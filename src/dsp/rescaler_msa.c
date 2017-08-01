@@ -246,7 +246,7 @@ static WEBP_INLINE void ExportRowExpand_1(const uint32_t* frow, uint32_t* irow,
   }
 }
 
-static void RescalerExportRowExpand(WebPRescaler* const wrk) {
+static void RescalerExportRowExpand_MIPSdspR2(WebPRescaler* const wrk) {
   uint8_t* dst = wrk->dst;
   rescaler_t* irow = wrk->irow;
   const int x_out_max = wrk->dst_width * wrk->num_channels;
@@ -411,7 +411,7 @@ static WEBP_INLINE void ExportRowShrink_1(uint32_t* irow, uint8_t* dst,
   }
 }
 
-static void RescalerExportRowShrink(WebPRescaler* const wrk) {
+static void RescalerExportRowShrink_MIPSdspR2(WebPRescaler* const wrk) {
   uint8_t* dst = wrk->dst;
   rescaler_t* irow = wrk->irow;
   const int x_out_max = wrk->dst_width * wrk->num_channels;
@@ -433,8 +433,8 @@ static void RescalerExportRowShrink(WebPRescaler* const wrk) {
 extern void WebPRescalerDspInitMSA(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void WebPRescalerDspInitMSA(void) {
-  WebPRescalerExportRowExpand = RescalerExportRowExpand;
-  WebPRescalerExportRowShrink = RescalerExportRowShrink;
+  WebPRescalerExportRowExpand = RescalerExportRowExpand_MIPSdspR2;
+  WebPRescalerExportRowShrink = RescalerExportRowShrink_MIPSdspR2;
 }
 
 #else     // !WEBP_USE_MSA
