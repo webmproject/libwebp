@@ -48,13 +48,13 @@ extern "C" {
 // somewhere (like: malloc(num_pixels * sizeof(*something))). That's why this
 // safe malloc() borrows the signature from calloc(), pointing at the dangerous
 // underlying multiply involved.
-WEBP_EXTERN(void*) WebPSafeMalloc(uint64_t nmemb, size_t size);
+WEBP_EXTERN void* WebPSafeMalloc(uint64_t nmemb, size_t size);
 // Note that WebPSafeCalloc() expects the second argument type to be 'size_t'
 // in order to favor the "calloc(num_foo, sizeof(foo))" pattern.
-WEBP_EXTERN(void*) WebPSafeCalloc(uint64_t nmemb, size_t size);
+WEBP_EXTERN void* WebPSafeCalloc(uint64_t nmemb, size_t size);
 
 // Companion deallocation function to the above allocations.
-WEBP_EXTERN(void) WebPSafeFree(void* const ptr);
+WEBP_EXTERN void WebPSafeFree(void* const ptr);
 
 //------------------------------------------------------------------------------
 // Alignment
@@ -147,14 +147,14 @@ static WEBP_INLINE int BitsLog2Floor(uint32_t n) { return WebPLog2FloorC(n); }
 struct WebPPicture;
 
 // Copy width x height pixels from 'src' to 'dst' honoring the strides.
-WEBP_EXTERN(void) WebPCopyPlane(const uint8_t* src, int src_stride,
-                                uint8_t* dst, int dst_stride,
-                                int width, int height);
+WEBP_EXTERN void WebPCopyPlane(const uint8_t* src, int src_stride,
+                               uint8_t* dst, int dst_stride,
+                               int width, int height);
 
 // Copy ARGB pixels from 'src' to 'dst' honoring strides. 'src' and 'dst' are
 // assumed to be already allocated and using ARGB data.
-WEBP_EXTERN(void) WebPCopyPixels(const struct WebPPicture* const src,
-                                 struct WebPPicture* const dst);
+WEBP_EXTERN void WebPCopyPixels(const struct WebPPicture* const src,
+                                struct WebPPicture* const dst);
 
 //------------------------------------------------------------------------------
 // Unique colors.
@@ -166,8 +166,8 @@ WEBP_EXTERN(void) WebPCopyPixels(const struct WebPPicture* const src,
 // MAX_PALETTE_SIZE, also outputs the actual unique colors into 'palette'.
 // Note: 'palette' is assumed to be an array already allocated with at least
 // MAX_PALETTE_SIZE elements.
-WEBP_EXTERN(int) WebPGetColorPalette(const struct WebPPicture* const pic,
-                                     uint32_t* const palette);
+WEBP_EXTERN int WebPGetColorPalette(const struct WebPPicture* const pic,
+                                    uint32_t* const palette);
 
 //------------------------------------------------------------------------------
 
