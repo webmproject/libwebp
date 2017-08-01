@@ -141,7 +141,6 @@ DUAL_SAMPLE_FUNC(DualLineSamplerARGB, VP8YuvToArgb)
 
 WebPUpsampleLinePairFunc WebPGetLinePairConverter(int alpha_is_last) {
   WebPInitUpsamplers();
-  VP8YUVInit();
 #ifdef FANCY_UPSAMPLING
   return WebPUpsamplers[alpha_is_last ? MODE_BGRA : MODE_ARGB];
 #else
