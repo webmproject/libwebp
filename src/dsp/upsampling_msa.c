@@ -274,7 +274,7 @@ static void YuvToRgb565(int y, int u, int v, uint8_t* const rgb) {
   const int b = Clip8(b1 >> 6);
   const int rg = (r & 0xf8) | (g >> 5);
   const int gb = ((g << 3) & 0xe0) | (b >> 3);
-#ifdef WEBP_SWAP_16BIT_CSP
+#if (WEBP_SWAP_16BIT_CSP == 1)
   rgb[0] = gb;
   rgb[1] = rg;
 #else
@@ -293,7 +293,7 @@ static void YuvToRgba4444(int y, int u, int v, uint8_t* const argb) {
   const int b = Clip8(b1 >> 6);
   const int rg = (r & 0xf0) | (g >> 4);
   const int ba = (b & 0xf0) | 0x0f;     // overwrite the lower 4 bits
-#ifdef WEBP_SWAP_16BIT_CSP
+#if (WEBP_SWAP_16BIT_CSP == 1)
   argb[0] = ba;
   argb[1] = rg;
 #else
@@ -459,11 +459,11 @@ static void YuvToRgba4444Line(const uint8_t* y, const uint8_t* u,
                               const uint8_t* v, uint8_t* dst, int length) {
   v16u8 R, G, B, RG, BA, tmp0, tmp1;
   while (length >= 16) {
-  #ifdef WEBP_SWAP_16BIT_CSP
+#if (WEBP_SWAP_16BIT_CSP == 1)
     CALC_RGBA4444(y, u, v, BA, RG, 16, dst);
-  #else
+#else
     CALC_RGBA4444(y, u, v, RG, BA, 16, dst);
-  #endif
+#endif
     y      += 16;
     u      += 16;
     v      += 16;
@@ -473,7 +473,7 @@ static void YuvToRgba4444Line(const uint8_t* y, const uint8_t* u,
   if (length > 8) {
     uint8_t temp[2 * 16] = { 0 };
     memcpy(temp, y, length * sizeof(*temp));
-#ifdef WEBP_SWAP_16BIT_CSP
+#if (WEBP_SWAP_16BIT_CSP == 1)
     CALC_RGBA4444(temp, u, v, BA, RG, 16, temp);
 #else
     CALC_RGBA4444(temp, u, v, RG, BA, 16, temp);
@@ -482,7 +482,7 @@ static void YuvToRgba4444Line(const uint8_t* y, const uint8_t* u,
   } else if (length > 0) {
     uint8_t temp[2 * 8] = { 0 };
     memcpy(temp, y, length * sizeof(*temp));
-#ifdef WEBP_SWAP_16BIT_CSP
+#if (WEBP_SWAP_16BIT_CSP == 1)
     CALC_RGBA4444(temp, u, v, BA, RG, 8, temp);
 #else
     CALC_RGBA4444(temp, u, v, RG, BA, 8, temp);
@@ -495,11 +495,11 @@ static void YuvToRgb565Line(const uint8_t* y, const uint8_t* u,
                             const uint8_t* v, uint8_t* dst, int length) {
   v16u8 R, G, B, RG, GB, tmp0, tmp1;
   while (length >= 16) {
-  #ifdef WEBP_SWAP_16BIT_CSP
+#if (WEBP_SWAP_16BIT_CSP == 1)
     CALC_RGB565(y, u, v, GB, RG, 16, dst);
-  #else
+#else
     CALC_RGB565(y, u, v, RG, GB, 16, dst);
-  #endif
+#endif
     y      += 16;
     u      += 16;
     v      += 16;
@@ -509,7 +509,7 @@ static void YuvToRgb565Line(const uint8_t* y, const uint8_t* u,
   if (length > 8) {
     uint8_t temp[2 * 16] = { 0 };
     memcpy(temp, y, length * sizeof(*temp));
-#ifdef WEBP_SWAP_16BIT_CSP
+#if (WEBP_SWAP_16BIT_CSP == 1)
     CALC_RGB565(temp, u, v, GB, RG, 16, temp);
 #else
     CALC_RGB565(temp, u, v, RG, GB, 16, temp);
@@ -518,7 +518,7 @@ static void YuvToRgb565Line(const uint8_t* y, const uint8_t* u,
   } else if (length > 0) {
     uint8_t temp[2 * 8] = { 0 };
     memcpy(temp, y, length * sizeof(*temp));
-#ifdef WEBP_SWAP_16BIT_CSP
+#if (WEBP_SWAP_16BIT_CSP == 1)
     CALC_RGB565(temp, u, v, GB, RG, 8, temp);
 #else
     CALC_RGB565(temp, u, v, RG, GB, 8, temp);
