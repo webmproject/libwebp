@@ -18,7 +18,9 @@
 
 // The 3-coeff sparse transform in SSE2 is not really faster than the plain-C
 // one it seems => disable it by default. Uncomment the following to enable:
-// #define USE_TRANSFORM_AC3
+#if !defined(USE_TRANSFORM_AC3)
+#define USE_TRANSFORM_AC3 0   // ALTERNATE_CODE
+#endif
 
 #include <emmintrin.h>
 #include "./common_sse2.h"
@@ -193,7 +195,7 @@ static void Transform(const int16_t* in, uint8_t* dst, int do_two) {
   }
 }
 
-#if defined(USE_TRANSFORM_AC3)
+#if (USE_TRANSFORM_AC3 == 1)
 #define MUL(a, b) (((a) * (b)) >> 16)
 static void TransformAC3(const int16_t* in, uint8_t* dst) {
   static const int kC1 = 20091 + (1 << 16);
@@ -1182,8 +1184,8 @@ extern void VP8DspInitSSE2(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitSSE2(void) {
   VP8Transform = Transform;
-#if defined(USE_TRANSFORM_AC3)
-  VP8TransformAC3 = TransformAC3;
+#if (USE_TRANSFORM_AC3 == 1)
+  VP8TransformAC3 = TransformAC3_SSE2;
 #endif
 
   VP8VFilter16 = VFilter16;
