@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c55b7006_6e792f90",
+        "filename": "makefile.unix",
+        "patchSetId": 9
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-08-01T19:01:13Z",
+      "side": 1,
+      "message": "redundant, but OK",
+      "range": {
+        "startLine": 60,
+        "startChar": 38,
+        "endLine": 60,
+        "endChar": 40
+      },
+      "revId": "f4391cd3f855a56db1f7bd82c7913897d5473847",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6243dcdc_6464441e",
+        "filename": "src/dec/tree_dec.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-08-01T19:01:13Z",
+      "side": 1,
+      "message": "these will lint elsewhere if it\u0027s not 2 spaces then //",
+      "revId": "f4391cd3f855a56db1f7bd82c7913897d5473847",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
