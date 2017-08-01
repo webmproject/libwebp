@@ -452,7 +452,7 @@ void VP8LConvertBGRAToRGBA4444_C(const uint32_t* src,
     const uint32_t argb = *src++;
     const uint8_t rg = ((argb >> 16) & 0xf0) | ((argb >> 12) & 0xf);
     const uint8_t ba = ((argb >>  0) & 0xf0) | ((argb >> 28) & 0xf);
-#ifdef WEBP_SWAP_16BIT_CSP
+#if (WEBP_SWAP_16BIT_CSP == 1)
     *dst++ = ba;
     *dst++ = rg;
 #else
@@ -469,7 +469,7 @@ void VP8LConvertBGRAToRGB565_C(const uint32_t* src,
     const uint32_t argb = *src++;
     const uint8_t rg = ((argb >> 16) & 0xf8) | ((argb >> 13) & 0x7);
     const uint8_t gb = ((argb >>  5) & 0xe0) | ((argb >>  3) & 0x1f);
-#ifdef WEBP_SWAP_16BIT_CSP
+#if (WEBP_SWAP_16BIT_CSP == 1)
     *dst++ = gb;
     *dst++ = rg;
 #else
@@ -496,22 +496,7 @@ static void CopyOrSwap(const uint32_t* src, int num_pixels, uint8_t* dst,
     const uint32_t* const src_end = src + num_pixels;
     while (src < src_end) {
       const uint32_t argb = *src++;
-
-#if !defined(WORDS_BIGENDIAN)
-#if !defined(WEBP_REFERENCE_IMPLEMENTATION)
       WebPUint32ToMem(dst, BSwap32(argb));
-#else  // WEBP_REFERENCE_IMPLEMENTATION
-      dst[0] = (argb >> 24) & 0xff;
-      dst[1] = (argb >> 16) & 0xff;
-      dst[2] = (argb >>  8) & 0xff;
-      dst[3] = (argb >>  0) & 0xff;
-#endif
-#else  // WORDS_BIGENDIAN
-      dst[0] = (argb >>  0) & 0xff;
-      dst[1] = (argb >>  8) & 0xff;
-      dst[2] = (argb >> 16) & 0xff;
-      dst[3] = (argb >> 24) & 0xff;
-#endif
       dst += sizeof(argb);
     }
   } else {

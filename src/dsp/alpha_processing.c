@@ -15,7 +15,10 @@
 #include "./dsp.h"
 
 // Tables can be faster on some platform but incur some extra binary size (~2k).
-// #define USE_TABLES_FOR_ALPHA_MULT
+#if !defined(USE_TABLES_FOR_ALPHA_MULT)
+#define USE_TABLES_FOR_ALPHA_MULT 0   // ALTERNATE_CODE
+#endif
+
 
 // -----------------------------------------------------------------------------
 
@@ -29,7 +32,7 @@ static uint32_t Mult(uint8_t x, uint32_t mult) {
   return v;
 }
 
-#ifdef USE_TABLES_FOR_ALPHA_MULT
+#if (USE_TABLES_FOR_ALPHA_MULT == 1)
 
 static const uint32_t kMultTables[2][256] = {
   {    // (255u << MFIX) / alpha
@@ -132,7 +135,7 @@ static WEBP_INLINE uint32_t GetScale(uint32_t a, int inverse) {
   return inverse ? (255u << MFIX) / a : a * KINV_255;
 }
 
-#endif    // USE_TABLES_FOR_ALPHA_MULT
+#endif  // USE_TABLES_FOR_ALPHA_MULT
 
 void WebPMultARGBRow_C(uint32_t* const ptr, int width, int inverse) {
   int x;
@@ -277,7 +280,7 @@ static WEBP_INLINE void ApplyAlphaMultiply4444_C(uint8_t* rgba4444,
 
 static void ApplyAlphaMultiply_16b_C(uint8_t* rgba4444,
                                      int w, int h, int stride) {
-#ifdef WEBP_SWAP_16BIT_CSP
+#if (WEBP_SWAP_16BIT_CSP == 1)
   ApplyAlphaMultiply4444_C(rgba4444, w, h, stride, 1);
 #else
   ApplyAlphaMultiply4444_C(rgba4444, w, h, stride, 0);

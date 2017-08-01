@@ -492,7 +492,7 @@ static void ConvertBGRAToRGBA4444(const uint32_t* src,
     "ins            %[temp3],    %[temp5],          16,   4    \n\t"
     "addiu          %[src],      %[src],            16         \n\t"
     "precr.qb.ph    %[temp3],    %[temp3],          %[temp2]   \n\t"
-#ifdef WEBP_SWAP_16BIT_CSP
+#if (WEBP_SWAP_16BIT_CSP == 1)
     "usw            %[temp1],    0(%[dst])                     \n\t"
     "usw            %[temp3],    4(%[dst])                     \n\t"
 #else
@@ -514,7 +514,7 @@ static void ConvertBGRAToRGBA4444(const uint32_t* src,
     "ins            %[temp0],    %[temp5],          16,   4    \n\t"
     "addiu          %[src],      %[src],            4          \n\t"
     "precr.qb.ph    %[temp0],    %[temp0],          %[temp0]   \n\t"
-#ifdef WEBP_SWAP_16BIT_CSP
+#if (WEBP_SWAP_16BIT_CSP == 1)
     "ush            %[temp0],    0(%[dst])                     \n\t"
 #else
     "wsbh           %[temp0],    %[temp0]                      \n\t"
@@ -570,7 +570,7 @@ static void ConvertBGRAToRGB565(const uint32_t* src,
     "ins            %[temp2],    %[temp3],          0,    5    \n\t"
     "addiu          %[src],      %[src],            16         \n\t"
     "append         %[temp2],    %[temp1],          16         \n\t"
-#ifdef WEBP_SWAP_16BIT_CSP
+#if (WEBP_SWAP_16BIT_CSP == 1)
     "usw            %[temp0],    0(%[dst])                     \n\t"
     "usw            %[temp2],    4(%[dst])                     \n\t"
 #else
@@ -592,7 +592,7 @@ static void ConvertBGRAToRGB565(const uint32_t* src,
     "ins            %[temp4],    %[temp5],          0,    11   \n\t"
     "addiu          %[src],      %[src],            4          \n\t"
     "ins            %[temp4],    %[temp0],          0,    5    \n\t"
-#ifdef WEBP_SWAP_16BIT_CSP
+#if (WEBP_SWAP_16BIT_CSP == 1)
     "ush            %[temp4],    0(%[dst])                     \n\t"
 #else
     "wsbh           %[temp4],    %[temp4]                      \n\t"

@@ -35,7 +35,7 @@ string(REGEX MATCH "[0-9.]+" WEBP_VERSION ${SOURCE_FILE})
 ################################################################################
 # Options.
 if(WEBP_ENABLE_SWAP_16BIT_CSP)
-  add_definitions(-DWEBP_SWAP_16BIT_CSP)
+  add_definitions(-DWEBP_SWAP_16BIT_CSP=1)
 endif()
 
 ################################################################################
