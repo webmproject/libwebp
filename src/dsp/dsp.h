@@ -148,7 +148,7 @@ typedef enum {
 } CPUFeature;
 // returns true if the CPU supports the feature.
 typedef int (*VP8CPUInfo)(CPUFeature feature);
-WEBP_EXTERN(VP8CPUInfo) VP8GetCPUInfo;
+WEBP_EXTERN VP8CPUInfo VP8GetCPUInfo;
 
 //------------------------------------------------------------------------------
 // Init stub generator

@@ -441,7 +441,7 @@ $(OUTPUT_DIRS):
 $(DIROBJ)\$(DLLINC):
 	@echo #ifndef WEBP_DLL_H_ > $@
 	@echo #define WEBP_DLL_H_ >> $@
-	@echo #define WEBP_EXTERN(type) __declspec(dllexport) type >> $@
+	@echo #define WEBP_EXTERN __declspec(dllexport) >> $@
 	@echo #endif  /* WEBP_DLL_H_ */ >> $@
 
 .SUFFIXES: .c .obj .res .exe
