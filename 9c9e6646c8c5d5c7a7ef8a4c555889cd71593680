@@ -1,0 +1,78 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d65ea3ef_4deccbf5",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 6
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-08-01T06:02:20Z",
+      "side": 1,
+      "message": "not sure I get what the pattern being described is",
+      "revId": "9c9e6646c8c5d5c7a7ef8a4c555889cd71593680",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "faaa5ab1_47cc5269",
+        "filename": "src/dec/tree_dec.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-08-01T06:02:20Z",
+      "side": 1,
+      "message": "this duplicates the block above, no?",
+      "revId": "9c9e6646c8c5d5c7a7ef8a4c555889cd71593680",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4a1b38a1_1d44c2b1",
+        "filename": "src/dsp/dsp.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-08-01T06:02:20Z",
+      "side": 1,
+      "message": "\u0027backward\u0027 should fit",
+      "range": {
+        "startLine": 137,
+        "startChar": 53,
+        "endLine": 137,
+        "endChar": 56
+      },
+      "revId": "9c9e6646c8c5d5c7a7ef8a4c555889cd71593680",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e161c044_dc983960",
+        "filename": "src/dsp/dsp.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-08-01T06:02:20Z",
+      "side": 1,
+      "message": "this line can go",
+      "revId": "9c9e6646c8c5d5c7a7ef8a4c555889cd71593680",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
