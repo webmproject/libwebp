@@ -71,15 +71,17 @@ extern "C" {
 #define WEBP_USE_AVX2
 #endif
 
-#if defined(__ANDROID__) && defined(__ARM_ARCH_7A__)
-#define WEBP_ANDROID_NEON  // Android targets that might support NEON
-#endif
-
 // The intrinsics currently cause compiler errors with arm-nacl-gcc and the
 // inline assembly would need to be modified for use with Native Client.
-#if (defined(__ARM_NEON__) || defined(WEBP_ANDROID_NEON) || \
+#if (defined(__ARM_NEON__) || \
      defined(__aarch64__) || defined(WEBP_HAVE_NEON)) && \
     !defined(__native_client__)
+#define WEBP_USE_NEON
+#endif
+
+#if !defined(WEBP_USE_NEON) && defined(__ANDROID__) && \
+    defined(__ARM_ARCH_7A__) && defined(HAVE_CPU_FEATURES_H)
+#define WEBP_ANDROID_NEON  // Android targets that may have NEON
 #define WEBP_USE_NEON
 #endif
 
