@@ -84,6 +84,7 @@ model {
       // Check for NEON usage.
       if (getTargetPlatform() == "arm") {
         NEON = "c.neon"
+        cCompiler.define "HAVE_CPU_FEATURES_H"
       } else {
         NEON = "c"
       }

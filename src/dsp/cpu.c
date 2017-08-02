@@ -18,8 +18,10 @@
 #include <string.h>
 #endif
 
-#if defined(WEBP_ANDROID_NEON)
+#if !defined(WEBP_HAVE_NEON) && defined(__ANDROID__) && \
+    defined(__ARM_ARCH_7A__) && defined(HAVE_CPU_FEATURES_H)
 #include <cpu-features.h>
+#define WEBP_ANDROID_NEON  // Android targets that may have NEON
 #endif
 
 //------------------------------------------------------------------------------

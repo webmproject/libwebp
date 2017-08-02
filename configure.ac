@@ -244,9 +244,13 @@ AS_IF([test "x$enable_neon" != "xno"], [
           NEON_FLAGS=""],
           [AC_DEFINE(WEBP_HAVE_NEON_RTCD, [1],
                      [Set to 1 if runtime detection of NEON is enabled])])])
-        ;;
-    esac
-    AC_SUBST([NEON_FLAGS])])
+
+      case "$host_os" in
+        *android*) AC_CHECK_HEADERS([cpu-features.h]) ;;
+      esac
+      ;;
+  esac
+  AC_SUBST([NEON_FLAGS])])
 
 dnl === CLEAR_LIBVARS([var_pfx])
 dnl ===   Clears <var_pfx>_{INCLUDES,LIBS}.

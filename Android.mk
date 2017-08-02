@@ -25,6 +25,7 @@ ifneq ($(findstring armeabi-v7a, $(TARGET_ARCH_ABI)),)
   # specifically.
   NEON := c.neon
   USE_CPUFEATURES := yes
+  WEBP_CFLAGS += -DHAVE_CPU_FEATURES_H
 else
   NEON := c
 endif
