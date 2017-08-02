@@ -22,6 +22,30 @@
       "revId": "0fb78a9940cd63e23007469da446c8c865d3e37e",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6574a9c6_94084dd2",
+        "filename": "Android.mk",
+        "patchSetId": 1
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-08-02T03:24:31Z",
+      "side": 1,
+      "message": "\u003e note: we have a mild naming inconsistency here (CPUFEATURES vs CPU_FEATURES below)\n\nI\u0027ll rename this one in a followup to CPU_FEATURES since the _H is based on the file name (cpu-features.h)",
+      "parentUuid": "505d65d5_96e3934e",
+      "range": {
+        "startLine": 27,
+        "startChar": 2,
+        "endLine": 27,
+        "endChar": 17
+      },
+      "revId": "0fb78a9940cd63e23007469da446c8c865d3e37e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
