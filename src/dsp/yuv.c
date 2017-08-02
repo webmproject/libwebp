@@ -334,7 +334,7 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitConvertARGBToYUV(void) {
       WebPInitSharpYUVSSE2();
     }
 #endif  // WEBP_USE_SSE2
-#if defined(WEBP_USE_NEON)
+#if defined(WEBP_USE_NEON) || defined(WEBP_ANDROID_NEON)
     if (VP8GetCPUInfo(kNEON)) {
       WebPInitConvertARGBToYUVNEON();
       WebPInitSharpYUVNEON();

@@ -772,7 +772,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInit(void) {
       VP8EncDspInitAVX2();
     }
 #endif
-#if defined(WEBP_USE_NEON)
+#if defined(WEBP_USE_NEON) || defined(WEBP_ANDROID_NEON)
     if (VP8GetCPUInfo(kNEON)) {
       VP8EncDspInitNEON();
     }

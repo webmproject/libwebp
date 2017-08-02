@@ -640,7 +640,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInit(void) {
       VP8LDspInitSSE2();
     }
 #endif
-#if defined(WEBP_USE_NEON)
+#if defined(WEBP_USE_NEON) || defined(WEBP_ANDROID_NEON)
     if (VP8GetCPUInfo(kNEON)) {
       VP8LDspInitNEON();
     }
