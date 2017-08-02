@@ -287,8 +287,9 @@ void VP8YuvToBgr32_SSE2(const uint8_t* y, const uint8_t* u, const uint8_t* v,
 //-----------------------------------------------------------------------------
 // Arbitrary-length row conversion functions
 
-static void YuvToRgbaRow(const uint8_t* y, const uint8_t* u, const uint8_t* v,
-                         uint8_t* dst, int len) {
+static void YuvToRgbaRow_SSE2(const uint8_t* y,
+                              const uint8_t* u, const uint8_t* v,
+                              uint8_t* dst, int len) {
   const __m128i kAlpha = _mm_set1_epi16(255);
   int n;
   for (n = 0; n + 8 <= len; n += 8, dst += 32) {
@@ -308,8 +309,9 @@ static void YuvToRgbaRow(const uint8_t* y, const uint8_t* u, const uint8_t* v,
   }
 }
 
-static void YuvToBgraRow(const uint8_t* y, const uint8_t* u, const uint8_t* v,
-                         uint8_t* dst, int len) {
+static void YuvToBgraRow_SSE2(const uint8_t* y,
+                              const uint8_t* u, const uint8_t* v,
+                              uint8_t* dst, int len) {
   const __m128i kAlpha = _mm_set1_epi16(255);
   int n;
   for (n = 0; n + 8 <= len; n += 8, dst += 32) {
@@ -329,8 +331,9 @@ static void YuvToBgraRow(const uint8_t* y, const uint8_t* u, const uint8_t* v,
   }
 }
 
-static void YuvToArgbRow(const uint8_t* y, const uint8_t* u, const uint8_t* v,
-                         uint8_t* dst, int len) {
+static void YuvToArgbRow_SSE2(const uint8_t* y,
+                              const uint8_t* u, const uint8_t* v,
+                              uint8_t* dst, int len) {
   const __m128i kAlpha = _mm_set1_epi16(255);
   int n;
   for (n = 0; n + 8 <= len; n += 8, dst += 32) {
@@ -350,8 +353,9 @@ static void YuvToArgbRow(const uint8_t* y, const uint8_t* u, const uint8_t* v,
   }
 }
 
-static void YuvToRgbRow(const uint8_t* y, const uint8_t* u, const uint8_t* v,
-                        uint8_t* dst, int len) {
+static void YuvToRgbRow_SSE2(const uint8_t* y,
+                             const uint8_t* u, const uint8_t* v,
+                             uint8_t* dst, int len) {
   int n;
   for (n = 0; n + 32 <= len; n += 32, dst += 32 * 3) {
     __m128i R0, R1, R2, R3, G0, G1, G2, G3, B0, B1, B2, B3;
@@ -386,8 +390,9 @@ static void YuvToRgbRow(const uint8_t* y, const uint8_t* u, const uint8_t* v,
   }
 }
 
-static void YuvToBgrRow(const uint8_t* y, const uint8_t* u, const uint8_t* v,
-                        uint8_t* dst, int len) {
+static void YuvToBgrRow_SSE2(const uint8_t* y,
+                             const uint8_t* u, const uint8_t* v,
+                             uint8_t* dst, int len) {
   int n;
   for (n = 0; n + 32 <= len; n += 32, dst += 32 * 3) {
     __m128i R0, R1, R2, R3, G0, G1, G2, G3, B0, B1, B2, B3;
@@ -428,11 +433,11 @@ static void YuvToBgrRow(const uint8_t* y, const uint8_t* u, const uint8_t* v,
 extern void WebPInitSamplersSSE2(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void WebPInitSamplersSSE2(void) {
-  WebPSamplers[MODE_RGB]  = YuvToRgbRow;
-  WebPSamplers[MODE_RGBA] = YuvToRgbaRow;
-  WebPSamplers[MODE_BGR]  = YuvToBgrRow;
-  WebPSamplers[MODE_BGRA] = YuvToBgraRow;
-  WebPSamplers[MODE_ARGB] = YuvToArgbRow;
+  WebPSamplers[MODE_RGB]  = YuvToRgbRow_SSE2;
+  WebPSamplers[MODE_RGBA] = YuvToRgbaRow_SSE2;
+  WebPSamplers[MODE_BGR]  = YuvToBgrRow_SSE2;
+  WebPSamplers[MODE_BGRA] = YuvToBgraRow_SSE2;
+  WebPSamplers[MODE_ARGB] = YuvToArgbRow_SSE2;
 }
 
 //------------------------------------------------------------------------------
@@ -549,7 +554,7 @@ static WEBP_INLINE void ConvertRGBToUV(const __m128i* const R,
 #undef MK_CST_16
 #undef TRANSFORM
 
-static void ConvertRGB24ToY(const uint8_t* rgb, uint8_t* y, int width) {
+static void ConvertRGB24ToY_SSE2(const uint8_t* rgb, uint8_t* y, int width) {
   const int max_width = width & ~31;
   int i;
   for (i = 0; i < max_width; rgb += 3 * 16 * 2) {
@@ -583,7 +588,7 @@ static void ConvertRGB24ToY(const uint8_t* rgb, uint8_t* y, int width) {
   }
 }
 
-static void ConvertBGR24ToY(const uint8_t* bgr, uint8_t* y, int width) {
+static void ConvertBGR24ToY_SSE2(const uint8_t* bgr, uint8_t* y, int width) {
   const int max_width = width & ~31;
   int i;
   for (i = 0; i < max_width; bgr += 3 * 16 * 2) {
@@ -617,7 +622,7 @@ static void ConvertBGR24ToY(const uint8_t* bgr, uint8_t* y, int width) {
   }
 }
 
-static void ConvertARGBToY(const uint32_t* argb, uint8_t* y, int width) {
+static void ConvertARGBToY_SSE2(const uint32_t* argb, uint8_t* y, int width) {
   const int max_width = width & ~15;
   int i;
   for (i = 0; i < max_width; i += 16) {
@@ -644,8 +649,9 @@ static void HorizontalAddPack(const __m128i* const A, const __m128i* const B,
   *out = _mm_packs_epi32(C, D);
 }
 
-static void ConvertARGBToUV(const uint32_t* argb, uint8_t* u, uint8_t* v,
-                            int src_width, int do_store) {
+static void ConvertARGBToUV_SSE2(const uint32_t* argb,
+                                 uint8_t* u, uint8_t* v,
+                                 int src_width, int do_store) {
   const int max_width = src_width & ~31;
   int i;
   for (i = 0; i < max_width; i += 32, u += 16, v += 16) {
@@ -701,8 +707,8 @@ static WEBP_INLINE void RGBA32PackedToPlanar_16b(const uint16_t* const rgbx,
   *b = _mm_unpacklo_epi64(B1, B3);
 }
 
-static void ConvertRGBA32ToUV(const uint16_t* rgb,
-                              uint8_t* u, uint8_t* v, int width) {
+static void ConvertRGBA32ToUV_SSE2(const uint16_t* rgb,
+                                   uint8_t* u, uint8_t* v, int width) {
   const int max_width = width & ~15;
   const uint16_t* const last_rgb = rgb + 4 * max_width;
   while (rgb < last_rgb) {
@@ -727,13 +733,13 @@ static void ConvertRGBA32ToUV(const uint16_t* rgb,
 extern void WebPInitConvertARGBToYUVSSE2(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void WebPInitConvertARGBToYUVSSE2(void) {
-  WebPConvertARGBToY = ConvertARGBToY;
-  WebPConvertARGBToUV = ConvertARGBToUV;
+  WebPConvertARGBToY = ConvertARGBToY_SSE2;
+  WebPConvertARGBToUV = ConvertARGBToUV_SSE2;
 
-  WebPConvertRGB24ToY = ConvertRGB24ToY;
-  WebPConvertBGR24ToY = ConvertBGR24ToY;
+  WebPConvertRGB24ToY = ConvertRGB24ToY_SSE2;
+  WebPConvertBGR24ToY = ConvertBGR24ToY_SSE2;
 
-  WebPConvertRGBA32ToUV = ConvertRGBA32ToUV;
+  WebPConvertRGBA32ToUV = ConvertRGBA32ToUV_SSE2;
 }
 
 //------------------------------------------------------------------------------

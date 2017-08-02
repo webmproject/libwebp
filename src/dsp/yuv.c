@@ -115,7 +115,7 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitSamplers(void) {
 //-----------------------------------------------------------------------------
 // ARGB -> YUV converters
 
-static void ConvertARGBToY(const uint32_t* argb, uint8_t* y, int width) {
+static void ConvertARGBToY_C(const uint32_t* argb, uint8_t* y, int width) {
   int i;
   for (i = 0; i < width; ++i) {
     const uint32_t p = argb[i];
@@ -167,14 +167,14 @@ void WebPConvertARGBToUV_C(const uint32_t* argb, uint8_t* u, uint8_t* v,
 
 //-----------------------------------------------------------------------------
 
-static void ConvertRGB24ToY(const uint8_t* rgb, uint8_t* y, int width) {
+static void ConvertRGB24ToY_C(const uint8_t* rgb, uint8_t* y, int width) {
   int i;
   for (i = 0; i < width; ++i, rgb += 3) {
     y[i] = VP8RGBToY(rgb[0], rgb[1], rgb[2], YUV_HALF);
   }
 }
 
-static void ConvertBGR24ToY(const uint8_t* bgr, uint8_t* y, int width) {
+static void ConvertBGR24ToY_C(const uint8_t* bgr, uint8_t* y, int width) {
   int i;
   for (i = 0; i < width; ++i, bgr += 3) {
     y[i] = VP8RGBToY(bgr[2], bgr[1], bgr[0], YUV_HALF);
@@ -262,11 +262,11 @@ extern void WebPInitSharpYUVNEON(void);
 WEBP_TSAN_IGNORE_FUNCTION void WebPInitConvertARGBToYUV(void) {
   if (rgba_to_yuv_last_cpuinfo_used == VP8GetCPUInfo) return;
 
-  WebPConvertARGBToY = ConvertARGBToY;
+  WebPConvertARGBToY = ConvertARGBToY_C;
   WebPConvertARGBToUV = WebPConvertARGBToUV_C;
 
-  WebPConvertRGB24ToY = ConvertRGB24ToY;
-  WebPConvertBGR24ToY = ConvertBGR24ToY;
+  WebPConvertRGB24ToY = ConvertRGB24ToY_C;
+  WebPConvertBGR24ToY = ConvertBGR24ToY_C;
 
   WebPConvertRGBA32ToUV = WebPConvertRGBA32ToUV_C;
 
