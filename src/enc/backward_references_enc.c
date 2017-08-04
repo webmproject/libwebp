@@ -530,9 +530,12 @@ static int BackwardReferencesLz77Box(int xsize, int ysize,
   const int pix_count = xsize * ysize;
   uint16_t* counts;
   int window_offsets[WINDOW_OFFSETS_SIZE_MAX] = {0};
+  int window_offsets_new[WINDOW_OFFSETS_SIZE_MAX] = {0};
   int window_offsets_size = 0;
+  int window_offsets_new_size = 0;
   uint16_t* const counts_ini =
       (uint16_t*)WebPSafeMalloc(xsize * ysize, sizeof(*counts_ini));
+  int best_offset_prev = -1, best_length_prev = -1;
   if (counts_ini == NULL) return 0;
 
   // counts[i] counts how many times a pixel is repeated starting at position i.
@@ -568,9 +571,23 @@ static int BackwardReferencesLz77Box(int xsize, int ysize,
       if (window_offsets[i] == 0) continue;
       window_offsets[window_offsets_size++] = window_offsets[i];
     }
+    // Given a pixel P, find the offsets that reach pixels unreachable from P-1
+    // with any of the offsets in window_offsets[].
+    for (i = 0; i < window_offsets_size; ++i) {
+      int j;
+      int is_reachable = 0;
+      for (j = 0; j < window_offsets_size && !is_reachable; ++j) {
+        is_reachable |= (window_offsets[i] == window_offsets[j] + 1);
+      }
+      if (!is_reachable) {
+        window_offsets_new[window_offsets_new_size] = window_offsets[i];
+        ++window_offsets_new_size;
+      }
+    }
   }
 
-  for (i = pix_count - 1; i > 0; --i) {
+  hash_chain->offset_length_[0] = 0;
+  for (i = 1; i < pix_count; ++i) {
     int ind;
     int best_length = VP8LHashChainFindLength(hash_chain_best, i);
     int best_offset;
@@ -588,13 +605,19 @@ static int BackwardReferencesLz77Box(int xsize, int ysize,
       }
     }
     if (do_compute) {
-      best_length = 0;
-      best_offset = 0;
+      // Figure out if we should use the offset/length from the previous pixel
+      // as an initial guess and therefore only inspect the offsets in
+      // window_offsets_new[].
+      int use_prev = (best_length_prev > 1) && (best_length_prev < MAX_LENGTH);
+      int num_ind = use_prev ? window_offsets_new_size : window_offsets_size;
+      best_length = use_prev ? best_length_prev - 1 : 0;
+      best_offset = use_prev ? best_offset_prev : 0;
       // Find the longest match in a window around the pixel.
-      for (ind = 0; ind < window_offsets_size; ++ind) {
+      for (ind = 0; ind < num_ind; ++ind) {
         int curr_length = 0;
         int j = i;
-        int j_offset = i - window_offsets[ind];
+        int j_offset =
+            use_prev ? i - window_offsets_new[ind] : i - window_offsets[ind];
         if (j_offset < 0 || argb[j_offset] != argb[i]) continue;
         // The longest match is the sum of how many times each pixel is
         // repeated.
@@ -613,8 +636,9 @@ static int BackwardReferencesLz77Box(int xsize, int ysize,
         } while (curr_length <= MAX_LENGTH && j < pix_count &&
                  argb[j_offset] == argb[j]);
         if (best_length < curr_length) {
-          best_offset = window_offsets[ind];
-          if (curr_length > MAX_LENGTH) {
+          best_offset =
+              use_prev ? window_offsets_new[ind] : window_offsets[ind];
+          if (curr_length >= MAX_LENGTH) {
             best_length = MAX_LENGTH;
             break;
           } else {
@@ -628,9 +652,13 @@ static int BackwardReferencesLz77Box(int xsize, int ysize,
     assert(best_length <= MAX_LENGTH);
     if (best_length <= MIN_LENGTH) {
       hash_chain->offset_length_[i] = 0;
+      best_offset_prev = 0;
+      best_length_prev = 0;
     } else {
       hash_chain->offset_length_[i] =
           (best_offset << MAX_LENGTH_BITS) | (uint32_t)best_length;
+      best_offset_prev = best_offset;
+      best_length_prev = best_length;
     }
   }
   hash_chain->offset_length_[0] = 0;
