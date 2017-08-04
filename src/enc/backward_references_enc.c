@@ -493,6 +493,7 @@ static int BackwardReferencesLz77(int xsize, int ysize,
         if (reach > max_reach) {
           len = j - i;
           max_reach = reach;
+          if (max_reach >= pix_count) break;
         }
       }
     } else {
