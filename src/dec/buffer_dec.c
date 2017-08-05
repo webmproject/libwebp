@@ -36,7 +36,7 @@ static int IsValidColorspace(int webp_csp_mode) {
 // strictly speaking, the very last (or first, if flipped) row
 // doesn't require padding.
 #define MIN_BUFFER_SIZE(WIDTH, HEIGHT, STRIDE)       \
-    (uint64_t)(STRIDE) * ((HEIGHT) - 1) + (WIDTH)
+    ((uint64_t)(STRIDE) * ((HEIGHT) - 1) + (WIDTH))
 
 static VP8StatusCode CheckDecBuffer(const WebPDecBuffer* const buffer) {
   int ok = 1;

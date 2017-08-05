@@ -25,7 +25,7 @@ static WEBP_INLINE uint8_t clip_8b(int v) {
 // Transforms (Paragraph 14.4)
 
 #define STORE(x, y, v) \
-  dst[x + y * BPS] = clip_8b(dst[x + y * BPS] + ((v) >> 3))
+  dst[(x) + (y) * BPS] = clip_8b(dst[(x) + (y) * BPS] + ((v) >> 3))
 
 #define STORE2(y, dc, d, c) do {    \
   const int DC = (dc);              \

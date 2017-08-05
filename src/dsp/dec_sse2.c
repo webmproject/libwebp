@@ -260,8 +260,8 @@ static WEBP_INLINE void SignedShift8b(__m128i* const x) {
 }
 
 #define FLIP_SIGN_BIT2(a, b) {                                                 \
-  a = _mm_xor_si128(a, sign_bit);                                              \
-  b = _mm_xor_si128(b, sign_bit);                                              \
+  (a) = _mm_xor_si128(a, sign_bit);                                            \
+  (b) = _mm_xor_si128(b, sign_bit);                                            \
 }
 
 #define FLIP_SIGN_BIT4(a, b, c, d) {                                           \
@@ -630,41 +630,41 @@ static void SimpleHFilter16i(uint8_t* p, int stride, int thresh) {
 // Complex In-loop filtering (Paragraph 15.3)
 
 #define MAX_DIFF1(p3, p2, p1, p0, m) do {                                      \
-  m = MM_ABS(p1, p0);                                                          \
-  m = _mm_max_epu8(m, MM_ABS(p3, p2));                                         \
-  m = _mm_max_epu8(m, MM_ABS(p2, p1));                                         \
+  (m) = MM_ABS(p1, p0);                                                        \
+  (m) = _mm_max_epu8(m, MM_ABS(p3, p2));                                       \
+  (m) = _mm_max_epu8(m, MM_ABS(p2, p1));                                       \
 } while (0)
 
 #define MAX_DIFF2(p3, p2, p1, p0, m) do {                                      \
-  m = _mm_max_epu8(m, MM_ABS(p1, p0));                                         \
-  m = _mm_max_epu8(m, MM_ABS(p3, p2));                                         \
-  m = _mm_max_epu8(m, MM_ABS(p2, p1));                                         \
+  (m) = _mm_max_epu8(m, MM_ABS(p1, p0));                                       \
+  (m) = _mm_max_epu8(m, MM_ABS(p3, p2));                                       \
+  (m) = _mm_max_epu8(m, MM_ABS(p2, p1));                                       \
 } while (0)
 
 #define LOAD_H_EDGES4(p, stride, e1, e2, e3, e4) {                             \
-  e1 = _mm_loadu_si128((__m128i*)&(p)[0 * stride]);                            \
-  e2 = _mm_loadu_si128((__m128i*)&(p)[1 * stride]);                            \
-  e3 = _mm_loadu_si128((__m128i*)&(p)[2 * stride]);                            \
-  e4 = _mm_loadu_si128((__m128i*)&(p)[3 * stride]);                            \
+  (e1) = _mm_loadu_si128((__m128i*)&(p)[0 * (stride)]);                        \
+  (e2) = _mm_loadu_si128((__m128i*)&(p)[1 * (stride)]);                        \
+  (e3) = _mm_loadu_si128((__m128i*)&(p)[2 * (stride)]);                        \
+  (e4) = _mm_loadu_si128((__m128i*)&(p)[3 * (stride)]);                        \
 }
 
 #define LOADUV_H_EDGE(p, u, v, stride) do {                                    \
   const __m128i U = _mm_loadl_epi64((__m128i*)&(u)[(stride)]);                 \
   const __m128i V = _mm_loadl_epi64((__m128i*)&(v)[(stride)]);                 \
-  p = _mm_unpacklo_epi64(U, V);                                                \
+  (p) = _mm_unpacklo_epi64(U, V);                                              \
 } while (0)
 
 #define LOADUV_H_EDGES4(u, v, stride, e1, e2, e3, e4) {                        \
-  LOADUV_H_EDGE(e1, u, v, 0 * stride);                                         \
-  LOADUV_H_EDGE(e2, u, v, 1 * stride);                                         \
-  LOADUV_H_EDGE(e3, u, v, 2 * stride);                                         \
-  LOADUV_H_EDGE(e4, u, v, 3 * stride);                                         \
+  LOADUV_H_EDGE(e1, u, v, 0 * (stride));                                       \
+  LOADUV_H_EDGE(e2, u, v, 1 * (stride));                                       \
+  LOADUV_H_EDGE(e3, u, v, 2 * (stride));                                       \
+  LOADUV_H_EDGE(e4, u, v, 3 * (stride));                                       \
 }
 
 #define STOREUV(p, u, v, stride) {                                             \
-  _mm_storel_epi64((__m128i*)&u[(stride)], p);                                 \
-  p = _mm_srli_si128(p, 8);                                                    \
-  _mm_storel_epi64((__m128i*)&v[(stride)], p);                                 \
+  _mm_storel_epi64((__m128i*)&(u)[(stride)], p);                               \
+  (p) = _mm_srli_si128(p, 8);                                                  \
+  _mm_storel_epi64((__m128i*)&(v)[(stride)], p);                               \
 }
 
 static WEBP_INLINE void ComplexMask(const __m128i* const p1,

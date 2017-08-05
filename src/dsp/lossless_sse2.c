@@ -381,7 +381,7 @@ static void PredictorAdd11_SSE2(const uint32_t* in, const uint32_t* upper,
 
 #define DO_PRED12_SHIFT(DIFF, LANE) do {                    \
   /* Shift the pre-computed value for the next iteration.*/ \
-  if (LANE == 0) (DIFF) = _mm_srli_si128((DIFF), 8);        \
+  if ((LANE) == 0) (DIFF) = _mm_srli_si128((DIFF), 8);      \
   src = _mm_srli_si128(src, 4);                             \
 } while (0)
 

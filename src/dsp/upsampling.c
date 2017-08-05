@@ -63,17 +63,17 @@ static void FUNC_NAME(const uint8_t* top_y, const uint8_t* bottom_y,           \
       const uint32_t uv0 = (diag_12 + tl_uv) >> 1;                             \
       const uint32_t uv1 = (diag_03 + t_uv) >> 1;                              \
       FUNC(top_y[2 * x - 1], uv0 & 0xff, (uv0 >> 16),                          \
-           top_dst + (2 * x - 1) * XSTEP);                                     \
+           top_dst + (2 * x - 1) * (XSTEP));                                   \
       FUNC(top_y[2 * x - 0], uv1 & 0xff, (uv1 >> 16),                          \
-           top_dst + (2 * x - 0) * XSTEP);                                     \
+           top_dst + (2 * x - 0) * (XSTEP));                                   \
     }                                                                          \
     if (bottom_y != NULL) {                                                    \
       const uint32_t uv0 = (diag_03 + l_uv) >> 1;                              \
       const uint32_t uv1 = (diag_12 + uv) >> 1;                                \
       FUNC(bottom_y[2 * x - 1], uv0 & 0xff, (uv0 >> 16),                       \
-           bottom_dst + (2 * x - 1) * XSTEP);                                  \
+           bottom_dst + (2 * x - 1) * (XSTEP));                                \
       FUNC(bottom_y[2 * x + 0], uv1 & 0xff, (uv1 >> 16),                       \
-           bottom_dst + (2 * x + 0) * XSTEP);                                  \
+           bottom_dst + (2 * x + 0) * (XSTEP));                                \
     }                                                                          \
     tl_uv = t_uv;                                                              \
     l_uv = uv;                                                                 \
@@ -82,12 +82,12 @@ static void FUNC_NAME(const uint8_t* top_y, const uint8_t* bottom_y,           \
     {                                                                          \
       const uint32_t uv0 = (3 * tl_uv + l_uv + 0x00020002u) >> 2;              \
       FUNC(top_y[len - 1], uv0 & 0xff, (uv0 >> 16),                            \
-           top_dst + (len - 1) * XSTEP);                                       \
+           top_dst + (len - 1) * (XSTEP));                                     \
     }                                                                          \
     if (bottom_y != NULL) {                                                    \
       const uint32_t uv0 = (3 * l_uv + tl_uv + 0x00020002u) >> 2;              \
       FUNC(bottom_y[len - 1], uv0 & 0xff, (uv0 >> 16),                         \
-           bottom_dst + (len - 1) * XSTEP);                                    \
+           bottom_dst + (len - 1) * (XSTEP));                                  \
     }                                                                          \
   }                                                                            \
 }
@@ -157,7 +157,7 @@ extern void FUNC_NAME(const uint8_t* y, const uint8_t* u, const uint8_t* v,    \
 void FUNC_NAME(const uint8_t* y, const uint8_t* u, const uint8_t* v,           \
                uint8_t* dst, int len) {                                        \
   int i;                                                                       \
-  for (i = 0; i < len; ++i) FUNC(y[i], u[i], v[i], &dst[i * XSTEP]);           \
+  for (i = 0; i < len; ++i) FUNC(y[i], u[i], v[i], &dst[i * (XSTEP)]);         \
 }
 
 YUV444_FUNC(WebPYuv444ToRgb_C,      VP8YuvToRgb,  3)

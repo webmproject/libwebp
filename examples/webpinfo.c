@@ -233,20 +233,20 @@ static int GetSignedBits(const uint8_t* const data, size_t data_size, size_t nb,
   return 1;
 }
 
-#define GET_BITS(v, n)                               \
-  do {                                               \
-    if (!GetBits(data, data_size, n, &v, bit_pos)) { \
-      LOG_ERROR("Truncated lossy bitstream.");       \
-      return WEBP_INFO_TRUNCATED_DATA;               \
-    }                                                \
+#define GET_BITS(v, n)                                 \
+  do {                                                 \
+    if (!GetBits(data, data_size, n, &(v), bit_pos)) { \
+      LOG_ERROR("Truncated lossy bitstream.");         \
+      return WEBP_INFO_TRUNCATED_DATA;                 \
+    }                                                  \
   } while (0)
 
-#define GET_SIGNED_BITS(v, n)                              \
-  do {                                                     \
-    if (!GetSignedBits(data, data_size, n, &v, bit_pos)) { \
-      LOG_ERROR("Truncated lossy bitstream.");             \
-      return WEBP_INFO_TRUNCATED_DATA;                     \
-    }                                                      \
+#define GET_SIGNED_BITS(v, n)                                \
+  do {                                                       \
+    if (!GetSignedBits(data, data_size, n, &(v), bit_pos)) { \
+      LOG_ERROR("Truncated lossy bitstream.");               \
+      return WEBP_INFO_TRUNCATED_DATA;                       \
+    }                                                        \
   } while (0)
 
 static WebPInfoStatus ParseLossySegmentHeader(const WebPInfo* const webp_info,
@@ -462,12 +462,12 @@ static int LLGetBits(const uint8_t* const data, size_t data_size, size_t nb,
   return 1;
 }
 
-#define LL_GET_BITS(v, n)                              \
-  do {                                                 \
-    if (!LLGetBits(data, data_size, n, &v, bit_pos)) { \
-      LOG_ERROR("Truncated lossless bitstream.");      \
-      return WEBP_INFO_TRUNCATED_DATA;                 \
-    }                                                  \
+#define LL_GET_BITS(v, n)                                \
+  do {                                                   \
+    if (!LLGetBits(data, data_size, n, &(v), bit_pos)) { \
+      LOG_ERROR("Truncated lossless bitstream.");        \
+      return WEBP_INFO_TRUNCATED_DATA;                   \
+    }                                                    \
   } while (0)
 
 static WebPInfoStatus ParseLosslessTransform(WebPInfo* const webp_info,

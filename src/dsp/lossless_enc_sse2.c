@@ -21,7 +21,7 @@
 #include "./lossless_common.h"
 
 // For sign-extended multiplying constants, pre-shifted by 5:
-#define CST_5b(X)  (((int16_t)((uint16_t)X << 8)) >> 5)
+#define CST_5b(X)  (((int16_t)((uint16_t)(X) << 8)) >> 5)
 
 //------------------------------------------------------------------------------
 // Subtract-Green Transform
@@ -261,9 +261,9 @@ static void HistogramAdd(const VP8LHistogram* const a,
 
 // Checks whether the X or Y contribution is worth computing and adding.
 // Used in loop unrolling.
-#define ANALYZE_X_OR_Y(x_or_y, j)                                   \
-  do {                                                              \
-    if (x_or_y[i + j] != 0) retval -= VP8LFastSLog2(x_or_y[i + j]); \
+#define ANALYZE_X_OR_Y(x_or_y, j)                                           \
+  do {                                                                      \
+    if ((x_or_y)[i + (j)] != 0) retval -= VP8LFastSLog2((x_or_y)[i + (j)]); \
   } while (0)
 
 // Checks whether the X + Y contribution is worth computing and adding.

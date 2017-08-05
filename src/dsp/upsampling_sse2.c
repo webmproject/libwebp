@@ -83,8 +83,8 @@
   GET_M(ad, s, diag2);                  /* diag2 = (3a + b + c + 3d) / 8 */    \
                                                                                \
   /* pack the alternate pixels */                                              \
-  PACK_AND_STORE(a, b, diag1, diag2, out +      0);  /* store top */           \
-  PACK_AND_STORE(c, d, diag2, diag1, out + 2 * 32);  /* store bottom */        \
+  PACK_AND_STORE(a, b, diag1, diag2, (out) +      0);  /* store top */         \
+  PACK_AND_STORE(c, d, diag2, diag1, (out) + 2 * 32);  /* store bottom */      \
 }
 
 // Turn the macro into a function for reducing code-size when non-critical
@@ -108,23 +108,23 @@ static void Upsample32Pixels(const uint8_t r1[], const uint8_t r2[],
                     top_dst, bottom_dst, cur_x, num_pixels) {                  \
   int n;                                                                       \
   for (n = 0; n < (num_pixels); ++n) {                                         \
-    FUNC(top_y[(cur_x) + n], r_u[n], r_v[n],                                   \
-         top_dst + ((cur_x) + n) * XSTEP);                                     \
+    FUNC((top_y)[(cur_x) + n], r_u[n], r_v[n],                                 \
+         (top_dst) + ((cur_x) + n) * (XSTEP));                                 \
   }                                                                            \
-  if (bottom_y != NULL) {                                                      \
+  if ((bottom_y) != NULL) {                                                    \
     for (n = 0; n < (num_pixels); ++n) {                                       \
-      FUNC(bottom_y[(cur_x) + n], r_u[64 + n], r_v[64 + n],                    \
-           bottom_dst + ((cur_x) + n) * XSTEP);                                \
+      FUNC((bottom_y)[(cur_x) + n], r_u[64 + n], r_v[64 + n],                  \
+           (bottom_dst) + ((cur_x) + n) * (XSTEP));                            \
     }                                                                          \
   }                                                                            \
 }
 
 #define CONVERT2RGB_32(FUNC, XSTEP, top_y, bottom_y,                           \
                        top_dst, bottom_dst, cur_x) do {                        \
-  FUNC##32_SSE2(top_y + (cur_x), r_u, r_v, top_dst + (cur_x) * XSTEP);         \
-  if (bottom_y != NULL) {                                                      \
-    FUNC##32_SSE2(bottom_y + (cur_x), r_u + 64, r_v + 64,                      \
-                  bottom_dst + (cur_x) * XSTEP);                               \
+  FUNC##32_SSE2((top_y) + (cur_x), r_u, r_v, (top_dst) + (cur_x) * (XSTEP));   \
+  if ((bottom_y) != NULL) {                                                    \
+    FUNC##32_SSE2((bottom_y) + (cur_x), r_u + 64, r_v + 64,                    \
+                  (bottom_dst) + (cur_x) * (XSTEP));                           \
   }                                                                            \
 } while (0)
 
@@ -220,9 +220,11 @@ static void FUNC_NAME(const uint8_t* y, const uint8_t* u, const uint8_t* v,    \
                       uint8_t* dst, int len) {                                 \
   int i;                                                                       \
   const int max_len = len & ~31;                                               \
-  for (i = 0; i < max_len; i += 32) CALL(y + i, u + i, v + i, dst + i * XSTEP);\
+  for (i = 0; i < max_len; i += 32) {                                          \
+    CALL(y + i, u + i, v + i, dst + i * (XSTEP));                              \
+  }                                                                            \
   if (i < len) {  /* C-fallback */                                             \
-    CALL_C(y + i, u + i, v + i, dst + i * XSTEP, len - i);                     \
+    CALL_C(y + i, u + i, v + i, dst + i * (XSTEP), len - i);                   \
   }                                                                            \
 }
 

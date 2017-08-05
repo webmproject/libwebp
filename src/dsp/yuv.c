@@ -22,14 +22,14 @@
 static void FUNC_NAME(const uint8_t* y,                                        \
                       const uint8_t* u, const uint8_t* v,                      \
                       uint8_t* dst, int len) {                                 \
-  const uint8_t* const end = dst + (len & ~1) * XSTEP;                         \
+  const uint8_t* const end = dst + (len & ~1) * (XSTEP);                       \
   while (dst != end) {                                                         \
     FUNC(y[0], u[0], v[0], dst);                                               \
-    FUNC(y[1], u[0], v[0], dst + XSTEP);                                       \
+    FUNC(y[1], u[0], v[0], dst + (XSTEP));                                     \
     y += 2;                                                                    \
     ++u;                                                                       \
     ++v;                                                                       \
-    dst += 2 * XSTEP;                                                          \
+    dst += 2 * (XSTEP);                                                        \
   }                                                                            \
   if (len & 1) {                                                               \
     FUNC(y[0], u[0], v[0], dst);                                               \
