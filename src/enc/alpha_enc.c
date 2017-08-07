@@ -48,7 +48,7 @@
 
 static int EncodeLossless(const uint8_t* const data, int width, int height,
                           int effort_level,  // in [0..6] range
-                          VP8LBitWriter* const bw,
+                          int use_quality_100, VP8LBitWriter* const bw,
                           WebPAuxStats* const stats) {
   int ok = 0;
   WebPConfig config;
@@ -76,7 +76,10 @@ static int EncodeLossless(const uint8_t* const data, int width, int height,
   // Set a low default quality for encoding alpha. Ensure that Alpha quality at
   // lower methods (3 and below) is less than the threshold for triggering
   // costly 'BackwardReferencesTraceBackwards'.
-  config.quality = 8.f * effort_level;
+  // If the alpha quality is set to 100 and the method to 6, allow for a high
+  // lossless quality to trigger the cruncher.
+  config.quality =
+      (use_quality_100 && effort_level == 6) ? 100 : 8.f * effort_level;
   assert(config.quality >= 0 && config.quality <= 100.f);
 
   // TODO(urvang): Temporary fix to avoid generating images that trigger
@@ -134,7 +137,7 @@ static int EncodeAlphaInternal(const uint8_t* const data, int width, int height,
   if (method != ALPHA_NO_COMPRESSION) {
     ok = VP8LBitWriterInit(&tmp_bw, data_size >> 3);
     ok = ok && EncodeLossless(alpha_src, width, height, effort_level,
-                              &tmp_bw, &result->stats);
+                              !reduce_levels, &tmp_bw, &result->stats);
     if (ok) {
       output = VP8LBitWriterFinish(&tmp_bw);
       output_size = VP8LBitWriterNumBytes(&tmp_bw);
