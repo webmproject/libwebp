@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "015fb7b1_8707f58b",
+        "filename": "src/enc/backward_references_enc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 612,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-08-07T18:56:23Z",
+      "side": 1,
+      "message": "these two variables could have been \u0027const\u0027. Worth a later patch, maybe...",
+      "range": {
+        "startLine": 612,
+        "startChar": 10,
+        "endLine": 612,
+        "endChar": 17
+      },
+      "revId": "b8821dbd81488f32b3dbc099ace069a23c8c90be",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
