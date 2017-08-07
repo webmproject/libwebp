@@ -609,8 +609,10 @@ static int BackwardReferencesLz77Box(int xsize, int ysize,
       // Figure out if we should use the offset/length from the previous pixel
       // as an initial guess and therefore only inspect the offsets in
       // window_offsets_new[].
-      int use_prev = (best_length_prev > 1) && (best_length_prev < MAX_LENGTH);
-      int num_ind = use_prev ? window_offsets_new_size : window_offsets_size;
+      const int use_prev =
+          (best_length_prev > 1) && (best_length_prev < MAX_LENGTH);
+      const int num_ind =
+          use_prev ? window_offsets_new_size : window_offsets_size;
       best_length = use_prev ? best_length_prev - 1 : 0;
       best_offset = use_prev ? best_offset_prev : 0;
       // Find the longest match in a window around the pixel.
