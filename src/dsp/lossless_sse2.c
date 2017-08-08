@@ -424,8 +424,8 @@ GENERATE_PREDICTOR_ADD(Predictor13_SSE2, PredictorAdd13_SSE2)
 //------------------------------------------------------------------------------
 // Subtract-Green Transform
 
-static void AddGreenToBlueAndRed(const uint32_t* const src, int num_pixels,
-                                 uint32_t* dst) {
+static void AddGreenToBlueAndRed_SSE2(const uint32_t* const src, int num_pixels,
+                                      uint32_t* dst) {
   int i;
   for (i = 0; i + 4 <= num_pixels; i += 4) {
     const __m128i in = _mm_loadu_si128((const __m128i*)&src[i]); // argb
@@ -444,9 +444,9 @@ static void AddGreenToBlueAndRed(const uint32_t* const src, int num_pixels,
 //------------------------------------------------------------------------------
 // Color Transform
 
-static void TransformColorInverse(const VP8LMultipliers* const m,
-                                  const uint32_t* const src, int num_pixels,
-                                  uint32_t* dst) {
+static void TransformColorInverse_SSE2(const VP8LMultipliers* const m,
+                                       const uint32_t* const src,
+                                       int num_pixels, uint32_t* dst) {
 // sign-extended multiplying constants, pre-shifted by 5.
 #define CST(X)  (((int16_t)(m->X << 8)) >> 5)   // sign-extend
   const __m128i mults_rb = _mm_set_epi16(
@@ -689,8 +689,8 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitSSE2(void) {
   VP8LPredictorsAdd[12] = PredictorAdd12_SSE2;
   VP8LPredictorsAdd[13] = PredictorAdd13_SSE2;
 
-  VP8LAddGreenToBlueAndRed = AddGreenToBlueAndRed;
-  VP8LTransformColorInverse = TransformColorInverse;
+  VP8LAddGreenToBlueAndRed = AddGreenToBlueAndRed_SSE2;
+  VP8LTransformColorInverse = TransformColorInverse_SSE2;
 
   VP8LConvertBGRAToRGB = ConvertBGRAToRGB_SSE2;
   VP8LConvertBGRAToRGBA = ConvertBGRAToRGBA_SSE2;
