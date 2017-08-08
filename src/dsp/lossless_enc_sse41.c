@@ -21,7 +21,8 @@
 //------------------------------------------------------------------------------
 // Subtract-Green Transform
 
-static void SubtractGreenFromBlueAndRed(uint32_t* argb_data, int num_pixels) {
+static void SubtractGreenFromBlueAndRed_SSE41(uint32_t* argb_data,
+                                              int num_pixels) {
   int i;
   const __m128i kCstShuffle = _mm_set_epi8(-1, 13, -1, 13, -1, 9, -1, 9,
                                            -1,  5, -1,  5, -1, 1, -1, 1);
@@ -43,7 +44,7 @@ static void SubtractGreenFromBlueAndRed(uint32_t* argb_data, int num_pixels) {
 extern void VP8LEncDspInitSSE41(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8LEncDspInitSSE41(void) {
-  VP8LSubtractGreenFromBlueAndRed = SubtractGreenFromBlueAndRed;
+  VP8LSubtractGreenFromBlueAndRed = SubtractGreenFromBlueAndRed_SSE41;
 }
 
 #else  // !WEBP_USE_SSE41
