@@ -26,8 +26,8 @@
 #if !defined(WORK_AROUND_GCC)
 // gcc 4.6.0 had some trouble (NDK-r9) with this code. We only use it for
 // gcc-4.8.x at least.
-static void ConvertBGRAToRGBA(const uint32_t* src,
-                              int num_pixels, uint8_t* dst) {
+static void ConvertBGRAToRGBA_NEON(const uint32_t* src,
+                                   int num_pixels, uint8_t* dst) {
   const uint32_t* const end = src + (num_pixels & ~15);
   for (; src < end; src += 16) {
     uint8x16x4_t pixel = vld4q_u8((uint8_t*)src);
@@ -41,8 +41,8 @@ static void ConvertBGRAToRGBA(const uint32_t* src,
   VP8LConvertBGRAToRGBA_C(src, num_pixels & 15, dst);  // left-overs
 }
 
-static void ConvertBGRAToBGR(const uint32_t* src,
-                             int num_pixels, uint8_t* dst) {
+static void ConvertBGRAToBGR_NEON(const uint32_t* src,
+                                  int num_pixels, uint8_t* dst) {
   const uint32_t* const end = src + (num_pixels & ~15);
   for (; src < end; src += 16) {
     const uint8x16x4_t pixel = vld4q_u8((uint8_t*)src);
@@ -53,8 +53,8 @@ static void ConvertBGRAToBGR(const uint32_t* src,
   VP8LConvertBGRAToBGR_C(src, num_pixels & 15, dst);  // left-overs
 }
 
-static void ConvertBGRAToRGB(const uint32_t* src,
-                             int num_pixels, uint8_t* dst) {
+static void ConvertBGRAToRGB_NEON(const uint32_t* src,
+                                  int num_pixels, uint8_t* dst) {
   const uint32_t* const end = src + (num_pixels & ~15);
   for (; src < end; src += 16) {
     const uint8x16x4_t pixel = vld4q_u8((uint8_t*)src);
@@ -71,8 +71,8 @@ static void ConvertBGRAToRGB(const uint32_t* src,
 
 static const uint8_t kRGBAShuffle[8] = { 2, 1, 0, 3, 6, 5, 4, 7 };
 
-static void ConvertBGRAToRGBA(const uint32_t* src,
-                              int num_pixels, uint8_t* dst) {
+static void ConvertBGRAToRGBA_NEON(const uint32_t* src,
+                                   int num_pixels, uint8_t* dst) {
   const uint32_t* const end = src + (num_pixels & ~1);
   const uint8x8_t shuffle = vld1_u8(kRGBAShuffle);
   for (; src < end; src += 2) {
@@ -89,8 +89,8 @@ static const uint8_t kBGRShuffle[3][8] = {
   { 21, 22, 24, 25, 26, 28, 29, 30 }
 };
 
-static void ConvertBGRAToBGR(const uint32_t* src,
-                             int num_pixels, uint8_t* dst) {
+static void ConvertBGRAToBGR_NEON(const uint32_t* src,
+                                  int num_pixels, uint8_t* dst) {
   const uint32_t* const end = src + (num_pixels & ~7);
   const uint8x8_t shuffle0 = vld1_u8(kBGRShuffle[0]);
   const uint8x8_t shuffle1 = vld1_u8(kBGRShuffle[1]);
@@ -116,8 +116,8 @@ static const uint8_t kRGBShuffle[3][8] = {
   { 21, 20, 26, 25, 24, 30, 29, 28 }
 };
 
-static void ConvertBGRAToRGB(const uint32_t* src,
-                             int num_pixels, uint8_t* dst) {
+static void ConvertBGRAToRGB_NEON(const uint32_t* src,
+                                  int num_pixels, uint8_t* dst) {
   const uint32_t* const end = src + (num_pixels & ~7);
   const uint8x8_t shuffle0 = vld1_u8(kRGBShuffle[0]);
   const uint8x8_t shuffle1 = vld1_u8(kRGBShuffle[1]);
@@ -138,7 +138,6 @@ static void ConvertBGRAToRGB(const uint32_t* src,
 }
 
 #endif   // !WORK_AROUND_GCC
-
 
 //------------------------------------------------------------------------------
 // Predictor Transform
@@ -522,8 +521,8 @@ static WEBP_INLINE uint8x16_t DoGreenShuffle(const uint8x16_t argb,
 }
 #endif  // USE_VTBLQ
 
-static void AddGreenToBlueAndRed(const uint32_t* src, int num_pixels,
-                                 uint32_t* dst) {
+static void AddGreenToBlueAndRed_NEON(const uint32_t* src, int num_pixels,
+                                      uint32_t* dst) {
   const uint32_t* const end = src + (num_pixels & ~3);
 #ifdef USE_VTBLQ
   const uint8x16_t shuffle = vld1q_u8(kGreenShuffle);
@@ -542,9 +541,9 @@ static void AddGreenToBlueAndRed(const uint32_t* src, int num_pixels,
 //------------------------------------------------------------------------------
 // Color Transform
 
-static void TransformColorInverse(const VP8LMultipliers* const m,
-                                  const uint32_t* const src, int num_pixels,
-                                  uint32_t* dst) {
+static void TransformColorInverse_NEON(const VP8LMultipliers* const m,
+                                       const uint32_t* const src,
+                                       int num_pixels, uint32_t* dst) {
 // sign-extended multiplying constants, pre-shifted by 6.
 #define CST(X)  (((int16_t)(m->X << 8)) >> 6)
   const int16_t rb[8] = {
@@ -627,12 +626,12 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitNEON(void) {
   VP8LPredictorsAdd[12] = PredictorAdd12_NEON;
   VP8LPredictorsAdd[13] = PredictorAdd13_NEON;
 
-  VP8LConvertBGRAToRGBA = ConvertBGRAToRGBA;
-  VP8LConvertBGRAToBGR = ConvertBGRAToBGR;
-  VP8LConvertBGRAToRGB = ConvertBGRAToRGB;
+  VP8LConvertBGRAToRGBA = ConvertBGRAToRGBA_NEON;
+  VP8LConvertBGRAToBGR = ConvertBGRAToBGR_NEON;
+  VP8LConvertBGRAToRGB = ConvertBGRAToRGB_NEON;
 
-  VP8LAddGreenToBlueAndRed = AddGreenToBlueAndRed;
-  VP8LTransformColorInverse = TransformColorInverse;
+  VP8LAddGreenToBlueAndRed = AddGreenToBlueAndRed_NEON;
+  VP8LTransformColorInverse = TransformColorInverse_NEON;
 }
 
 #else  // !WEBP_USE_NEON

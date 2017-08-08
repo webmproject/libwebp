@@ -107,69 +107,69 @@ static WEBP_INLINE uint32_t Select(uint32_t a, uint32_t b, uint32_t c) {
 //------------------------------------------------------------------------------
 // Predictors
 
-static uint32_t Predictor0(uint32_t left, const uint32_t* const top) {
+static uint32_t Predictor0_C(uint32_t left, const uint32_t* const top) {
   (void)top;
   (void)left;
   return ARGB_BLACK;
 }
-static uint32_t Predictor1(uint32_t left, const uint32_t* const top) {
+static uint32_t Predictor1_C(uint32_t left, const uint32_t* const top) {
   (void)top;
   return left;
 }
-static uint32_t Predictor2(uint32_t left, const uint32_t* const top) {
+static uint32_t Predictor2_C(uint32_t left, const uint32_t* const top) {
   (void)left;
   return top[0];
 }
-static uint32_t Predictor3(uint32_t left, const uint32_t* const top) {
+static uint32_t Predictor3_C(uint32_t left, const uint32_t* const top) {
   (void)left;
   return top[1];
 }
-static uint32_t Predictor4(uint32_t left, const uint32_t* const top) {
+static uint32_t Predictor4_C(uint32_t left, const uint32_t* const top) {
   (void)left;
   return top[-1];
 }
-static uint32_t Predictor5(uint32_t left, const uint32_t* const top) {
+static uint32_t Predictor5_C(uint32_t left, const uint32_t* const top) {
   const uint32_t pred = Average3(left, top[0], top[1]);
   return pred;
 }
-static uint32_t Predictor6(uint32_t left, const uint32_t* const top) {
+static uint32_t Predictor6_C(uint32_t left, const uint32_t* const top) {
   const uint32_t pred = Average2(left, top[-1]);
   return pred;
 }
-static uint32_t Predictor7(uint32_t left, const uint32_t* const top) {
+static uint32_t Predictor7_C(uint32_t left, const uint32_t* const top) {
   const uint32_t pred = Average2(left, top[0]);
   return pred;
 }
-static uint32_t Predictor8(uint32_t left, const uint32_t* const top) {
+static uint32_t Predictor8_C(uint32_t left, const uint32_t* const top) {
   const uint32_t pred = Average2(top[-1], top[0]);
   (void)left;
   return pred;
 }
-static uint32_t Predictor9(uint32_t left, const uint32_t* const top) {
+static uint32_t Predictor9_C(uint32_t left, const uint32_t* const top) {
   const uint32_t pred = Average2(top[0], top[1]);
   (void)left;
   return pred;
 }
-static uint32_t Predictor10(uint32_t left, const uint32_t* const top) {
+static uint32_t Predictor10_C(uint32_t left, const uint32_t* const top) {
   const uint32_t pred = Average4(left, top[-1], top[0], top[1]);
   return pred;
 }
-static uint32_t Predictor11(uint32_t left, const uint32_t* const top) {
+static uint32_t Predictor11_C(uint32_t left, const uint32_t* const top) {
   const uint32_t pred = Select(top[0], left, top[-1]);
   return pred;
 }
-static uint32_t Predictor12(uint32_t left, const uint32_t* const top) {
+static uint32_t Predictor12_C(uint32_t left, const uint32_t* const top) {
   const uint32_t pred = ClampedAddSubtractFull(left, top[0], top[-1]);
   return pred;
 }
-static uint32_t Predictor13(uint32_t left, const uint32_t* const top) {
+static uint32_t Predictor13_C(uint32_t left, const uint32_t* const top) {
   const uint32_t pred = ClampedAddSubtractHalf(left, top[0], top[-1]);
   return pred;
 }
 
-GENERATE_PREDICTOR_ADD(Predictor0, PredictorAdd0)
-static void PredictorAdd1(const uint32_t* in, const uint32_t* upper,
-                          int num_pixels, uint32_t* out) {
+GENERATE_PREDICTOR_ADD(Predictor0_C, PredictorAdd0_C)
+static void PredictorAdd1_C(const uint32_t* in, const uint32_t* upper,
+                            int num_pixels, uint32_t* out) {
   int i;
   uint32_t left = out[-1];
   for (i = 0; i < num_pixels; ++i) {
@@ -177,29 +177,29 @@ static void PredictorAdd1(const uint32_t* in, const uint32_t* upper,
   }
   (void)upper;
 }
-GENERATE_PREDICTOR_ADD(Predictor2, PredictorAdd2)
-GENERATE_PREDICTOR_ADD(Predictor3, PredictorAdd3)
-GENERATE_PREDICTOR_ADD(Predictor4, PredictorAdd4)
-GENERATE_PREDICTOR_ADD(Predictor5, PredictorAdd5)
-GENERATE_PREDICTOR_ADD(Predictor6, PredictorAdd6)
-GENERATE_PREDICTOR_ADD(Predictor7, PredictorAdd7)
-GENERATE_PREDICTOR_ADD(Predictor8, PredictorAdd8)
-GENERATE_PREDICTOR_ADD(Predictor9, PredictorAdd9)
-GENERATE_PREDICTOR_ADD(Predictor10, PredictorAdd10)
-GENERATE_PREDICTOR_ADD(Predictor11, PredictorAdd11)
-GENERATE_PREDICTOR_ADD(Predictor12, PredictorAdd12)
-GENERATE_PREDICTOR_ADD(Predictor13, PredictorAdd13)
+GENERATE_PREDICTOR_ADD(Predictor2_C, PredictorAdd2_C)
+GENERATE_PREDICTOR_ADD(Predictor3_C, PredictorAdd3_C)
+GENERATE_PREDICTOR_ADD(Predictor4_C, PredictorAdd4_C)
+GENERATE_PREDICTOR_ADD(Predictor5_C, PredictorAdd5_C)
+GENERATE_PREDICTOR_ADD(Predictor6_C, PredictorAdd6_C)
+GENERATE_PREDICTOR_ADD(Predictor7_C, PredictorAdd7_C)
+GENERATE_PREDICTOR_ADD(Predictor8_C, PredictorAdd8_C)
+GENERATE_PREDICTOR_ADD(Predictor9_C, PredictorAdd9_C)
+GENERATE_PREDICTOR_ADD(Predictor10_C, PredictorAdd10_C)
+GENERATE_PREDICTOR_ADD(Predictor11_C, PredictorAdd11_C)
+GENERATE_PREDICTOR_ADD(Predictor12_C, PredictorAdd12_C)
+GENERATE_PREDICTOR_ADD(Predictor13_C, PredictorAdd13_C)
 
 //------------------------------------------------------------------------------
 
 // Inverse prediction.
-static void PredictorInverseTransform(const VP8LTransform* const transform,
-                                      int y_start, int y_end,
-                                      const uint32_t* in, uint32_t* out) {
+static void PredictorInverseTransform_C(const VP8LTransform* const transform,
+                                        int y_start, int y_end,
+                                        const uint32_t* in, uint32_t* out) {
   const int width = transform->xsize_;
   if (y_start == 0) {  // First Row follows the L (mode=1) mode.
-    PredictorAdd0(in, NULL, 1, out);
-    PredictorAdd1(in + 1, NULL, width - 1, out + 1);
+    PredictorAdd0_C(in, NULL, 1, out);
+    PredictorAdd1_C(in + 1, NULL, width - 1, out + 1);
     in += width;
     out += width;
     ++y_start;
@@ -217,7 +217,7 @@ static void PredictorInverseTransform(const VP8LTransform* const transform,
       const uint32_t* pred_mode_src = pred_mode_base;
       int x = 1;
       // First pixel follows the T (mode=2) mode.
-      PredictorAdd2(in, out - width, 1, out);
+      PredictorAdd2_C(in, out - width, 1, out);
       // .. the rest:
       while (x < width) {
         const VP8LPredictorAddSubFunc pred_func =
@@ -284,9 +284,9 @@ void VP8LTransformColorInverse_C(const VP8LMultipliers* const m,
 }
 
 // Color space inverse transform.
-static void ColorSpaceInverseTransform(const VP8LTransform* const transform,
-                                       int y_start, int y_end,
-                                       const uint32_t* src, uint32_t* dst) {
+static void ColorSpaceInverseTransform_C(const VP8LTransform* const transform,
+                                         int y_start, int y_end,
+                                         const uint32_t* src, uint32_t* dst) {
   const int width = transform->xsize_;
   const int tile_width = 1 << transform->bits_;
   const int mask = tile_width - 1;
@@ -362,10 +362,10 @@ STATIC_DECL void FUNC_NAME(const VP8LTransform* const transform,               \
   }                                                                            \
 }
 
-COLOR_INDEX_INVERSE(ColorIndexInverseTransform, MapARGB, static, uint32_t, 32b,
-                    VP8GetARGBIndex, VP8GetARGBValue)
-COLOR_INDEX_INVERSE(VP8LColorIndexInverseTransformAlpha, MapAlpha, , uint8_t,
-                    8b, VP8GetAlphaIndex, VP8GetAlphaValue)
+COLOR_INDEX_INVERSE(ColorIndexInverseTransform_C, MapARGB_C, static,
+                    uint32_t, 32b, VP8GetARGBIndex, VP8GetARGBValue)
+COLOR_INDEX_INVERSE(VP8LColorIndexInverseTransformAlpha, MapAlpha_C, ,
+                    uint8_t, 8b, VP8GetAlphaIndex, VP8GetAlphaValue)
 
 #undef COLOR_INDEX_INVERSE
 
@@ -380,7 +380,7 @@ void VP8LInverseTransform(const VP8LTransform* const transform,
       VP8LAddGreenToBlueAndRed(in, (row_end - row_start) * width, out);
       break;
     case PREDICTOR_TRANSFORM:
-      PredictorInverseTransform(transform, row_start, row_end, in, out);
+      PredictorInverseTransform_C(transform, row_start, row_end, in, out);
       if (row_end != transform->ysize_) {
         // The last predicted row in this iteration will be the top-pred row
         // for the first row in next iteration.
@@ -389,7 +389,7 @@ void VP8LInverseTransform(const VP8LTransform* const transform,
       }
       break;
     case CROSS_COLOR_TRANSFORM:
-      ColorSpaceInverseTransform(transform, row_start, row_end, in, out);
+      ColorSpaceInverseTransform_C(transform, row_start, row_end, in, out);
       break;
     case COLOR_INDEXING_TRANSFORM:
       if (in == out && transform->bits_ > 0) {
@@ -403,9 +403,9 @@ void VP8LInverseTransform(const VP8LTransform* const transform,
             VP8LSubSampleSize(transform->xsize_, transform->bits_);
         uint32_t* const src = out + out_stride - in_stride;
         memmove(src, out, in_stride * sizeof(*src));
-        ColorIndexInverseTransform(transform, row_start, row_end, src, out);
+        ColorIndexInverseTransform_C(transform, row_start, row_end, src, out);
       } else {
-        ColorIndexInverseTransform(transform, row_start, row_end, in, out);
+        ColorIndexInverseTransform_C(transform, row_start, row_end, in, out);
       }
       break;
   }
@@ -578,23 +578,23 @@ extern void VP8LDspInitMSA(void);
 static volatile VP8CPUInfo lossless_last_cpuinfo_used =
     (VP8CPUInfo)&lossless_last_cpuinfo_used;
 
-#define COPY_PREDICTOR_ARRAY(IN, OUT) do {              \
-  (OUT)[0] = IN##0;                                     \
-  (OUT)[1] = IN##1;                                     \
-  (OUT)[2] = IN##2;                                     \
-  (OUT)[3] = IN##3;                                     \
-  (OUT)[4] = IN##4;                                     \
-  (OUT)[5] = IN##5;                                     \
-  (OUT)[6] = IN##6;                                     \
-  (OUT)[7] = IN##7;                                     \
-  (OUT)[8] = IN##8;                                     \
-  (OUT)[9] = IN##9;                                     \
-  (OUT)[10] = IN##10;                                   \
-  (OUT)[11] = IN##11;                                   \
-  (OUT)[12] = IN##12;                                   \
-  (OUT)[13] = IN##13;                                   \
-  (OUT)[14] = IN##0; /* <- padding security sentinels*/ \
-  (OUT)[15] = IN##0;                                    \
+#define COPY_PREDICTOR_ARRAY(IN, OUT) do {                \
+  (OUT)[0] = IN##0_C;                                     \
+  (OUT)[1] = IN##1_C;                                     \
+  (OUT)[2] = IN##2_C;                                     \
+  (OUT)[3] = IN##3_C;                                     \
+  (OUT)[4] = IN##4_C;                                     \
+  (OUT)[5] = IN##5_C;                                     \
+  (OUT)[6] = IN##6_C;                                     \
+  (OUT)[7] = IN##7_C;                                     \
+  (OUT)[8] = IN##8_C;                                     \
+  (OUT)[9] = IN##9_C;                                     \
+  (OUT)[10] = IN##10_C;                                   \
+  (OUT)[11] = IN##11_C;                                   \
+  (OUT)[12] = IN##12_C;                                   \
+  (OUT)[13] = IN##13_C;                                   \
+  (OUT)[14] = IN##0_C; /* <- padding security sentinels*/ \
+  (OUT)[15] = IN##0_C;                                    \
 } while (0);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInit(void) {
@@ -615,8 +615,8 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInit(void) {
   VP8LConvertBGRAToRGB565 = VP8LConvertBGRAToRGB565_C;
   VP8LConvertBGRAToBGR = VP8LConvertBGRAToBGR_C;
 
-  VP8LMapColor32b = MapARGB;
-  VP8LMapColor8b = MapAlpha;
+  VP8LMapColor32b = MapARGB_C;
+  VP8LMapColor8b = MapAlpha_C;
 
   // If defined, use CPUInfo() to overwrite some pointers with faster versions.
   if (VP8GetCPUInfo != NULL) {
