@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9d1b5329_8163a85d",
+        "filename": "src/dsp/lossless_msa.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 349,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-08-08T01:22:49Z",
+      "side": 1,
+      "message": "copy / paste error?",
+      "range": {
+        "startLine": 349,
+        "startChar": 51,
+        "endLine": 349,
+        "endChar": 59
+      },
+      "revId": "f653482a2a40488cf76f9b412390509f3aead9e8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
