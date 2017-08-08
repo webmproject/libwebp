@@ -484,8 +484,8 @@ static void TransformColorInverse(const VP8LMultipliers* const m,
 //------------------------------------------------------------------------------
 // Color-space conversion functions
 
-static void ConvertBGRAToRGB(const uint32_t* src, int num_pixels,
-                             uint8_t* dst) {
+static void ConvertBGRAToRGB_SSE2(const uint32_t* src, int num_pixels,
+                                  uint8_t* dst) {
   const __m128i* in = (const __m128i*)src;
   __m128i* out = (__m128i*)dst;
 
@@ -520,8 +520,8 @@ static void ConvertBGRAToRGB(const uint32_t* src, int num_pixels,
   }
 }
 
-static void ConvertBGRAToRGBA(const uint32_t* src,
-                              int num_pixels, uint8_t* dst) {
+static void ConvertBGRAToRGBA_SSE2(const uint32_t* src,
+                                   int num_pixels, uint8_t* dst) {
   const __m128i red_blue_mask = _mm_set1_epi32(0x00ff00ffu);
   const __m128i* in = (const __m128i*)src;
   __m128i* out = (__m128i*)dst;
@@ -548,8 +548,8 @@ static void ConvertBGRAToRGBA(const uint32_t* src,
   }
 }
 
-static void ConvertBGRAToRGBA4444(const uint32_t* src,
-                                  int num_pixels, uint8_t* dst) {
+static void ConvertBGRAToRGBA4444_SSE2(const uint32_t* src,
+                                       int num_pixels, uint8_t* dst) {
   const __m128i mask_0x0f = _mm_set1_epi8(0x0f);
   const __m128i mask_0xf0 = _mm_set1_epi8(0xf0);
   const __m128i* in = (const __m128i*)src;
@@ -584,8 +584,8 @@ static void ConvertBGRAToRGBA4444(const uint32_t* src,
   }
 }
 
-static void ConvertBGRAToRGB565(const uint32_t* src,
-                                int num_pixels, uint8_t* dst) {
+static void ConvertBGRAToRGB565_SSE2(const uint32_t* src,
+                                     int num_pixels, uint8_t* dst) {
   const __m128i mask_0xe0 = _mm_set1_epi8(0xe0);
   const __m128i mask_0xf8 = _mm_set1_epi8(0xf8);
   const __m128i mask_0x07 = _mm_set1_epi8(0x07);
@@ -625,8 +625,8 @@ static void ConvertBGRAToRGB565(const uint32_t* src,
   }
 }
 
-static void ConvertBGRAToBGR(const uint32_t* src,
-                             int num_pixels, uint8_t* dst) {
+static void ConvertBGRAToBGR_SSE2(const uint32_t* src,
+                                  int num_pixels, uint8_t* dst) {
   const __m128i mask_l = _mm_set_epi32(0, 0x00ffffff, 0, 0x00ffffff);
   const __m128i mask_h = _mm_set_epi32(0x00ffffff, 0, 0x00ffffff, 0);
   const __m128i* in = (const __m128i*)src;
@@ -692,11 +692,11 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitSSE2(void) {
   VP8LAddGreenToBlueAndRed = AddGreenToBlueAndRed;
   VP8LTransformColorInverse = TransformColorInverse;
 
-  VP8LConvertBGRAToRGB = ConvertBGRAToRGB;
-  VP8LConvertBGRAToRGBA = ConvertBGRAToRGBA;
-  VP8LConvertBGRAToRGBA4444 = ConvertBGRAToRGBA4444;
-  VP8LConvertBGRAToRGB565 = ConvertBGRAToRGB565;
-  VP8LConvertBGRAToBGR = ConvertBGRAToBGR;
+  VP8LConvertBGRAToRGB = ConvertBGRAToRGB_SSE2;
+  VP8LConvertBGRAToRGBA = ConvertBGRAToRGBA_SSE2;
+  VP8LConvertBGRAToRGBA4444 = ConvertBGRAToRGBA4444_SSE2;
+  VP8LConvertBGRAToRGB565 = ConvertBGRAToRGB565_SSE2;
+  VP8LConvertBGRAToBGR = ConvertBGRAToBGR_SSE2;
 }
 
 #else  // !WEBP_USE_SSE2
