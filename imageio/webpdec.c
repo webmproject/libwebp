@@ -141,10 +141,21 @@ int ReadWebP(const uint8_t* const data, size_t data_size,
 
   do {
     const int has_alpha = keep_alpha && bitstream->has_alpha;
+    uint64_t stride;
     pic->width = bitstream->width;
     pic->height = bitstream->height;
-    if (!pic->use_argb) pic->colorspace = has_alpha ? WEBP_YUV420A
-                                                    : WEBP_YUV420;
+    if (pic->use_argb) {
+      stride = (uint64_t)bitstream->width * (has_alpha ? 4 : 3);
+    } else {
+      stride = (uint64_t)bitstream->width * (has_alpha ? 5 : 3) / 2;
+      pic->colorspace = has_alpha ? WEBP_YUV420A : WEBP_YUV420;
+    }
+
+    if (!ImgIoUtilCheckSizeArgumentsOverflow(stride, bitstream->height)) {
+      status = VP8_STATUS_OUT_OF_MEMORY;
+      break;
+    }
+
     ok = WebPPictureAlloc(pic);
     if (!ok) {
       status = VP8_STATUS_OUT_OF_MEMORY;
