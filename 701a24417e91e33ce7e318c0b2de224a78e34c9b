@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "722fec44_c937314f",
+        "filename": "src/dsp/lossless_enc_mips_dsp_r2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-08-08T00:56:21Z",
+      "side": 1,
+      "message": "breaks the constraints it seems",
+      "range": {
+        "startLine": 82,
+        "startChar": 47,
+        "endLine": 82,
+        "endChar": 52
+      },
+      "revId": "701a24417e91e33ce7e318c0b2de224a78e34c9b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
