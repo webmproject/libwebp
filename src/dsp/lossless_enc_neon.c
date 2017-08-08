@@ -52,7 +52,8 @@ static WEBP_INLINE uint8x16_t DoGreenShuffle(const uint8x16_t argb,
 }
 #endif  // USE_VTBLQ
 
-static void SubtractGreenFromBlueAndRed(uint32_t* argb_data, int num_pixels) {
+static void SubtractGreenFromBlueAndRed_NEON(uint32_t* argb_data,
+                                             int num_pixels) {
   const uint32_t* const end = argb_data + (num_pixels & ~3);
 #ifdef USE_VTBLQ
   const uint8x16_t shuffle = vld1q_u8(kGreenShuffle);
@@ -71,8 +72,8 @@ static void SubtractGreenFromBlueAndRed(uint32_t* argb_data, int num_pixels) {
 //------------------------------------------------------------------------------
 // Color Transform
 
-static void TransformColor(const VP8LMultipliers* const m,
-                           uint32_t* argb_data, int num_pixels) {
+static void TransformColor_NEON(const VP8LMultipliers* const m,
+                                uint32_t* argb_data, int num_pixels) {
   // sign-extended multiplying constants, pre-shifted by 6.
 #define CST(X)  (((int16_t)(m->X << 8)) >> 6)
   const int16_t rb[8] = {
@@ -132,8 +133,8 @@ static void TransformColor(const VP8LMultipliers* const m,
 extern void VP8LEncDspInitNEON(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8LEncDspInitNEON(void) {
-  VP8LSubtractGreenFromBlueAndRed = SubtractGreenFromBlueAndRed;
-  VP8LTransformColor = TransformColor;
+  VP8LSubtractGreenFromBlueAndRed = SubtractGreenFromBlueAndRed_NEON;
+  VP8LTransformColor = TransformColor_NEON;
 }
 
 #else  // !WEBP_USE_NEON
