@@ -109,8 +109,8 @@ static double SSIMGet_C(const uint8_t* src1, int stride1,
 
 //------------------------------------------------------------------------------
 
-static uint32_t AccumulateSSE(const uint8_t* src1,
-                              const uint8_t* src2, int len) {
+static uint32_t AccumulateSSE_C(const uint8_t* src1,
+                                const uint8_t* src2, int len) {
   int i;
   uint32_t sse2 = 0;
   assert(len <= 65535);  // to ensure that accumulation fits within uint32_t
@@ -138,7 +138,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8SSIMDspInit(void) {
   VP8SSIMGetClipped = SSIMGetClipped_C;
   VP8SSIMGet = SSIMGet_C;
 
-  VP8AccumulateSSE = AccumulateSSE;
+  VP8AccumulateSSE = AccumulateSSE_C;
   if (VP8GetCPUInfo != NULL) {
 #if defined(WEBP_USE_SSE2)
     if (VP8GetCPUInfo(kSSE2)) {
