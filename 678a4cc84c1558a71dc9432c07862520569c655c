@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ef276ab9_a23ab2eb",
+        "filename": "src/dsp/enc_sse2.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-08-09T02:12:43Z",
+      "side": 1,
+      "message": "typo",
+      "revId": "678a4cc84c1558a71dc9432c07862520569c655c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
