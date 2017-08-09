@@ -16,6 +16,24 @@
       "revId": "678a4cc84c1558a71dc9432c07862520569c655c",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7276ddb0_fce53c91",
+        "filename": "src/dsp/enc_sse2.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-08-09T02:15:18Z",
+      "side": 1,
+      "message": "fixed. Funny it wasn\u0027t detected!",
+      "parentUuid": "ef276ab9_a23ab2eb",
+      "revId": "678a4cc84c1558a71dc9432c07862520569c655c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
