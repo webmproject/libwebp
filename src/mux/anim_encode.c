@@ -1536,7 +1536,8 @@ int WebPAnimEncoderAssemble(WebPAnimEncoder* enc, WebPData* webp_data) {
 
   if (!enc->got_null_frame_ && enc->in_frame_count_ > 1 && enc->count_ > 0) {
     // set duration of the last frame to be avg of durations of previous frames.
-    const double delta_time = enc->prev_timestamp_ - enc->first_timestamp_;
+    const double delta_time =
+        (uint32_t)enc->prev_timestamp_ - enc->first_timestamp_;
     const int average_duration = (int)(delta_time / (enc->in_frame_count_ - 1));
     if (!IncreasePreviousDuration(enc, average_duration)) {
       return 0;
