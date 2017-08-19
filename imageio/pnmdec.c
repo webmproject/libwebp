@@ -117,8 +117,13 @@ static size_t ReadPAMFields(PNMInfo* const info, size_t off) {
     }
   }
   if (!(info->seen_flags & TUPLE_FLAG)) {
-    info->seen_flags |= TUPLE_FLAG;
-    info->bytes_per_px = info->depth * (info->max_value > 255 ? 2 : 1);
+    if (info->depth > 0 && info->depth <= 4) {
+      info->seen_flags |= TUPLE_FLAG;
+      info->bytes_per_px = info->depth * (info->max_value > 255 ? 2 : 1);
+    } else {
+      fprintf(stderr, "PAM: invalid bitdepth (%d).\n", info->depth);
+      return 0;
+    }
   }
   if (info->seen_flags != ALL_NEEDED_FLAGS) {
     fprintf(stderr, "PAM: incomplete header.\n");
