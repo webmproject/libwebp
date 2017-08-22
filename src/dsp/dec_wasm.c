@@ -108,10 +108,19 @@ static WEBP_INLINE int32x4 _unpackhi_epi64(const int32x4 a, const int32x4 b) {
 //  #define ENABLE_X86_BUILTIN_MULHI_INT16X8
 #endif
 
+#if defined(__ARM_NEON__) || defined(__aarch64__)
+//  #define ENABLE_NEON_BUILTIN_MULHI_INT16X8
+#endif
+
 static WEBP_INLINE int16x8 _mulhi_int16x8(const int16x8 in, const int32x4 k) {
 #if defined(ENABLE_X86_BUILTIN_MULHI_INT16X8)
   const int16x8 k_16bit = splat_int16(k[0]);
   return (int16x8)__builtin_ia32_pmulhw128(in, k_16bit);
+#elif defined(ENABLE_NEON_BUILTIN_MULHI_INT16X8)
+  const int16x8 k_16bit = splat_int16(k[0]);
+  const int16x8 one = (int16x8){1, 1, 1, 1, 1, 1, 1, 1};
+  return ((int16x8)__builtin_neon_vqdmulhq_v((int8x16_t)in, (int8x16_t)k_16bit,
+                                             33)) >> one;
 #else
   const int16x8 zero = (int16x8){0, 0, 0, 0, 0, 0, 0, 0};
   const int32x4 sixteen = (int32x4){16, 16, 16, 16};
@@ -255,7 +264,8 @@ static void Transform(const int16_t* in, uint8_t* dst, int do_two) {
     const int16x8 a = in0 + in2;
     const int16x8 b = in0 - in2;
 
-#if defined(ENABLE_X86_BUILTIN_MULHI_INT16X8)
+#if defined(ENABLE_X86_BUILTIN_MULHI_INT16X8) || \
+    defined(ENABLE_NEON_BUILTIN_MULHI_INT16X8)
     // c = MUL(in1, K2) - MUL(in3, K1) = MUL(in1, k2) - MUL(in3, k1) + in1 - in3
     const int16x8 c1 = _mulhi_int16x8(in1, k2);
     const int16x8 c2 = _mulhi_int16x8(in3, k1);
@@ -293,7 +303,8 @@ static void Transform(const int16_t* in, uint8_t* dst, int do_two) {
     const int16x8 dc = T0 + four;
     const int16x8 a = dc + T2;
     const int16x8 b = dc - T2;
-#if defined(ENABLE_X86_BUILTIN_MULHI_INT16X8)
+#if defined(ENABLE_X86_BUILTIN_MULHI_INT16X8) || \
+    defined(ENABLE_NEON_BUILTIN_MULHI_INT16X8)
     // c = MUL(T1, K2) - MUL(T3, K1) = MUL(T1, k2) - MUL(T3, k1) + T1 - T3
     const int16x8 c1 = _mulhi_int16x8(T1, k2);
     const int16x8 c2 = _mulhi_int16x8(T3, k1);
