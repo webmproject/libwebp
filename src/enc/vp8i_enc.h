@@ -506,12 +506,6 @@ void WebPCleanupTransparentAreaLossless(WebPPicture* const pic);
 // Near lossless preprocessing in RGB color-space.
 int VP8ApplyNearLossless(const WebPPicture* const picture, int quality,
                          uint32_t* const argb_dst);
-// Near lossless adjustment for predictors.
-void VP8ApplyNearLosslessPredict(int xsize, int ysize, int pred_bits,
-                                 const uint32_t* argb_orig,
-                                 uint32_t* argb, uint32_t* argb_scratch,
-                                 const uint32_t* const transform_data,
-                                 int quality, int subtract_green);
 //------------------------------------------------------------------------------
 
 #ifdef __cplusplus
