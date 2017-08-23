@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "016d36cc_385902b3",
+        "filename": "src/dsp/dec_wasm.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-08-23T18:11:42Z",
+      "side": 1,
+      "message": "clang-format will do something a bit different, not sure if you were still trying to use that across some of the changes.",
+      "revId": "4f7cb58cd14c471d29efdbf4b222ac20a773e590",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
