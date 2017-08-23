@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4e41bef0_cd1ef015",
+        "filename": "src/dsp/dec_wasm.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-08-23T01:42:28Z",
+      "side": 1,
+      "message": "the clang implementation has casts to int8x16, might want those for compatibility",
+      "range": {
+        "startLine": 122,
+        "startChar": 45,
+        "endLine": 122,
+        "endChar": 47
+      },
+      "revId": "5052db9da883875b3d3e5122c39dd5314dc20f89",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5bafd623_a7d28129",
+        "filename": "src/dsp/dec_wasm.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 266,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-08-23T01:42:28Z",
+      "side": 1,
+      "message": "logical || is OK here and below",
+      "range": {
+        "startLine": 266,
+        "startChar": 46,
+        "endLine": 266,
+        "endChar": 47
+      },
+      "revId": "5052db9da883875b3d3e5122c39dd5314dc20f89",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
