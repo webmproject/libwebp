@@ -164,13 +164,3 @@ strip_bracket(PACKAGE_URL)
 set(PACKAGE_STRING "${PACKAGE_NAME} ${PACKAGE_VERSION}")
 set(PACKAGE_TARNAME ${PACKAGE_NAME})
 set(VERSION ${PACKAGE_VERSION})
-
-## Generate the config.h header.
-configure_file(${CMAKE_CURRENT_LIST_DIR}/config.h.in
-  ${CMAKE_CURRENT_BINARY_DIR}/include/webp/config.h)
-add_definitions(-DHAVE_CONFIG_H)
-# The webp folder is included as we reference config.h as
-# ../webp/config.h or webp/config.h
-include_directories(${CMAKE_CURRENT_BINARY_DIR}/include
-  ${CMAKE_CURRENT_BINARY_DIR}/include/webp
-)
