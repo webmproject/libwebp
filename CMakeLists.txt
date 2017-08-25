@@ -26,11 +26,8 @@ if(NOT CMAKE_BUILD_TYPE)
   )
 endif()
 
-include(cmake/config.h.cmake)
-
-# Extract the version of the library.
-file(READ ${CMAKE_CURRENT_SOURCE_DIR}/configure.ac SOURCE_FILE)
-string(REGEX MATCH "[0-9.]+" WEBP_VERSION ${SOURCE_FILE})
+# Include dependencies.
+include(cmake/deps.cmake)
 
 ################################################################################
 # Options.
@@ -51,6 +48,9 @@ if(ANDROID)
     ${ANDROID_NDK}/sources/android/cpufeatures
   )
   add_definitions(-DHAVE_CPU_FEATURES_H)
+  set(HAVE_CPU_FEATURES_H 1)
+else()
+  set(HAVE_CPU_FEATURES_H 0)
 endif()
 
 ################################################################################
@@ -141,13 +141,13 @@ function(parse_version FILE NAME VAR)
   set(${VAR} "${VERSION}" PARENT_SCOPE)
 endfunction()
 parse_version(Makefile.am webp WEBP_WEBP_SOVERSION)
-set_target_properties(webp PROPERTIES VERSION ${WEBP_VERSION}
+set_target_properties(webp PROPERTIES VERSION ${PACKAGE_VERSION}
   SOVERSION ${WEBP_WEBP_SOVERSION})
 parse_version(Makefile.am webpdecoder WEBP_DECODER_SOVERSION)
-set_target_properties(webpdecoder PROPERTIES VERSION ${WEBP_VERSION}
+set_target_properties(webpdecoder PROPERTIES VERSION ${PACKAGE_VERSION}
   SOVERSION ${WEBP_DECODER_SOVERSION})
 parse_version(demux/Makefile.am webpdemux WEBP_DEMUX_SOVERSION)
-set_target_properties(webpdemux PROPERTIES VERSION ${WEBP_VERSION}
+set_target_properties(webpdemux PROPERTIES VERSION ${PACKAGE_VERSION}
   SOVERSION ${WEBP_DEMUX_SOVERSION})
 
 # Define the libraries to install.
@@ -226,7 +226,7 @@ if(WEBP_BUILD_GIF2WEBP OR WEBP_BUILD_IMG2WEBP)
   add_library(webpmux ${WEBP_MUX_SRCS})
   target_link_libraries(webpmux webp)
   parse_version(mux/Makefile.am webpmux WEBP_MUX_SOVERSION)
-  set_target_properties(webpmux PROPERTIES VERSION ${WEBP_VERSION}
+  set_target_properties(webpmux PROPERTIES VERSION ${PACKAGE_VERSION}
     SOVERSION ${WEBP_MUX_SOVERSION})
   list(APPEND INSTALLED_LIBRARIES webpmux)
 endif()
@@ -267,6 +267,7 @@ if(WEBP_BUILD_WEBP_JS)
   add_executable(webp_js
                  ${CMAKE_CURRENT_SOURCE_DIR}/extras/webp_to_sdl.c)
   target_link_libraries(webp_js webpdecoder SDL)
+  set(WEBP_HAVE_SDL 1)
   set_target_properties(webp_js PROPERTIES LINK_FLAGS
       "-s EXPORTED_FUNCTIONS='[\"_WebpToSDL\"]' -s INVOKE_RUN=0")
   set_target_properties(webp_js PROPERTIES OUTPUT_NAME webp)
@@ -284,6 +285,16 @@ if(WEBP_BUILD_WEBP_JS)
   target_compile_definitions(webpdecoder PUBLIC EMSCRIPTEN)
 endif()
 
+# Generate the config.h file.
+configure_file(${CMAKE_CURRENT_LIST_DIR}/cmake/config.h.in
+  ${CMAKE_CURRENT_BINARY_DIR}/include/webp/config.h)
+add_definitions(-DHAVE_CONFIG_H)
+# The webp folder is included as we reference config.h as
+# ../webp/config.h or webp/config.h
+include_directories(${CMAKE_CURRENT_BINARY_DIR}/include
+  ${CMAKE_CURRENT_BINARY_DIR}/include/webp
+)
+
 # Install the different headers and libraries.
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/webp/decode.h
               ${CMAKE_CURRENT_SOURCE_DIR}/src/webp/demux.h
@@ -300,7 +311,7 @@ install(TARGETS ${INSTALLED_LIBRARIES}
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file(
   "${CMAKE_CURRENT_BINARY_DIR}/WebPConfigVersion.cmake"
-  VERSION ${WEBP_VERSION}
+  VERSION ${PACKAGE_VERSION}
   COMPATIBILITY AnyNewerVersion
 )
 
