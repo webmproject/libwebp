@@ -169,11 +169,11 @@ VP8StatusCode WebPFlipBuffer(WebPDecBuffer* const buffer) {
   return VP8_STATUS_OK;
 }
 
-VP8StatusCode WebPAllocateDecBuffer(int w, int h,
+VP8StatusCode WebPAllocateDecBuffer(int width, int height,
                                     const WebPDecoderOptions* const options,
-                                    WebPDecBuffer* const out) {
+                                    WebPDecBuffer* const buffer) {
   VP8StatusCode status;
-  if (out == NULL || w <= 0 || h <= 0) {
+  if (buffer == NULL || width <= 0 || height <= 0) {
     return VP8_STATUS_INVALID_PARAM;
   }
   if (options != NULL) {    // First, apply options if there is any.
@@ -182,33 +182,34 @@ VP8StatusCode WebPAllocateDecBuffer(int w, int h,
       const int ch = options->crop_height;
       const int x = options->crop_left & ~1;
       const int y = options->crop_top & ~1;
-      if (x < 0 || y < 0 || cw <= 0 || ch <= 0 || x + cw > w || y + ch > h) {
+      if (x < 0 || y < 0 || cw <= 0 || ch <= 0 ||
+          x + cw > width || y + ch > height) {
         return VP8_STATUS_INVALID_PARAM;   // out of frame boundary.
       }
-      w = cw;
-      h = ch;
+      width = cw;
+      height = ch;
     }
     if (options->use_scaling) {
       int scaled_width = options->scaled_width;
       int scaled_height = options->scaled_height;
       if (!WebPRescalerGetScaledDimensions(
-              w, h, &scaled_width, &scaled_height)) {
+              width, height, &scaled_width, &scaled_height)) {
         return VP8_STATUS_INVALID_PARAM;
       }
-      w = scaled_width;
-      h = scaled_height;
+      width = scaled_width;
+      height = scaled_height;
     }
   }
-  out->width = w;
-  out->height = h;
+  buffer->width = width;
+  buffer->height = height;
 
   // Then, allocate buffer for real.
-  status = AllocateBuffer(out);
+  status = AllocateBuffer(buffer);
   if (status != VP8_STATUS_OK) return status;
 
   // Use the stride trick if vertical flip is needed.
   if (options != NULL && options->flip) {
-    status = WebPFlipBuffer(out);
+    status = WebPFlipBuffer(buffer);
   }
   return status;
 }

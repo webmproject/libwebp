@@ -542,22 +542,24 @@ int WebPWriteYUV(FILE* fout, const WebPDecBuffer* const buffer) {
 // Generic top-level call
 
 int WebPSaveImage(const WebPDecBuffer* const buffer,
-                  WebPOutputFileFormat format, const char* const out_file) {
+                  WebPOutputFileFormat format,
+                  const char* const out_file_name) {
   FILE* fout = NULL;
   int needs_open_file = 1;
-  const int use_stdout = (out_file != NULL) && !strcmp(out_file, "-");
+  const int use_stdout = (out_file_name != NULL) && !strcmp(out_file_name, "-");
   int ok = 1;
 
-  if (buffer == NULL || out_file == NULL) return 0;
+  if (buffer == NULL || out_file_name == NULL) return 0;
 
 #ifdef HAVE_WINCODEC_H
   needs_open_file = (format != PNG);
 #endif
 
   if (needs_open_file) {
-    fout = use_stdout ? ImgIoUtilSetBinaryMode(stdout) : fopen(out_file, "wb");
+    fout = use_stdout ? ImgIoUtilSetBinaryMode(stdout)
+                      : fopen(out_file_name, "wb");
     if (fout == NULL) {
-      fprintf(stderr, "Error opening output file %s\n", out_file);
+      fprintf(stderr, "Error opening output file %s\n", out_file_name);
       return 0;
     }
   }
@@ -566,7 +568,7 @@ int WebPSaveImage(const WebPDecBuffer* const buffer,
       format == RGBA || format == BGRA || format == ARGB ||
       format == rgbA || format == bgrA || format == Argb) {
 #ifdef HAVE_WINCODEC_H
-    ok &= WebPWritePNG(out_file, use_stdout, buffer);
+    ok &= WebPWritePNG(out_file_name, use_stdout, buffer);
 #else
     ok &= WebPWritePNG(fout, buffer);
 #endif
