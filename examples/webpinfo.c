@@ -817,9 +817,8 @@ static WebPInfoStatus ProcessImageChunk(const ChunkData* const chunk_data,
     if (webp_info->seen_image_subchunk_) {
       LOG_ERROR("Consecutive VP8/VP8L sub-chunks in an ANMF chunk.");
       return WEBP_INFO_PARSE_ERROR;
-    } else {
-      webp_info->seen_image_subchunk_ = 1;
     }
+    webp_info->seen_image_subchunk_ = 1;
   } else {
     if (webp_info->chunk_counts_[CHUNK_VP8] ||
         webp_info->chunk_counts_[CHUNK_VP8L]) {
@@ -873,9 +872,9 @@ static WebPInfoStatus ProcessALPHChunk(const ChunkData* const chunk_data,
     if (webp_info->seen_alpha_subchunk_) {
       LOG_ERROR("Consecutive ALPH sub-chunks in an ANMF chunk.");
       return WEBP_INFO_PARSE_ERROR;
-    } else {
-      webp_info->seen_alpha_subchunk_ = 1;
     }
+    webp_info->seen_alpha_subchunk_ = 1;
+
     if (webp_info->seen_image_subchunk_) {
       LOG_ERROR("ALPHA sub-chunk detected after VP8 sub-chunk "
                 "in an ANMF chunk.");
