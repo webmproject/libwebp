@@ -486,10 +486,10 @@ static int WriteWebPWithMetadata(FILE* const out,
       *metadata_written |= METADATA_XMP;
     }
     return ok;
-  } else {
-    // No metadata, just write the original image file.
-    return (fwrite(webp, webp_size, 1, out) == 1);
   }
+
+  // No metadata, just write the original image file.
+  return (fwrite(webp, webp_size, 1, out) == 1);
 }
 
 //------------------------------------------------------------------------------
