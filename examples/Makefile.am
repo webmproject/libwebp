@@ -2,7 +2,7 @@ AM_CPPFLAGS += -I$(top_builddir)/src -I$(top_srcdir)/src
 
 bin_PROGRAMS = dwebp cwebp
 if BUILD_ANIMDIFF
-  noinst_PROGRAMS = anim_diff
+  noinst_PROGRAMS = anim_diff anim_dump
 endif
 if BUILD_GIF2WEBP
   bin_PROGRAMS += gif2webp
@@ -32,6 +32,16 @@ anim_diff_LDADD += ../src/demux/libwebpdemux.la
 anim_diff_LDADD += libexample_util.la
 anim_diff_LDADD += ../imageio/libimageio_util.la
 anim_diff_LDADD += $(GIF_LIBS) -lm
+
+anim_dump_SOURCES = anim_dump.c anim_util.c anim_util.h
+anim_dump_CPPFLAGS = $(AM_CPPFLAGS) $(USE_EXPERIMENTAL_CODE) $(PNG_INCLUDES)
+anim_dump_CPPFLAGS += $(GIF_INCLUDES)
+anim_dump_LDADD  =
+anim_dump_LDADD += ../src/demux/libwebpdemux.la
+anim_dump_LDADD += libexample_util.la
+anim_dump_LDADD += ../imageio/libimageio_util.la
+anim_dump_LDADD += ../imageio/libimageenc.la
+anim_dump_LDADD += $(PNG_LIBS) $(GIF_LIBS) $(TIFF_LIBS) -lm
 
 cwebp_SOURCES  = cwebp.c stopwatch.h
 cwebp_CPPFLAGS  = $(AM_CPPFLAGS) $(USE_EXPERIMENTAL_CODE)
@@ -97,8 +107,10 @@ webpinfo_LDADD += ../src/libwebp.la
 
 if BUILD_LIBWEBPDECODER
   anim_diff_LDADD += ../src/libwebpdecoder.la
+  anim_dump_LDADD += ../src/libwebpdecoder.la
   vwebp_LDADD += ../src/libwebpdecoder.la
 else
   anim_diff_LDADD += ../src/libwebp.la
+  anim_dump_LDADD += ../src/libwebp.la
   vwebp_LDADD += ../src/libwebp.la
 endif
