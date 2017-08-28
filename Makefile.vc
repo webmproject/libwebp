@@ -155,6 +155,7 @@ CFGSET = TRUE
 !MESSAGE - all                            - build (de)mux-based targets for CFG
 !MESSAGE - gif2webp                       - requires libgif & >= VS2013
 !MESSAGE - anim_diff                      - requires libgif & >= VS2013
+!MESSAGE - anim_dump
 !MESSAGE
 !MESSAGE RTLIBCFG controls the runtime library linkage - 'static' or 'dynamic'.
 !MESSAGE   'legacy' will produce a Windows 2000 compatible library.
@@ -355,10 +356,15 @@ all: ex $(EXTRA_EXAMPLES)
 # C99 support which is only available from VS2013 onward.
 gif2webp: $(DIRBIN)\gif2webp.exe
 anim_diff: $(DIRBIN)\anim_diff.exe
+anim_dump: $(DIRBIN)\anim_dump.exe
 
 $(DIRBIN)\anim_diff.exe: $(DIROBJ)\examples\anim_diff.obj $(EX_ANIM_UTIL_OBJS)
 $(DIRBIN)\anim_diff.exe: $(EX_UTIL_OBJS) $(IMAGEIO_UTIL_OBJS)
 $(DIRBIN)\anim_diff.exe: $(EX_GIF_DEC_OBJS) $(LIBWEBPDEMUX) $(LIBWEBP)
+$(DIRBIN)\anim_dump.exe: $(DIROBJ)\examples\anim_dump.obj $(EX_ANIM_UTIL_OBJS)
+$(DIRBIN)\anim_dump.exe: $(EX_UTIL_OBJS) $(IMAGEIO_UTIL_OBJS)
+$(DIRBIN)\anim_dump.exe: $(EX_GIF_DEC_OBJS) $(LIBWEBPDEMUX) $(LIBWEBP)
+$(DIRBIN)\anim_dump.exe: $(IMAGEIO_ENC_OBJS)
 $(DIRBIN)\cwebp.exe: $(DIROBJ)\examples\cwebp.obj $(IMAGEIO_DEC_OBJS)
 $(DIRBIN)\cwebp.exe: $(IMAGEIO_UTIL_OBJS)
 $(DIRBIN)\dwebp.exe: $(DIROBJ)\examples\dwebp.obj $(IMAGEIO_DEC_OBJS)
@@ -451,6 +457,9 @@ $(DIROBJ)\dsp\enc_avx2.obj: src\dsp\enc_avx2.c
 	$(CC) $(CFLAGS) $(AVX2_FLAGS) /Fd$(LIBWEBP_PDBNAME) /Fo$(DIROBJ)\dsp\ \
 	  src\dsp\$(@B).c
 $(DIROBJ)\examples\anim_diff.obj: examples\anim_diff.c
+	$(CC) $(CFLAGS) /DWEBP_HAVE_GIF /Fd$(LIBWEBP_PDBNAME) \
+	  /Fo$(DIROBJ)\examples\ examples\$(@B).c
+$(DIROBJ)\examples\anim_dump.obj: examples\anim_dump.c
 	$(CC) $(CFLAGS) /DWEBP_HAVE_GIF /Fd$(LIBWEBP_PDBNAME) \
 	  /Fo$(DIROBJ)\examples\ examples\$(@B).c
 $(DIROBJ)\examples\anim_util.obj: examples\anim_util.c
