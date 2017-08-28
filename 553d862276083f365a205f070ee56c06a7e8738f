@@ -1,0 +1,101 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5c56b187_a768fe51",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-08-28T18:55:50Z",
+      "side": 1,
+      "message": "...to a PNG...",
+      "revId": "553d862276083f365a205f070ee56c06a7e8738f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "13fff759_e0997f73",
+        "filename": "examples/anim_dump.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-08-28T18:55:50Z",
+      "side": 1,
+      "message": "dumps",
+      "range": {
+        "startLine": 10,
+        "startChar": 37,
+        "endLine": 10,
+        "endChar": 41
+      },
+      "revId": "553d862276083f365a205f070ee56c06a7e8738f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "061750a0_c6ef8934",
+        "filename": "examples/anim_dump.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-08-28T18:55:50Z",
+      "side": 1,
+      "message": "(defaults to: \u0027.\u0027)",
+      "range": {
+        "startLine": 24,
+        "startChar": 34,
+        "endLine": 24,
+        "endChar": 45
+      },
+      "revId": "553d862276083f365a205f070ee56c06a7e8738f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0cd8b377_9feb501e",
+        "filename": "examples/anim_dump.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-08-28T18:55:50Z",
+      "side": 1,
+      "message": "pam could be added to balance the anim_diff output. tiff does give a format that\u0027s guaranteed to be available as output already though",
+      "revId": "553d862276083f365a205f070ee56c06a7e8738f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "17308d44_7154f762",
+        "filename": "examples/anim_dump.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-08-28T18:55:50Z",
+      "side": 1,
+      "message": "snprintf needs a fallback\n\nhttps://chromium.googlesource.com/webm/libwebp/+/master/examples/anim_diff.c#24",
+      "revId": "553d862276083f365a205f070ee56c06a7e8738f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
