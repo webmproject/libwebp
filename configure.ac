@@ -590,7 +590,7 @@ AS_IF([test "x$enable_gif" != "xno"], [
 
   if test "$gif_support" = "yes" -a \
           "$enable_libwebpdemux" = "yes"; then
-    build_animdiff=yes
+    build_anim_diff=yes
   fi
 
   if test "$gif_support" = "yes" -a \
@@ -598,7 +598,7 @@ AS_IF([test "x$enable_gif" != "xno"], [
     build_gif2webp=yes
   fi
 ])
-AM_CONDITIONAL([BUILD_ANIMDIFF], [test "${build_animdiff}" = "yes"])
+AM_CONDITIONAL([BUILD_ANIMDIFF], [test "${build_anim_diff}" = "yes"])
 AM_CONDITIONAL([BUILD_GIF2WEBP], [test "${build_gif2webp}" = "yes"])
 
 if test "$enable_libwebpmux" = "yes"; then
@@ -763,7 +763,7 @@ dwebp : yes
   PNG  : ${png_support-no}
   WIC  : ${wic_support-no}
 GIF support : ${gif_support-no}
-anim_diff   : ${build_animdiff-no}
+anim_diff   : ${build_anim_diff-no}
 gif2webp    : ${build_gif2webp-no}
 img2webp    : ${build_img2webp-no}
 webpmux     : ${enable_libwebpmux-no}
