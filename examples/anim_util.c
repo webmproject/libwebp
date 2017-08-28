@@ -200,7 +200,7 @@ static int IsWebP(const WebPData* const webp_data) {
   return (WebPGetInfo(webp_data->bytes, webp_data->size, NULL, NULL) != 0);
 }
 
-// Read animated WebP bitstream 'file_str' into 'AnimatedImage' struct.
+// Read animated WebP bitstream 'webp_data' into 'AnimatedImage' struct.
 static int ReadAnimatedWebP(const char filename[],
                             const WebPData* const webp_data,
                             AnimatedImage* const image, int dump_frames,
