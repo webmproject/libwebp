@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "15ea929d_5fa05f1c",
+        "filename": "examples/Makefile.am",
+        "patchSetId": 2
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-08-29T19:36:15Z",
+      "side": 1,
+      "message": "you could reformat this one like your Makefile.am change",
+      "revId": "071868acb039b2e46bb7b23d0856bc95b9f14f4d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
