@@ -152,6 +152,8 @@ static int DumpFrame(const char filename[], const char dump_folder[],
   FILE* f = NULL;
   const char* row;
 
+  if (dump_folder == NULL) dump_folder = ".";
+
   base_name = strrchr(filename, '/');
   base_name = (base_name == NULL) ? filename : base_name + 1;
   max_len = strlen(dump_folder) + 1 + strlen(base_name)
