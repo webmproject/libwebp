@@ -19,7 +19,7 @@
 
 #include "../dsp/lossless_common.h"
 #include "../utils/utils.h"
-#include "./vp8i_enc.h"
+#include "./vp8li_enc.h"
 
 #define MIN_DIM_FOR_NEAR_LOSSLESS 64
 #define MAX_LIMIT_BITS             5

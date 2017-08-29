@@ -502,10 +502,6 @@ int WebPPictureAllocYUVA(WebPPicture* const picture, int width, int height);
 // compressibility (no guarantee, though). Assumes that pic->use_argb is true.
 void WebPCleanupTransparentAreaLossless(WebPPicture* const pic);
 
-  // in near_lossless.c
-// Near lossless preprocessing in RGB color-space.
-int VP8ApplyNearLossless(const WebPPicture* const picture, int quality,
-                         uint32_t* const argb_dst);
 //------------------------------------------------------------------------------
 
 #ifdef __cplusplus
