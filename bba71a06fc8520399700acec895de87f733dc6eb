@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "d1db56f9_2fa9402b",
+        "filename": "examples/Makefile.am",
+        "patchSetId": 2
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-08-29T07:01:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "254cda2a_0ca228df",
+      "revId": "bba71a06fc8520399700acec895de87f733dc6eb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "79f86dd5_86932c1f",
         "filename": "src/dsp/Makefile.am",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2017-08-29T06:00:35Z",
       "side": 1,
       "message": "this one could be blanked like the others",
+      "revId": "bba71a06fc8520399700acec895de87f733dc6eb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f49a883c_07ce1c31",
+        "filename": "src/dsp/Makefile.am",
+        "patchSetId": 2
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-08-29T07:01:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "79f86dd5_86932c1f",
       "revId": "bba71a06fc8520399700acec895de87f733dc6eb",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
