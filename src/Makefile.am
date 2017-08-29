@@ -22,6 +22,7 @@ commondir = $(includedir)/webp
 libwebp_la_SOURCES =
 libwebpinclude_HEADERS =
 libwebpinclude_HEADERS += webp/encode.h
+
 noinst_HEADERS =
 noinst_HEADERS += webp/format_constants.h
 
