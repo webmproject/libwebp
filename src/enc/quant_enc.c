@@ -1162,7 +1162,7 @@ static void RefineUsingDistortion(VP8EncIterator* const it,
     const uint8_t* const src = it->yuv_in_ + Y_OFF_ENC;
     for (mode = 0; mode < NUM_PRED_MODES; ++mode) {
       const uint8_t* const ref = it->yuv_p_ + VP8I16ModeOffsets[mode];
-      const score_t score = VP8SSE16x16(src, ref) * RD_DISTO_MULT
+      const score_t score = (score_t)VP8SSE16x16(src, ref) * RD_DISTO_MULT
                           + VP8FixedCostsI16[mode] * lambda_d_i16;
       if (mode > 0 && VP8FixedCostsI16[mode] > bit_limit) {
         continue;
