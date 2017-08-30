@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "155fda2c_6132a045",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-08-30T06:12:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bc2fe110_45c408e4",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 6
+      },
+      "revId": "514a739a06746264becd3775ecc92cc6ed128d66",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "914b46f9_27351a2d",
         "filename": "Makefile.vc",
         "patchSetId": 4
@@ -36,6 +60,24 @@
       "writtenOn": "2017-08-30T06:05:11Z",
       "side": 1,
       "message": "you could add a reference here",
+      "revId": "514a739a06746264becd3775ecc92cc6ed128d66",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "37d424fa_0a0d0022",
+        "filename": "Makefile.vc",
+        "patchSetId": 4
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-08-30T06:12:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "914b46f9_27351a2d",
       "revId": "514a739a06746264becd3775ecc92cc6ed128d66",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
