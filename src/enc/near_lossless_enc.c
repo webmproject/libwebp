@@ -21,6 +21,8 @@
 #include "../utils/utils.h"
 #include "./vp8li_enc.h"
 
+#if (WEBP_NEAR_LOSSLESS == 1)
+
 #define MIN_DIM_FOR_NEAR_LOSSLESS 64
 #define MAX_LIMIT_BITS             5
 
@@ -140,3 +142,10 @@ int VP8ApplyNearLossless(const WebPPicture* const picture, int quality,
   WebPSafeFree(copy_buffer);
   return 1;
 }
+#else  // (WEBP_NEAR_LOSSLESS == 1)
+
+// Define a stub to suppress compiler warnings.
+extern void VP8LNearLosslessStub(void);
+WEBP_TSAN_IGNORE_FUNCTION void VP8LNearLosslessStub(void) {}
+
+#endif  // (WEBP_NEAR_LOSSLESS == 1)

@@ -1567,10 +1567,14 @@ static int EncodeStreamHook(void* input, void* data2) {
   WebPEncodingError err = VP8_ENC_OK;
   const int quality = (int)config->quality;
   const int low_effort = (config->method == 0);
+#if (WEBP_NEAR_LOSSLESS == 1) || defined(WEBP_EXPERIMENTAL_FEATURES)
   const int width = picture->width;
+#endif
   const int height = picture->height;
   const size_t byte_position = VP8LBitWriterNumBytes(bw);
+#if (WEBP_NEAR_LOSSLESS == 1)
   int use_near_lossless = 0;
+#endif
   int hdr_size = 0;
   int data_size = 0;
   int use_delta_palette = 0;
@@ -1602,6 +1606,7 @@ static int EncodeStreamHook(void* input, void* data2) {
     VP8LBackwardRefsClear(&enc->refs_[0]);
     VP8LBackwardRefsClear(&enc->refs_[1]);
 
+#if (WEBP_NEAR_LOSSLESS == 1)
     // Apply near-lossless preprocessing.
     use_near_lossless = (config->near_lossless < 100) && !enc->use_palette_ &&
                         !enc->use_predict_;
@@ -1617,6 +1622,9 @@ static int EncodeStreamHook(void* input, void* data2) {
     } else {
       enc->argb_content_ = kEncoderNone;
     }
+#else
+    enc->argb_content_ = kEncoderNone;
+#endif
 
 #ifdef WEBP_EXPERIMENTAL_FEATURES
     if (config->use_delta_palette) {

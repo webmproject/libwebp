@@ -140,6 +140,9 @@
 /* Set to 1 if TIFF library is installed */
 #cmakedefine WEBP_HAVE_TIFF 1
 
+/* Enable near lossless encoding */
+#cmakedefine WEBP_NEAR_LOSSLESS 1
+
 /* Undefine this to disable thread support. */
 #cmakedefine WEBP_USE_THREAD 1
 

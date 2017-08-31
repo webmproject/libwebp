@@ -689,6 +689,21 @@ fi
 AC_MSG_RESULT(${enable_experimental-no})
 AC_SUBST(USE_EXPERIMENTAL_CODE)
 
+dnl === If --disable-near-lossless is defined, add -DWEBP_NEAR_LOSSLESS=0
+
+AC_DEFINE(WEBP_NEAR_LOSSLESS, [1], [Enable near lossless encoding])
+AC_MSG_CHECKING(if --disable-near-lossless option is specified)
+AC_ARG_ENABLE([near_lossless],
+              AS_HELP_STRING([--disable-near-lossless],
+                             [Disable near lossless encoding]),
+              [], [enable_near_lossless=yes])
+if test "$enable_near_lossless" = "no"; then
+  AC_DEFINE(WEBP_NEAR_LOSSLESS, [0], [Enable near lossless encoding])
+  AC_MSG_RESULT([yes])
+else
+  AC_MSG_RESULT([no])
+fi
+
 dnl === Check whether libwebpmux should be built
 AC_MSG_CHECKING(whether libwebpmux is to be built)
 AC_ARG_ENABLE([libwebpmux],
