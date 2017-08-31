@@ -98,9 +98,14 @@ static VP8StatusCode AllocateBuffer(WebPDecBuffer* const buffer) {
     uint64_t uv_size = 0, a_size = 0, total_size;
     // We need memory and it hasn't been allocated yet.
     // => initialize output buffer, now that dimensions are known.
-    const int stride = w * kModeBpp[mode];
-    const uint64_t size = (uint64_t)stride * h;
+    int stride;
+    uint64_t size;
 
+    if ((uint64_t)w * kModeBpp[mode] >= (1ull << 32)) {
+      return VP8_STATUS_INVALID_PARAM;
+    }
+    stride = w * kModeBpp[mode];
+    size = (uint64_t)stride * h;
     if (!WebPIsRGBMode(mode)) {
       uv_stride = (w + 1) / 2;
       uv_size = (uint64_t)uv_stride * ((h + 1) / 2);

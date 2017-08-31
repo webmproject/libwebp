@@ -92,8 +92,8 @@ int WebPPictureAllocYUVA(WebPPicture* const picture, int width, int height) {
       (WebPEncCSP)((int)picture->colorspace & WEBP_CSP_UV_MASK);
   const int has_alpha = (int)picture->colorspace & WEBP_CSP_ALPHA_BIT;
   const int y_stride = width;
-  const int uv_width = (width + 1) >> 1;
-  const int uv_height = (height + 1) >> 1;
+  const int uv_width = (int)(((int64_t)width + 1) >> 1);
+  const int uv_height = (int)(((int64_t)height + 1) >> 1);
   const int uv_stride = uv_width;
   int a_width, a_stride;
   uint64_t y_size, uv_size, a_size, total_size;
@@ -118,8 +118,8 @@ int WebPPictureAllocYUVA(WebPPicture* const picture, int width, int height) {
   total_size = y_size + a_size + 2 * uv_size;
 
   // Security and validation checks
-  if (width <= 0 || height <= 0 ||         // luma/alpha param error
-      uv_width < 0 || uv_height < 0) {     // u/v param error
+  if (width <= 0 || height <= 0 ||           // luma/alpha param error
+      uv_width <= 0 || uv_height <= 0) {     // u/v param error
     return WebPEncodingSetError(picture, VP8_ENC_ERROR_BAD_DIMENSION);
   }
   // allocate a new buffer.
