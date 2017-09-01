@@ -15,7 +15,10 @@ endif
 # https://bugs.chromium.org/p/webp/issues/detail?id=343
 ifeq ($(findstring clang,$(NDK_TOOLCHAIN_VERSION)),clang)
   ifeq ($(TARGET_ARCH),mips)
-    WEBP_CFLAGS += -no-integrated-as
+    clang_version := $(shell $(TARGET_CC) --version)
+    ifneq ($(findstring clang version 3,$(clang_version)),)
+      WEBP_CFLAGS += -no-integrated-as
+    endif
   endif
 endif
 
