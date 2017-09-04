@@ -361,7 +361,7 @@ src/utils/bit_reader_utils.o: src/utils/endian_inl_utils.h
 src/utils/bit_writer_utils.o: src/utils/endian_inl_utils.h
 
 %.o: %.c $(HDRS)
-	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
 examples/libanim_util.a: $(ANIM_UTIL_OBJS)
 examples/libexample_util.a: $(EX_UTIL_OBJS)
