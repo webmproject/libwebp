@@ -11,6 +11,8 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
+#if !defined(WEBP_REDUCE_SIZE)
+
 #include <math.h>
 #include <stdlib.h>
 
@@ -211,3 +213,5 @@ int WebPPictureDistortion(const WebPPicture* src, const WebPPicture* ref,
 }
 
 //------------------------------------------------------------------------------
+
+#endif // WEBP_REDUCE_SIZE

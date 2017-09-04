@@ -25,8 +25,10 @@
 // Uncomment to disable gamma-compression during RGB->U/V averaging
 #define USE_GAMMA_COMPRESSION
 
+#if !defined(WEBP_REDUCE_SIZE)
 // If defined, use table to compute x / alpha.
 #define USE_INVERSE_ALPHA_TABLE
+#endif
 
 static const union {
   uint32_t argb;

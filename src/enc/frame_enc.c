@@ -452,6 +452,8 @@ static int RecordTokens(VP8EncIterator* const it, const VP8ModeScore* const rd,
 //------------------------------------------------------------------------------
 // ExtraInfo map / Debug function
 
+#if !defined(WEBP_REDUCE_SIZE)
+
 #if SEGMENT_VISU
 static void SetBlock(uint8_t* p, int value, int size) {
   int y;
@@ -515,6 +517,15 @@ static void StoreSideInfo(const VP8EncIterator* const it) {
   SetBlock(it->yuv_out_ + V_OFF_ENC, mb->uv_mode_ * 64, 8);
 #endif
 }
+
+#else
+static void ResetSSE(VP8Encoder* const enc) {
+  (void)enc;
+}
+static void StoreSideInfo(const VP8EncIterator* const it) {
+  (void)it;
+}
+#endif
 
 static double GetPSNR(uint64_t mse, uint64_t size) {
   return (mse > 0 && size > 0) ? 10. * log10(255. * 255. * size / mse) : 99;
@@ -851,4 +862,3 @@ int VP8EncTokenLoop(VP8Encoder* const enc) {
 #endif    // DISABLE_TOKEN_BUFFER
 
 //------------------------------------------------------------------------------
-

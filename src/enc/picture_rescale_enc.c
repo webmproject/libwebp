@@ -11,6 +11,8 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
+#if !defined(WEBP_REDUCE_SIZE)
+
 #include <assert.h>
 #include <stdlib.h>
 
@@ -262,3 +264,5 @@ int WebPPictureRescale(WebPPicture* pic, int width, int height) {
 }
 
 //------------------------------------------------------------------------------
+
+#endif  // WEBP_REDUCE_SIZE

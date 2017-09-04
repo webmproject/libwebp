@@ -13,7 +13,7 @@
 
 #include "./dsp.h"
 
-#if defined(WEBP_USE_SSE2)
+#if defined(WEBP_USE_SSE2) && !defined(WEBP_REDUCE_SIZE)
 
 #include <assert.h>
 #include <emmintrin.h>

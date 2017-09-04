@@ -34,7 +34,6 @@ else
   GL_LIBS = -lglut -lGL
 endif
 
-
 # To install libraries on Mac OS X:
 # 1. Install MacPorts (http://www.macports.org/install.php)
 # 2. Run "sudo port install jpeg"
@@ -98,6 +97,9 @@ endif
 # MIPS (MSA) 64-bit build specific flags for mips64r6 (i6400):
 # EXTRA_FLAGS += -mips64r6 -mabi=64 -mtune=i6400 -mmsa -mfp64
 # EXTRA_FLAGS += -msched-weight -mload-store-pairs
+
+# to remove some non-critical parts of the API:
+# EXTRA_FLAGS += -DWEBP_REDUCE_SIZE
 
 #### Nothing should normally be changed below this line ####
 

@@ -16,6 +16,8 @@
 
 #include "./dsp.h"
 
+#if !defined(WEBP_REDUCE_SIZE)
+
 //------------------------------------------------------------------------------
 // SSIM / PSNR
 
@@ -149,3 +151,9 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8SSIMDspInit(void) {
 
   ssim_last_cpuinfo_used = VP8GetCPUInfo;
 }
+
+#else  // !WEBP_REDUCE_SIZE
+
+WEBP_DSP_INIT_STUB(VP8SSIMDspInit)
+
+#endif
