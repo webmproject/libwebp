@@ -34,6 +34,16 @@ else
   GL_LIBS = -lglut -lGL
 endif
 
+# SDL flags: use sdl-config if it exists
+SDL_CONFIG = $(shell sdl-config --version 2> /dev/null)
+ifneq ($(SDL_CONFIG),)
+  SDL_LIBS = $(shell sdl-config --libs)
+  SDL_FLAGS = $(shell sdl-config --cflags)
+else
+  # use best-guess
+  SDL_LIBS = -lSDL
+  SDL_FLAGS =
+endif
 
 # To install libraries on Mac OS X:
 # 1. Install MacPorts (http://www.macports.org/install.php)
@@ -440,8 +450,8 @@ extras/vwebp_sdl: extras/vwebp_sdl.o
 extras/vwebp_sdl: extras/webp_to_sdl.o
 extras/vwebp_sdl: imageio/libimageio_util.a
 extras/vwebp_sdl: src/libwebp.a
-extras/vwebp_sdl: EXTRA_FLAGS += -DWEBP_HAVE_SDL
-extras/vwebp_sdl: EXTRA_LIBS += -lSDL
+extras/vwebp_sdl: EXTRA_FLAGS += -DWEBP_HAVE_SDL $(SDL_FLAGS)
+extras/vwebp_sdl: EXTRA_LIBS += $(SDL_LIBS)
 
 $(OUT_EXAMPLES) $(EXTRA_EXAMPLES) $(OTHER_EXAMPLES):
 	$(CC) -o $@ $^ $(LDFLAGS)
