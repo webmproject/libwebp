@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f952da55_fa4d81e5",
+        "filename": "makefile.unix",
+        "patchSetId": 2
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-09-05T02:12:52Z",
+      "side": 1,
+      "message": "this will get defined even if this fails, I think you\u0027ll want ifeq ($(SDL_CONFIG),)\n\nmaybe an \u0027_\u0027 for the variable name too",
+      "revId": "2d5ee0608271d66e7f93fa612cf75c69cd0aa07c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0df07212_ae59ca5c",
+        "filename": "makefile.unix",
+        "patchSetId": 2
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-09-05T02:12:52Z",
+      "side": 1,
+      "message": "include path?",
+      "revId": "2d5ee0608271d66e7f93fa612cf75c69cd0aa07c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
