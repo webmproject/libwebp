@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0e8ec614_c93f485c",
+        "filename": "makefile.unix",
+        "patchSetId": 3
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-09-05T23:19:18Z",
+      "side": 1,
+      "message": "still needs to become an ifeq",
+      "revId": "a9b5284be8695c7f1630d85f5e44b42bcfb4765f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
