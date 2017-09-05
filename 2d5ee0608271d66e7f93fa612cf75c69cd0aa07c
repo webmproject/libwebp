@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "f40bc8b0_dab8667a",
+        "filename": "makefile.unix",
+        "patchSetId": 2
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-09-05T05:50:31Z",
+      "side": 1,
+      "message": "the trick here, is redirecting the output to /dev/null\nIn case of error, the variable will thus be undefined (empty).",
+      "parentUuid": "f952da55_fa4d81e5",
+      "revId": "2d5ee0608271d66e7f93fa612cf75c69cd0aa07c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0df07212_ae59ca5c",
         "filename": "makefile.unix",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2017-09-05T02:12:52Z",
       "side": 1,
       "message": "include path?",
+      "revId": "2d5ee0608271d66e7f93fa612cf75c69cd0aa07c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a44048c3_dcead169",
+        "filename": "makefile.unix",
+        "patchSetId": 2
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-09-05T05:50:31Z",
+      "side": 1,
+      "message": "done (SDL_FLAGS)",
+      "parentUuid": "0df07212_ae59ca5c",
       "revId": "2d5ee0608271d66e7f93fa612cf75c69cd0aa07c",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
