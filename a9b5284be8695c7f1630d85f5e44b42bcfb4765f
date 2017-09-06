@@ -52,6 +52,24 @@
       "revId": "a9b5284be8695c7f1630d85f5e44b42bcfb4765f",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "203a89a3_f39f8fe2",
+        "filename": "makefile.unix",
+        "patchSetId": 3
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-09-06T20:36:32Z",
+      "side": 1,
+      "message": "oh, i see. done.",
+      "parentUuid": "4013baaa_2f57cd05",
+      "revId": "a9b5284be8695c7f1630d85f5e44b42bcfb4765f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
