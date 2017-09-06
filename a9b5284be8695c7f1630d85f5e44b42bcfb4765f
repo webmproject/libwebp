@@ -16,6 +16,24 @@
       "revId": "a9b5284be8695c7f1630d85f5e44b42bcfb4765f",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "554244e7_7ae04528",
+        "filename": "makefile.unix",
+        "patchSetId": 3
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-09-06T14:44:33Z",
+      "side": 1,
+      "message": "problem is, \u0027sdl-config --version\u0027 returns a version number (\"1.2.15\" e.g.).\nDo we want to \u0027ifeq\u0027 it to a hardcoded version number? It\u0027s going to be a problem going forward...",
+      "parentUuid": "0e8ec614_c93f485c",
+      "revId": "a9b5284be8695c7f1630d85f5e44b42bcfb4765f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
