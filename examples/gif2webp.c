@@ -70,6 +70,8 @@ static void Help(void) {
   printf("  -kmax <int> ............ max distance between key frames\n");
   printf("  -f <int> ............... filter strength (0=off..100)\n");
   printf("  -metadata <string> ..... comma separated list of metadata to\n");
+  printf("  -loop_compatibility .... use compatibility mode for Chrome");
+  printf("                            version prior to M62 (inclusive)\n");
   printf("                           ");
   printf("copy from the input to the output if present\n");
   printf("                           "
@@ -117,6 +119,7 @@ int main(int argc, const char *argv[]) {
   int stored_xmp = 0;         // Whether we have already stored an XMP profile.
   int loop_count = 0;
   int stored_loop_count = 0;  // Whether we have found an explicit loop count.
+  int loop_compatibility = 0;
   WebPMux* mux = NULL;
 
   int default_kmin = 1;  // Whether to use default kmin value.
@@ -151,6 +154,8 @@ int main(int argc, const char *argv[]) {
     } else if (!strcmp(argv[c], "-mixed")) {
       enc_options.allow_mixed = 1;
       config.lossless = 0;
+    } else if (!strcmp(argv[c], "-loop_compatibility")) {
+      loop_compatibility = 1;
     } else if (!strcmp(argv[c], "-q") && c < argc - 1) {
       config.quality = ExUtilGetFloat(argv[++c], &parse_error);
     } else if (!strcmp(argv[c], "-m") && c < argc - 1) {
@@ -460,7 +465,7 @@ int main(int argc, const char *argv[]) {
                 ErrorString(err));
         goto End;
       }
-      new_params.loop_count = loop_count;
+      new_params.loop_count = loop_compatibility ? loop_count : loop_count + 1;
       err = WebPMuxSetAnimationParams(mux, &new_params);
       if (err != WEBP_MUX_OK) {
         fprintf(stderr, "ERROR (%s): Could not update loop count.\n",
