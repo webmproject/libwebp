@@ -477,6 +477,8 @@ Options:
   -metadata <string> ..... comma separated list of metadata to
                            copy from the input to the output if present
                            Valid values: all, none, icc, xmp (default)
+  -loop_compatibility .... use compatibility mode for Chrome
+                           version prior to M62 (inclusive)
   -mt .................... use multi-threading if available
 
   -version ............... print version number and exit
