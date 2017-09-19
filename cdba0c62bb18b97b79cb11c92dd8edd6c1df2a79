@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "68cc3d9b_d5187d86",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 450,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-09-19T23:42:28Z",
+      "side": 1,
+      "message": "this debug can go",
+      "revId": "cdba0c62bb18b97b79cb11c92dd8edd6c1df2a79",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3568ea3f_5bdc737c",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 453,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-09-19T23:42:28Z",
+      "side": 1,
+      "message": "explicitly",
+      "range": {
+        "startLine": 453,
+        "startChar": 32,
+        "endLine": 453,
+        "endChar": 43
+      },
+      "revId": "cdba0c62bb18b97b79cb11c92dd8edd6c1df2a79",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e1e267fc_8a314dfb",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 477,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-09-19T23:42:28Z",
+      "side": 1,
+      "message": "this will become 2 in the case from line 455 where we really want 1 as there was no loop element",
+      "range": {
+        "startLine": 477,
+        "startChar": 64,
+        "endLine": 477,
+        "endChar": 79
+      },
+      "revId": "cdba0c62bb18b97b79cb11c92dd8edd6c1df2a79",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
