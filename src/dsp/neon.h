@@ -17,8 +17,9 @@
 #include "./dsp.h"
 
 // Right now, some intrinsics functions seem slower, so we disable them
-// everywhere except aarch64 where the inline assembly is incompatible.
-#if defined(__aarch64__)
+// everywhere except newer gcc or aarch64 where the inline assembly is
+// incompatible.
+#if LOCAL_GCC_PREREQ(4,9) || defined(__aarch64__)
 #define WEBP_USE_INTRINSICS   // use intrinsics when possible
 #endif
 
