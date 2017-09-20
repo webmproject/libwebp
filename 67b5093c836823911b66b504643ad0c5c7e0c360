@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0f16ed22_40d3bf0a",
+        "filename": "examples/anim_util.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 450,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-09-20T21:37:55Z",
+      "side": 1,
+      "message": "extra space",
+      "range": {
+        "startLine": 450,
+        "startChar": 23,
+        "endLine": 450,
+        "endChar": 24
+      },
+      "revId": "67b5093c836823911b66b504643ad0c5c7e0c360",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
