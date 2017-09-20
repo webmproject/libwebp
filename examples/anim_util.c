@@ -425,6 +425,11 @@ static uint32_t GetBackgroundColorGIF(GifFileType* gif) {
 }
 
 // Find appropriate app extension and get loop count from the next extension.
+// We use Chrome's interpretation of the 'loop_count' semantics:
+//   if not present -> loop once
+//   if present and loop_count == 0, return 0 ('infinite').
+//   if present and loop_count != 0, it's the number of *extra* loops
+//     so we need to return loop_count + 1 as total loop number.
 static uint32_t GetLoopCountGIF(const GifFileType* const gif) {
   int i;
   for (i = 0; i < gif->ImageCount; ++i) {
@@ -442,12 +447,13 @@ static uint32_t GetLoopCountGIF(const GifFileType* const gif) {
       if (signature_is_ok &&
           eb2->Function == CONTINUE_EXT_FUNC_CODE && eb2->ByteCount >= 3 &&
           eb2->Bytes[0] == 1) {
-        return ((uint32_t)(eb2->Bytes[2]) << 8) +
-               ((uint32_t)(eb2->Bytes[1]) << 0);
+        const uint32_t extra_loop = ((uint32_t)(eb2->Bytes[2]) << 8) +
+                                    ((uint32_t)(eb2->Bytes[1]) << 0);
+        return (extra_loop > 0) ? extra_loop + 1 : 0;
       }
     }
   }
-  return 0;  // Default.
+  return 1;  // Default.
 }
 
 // Get duration of 'n'th frame in milliseconds.
