@@ -106,7 +106,7 @@ int main(int argc, const char *argv[]) {
   WebPAnimEncoderOptions enc_options;
   WebPConfig config;
 
-  int is_first_frame = 1;     // Whether we are processing the first frame.
+  int frame_number = 0;     // Whether we are processing the first frame.
   int done;
   int c;
   int quiet = 0;
@@ -282,7 +282,7 @@ int main(int argc, const char *argv[]) {
 
         if (!DGifGetImageDesc(gif)) goto End;
 
-        if (is_first_frame) {
+        if (frame_number == 0) {
           if (verbose) {
             printf("Canvas screen: %d x %d\n", gif->SWidth, gif->SHeight);
           }
@@ -324,7 +324,6 @@ int main(int argc, const char *argv[]) {
                     "a memory error.\n");
             goto End;
           }
-          is_first_frame = 0;
         }
 
         // Some even more broken GIF can have sub-rect with zero width/height.
@@ -341,7 +340,11 @@ int main(int argc, const char *argv[]) {
         GIFBlendFrames(&frame, &gif_rect, &curr_canvas);
 
         if (!WebPAnimEncoderAdd(enc, &curr_canvas, frame_timestamp, &config)) {
-          fprintf(stderr, "%s\n", WebPAnimEncoderGetError(enc));
+          fprintf(stderr, "Error while adding frame #%d: %s\n", frame_number,
+                  WebPAnimEncoderGetError(enc));
+          goto End;
+        } else {
+          ++frame_number;
         }
 
         // Update canvases.
@@ -451,9 +454,12 @@ int main(int argc, const char *argv[]) {
   if (!loop_compatibility) {
     if (!stored_loop_count) {
       // if no loop-count element is seen, the default is '1' (loop-once)
-      // and we need to signal it explicitly in WebP.
-      stored_loop_count = 1;
-      loop_count = 1;
+      // and we need to signal it explicitly in WebP. Note however that
+      // in case there's a single frame, we still don't need to store it.
+      if (frame_number > 1) {
+        stored_loop_count = 1;
+        loop_count = 1;
+      }
     } else if (loop_count > 0) {
       // adapt GIF's semantic to WebP's (except in the infinite-loop case)
       loop_count += 1;
