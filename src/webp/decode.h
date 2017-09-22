@@ -340,7 +340,8 @@ WEBP_EXTERN VP8StatusCode WebPIUpdate(
 // specified during call to WebPINewDecoder() or WebPINewRGB().
 // *last_y is the index of last decoded row in raster scan order. Some pointers
 // (*last_y, *width etc.) can be NULL if corresponding information is not
-// needed.
+// needed. The values in these pointers are only valid on successful (non-NULL)
+// return.
 WEBP_EXTERN uint8_t* WebPIDecGetRGB(
     const WebPIDecoder* idec, int* last_y,
     int* width, int* height, int* stride);
