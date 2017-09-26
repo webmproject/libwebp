@@ -48,7 +48,7 @@ if(ANDROID)
   set(WEBP_DEP_INCLUDE_DIRS ${WEBP_DEP_INCLUDE_DIRS}
     ${ANDROID_NDK}/sources/android/cpufeatures
   )
-  add_definitions(-DHAVE_CPU_FEATURES_H)
+  add_definitions(-DHAVE_CPU_FEATURES_H=1)
   set(HAVE_CPU_FEATURES_H 1)
 else()
   set(HAVE_CPU_FEATURES_H 0)
