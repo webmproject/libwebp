@@ -143,7 +143,7 @@ static int x86CPUInfo(CPUFeature feature) {
     return !!(cpu_info[2] & (1 << 0));
   }
   if (feature == kSlowSSSE3) {
-    if (is_intel && (cpu_info[2] & (1 << 0))) {   // SSSE3?
+    if (is_intel && (cpu_info[2] & (1 << 9))) {   // SSSE3?
       return CheckSlowModel(cpu_info[0]);
     }
     return 0;
