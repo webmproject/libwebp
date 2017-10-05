@@ -191,9 +191,9 @@ void WebPCleanupTransparentAreaLossless(WebPPicture* const pic) {
 // Blend color and remove transparency info
 
 #define BLEND(V0, V1, ALPHA) \
-    ((((V0) * (255 - (ALPHA)) + (V1) * (ALPHA)) * 0x101) >> 16)
+    ((((V0) * (255 - (ALPHA)) + (V1) * (ALPHA)) * 0x101 + 256) >> 16)
 #define BLEND_10BIT(V0, V1, ALPHA) \
-    ((((V0) * (1020 - (ALPHA)) + (V1) * (ALPHA)) * 0x101) >> 18)
+    ((((V0) * (1020 - (ALPHA)) + (V1) * (ALPHA)) * 0x101 + 1024) >> 18)
 
 void WebPBlendAlpha(WebPPicture* pic, uint32_t background_rgb) {
   const int red = (background_rgb >> 16) & 0xff;
