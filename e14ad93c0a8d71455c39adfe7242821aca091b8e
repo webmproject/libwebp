@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "71cf7fe9_346f788a",
+        "filename": "src/enc/picture_tools_enc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-10-06T16:44:13Z",
+      "side": 1,
+      "message": "1024 is ok: it\u0027s inaccurate in 0.70% of cases, but it preserves the value V0\u003d255 ALPHA\u003d255 (white) which is important.\n\nUsing a constant of 512 would be overall more accurate (0.29% bad cases) but wouldn\u0027t preserve the white. Let\u0027s stick to 1024.",
+      "range": {
+        "startLine": 196,
+        "startChar": 40,
+        "endLine": 196,
+        "endChar": 41
+      },
+      "revId": "e14ad93c0a8d71455c39adfe7242821aca091b8e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
