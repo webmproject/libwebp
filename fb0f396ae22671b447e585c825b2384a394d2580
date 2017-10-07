@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "653ef36f_7b3c69a5",
+        "filename": "build.gradle",
+        "patchSetId": 1
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-10-07T21:28:11Z",
+      "side": 1,
+      "message": "src/ is already in the include list, not sure how gradle picked that up. it isn\u0027t explicit",
+      "revId": "fb0f396ae22671b447e585c825b2384a394d2580",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4010cafb_c2419b0a",
+        "filename": "extras/Makefile.am",
+        "patchSetId": 1
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-10-07T21:28:11Z",
+      "side": 1,
+      "message": "both are needed for using the webp/ includes",
+      "revId": "fb0f396ae22671b447e585c825b2384a394d2580",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
