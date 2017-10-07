@@ -18,7 +18,7 @@
 extern "C" {
 #endif
 
-#include "../utils/rescaler_utils.h"
+#include "src/utils/rescaler_utils.h"
 #include "./vp8_dec.h"
 
 //------------------------------------------------------------------------------

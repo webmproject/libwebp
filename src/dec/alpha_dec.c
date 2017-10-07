@@ -15,10 +15,10 @@
 #include "./alphai_dec.h"
 #include "./vp8i_dec.h"
 #include "./vp8li_dec.h"
-#include "../dsp/dsp.h"
-#include "../utils/quant_levels_dec_utils.h"
-#include "../utils/utils.h"
-#include "../webp/format_constants.h"
+#include "src/dsp/dsp.h"
+#include "src/utils/quant_levels_dec_utils.h"
+#include "src/utils/utils.h"
+#include "src/webp/format_constants.h"
 
 //------------------------------------------------------------------------------
 // ALPHDecoder object.

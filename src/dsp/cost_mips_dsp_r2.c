@@ -13,7 +13,7 @@
 
 #if defined(WEBP_USE_MIPS_DSP_R2)
 
-#include "../enc/cost_enc.h"
+#include "src/enc/cost_enc.h"
 
 static int GetResidualCost_MIPSdspR2(int ctx0, const VP8Residual* const res) {
   int temp0, temp1;

@@ -18,9 +18,9 @@
 
 #include "./backward_references_enc.h"
 #include "./histogram_enc.h"
-#include "../dsp/lossless_common.h"
-#include "../utils/color_cache_utils.h"
-#include "../utils/utils.h"
+#include "src/dsp/lossless_common.h"
+#include "src/utils/color_cache_utils.h"
+#include "src/utils/utils.h"
 
 #define VALUES_IN_BYTE 256
 

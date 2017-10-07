@@ -13,7 +13,7 @@
 
 #include <assert.h>
 #include "./vp8i_enc.h"
-#include "../dsp/dsp.h"
+#include "src/dsp/dsp.h"
 
 // This table gives, for a given sharpness, the filtering strength to be
 // used (at least) in order to filter a given edge step delta.

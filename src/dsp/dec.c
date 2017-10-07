@@ -12,8 +12,8 @@
 // Author: Skal (pascal.massimino@gmail.com)
 
 #include "./dsp.h"
-#include "../dec/vp8i_dec.h"
-#include "../utils/utils.h"
+#include "src/dec/vp8i_dec.h"
+#include "src/utils/utils.h"
 
 //------------------------------------------------------------------------------
 

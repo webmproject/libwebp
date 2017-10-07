@@ -14,7 +14,7 @@
 
 #include <assert.h>
 #include "./muxi.h"
-#include "../utils/utils.h"
+#include "src/utils/utils.h"
 
 //------------------------------------------------------------------------------
 // Life of a mux object.

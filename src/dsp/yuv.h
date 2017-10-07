@@ -36,7 +36,7 @@
 #define WEBP_DSP_YUV_H_
 
 #include "./dsp.h"
-#include "../dec/vp8_dec.h"
+#include "src/dec/vp8_dec.h"
 
 //------------------------------------------------------------------------------
 // YUV -> RGB conversion

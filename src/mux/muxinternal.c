@@ -14,7 +14,7 @@
 
 #include <assert.h>
 #include "./muxi.h"
-#include "../utils/utils.h"
+#include "src/utils/utils.h"
 
 #define UNDEFINED_CHUNK_SIZE ((uint32_t)(-1))
 

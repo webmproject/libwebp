@@ -13,9 +13,9 @@
 
 #include <assert.h>
 
-#include "../utils/utils.h"
-#include "../webp/format_constants.h"  // RIFF constants
-#include "../webp/mux_types.h"         // ALPHA_FLAG
+#include "src/utils/utils.h"
+#include "src/webp/format_constants.h"  // RIFF constants
+#include "src/webp/mux_types.h"         // ALPHA_FLAG
 #include "./vp8i_enc.h"
 
 //------------------------------------------------------------------------------

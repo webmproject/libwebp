@@ -1,4 +1,5 @@
 ## Check for SIMD extensions.
+include(CMakePushCheckState)
 
 function(webp_check_compiler_flag WEBP_SIMD_FLAG ENABLE_SIMD)
   if(NOT ENABLE_SIMD)
@@ -7,6 +8,8 @@ function(webp_check_compiler_flag WEBP_SIMD_FLAG ENABLE_SIMD)
     return()
   endif()
   unset(WEBP_HAVE_FLAG_${WEBP_SIMD_FLAG} CACHE)
+  cmake_push_check_state()
+  set(CMAKE_REQUIRED_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR})
   check_c_source_compiles("
       #include \"${CMAKE_CURRENT_LIST_DIR}/../src/dsp/dsp.h\"
       int main(void) {
@@ -17,6 +20,7 @@ function(webp_check_compiler_flag WEBP_SIMD_FLAG ENABLE_SIMD)
       }
     " WEBP_HAVE_FLAG_${WEBP_SIMD_FLAG}
   )
+  cmake_pop_check_state()
   if(WEBP_HAVE_FLAG_${WEBP_SIMD_FLAG})
     set(WEBP_HAVE_${WEBP_SIMD_FLAG} 1 PARENT_SCOPE)
   else()
@@ -54,7 +58,6 @@ endif()
 list(LENGTH WEBP_SIMD_FLAGS WEBP_SIMD_FLAGS_LENGTH)
 math(EXPR WEBP_SIMD_FLAGS_RANGE "${WEBP_SIMD_FLAGS_LENGTH} - 1")
 
-include(CMakePushCheckState)
 foreach(I_SIMD RANGE ${WEBP_SIMD_FLAGS_RANGE})
   list(GET WEBP_SIMD_FLAGS ${I_SIMD} WEBP_SIMD_FLAG)
 

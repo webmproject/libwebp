@@ -17,9 +17,9 @@
 
 #include <string.h>     // for memcpy()
 #include "./webpi_dec.h"
-#include "../utils/bit_reader_utils.h"
-#include "../utils/color_cache_utils.h"
-#include "../utils/huffman_utils.h"
+#include "src/utils/bit_reader_utils.h"
+#include "src/utils/color_cache_utils.h"
+#include "src/utils/huffman_utils.h"
 
 #ifdef __cplusplus
 extern "C" {
