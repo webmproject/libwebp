@@ -14,7 +14,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../dsp/dsp.h"
+#include "src/dsp/dsp.h"
 #include "./rescaler_utils.h"
 
 //------------------------------------------------------------------------------

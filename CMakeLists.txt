@@ -104,7 +104,7 @@ endforeach()
 ### Define the mandatory libraries.
 # Build the webpdecoder library.
 add_definitions(-Wall)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/ ${WEBP_DEP_INCLUDE_DIRS})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${WEBP_DEP_INCLUDE_DIRS})
 add_library(webpdecode OBJECT ${WEBP_DEC_SRCS})
 add_library(webpdspdecode OBJECT ${WEBP_DSP_COMMON_SRCS} ${WEBP_DSP_DEC_SRCS})
 add_library(webputilsdecode OBJECT ${WEBP_UTILS_COMMON_SRCS}
@@ -195,6 +195,10 @@ if(WEBP_BUILD_CWEBP OR WEBP_BUILD_DWEBP OR
     "imageenc_[^ ]*")
   add_library(imageenc ${IMAGEENC_SRCS})
   target_link_libraries(imageenc webp)
+
+  set_property(TARGET exampleutil imageioutil imagedec imageenc
+    PROPERTY INCLUDE_DIRECTORIES
+    ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_BINARY_DIR}/src)
 endif()
 
 if(WEBP_BUILD_DWEBP)
@@ -205,6 +209,8 @@ if(WEBP_BUILD_DWEBP)
   add_executable(dwebp ${DWEBP_SRCS})
   target_link_libraries(dwebp exampleutil imagedec imageenc webpdecoder)
   install(TARGETS dwebp RUNTIME DESTINATION bin)
+  set_property(TARGET dwebp PROPERTY INCLUDE_DIRECTORIES
+    ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_BINARY_DIR}/src)
 endif()
 
 if(WEBP_BUILD_CWEBP)
@@ -215,6 +221,8 @@ if(WEBP_BUILD_CWEBP)
   add_executable(cwebp ${CWEBP_SRCS})
   target_link_libraries(cwebp exampleutil imagedec webp)
   install(TARGETS cwebp RUNTIME DESTINATION bin)
+  set_property(TARGET cwebp PROPERTY INCLUDE_DIRECTORIES
+    ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_BINARY_DIR}/src)
 endif()
 
 if(WEBP_BUILD_GIF2WEBP AND NOT GIF_FOUND)
@@ -241,6 +249,8 @@ if(WEBP_BUILD_GIF2WEBP)
   target_link_libraries(gif2webp exampleutil imageioutil webp webpmux
     ${WEBP_DEP_GIF_LIBRARIES})
   install(TARGETS gif2webp RUNTIME DESTINATION bin)
+  set_property(TARGET gif2webp PROPERTY INCLUDE_DIRECTORIES
+    ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_BINARY_DIR}/src)
 endif()
 
 if(WEBP_BUILD_IMG2WEBP)
@@ -251,6 +261,8 @@ if(WEBP_BUILD_IMG2WEBP)
   add_executable(img2webp ${IMG2WEBP_SRCS})
   target_link_libraries(img2webp exampleutil imagedec imageioutil webp webpmux)
   install(TARGETS img2webp RUNTIME DESTINATION bin)
+  set_property(TARGET img2webp PROPERTY INCLUDE_DIRECTORIES
+    ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_BINARY_DIR}/src)
 endif()
 
 if (WEBP_BUILD_WEBPINFO)
@@ -261,6 +273,8 @@ if (WEBP_BUILD_WEBPINFO)
   add_executable(webpinfo ${WEBPINFO_SRCS})
   target_link_libraries(webpinfo exampleutil imageioutil)
   install(TARGETS webpinfo RUNTIME DESTINATION bin)
+  set_property(TARGET webpinfo PROPERTY INCLUDE_DIRECTORIES
+    ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_BINARY_DIR}/src)
 endif()
 
 if(WEBP_BUILD_WEBP_JS)
@@ -288,13 +302,11 @@ endif()
 
 # Generate the config.h file.
 configure_file(${CMAKE_CURRENT_LIST_DIR}/cmake/config.h.in
-  ${CMAKE_CURRENT_BINARY_DIR}/include/webp/config.h)
+  ${CMAKE_CURRENT_BINARY_DIR}/src/webp/config.h)
 add_definitions(-DHAVE_CONFIG_H)
 # The webp folder is included as we reference config.h as
 # ../webp/config.h or webp/config.h
-include_directories(${CMAKE_CURRENT_BINARY_DIR}/include
-  ${CMAKE_CURRENT_BINARY_DIR}/include/webp
-)
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 # Install the different headers and libraries.
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/webp/decode.h

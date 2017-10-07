@@ -19,7 +19,7 @@
 #include "./cost_enc.h"
 #include "./vp8i_enc.h"
 #include "./vp8li_enc.h"
-#include "../utils/utils.h"
+#include "src/utils/utils.h"
 
 // #define PRINT_MEMORY_INFO
 

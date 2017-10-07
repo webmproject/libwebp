@@ -17,7 +17,7 @@
 #if defined(WEBP_USE_NEON)
 
 #include "./neon.h"
-#include "../dec/vp8i_dec.h"
+#include "src/dec/vp8i_dec.h"
 
 //------------------------------------------------------------------------------
 // NxM Loading functions

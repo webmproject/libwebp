@@ -24,8 +24,8 @@
 
 #include <emmintrin.h>
 #include "./common_sse2.h"
-#include "../dec/vp8i_dec.h"
-#include "../utils/utils.h"
+#include "src/dec/vp8i_dec.h"
+#include "src/utils/utils.h"
 
 //------------------------------------------------------------------------------
 // Transforms (Paragraph 14.4)

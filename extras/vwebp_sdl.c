@@ -24,7 +24,7 @@
 
 #include "webp_to_sdl.h"
 #include "webp/decode.h"
-#include "../imageio/imageio_util.h"
+#include "imageio/imageio_util.h"
 
 #if defined(WEBP_HAVE_JUST_SDL_H)
 #include <SDL.h>

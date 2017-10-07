@@ -18,7 +18,7 @@
 #include "./alphai_dec.h"
 #include "./webpi_dec.h"
 #include "./vp8i_dec.h"
-#include "../utils/utils.h"
+#include "src/utils/utils.h"
 
 // In append mode, buffer allocations increase as multiples of this value.
 // Needs to be a power of 2.

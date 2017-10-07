@@ -16,7 +16,7 @@
 
 #if defined(WEBP_USE_MIPS_DSP_R2)
 
-#include "../dsp/dsp.h"
+#include "src/dsp/dsp.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
