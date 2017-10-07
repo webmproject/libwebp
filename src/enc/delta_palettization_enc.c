@@ -10,11 +10,11 @@
 // Author: Mislav Bradac (mislavm@google.com)
 //
 
-#include "./delta_palettization_enc.h"
+#include "src/enc/delta_palettization_enc.h"
 
 #ifdef WEBP_EXPERIMENTAL_FEATURES
-#include "../webp/types.h"
-#include "../dsp/lossless.h"
+#include "src/webp/types.h"
+#include "src/dsp/lossless.h"
 
 #define MK_COL(r, g, b) (((r) << 16) + ((g) << 8) + (b))
 

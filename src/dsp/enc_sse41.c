@@ -11,14 +11,14 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
-#include "./dsp.h"
+#include "src/dsp/dsp.h"
 
 #if defined(WEBP_USE_SSE41)
 #include <smmintrin.h>
 #include <stdlib.h>  // for abs()
 
-#include "./common_sse2.h"
-#include "../enc/vp8i_enc.h"
+#include "src/dsp/common_sse2.h"
+#include "src/enc/vp8i_enc.h"
 
 //------------------------------------------------------------------------------
 // Compute susceptibility based on DCT-coeff histograms.

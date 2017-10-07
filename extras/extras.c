@@ -10,7 +10,7 @@
 //  Additional WebP utilities.
 //
 
-#include "./extras.h"
+#include "extras/extras.h"
 #include "webp/format_constants.h"
 
 #include <assert.h>

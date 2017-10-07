@@ -11,14 +11,14 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
-#include "./dsp.h"
+#include "src/dsp/dsp.h"
 
 #if defined(WEBP_USE_SSE2)
 
 #include <assert.h>
 #include <emmintrin.h>
 
-#include "./common_sse2.h"
+#include "src/dsp/common_sse2.h"
 
 // Helper function
 static WEBP_INLINE void SubtractAndSquare(const __m128i a, const __m128i b,

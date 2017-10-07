@@ -15,12 +15,12 @@
 #include <stdlib.h>
 #include <math.h>
 
-#include "./vp8i_enc.h"
-#include "../utils/random_utils.h"
-#include "../utils/utils.h"
-#include "../dsp/dsp.h"
-#include "../dsp/lossless.h"
-#include "../dsp/yuv.h"
+#include "src/enc/vp8i_enc.h"
+#include "src/utils/random_utils.h"
+#include "src/utils/utils.h"
+#include "src/dsp/dsp.h"
+#include "src/dsp/lossless.h"
+#include "src/dsp/yuv.h"
 
 // Uncomment to disable gamma-compression during RGB->U/V averaging
 #define USE_GAMMA_COMPRESSION

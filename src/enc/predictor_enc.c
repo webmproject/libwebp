@@ -14,9 +14,9 @@
 //          Urvang Joshi (urvang@google.com)
 //          Vincent Rabaud (vrabaud@google.com)
 
-#include "../dsp/lossless.h"
-#include "../dsp/lossless_common.h"
-#include "./vp8li_enc.h"
+#include "src/dsp/lossless.h"
+#include "src/dsp/lossless_common.h"
+#include "src/enc/vp8li_enc.h"
 
 #define MAX_DIFF_COST (1e30f)
 

@@ -18,8 +18,8 @@
 extern "C" {
 #endif
 
-#include "../utils/rescaler_utils.h"
-#include "./vp8_dec.h"
+#include "src/utils/rescaler_utils.h"
+#include "src/dec/vp8_dec.h"
 
 //------------------------------------------------------------------------------
 // WebPDecParams: Decoding output parameters. Transient internal object.

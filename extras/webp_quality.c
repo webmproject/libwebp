@@ -11,8 +11,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "./extras.h"
-#include "../imageio/imageio_util.h"
+#include "extras/extras.h"
+#include "imageio/imageio_util.h"
 
 int main(int argc, const char *argv[]) {
   int c;

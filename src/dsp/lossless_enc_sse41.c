@@ -11,12 +11,12 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
-#include "./dsp.h"
+#include "src/dsp/dsp.h"
 
 #if defined(WEBP_USE_SSE41)
 #include <assert.h>
 #include <smmintrin.h>
-#include "./lossless.h"
+#include "src/dsp/lossless.h"
 
 //------------------------------------------------------------------------------
 // Subtract-Green Transform
