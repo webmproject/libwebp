@@ -88,8 +88,8 @@
 }
 
 // Turn the macro into a function for reducing code-size when non-critical
-static void Upsample32Pixels(const uint8_t r1[], const uint8_t r2[],
-                             uint8_t* const out) {
+static void Upsample32Pixels_SSE2(const uint8_t r1[], const uint8_t r2[],
+                                  uint8_t* const out) {
   UPSAMPLE_32PIXELS(r1, r2, out);
 }
 
@@ -101,7 +101,7 @@ static void Upsample32Pixels(const uint8_t r1[], const uint8_t r2[],
   memset(r1 + (num_pixels), r1[(num_pixels) - 1], 17 - (num_pixels));          \
   memset(r2 + (num_pixels), r2[(num_pixels) - 1], 17 - (num_pixels));          \
   /* using the shared function instead of the macro saves ~3k code size */     \
-  Upsample32Pixels(r1, r2, out);                                               \
+  Upsample32Pixels_SSE2(r1, r2, out);                                          \
 }
 
 #define CONVERT2RGB(FUNC, XSTEP, top_y, bottom_y,                              \
@@ -169,13 +169,13 @@ static void FUNC_NAME(const uint8_t* top_y, const uint8_t* bottom_y,           \
 }
 
 // SSE2 variants of the fancy upsampler.
-SSE2_UPSAMPLE_FUNC(UpsampleRgbLinePair,  VP8YuvToRgb,  3)
-SSE2_UPSAMPLE_FUNC(UpsampleBgrLinePair,  VP8YuvToBgr,  3)
-SSE2_UPSAMPLE_FUNC(UpsampleRgbaLinePair, VP8YuvToRgba, 4)
-SSE2_UPSAMPLE_FUNC(UpsampleBgraLinePair, VP8YuvToBgra, 4)
-SSE2_UPSAMPLE_FUNC(UpsampleArgbLinePair, VP8YuvToArgb, 4)
-SSE2_UPSAMPLE_FUNC(UpsampleRgba4444LinePair, VP8YuvToRgba4444, 2)
-SSE2_UPSAMPLE_FUNC(UpsampleRgb565LinePair, VP8YuvToRgb565, 2)
+SSE2_UPSAMPLE_FUNC(UpsampleRgbLinePair_SSE2,  VP8YuvToRgb,  3)
+SSE2_UPSAMPLE_FUNC(UpsampleBgrLinePair_SSE2,  VP8YuvToBgr,  3)
+SSE2_UPSAMPLE_FUNC(UpsampleRgbaLinePair_SSE2, VP8YuvToRgba, 4)
+SSE2_UPSAMPLE_FUNC(UpsampleBgraLinePair_SSE2, VP8YuvToBgra, 4)
+SSE2_UPSAMPLE_FUNC(UpsampleArgbLinePair_SSE2, VP8YuvToArgb, 4)
+SSE2_UPSAMPLE_FUNC(UpsampleRgba4444LinePair_SSE2, VP8YuvToRgba4444, 2)
+SSE2_UPSAMPLE_FUNC(UpsampleRgb565LinePair_SSE2, VP8YuvToRgb565, 2)
 
 #undef GET_M
 #undef PACK_AND_STORE
@@ -193,17 +193,17 @@ extern WebPUpsampleLinePairFunc WebPUpsamplers[/* MODE_LAST */];
 extern void WebPInitUpsamplersSSE2(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void WebPInitUpsamplersSSE2(void) {
-  WebPUpsamplers[MODE_RGB]  = UpsampleRgbLinePair;
-  WebPUpsamplers[MODE_RGBA] = UpsampleRgbaLinePair;
-  WebPUpsamplers[MODE_BGR]  = UpsampleBgrLinePair;
-  WebPUpsamplers[MODE_BGRA] = UpsampleBgraLinePair;
-  WebPUpsamplers[MODE_ARGB] = UpsampleArgbLinePair;
-  WebPUpsamplers[MODE_rgbA] = UpsampleRgbaLinePair;
-  WebPUpsamplers[MODE_bgrA] = UpsampleBgraLinePair;
-  WebPUpsamplers[MODE_Argb] = UpsampleArgbLinePair;
-  WebPUpsamplers[MODE_RGB_565] = UpsampleRgb565LinePair;
-  WebPUpsamplers[MODE_RGBA_4444] = UpsampleRgba4444LinePair;
-  WebPUpsamplers[MODE_rgbA_4444] = UpsampleRgba4444LinePair;
+  WebPUpsamplers[MODE_RGB]  = UpsampleRgbLinePair_SSE2;
+  WebPUpsamplers[MODE_RGBA] = UpsampleRgbaLinePair_SSE2;
+  WebPUpsamplers[MODE_BGR]  = UpsampleBgrLinePair_SSE2;
+  WebPUpsamplers[MODE_BGRA] = UpsampleBgraLinePair_SSE2;
+  WebPUpsamplers[MODE_ARGB] = UpsampleArgbLinePair_SSE2;
+  WebPUpsamplers[MODE_rgbA] = UpsampleRgbaLinePair_SSE2;
+  WebPUpsamplers[MODE_bgrA] = UpsampleBgraLinePair_SSE2;
+  WebPUpsamplers[MODE_Argb] = UpsampleArgbLinePair_SSE2;
+  WebPUpsamplers[MODE_RGB_565] = UpsampleRgb565LinePair_SSE2;
+  WebPUpsamplers[MODE_RGBA_4444] = UpsampleRgba4444LinePair_SSE2;
+  WebPUpsamplers[MODE_rgbA_4444] = UpsampleRgba4444LinePair_SSE2;
 }
 
 #endif  // FANCY_UPSAMPLING
