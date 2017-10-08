@@ -178,8 +178,8 @@ static void CollectColorRedTransforms_SSE2(const uint32_t* argb, int stride,
 //------------------------------------------------------------------------------
 
 #define LINE_SIZE 16    // 8 or 16
-static void AddVector(const uint32_t* a, const uint32_t* b, uint32_t* out,
-                      int size) {
+static void AddVector_SSE2(const uint32_t* a, const uint32_t* b, uint32_t* out,
+                           int size) {
   int i;
   assert(size % LINE_SIZE == 0);
   for (i = 0; i < size; i += LINE_SIZE) {
@@ -204,7 +204,7 @@ static void AddVector(const uint32_t* a, const uint32_t* b, uint32_t* out,
   }
 }
 
-static void AddVectorEq(const uint32_t* a, uint32_t* out, int size) {
+static void AddVectorEq_SSE2(const uint32_t* a, uint32_t* out, int size) {
   int i;
   assert(size % LINE_SIZE == 0);
   for (i = 0; i < size; i += LINE_SIZE) {
@@ -239,15 +239,15 @@ static void HistogramAdd_SSE2(const VP8LHistogram* const a,
   const int literal_size = VP8LHistogramNumCodes(a->palette_code_bits_);
   assert(a->palette_code_bits_ == b->palette_code_bits_);
   if (b != out) {
-    AddVector(a->literal_, b->literal_, out->literal_, NUM_LITERAL_CODES);
-    AddVector(a->red_, b->red_, out->red_, NUM_LITERAL_CODES);
-    AddVector(a->blue_, b->blue_, out->blue_, NUM_LITERAL_CODES);
-    AddVector(a->alpha_, b->alpha_, out->alpha_, NUM_LITERAL_CODES);
+    AddVector_SSE2(a->literal_, b->literal_, out->literal_, NUM_LITERAL_CODES);
+    AddVector_SSE2(a->red_, b->red_, out->red_, NUM_LITERAL_CODES);
+    AddVector_SSE2(a->blue_, b->blue_, out->blue_, NUM_LITERAL_CODES);
+    AddVector_SSE2(a->alpha_, b->alpha_, out->alpha_, NUM_LITERAL_CODES);
   } else {
-    AddVectorEq(a->literal_, out->literal_, NUM_LITERAL_CODES);
-    AddVectorEq(a->red_, out->red_, NUM_LITERAL_CODES);
-    AddVectorEq(a->blue_, out->blue_, NUM_LITERAL_CODES);
-    AddVectorEq(a->alpha_, out->alpha_, NUM_LITERAL_CODES);
+    AddVectorEq_SSE2(a->literal_, out->literal_, NUM_LITERAL_CODES);
+    AddVectorEq_SSE2(a->red_, out->red_, NUM_LITERAL_CODES);
+    AddVectorEq_SSE2(a->blue_, out->blue_, NUM_LITERAL_CODES);
+    AddVectorEq_SSE2(a->alpha_, out->alpha_, NUM_LITERAL_CODES);
   }
   for (i = NUM_LITERAL_CODES; i < literal_size; ++i) {
     out->literal_[i] = a->literal_[i] + b->literal_[i];
@@ -575,8 +575,8 @@ static void PredictorSub10_SSE2(const uint32_t* in, const uint32_t* upper,
 }
 
 // Predictor11: select.
-static void GetSumAbsDiff32(const __m128i* const A, const __m128i* const B,
-                            __m128i* const out) {
+static void GetSumAbsDiff32_SSE2(const __m128i* const A, const __m128i* const B,
+                                 __m128i* const out) {
   // We can unpack with any value on the upper 32 bits, provided it's the same
   // on both operands (to that their sum of abs diff is zero). Here we use *A.
   const __m128i A_lo = _mm_unpacklo_epi32(*A, *A);
@@ -597,8 +597,8 @@ static void PredictorSub11_SSE2(const uint32_t* in, const uint32_t* upper,
     const __m128i TL = _mm_loadu_si128((const __m128i*)&upper[i - 1]);
     const __m128i src = _mm_loadu_si128((const __m128i*)&in[i]);
     __m128i pa, pb;
-    GetSumAbsDiff32(&T, &TL, &pa);   // pa = sum |T-TL|
-    GetSumAbsDiff32(&L, &TL, &pb);   // pb = sum |L-TL|
+    GetSumAbsDiff32_SSE2(&T, &TL, &pa);   // pa = sum |T-TL|
+    GetSumAbsDiff32_SSE2(&L, &TL, &pb);   // pb = sum |L-TL|
     {
       const __m128i mask = _mm_cmpgt_epi32(pb, pa);
       const __m128i A = _mm_and_si128(mask, L);
