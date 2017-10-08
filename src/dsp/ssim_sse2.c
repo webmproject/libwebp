@@ -21,8 +21,8 @@
 #include "./common_sse2.h"
 
 // Helper function
-static WEBP_INLINE void SubtractAndSquare(const __m128i a, const __m128i b,
-                                          __m128i* const sum) {
+static WEBP_INLINE void SubtractAndSquare_SSE2(const __m128i a, const __m128i b,
+                                               __m128i* const sum) {
   // take abs(a-b) in 8b
   const __m128i a_b = _mm_subs_epu8(a, b);
   const __m128i b_a = _mm_subs_epu8(b, a);
@@ -57,15 +57,15 @@ static uint32_t AccumulateSSE_SSE2(const uint8_t* src1,
       const __m128i b1 = _mm_loadu_si128((const __m128i*)&src2[i]);
       __m128i sum2;
       i += 16;
-      SubtractAndSquare(a0, b0, &sum1);
+      SubtractAndSquare_SSE2(a0, b0, &sum1);
       sum = _mm_add_epi32(sum, sum1);
       a0 = _mm_loadu_si128((const __m128i*)&src1[i]);
       b0 = _mm_loadu_si128((const __m128i*)&src2[i]);
       i += 16;
-      SubtractAndSquare(a1, b1, &sum2);
+      SubtractAndSquare_SSE2(a1, b1, &sum2);
       sum = _mm_add_epi32(sum, sum2);
     }
-    SubtractAndSquare(a0, b0, &sum1);
+    SubtractAndSquare_SSE2(a0, b0, &sum1);
     sum = _mm_add_epi32(sum, sum1);
     _mm_storeu_si128((__m128i*)tmp, sum);
     sse2 += (tmp[3] + tmp[2] + tmp[1] + tmp[0]);
@@ -78,7 +78,7 @@ static uint32_t AccumulateSSE_SSE2(const uint8_t* src1,
   return sse2;
 }
 
-static uint32_t HorizontalAdd16b(const __m128i* const m) {
+static uint32_t HorizontalAdd16b_SSE2(const __m128i* const m) {
   uint16_t tmp[8];
   const __m128i a = _mm_srli_si128(*m, 8);
   const __m128i b = _mm_add_epi16(*m, a);
@@ -86,7 +86,7 @@ static uint32_t HorizontalAdd16b(const __m128i* const m) {
   return (uint32_t)tmp[3] + tmp[2] + tmp[1] + tmp[0];
 }
 
-static uint32_t HorizontalAdd32b(const __m128i* const m) {
+static uint32_t HorizontalAdd32b_SSE2(const __m128i* const m) {
   const __m128i a = _mm_srli_si128(*m, 8);
   const __m128i b = _mm_add_epi32(*m, a);
   const __m128i c = _mm_add_epi32(b, _mm_srli_si128(b, 4));
@@ -132,11 +132,11 @@ static double SSIMGet_SSE2(const uint8_t* src1, int stride1,
   ACCUMULATE_ROW(3);
   ACCUMULATE_ROW(2);
   ACCUMULATE_ROW(1);
-  stats.xm  = HorizontalAdd16b(&xm);
-  stats.ym  = HorizontalAdd16b(&ym);
-  stats.xxm = HorizontalAdd32b(&xxm);
-  stats.xym = HorizontalAdd32b(&xym);
-  stats.yym = HorizontalAdd32b(&yym);
+  stats.xm  = HorizontalAdd16b_SSE2(&xm);
+  stats.ym  = HorizontalAdd16b_SSE2(&ym);
+  stats.xxm = HorizontalAdd32b_SSE2(&xxm);
+  stats.xym = HorizontalAdd32b_SSE2(&xym);
+  stats.yym = HorizontalAdd32b_SSE2(&yym);
   return VP8SSIMFromStats(&stats);
 }
 
