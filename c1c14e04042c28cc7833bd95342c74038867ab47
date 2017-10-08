@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4aae7f0d_a78fb38d",
+        "filename": "src/dec/alpha_dec.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-10-08T19:32:05Z",
+      "side": 1,
+      "message": "i wonder if we should keep the ./ or replace with src/dec/ and so on and so forth...",
+      "range": {
+        "startLine": 17,
+        "startChar": 12,
+        "endLine": 17,
+        "endChar": 21
+      },
+      "revId": "c1c14e04042c28cc7833bd95342c74038867ab47",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
