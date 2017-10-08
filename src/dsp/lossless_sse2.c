@@ -24,8 +24,9 @@
 //------------------------------------------------------------------------------
 // Predictor Transform
 
-static WEBP_INLINE uint32_t ClampedAddSubtractFull(uint32_t c0, uint32_t c1,
-                                                   uint32_t c2) {
+static WEBP_INLINE uint32_t ClampedAddSubtractFull_SSE2(uint32_t c0,
+                                                        uint32_t c1,
+                                                        uint32_t c2) {
   const __m128i zero = _mm_setzero_si128();
   const __m128i C0 = _mm_unpacklo_epi8(_mm_cvtsi32_si128(c0), zero);
   const __m128i C1 = _mm_unpacklo_epi8(_mm_cvtsi32_si128(c1), zero);
@@ -37,8 +38,9 @@ static WEBP_INLINE uint32_t ClampedAddSubtractFull(uint32_t c0, uint32_t c1,
   return output;
 }
 
-static WEBP_INLINE uint32_t ClampedAddSubtractHalf(uint32_t c0, uint32_t c1,
-                                                   uint32_t c2) {
+static WEBP_INLINE uint32_t ClampedAddSubtractHalf_SSE2(uint32_t c0,
+                                                        uint32_t c1,
+                                                        uint32_t c2) {
   const __m128i zero = _mm_setzero_si128();
   const __m128i C0 = _mm_unpacklo_epi8(_mm_cvtsi32_si128(c0), zero);
   const __m128i C1 = _mm_unpacklo_epi8(_mm_cvtsi32_si128(c1), zero);
@@ -55,7 +57,7 @@ static WEBP_INLINE uint32_t ClampedAddSubtractHalf(uint32_t c0, uint32_t c1,
   return output;
 }
 
-static WEBP_INLINE uint32_t Select(uint32_t a, uint32_t b, uint32_t c) {
+static WEBP_INLINE uint32_t Select_SSE2(uint32_t a, uint32_t b, uint32_t c) {
   int pa_minus_pb;
   const __m128i zero = _mm_setzero_si128();
   const __m128i A0 = _mm_cvtsi32_si128(a);
@@ -88,8 +90,9 @@ static WEBP_INLINE void Average2_m128i(const __m128i* const a0,
   *avg = _mm_sub_epi8(avg1, one);
 }
 
-static WEBP_INLINE void Average2_uint32(const uint32_t a0, const uint32_t a1,
-                                        __m128i* const avg) {
+static WEBP_INLINE void Average2_uint32_SSE2(const uint32_t a0,
+                                             const uint32_t a1,
+                                             __m128i* const avg) {
   // (a + b) >> 1 = ((a + b + 1) >> 1) - ((a ^ b) & 1)
   const __m128i ones = _mm_set1_epi8(1);
   const __m128i A0 = _mm_cvtsi32_si128(a0);
@@ -99,7 +102,7 @@ static WEBP_INLINE void Average2_uint32(const uint32_t a0, const uint32_t a1,
   *avg = _mm_sub_epi8(avg1, one);
 }
 
-static WEBP_INLINE __m128i Average2_uint32_16(uint32_t a0, uint32_t a1) {
+static WEBP_INLINE __m128i Average2_uint32_16_SSE2(uint32_t a0, uint32_t a1) {
   const __m128i zero = _mm_setzero_si128();
   const __m128i A0 = _mm_unpacklo_epi8(_mm_cvtsi32_si128(a0), zero);
   const __m128i A1 = _mm_unpacklo_epi8(_mm_cvtsi32_si128(a1), zero);
@@ -107,15 +110,16 @@ static WEBP_INLINE __m128i Average2_uint32_16(uint32_t a0, uint32_t a1) {
   return _mm_srli_epi16(sum, 1);
 }
 
-static WEBP_INLINE uint32_t Average2(uint32_t a0, uint32_t a1) {
+static WEBP_INLINE uint32_t Average2_SSE2(uint32_t a0, uint32_t a1) {
   __m128i output;
-  Average2_uint32(a0, a1, &output);
+  Average2_uint32_SSE2(a0, a1, &output);
   return _mm_cvtsi128_si32(output);
 }
 
-static WEBP_INLINE uint32_t Average3(uint32_t a0, uint32_t a1, uint32_t a2) {
+static WEBP_INLINE uint32_t Average3_SSE2(uint32_t a0, uint32_t a1,
+                                          uint32_t a2) {
   const __m128i zero = _mm_setzero_si128();
-  const __m128i avg1 = Average2_uint32_16(a0, a2);
+  const __m128i avg1 = Average2_uint32_16_SSE2(a0, a2);
   const __m128i A1 = _mm_unpacklo_epi8(_mm_cvtsi32_si128(a1), zero);
   const __m128i sum = _mm_add_epi16(avg1, A1);
   const __m128i avg2 = _mm_srli_epi16(sum, 1);
@@ -124,10 +128,10 @@ static WEBP_INLINE uint32_t Average3(uint32_t a0, uint32_t a1, uint32_t a2) {
   return output;
 }
 
-static WEBP_INLINE uint32_t Average4(uint32_t a0, uint32_t a1,
-                                     uint32_t a2, uint32_t a3) {
-  const __m128i avg1 = Average2_uint32_16(a0, a1);
-  const __m128i avg2 = Average2_uint32_16(a2, a3);
+static WEBP_INLINE uint32_t Average4_SSE2(uint32_t a0, uint32_t a1,
+                                          uint32_t a2, uint32_t a3) {
+  const __m128i avg1 = Average2_uint32_16_SSE2(a0, a1);
+  const __m128i avg2 = Average2_uint32_16_SSE2(a2, a3);
   const __m128i sum = _mm_add_epi16(avg2, avg1);
   const __m128i avg3 = _mm_srli_epi16(sum, 1);
   const __m128i A0 = _mm_packus_epi16(avg3, avg3);
@@ -136,41 +140,41 @@ static WEBP_INLINE uint32_t Average4(uint32_t a0, uint32_t a1,
 }
 
 static uint32_t Predictor5_SSE2(uint32_t left, const uint32_t* const top) {
-  const uint32_t pred = Average3(left, top[0], top[1]);
+  const uint32_t pred = Average3_SSE2(left, top[0], top[1]);
   return pred;
 }
 static uint32_t Predictor6_SSE2(uint32_t left, const uint32_t* const top) {
-  const uint32_t pred = Average2(left, top[-1]);
+  const uint32_t pred = Average2_SSE2(left, top[-1]);
   return pred;
 }
 static uint32_t Predictor7_SSE2(uint32_t left, const uint32_t* const top) {
-  const uint32_t pred = Average2(left, top[0]);
+  const uint32_t pred = Average2_SSE2(left, top[0]);
   return pred;
 }
 static uint32_t Predictor8_SSE2(uint32_t left, const uint32_t* const top) {
-  const uint32_t pred = Average2(top[-1], top[0]);
+  const uint32_t pred = Average2_SSE2(top[-1], top[0]);
   (void)left;
   return pred;
 }
 static uint32_t Predictor9_SSE2(uint32_t left, const uint32_t* const top) {
-  const uint32_t pred = Average2(top[0], top[1]);
+  const uint32_t pred = Average2_SSE2(top[0], top[1]);
   (void)left;
   return pred;
 }
 static uint32_t Predictor10_SSE2(uint32_t left, const uint32_t* const top) {
-  const uint32_t pred = Average4(left, top[-1], top[0], top[1]);
+  const uint32_t pred = Average4_SSE2(left, top[-1], top[0], top[1]);
   return pred;
 }
 static uint32_t Predictor11_SSE2(uint32_t left, const uint32_t* const top) {
-  const uint32_t pred = Select(top[0], left, top[-1]);
+  const uint32_t pred = Select_SSE2(top[0], left, top[-1]);
   return pred;
 }
 static uint32_t Predictor12_SSE2(uint32_t left, const uint32_t* const top) {
-  const uint32_t pred = ClampedAddSubtractFull(left, top[0], top[-1]);
+  const uint32_t pred = ClampedAddSubtractFull_SSE2(left, top[0], top[-1]);
   return pred;
 }
 static uint32_t Predictor13_SSE2(uint32_t left, const uint32_t* const top) {
-  const uint32_t pred = ClampedAddSubtractHalf(left, top[0], top[-1]);
+  const uint32_t pred = ClampedAddSubtractHalf_SSE2(left, top[0], top[-1]);
   return pred;
 }
 
