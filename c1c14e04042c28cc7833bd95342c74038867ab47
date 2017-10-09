@@ -22,6 +22,30 @@
       "revId": "c1c14e04042c28cc7833bd95342c74038867ab47",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9d819129_cdbb0dd4",
+        "filename": "src/dec/alpha_dec.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-10-09T19:17:26Z",
+      "side": 1,
+      "message": "\u003e i wonder if we should keep the ./ or replace with src/dec/ and so on and so forth...\n\nwe probably should normalize them, adding it here shouldn\u0027t add too many more lines.",
+      "parentUuid": "4aae7f0d_a78fb38d",
+      "range": {
+        "startLine": 17,
+        "startChar": 12,
+        "endLine": 17,
+        "endChar": 21
+      },
+      "revId": "c1c14e04042c28cc7833bd95342c74038867ab47",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
