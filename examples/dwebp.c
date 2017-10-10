@@ -126,48 +126,49 @@ static uint8_t* AllocateExternalBuffer(WebPDecoderConfig* config,
     h = config->options.crop_height;
   }
   if (format >= RGB && format <= rgbA_4444) {
-    const int bpp = (format == RGB || format == BGR) ? 3
-                  : (format == RGBA_4444 || format == rgbA_4444 ||
-                     format == RGB_565) ? 2
-                  : 4;
-    uint32_t stride = bpp * w + 7;   // <- just for exercising
-    external_buffer = (uint8_t*)malloc(stride * h);
+    const uint32_t bpp = (format == RGB || format == BGR) ? 3
+                       : (format == RGBA_4444 || format == rgbA_4444 ||
+                          format == RGB_565) ? 2
+                       : 4;
+    const uint32_t stride = bpp * (uint32_t)w;
+    external_buffer = (uint8_t*)malloc(stride * (uint32_t)h);
     if (external_buffer == NULL) return NULL;
-    output_buffer->u.RGBA.stride = stride;
-    output_buffer->u.RGBA.size = stride * h;
+    output_buffer->u.RGBA.stride = (int)stride;
+    output_buffer->u.RGBA.size = stride * (uint32_t)h;
     output_buffer->u.RGBA.rgba = external_buffer;
   } else {    // YUV and YUVA
     const int has_alpha = WebPIsAlphaMode(output_buffer->colorspace);
     uint8_t* tmp;
-    uint32_t stride = w + 3;
-    uint32_t uv_stride = (w + 1) / 2 + 13;
-    uint32_t total_size = stride * h * (has_alpha ? 2 : 1)
-                        + 2 * uv_stride * (h + 1) / 2;
+    const uint32_t stride = (uint32_t)w;
+    const uint32_t uv_stride = (uint32_t)(w + 1) / 2;
+    const uint32_t uv_height = (uint32_t)(h + 1) / 2;
+    const uint32_t total_size = stride * (uint32_t)h * (has_alpha ? 2 : 1)
+                              + 2 * uv_stride * uv_height;
     assert(format >= YUV && format <= YUVA);
     external_buffer = (uint8_t*)malloc(total_size);
     if (external_buffer == NULL) return NULL;
     tmp = external_buffer;
     output_buffer->u.YUVA.y = tmp;
-    output_buffer->u.YUVA.y_stride = stride;
-    output_buffer->u.YUVA.y_size = stride * h;
+    output_buffer->u.YUVA.y_stride = (int)stride;
+    output_buffer->u.YUVA.y_size = stride * (uint32_t)h;
     tmp += output_buffer->u.YUVA.y_size;
     if (has_alpha) {
       output_buffer->u.YUVA.a = tmp;
-      output_buffer->u.YUVA.a_stride = stride;
-      output_buffer->u.YUVA.a_size = stride * h;
+      output_buffer->u.YUVA.a_stride = (int)stride;
+      output_buffer->u.YUVA.a_size = stride * (uint32_t)h;
       tmp += output_buffer->u.YUVA.a_size;
     } else {
       output_buffer->u.YUVA.a = NULL;
       output_buffer->u.YUVA.a_stride = 0;
     }
     output_buffer->u.YUVA.u = tmp;
-    output_buffer->u.YUVA.u_stride = uv_stride;
-    output_buffer->u.YUVA.u_size = uv_stride * (h + 1) / 2;
+    output_buffer->u.YUVA.u_stride = (int)uv_stride;
+    output_buffer->u.YUVA.u_size = uv_stride * uv_height;
     tmp += output_buffer->u.YUVA.u_size;
 
     output_buffer->u.YUVA.v = tmp;
-    output_buffer->u.YUVA.v_stride = uv_stride;
-    output_buffer->u.YUVA.v_size = uv_stride * (h + 1) / 2;
+    output_buffer->u.YUVA.v_stride = (int)uv_stride;
+    output_buffer->u.YUVA.v_size = uv_stride * uv_height;
     tmp += output_buffer->u.YUVA.v_size;
     assert(tmp <= external_buffer + total_size);
   }

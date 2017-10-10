@@ -41,7 +41,7 @@ static WEBP_INLINE double SSIMCalculation(
     // we descale by 8 to prevent overflow during the fnum/fden multiply.
     const uint64_t num_S = (2 * (uint64_t)(sxy < 0 ? 0 : sxy) + C2) >> 8;
     const uint64_t den_S = (sxx + syy + C2) >> 8;
-    const uint64_t fnum = (2 * xmym + C1) * num_S;
+    const uint64_t fnum = (uint64_t)(2 * xmym + C1) * num_S;
     const uint64_t fden = (xmxm + ymym + C1) * den_S;
     const double r = (double)fnum / fden;
     assert(r >= 0. && r <= 1.0);
@@ -116,7 +116,7 @@ static uint32_t AccumulateSSE_C(const uint8_t* src1,
   assert(len <= 65535);  // to ensure that accumulation fits within uint32_t
   for (i = 0; i < len; ++i) {
     const int32_t diff = src1[i] - src2[i];
-    sse2 += diff * diff;
+    sse2 += (uint32_t)(diff * diff);
   }
   return sse2;
 }

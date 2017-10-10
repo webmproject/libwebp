@@ -12,7 +12,8 @@
 #include "./image_dec.h"
 
 static WEBP_INLINE uint32_t GetBE32(const uint8_t buf[]) {
-  return ((uint32_t)buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3];
+  return ((uint32_t)buf[0] << 24) | ((uint32_t)buf[1] << 16) |
+         ((uint32_t)buf[2] <<  8) | ((uint32_t)buf[3] <<  0);
 }
 
 WebPInputFileFormat WebPGuessImageType(const uint8_t* const data,

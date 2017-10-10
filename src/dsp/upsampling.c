@@ -32,7 +32,7 @@ WebPUpsampleLinePairFunc WebPUpsamplers[MODE_LAST];
 //  ([3*a +   b + 9*c + 3*d      a + 3*b + 3*c + 9*d]   [8 8]) / 16
 
 // We process u and v together stashed into 32bit (16bit each).
-#define LOAD_UV(u, v) ((u) | ((v) << 16))
+#define LOAD_UV(u, v) ((u) | ((uint32_t)(v) << 16))
 
 #define UPSAMPLE_FUNC(FUNC_NAME, FUNC, XSTEP)                                  \
 static void FUNC_NAME(const uint8_t* top_y, const uint8_t* bottom_y,           \
@@ -46,11 +46,11 @@ static void FUNC_NAME(const uint8_t* top_y, const uint8_t* bottom_y,           \
   assert(top_y != NULL);                                                       \
   {                                                                            \
     const uint32_t uv0 = (3 * tl_uv + l_uv + 0x00020002u) >> 2;                \
-    FUNC(top_y[0], uv0 & 0xff, (uv0 >> 16), top_dst);                          \
+    FUNC(top_y[0], (uint8_t)(uv0 & 0xff), (uint8_t)(uv0 >> 16), top_dst);      \
   }                                                                            \
   if (bottom_y != NULL) {                                                      \
     const uint32_t uv0 = (3 * l_uv + tl_uv + 0x00020002u) >> 2;                \
-    FUNC(bottom_y[0], uv0 & 0xff, (uv0 >> 16), bottom_dst);                    \
+    FUNC(bottom_y[0], (uint8_t)(uv0 & 0xff), (uint8_t)(uv0 >> 16), bottom_dst);\
   }                                                                            \
   for (x = 1; x <= last_pixel_pair; ++x) {                                     \
     const uint32_t t_uv = LOAD_UV(top_u[x], top_v[x]);  /* top sample */       \
@@ -62,17 +62,17 @@ static void FUNC_NAME(const uint8_t* top_y, const uint8_t* bottom_y,           \
     {                                                                          \
       const uint32_t uv0 = (diag_12 + tl_uv) >> 1;                             \
       const uint32_t uv1 = (diag_03 + t_uv) >> 1;                              \
-      FUNC(top_y[2 * x - 1], uv0 & 0xff, (uv0 >> 16),                          \
+      FUNC(top_y[2 * x - 1], (uint8_t)(uv0 & 0xff), (uint8_t)(uv0 >> 16),      \
            top_dst + (2 * x - 1) * (XSTEP));                                   \
-      FUNC(top_y[2 * x - 0], uv1 & 0xff, (uv1 >> 16),                          \
+      FUNC(top_y[2 * x - 0], (uint8_t)(uv1 & 0xff), (uint8_t)(uv1 >> 16),      \
            top_dst + (2 * x - 0) * (XSTEP));                                   \
     }                                                                          \
     if (bottom_y != NULL) {                                                    \
       const uint32_t uv0 = (diag_03 + l_uv) >> 1;                              \
       const uint32_t uv1 = (diag_12 + uv) >> 1;                                \
-      FUNC(bottom_y[2 * x - 1], uv0 & 0xff, (uv0 >> 16),                       \
+      FUNC(bottom_y[2 * x - 1], (uint8_t)(uv0 & 0xff), (uint8_t)(uv0 >> 16),   \
            bottom_dst + (2 * x - 1) * (XSTEP));                                \
-      FUNC(bottom_y[2 * x + 0], uv1 & 0xff, (uv1 >> 16),                       \
+      FUNC(bottom_y[2 * x + 0], (uint8_t)(uv1 & 0xff), (uint8_t)(uv1 >> 16),   \
            bottom_dst + (2 * x + 0) * (XSTEP));                                \
     }                                                                          \
     tl_uv = t_uv;                                                              \
@@ -81,12 +81,12 @@ static void FUNC_NAME(const uint8_t* top_y, const uint8_t* bottom_y,           \
   if (!(len & 1)) {                                                            \
     {                                                                          \
       const uint32_t uv0 = (3 * tl_uv + l_uv + 0x00020002u) >> 2;              \
-      FUNC(top_y[len - 1], uv0 & 0xff, (uv0 >> 16),                            \
+      FUNC(top_y[len - 1], (uint8_t)(uv0 & 0xff), (uint8_t)(uv0 >> 16),        \
            top_dst + (len - 1) * (XSTEP));                                     \
     }                                                                          \
     if (bottom_y != NULL) {                                                    \
       const uint32_t uv0 = (3 * l_uv + tl_uv + 0x00020002u) >> 2;              \
-      FUNC(bottom_y[len - 1], uv0 & 0xff, (uv0 >> 16),                         \
+      FUNC(bottom_y[len - 1], (uint8_t)(uv0 & 0xff), (uint8_t)(uv0 >> 16),     \
            bottom_dst + (len - 1) * (XSTEP));                                  \
     }                                                                          \
   }                                                                            \

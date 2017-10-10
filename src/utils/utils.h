@@ -82,24 +82,24 @@ static WEBP_INLINE int GetLE16(const uint8_t* const data) {
 }
 
 static WEBP_INLINE int GetLE24(const uint8_t* const data) {
-  return GetLE16(data) | (data[2] << 16);
+  return GetLE16(data) | (int)(data[2] << 16);
 }
 
 static WEBP_INLINE uint32_t GetLE32(const uint8_t* const data) {
-  return GetLE16(data) | ((uint32_t)GetLE16(data + 2) << 16);
+  return (uint32_t)GetLE16(data) | ((uint32_t)GetLE16(data + 2) << 16);
 }
 
 // Store 16, 24 or 32 bits in little-endian order.
 static WEBP_INLINE void PutLE16(uint8_t* const data, int val) {
   assert(val < (1 << 16));
-  data[0] = (val >> 0);
-  data[1] = (val >> 8);
+  data[0] = (uint8_t)(val >> 0);
+  data[1] = (uint8_t)(val >> 8);
 }
 
 static WEBP_INLINE void PutLE24(uint8_t* const data, int val) {
   assert(val < (1 << 24));
   PutLE16(data, val & 0xffff);
-  data[2] = (val >> 16);
+  data[2] = (uint8_t)(val >> 16);
 }
 
 static WEBP_INLINE void PutLE32(uint8_t* const data, uint32_t val) {

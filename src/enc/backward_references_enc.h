@@ -56,7 +56,7 @@ static WEBP_INLINE PixOrCopy PixOrCopyCreateCacheIdx(int idx) {
   assert(idx >= 0);
   assert(idx < (1 << MAX_COLOR_CACHE_BITS));
   retval.mode = kCacheIdx;
-  retval.argb_or_distance = idx;
+  retval.argb_or_distance = (uint32_t)idx;
   retval.len = 1;
   return retval;
 }

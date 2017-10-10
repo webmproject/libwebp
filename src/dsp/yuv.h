@@ -64,19 +64,20 @@ static WEBP_INLINE int MultHi(int v, int coeff) {   // _mm_mulhi_epu16 emulation
   return (v * coeff) >> 8;
 }
 
-static WEBP_INLINE int VP8Clip8(int v) {
-  return ((v & ~YUV_MASK2) == 0) ? (v >> YUV_FIX2) : (v < 0) ? 0 : 255;
+static WEBP_INLINE uint8_t VP8Clip8(int v) {
+  return ((v & ~YUV_MASK2) == 0) ? (uint8_t)(v >> YUV_FIX2)
+                                 : (v < 0) ? 0 : 255u;
 }
 
-static WEBP_INLINE int VP8YUVToR(int y, int v) {
+static WEBP_INLINE uint8_t VP8YUVToR(int y, int v) {
   return VP8Clip8(MultHi(y, 19077) + MultHi(v, 26149) - 14234);
 }
 
-static WEBP_INLINE int VP8YUVToG(int y, int u, int v) {
+static WEBP_INLINE uint8_t VP8YUVToG(int y, int u, int v) {
   return VP8Clip8(MultHi(y, 19077) - MultHi(u, 6419) - MultHi(v, 13320) + 8708);
 }
 
-static WEBP_INLINE int VP8YUVToB(int y, int u) {
+static WEBP_INLINE uint8_t VP8YUVToB(int y, int u) {
   return VP8Clip8(MultHi(y, 19077) + MultHi(u, 33050) - 17685);
 }
 
@@ -102,11 +103,11 @@ static WEBP_INLINE void VP8YuvToRgb565(int y, int u, int v,
   const int rg = (r & 0xf8) | (g >> 5);
   const int gb = ((g << 3) & 0xe0) | (b >> 3);
 #if (WEBP_SWAP_16BIT_CSP == 1)
-  rgb[0] = gb;
-  rgb[1] = rg;
+  rgb[0] = (uint8_t)gb;
+  rgb[1] = (uint8_t)rg;
 #else
-  rgb[0] = rg;
-  rgb[1] = gb;
+  rgb[0] = (uint8_t)rg;
+  rgb[1] = (uint8_t)gb;
 #endif
 }
 
@@ -118,11 +119,11 @@ static WEBP_INLINE void VP8YuvToRgba4444(int y, int u, int v,
   const int rg = (r & 0xf0) | (g >> 4);
   const int ba = (b & 0xf0) | 0x0f;     // overwrite the lower 4 bits
 #if (WEBP_SWAP_16BIT_CSP == 1)
-  argb[0] = ba;
-  argb[1] = rg;
+  argb[0] = (uint8_t)ba;
+  argb[1] = (uint8_t)rg;
 #else
-  argb[0] = rg;
-  argb[1] = ba;
+  argb[0] = (uint8_t)rg;
+  argb[1] = (uint8_t)ba;
 #endif
 }
 
