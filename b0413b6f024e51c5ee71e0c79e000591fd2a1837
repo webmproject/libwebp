@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5b45e267_c33c62c3",
+        "filename": "examples/dwebp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-10-11T05:39:40Z",
+      "side": 1,
+      "message": "not -Wsign-conversion is off by default in C++",
+      "range": {
+        "startLine": 137,
+        "startChar": 42,
+        "endLine": 137,
+        "endChar": 53
+      },
+      "revId": "b0413b6f024e51c5ee71e0c79e000591fd2a1837",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2346819e_675aa3b8",
+        "filename": "src/enc/backward_references_enc.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-10-11T05:39:40Z",
+      "side": 1,
+      "message": "oops, forgot to update these when I renamed things",
+      "range": {
+        "startLine": 14,
+        "startChar": 8,
+        "endLine": 14,
+        "endChar": 39
+      },
+      "revId": "b0413b6f024e51c5ee71e0c79e000591fd2a1837",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
