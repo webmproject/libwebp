@@ -88,8 +88,6 @@ model {
       } else {
         NEON = "c"
       }
-
-      cCompiler.args "-I" + file(".").absolutePath
     }
     // Link to pthread for shared libraries.
     withType(SharedLibraryBinarySpec) {

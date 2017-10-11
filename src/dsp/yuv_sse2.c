@@ -11,11 +11,11 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
-#include "src/dsp/yuv.h"
+#include "./yuv.h"
 
 #if defined(WEBP_USE_SSE2)
 
-#include "src/dsp/common_sse2.h"
+#include "./common_sse2.h"
 #include <stdlib.h>
 #include <emmintrin.h>
 

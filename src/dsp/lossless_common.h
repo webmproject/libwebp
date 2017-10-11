@@ -16,9 +16,9 @@
 #ifndef WEBP_DSP_LOSSLESS_COMMON_H_
 #define WEBP_DSP_LOSSLESS_COMMON_H_
 
-#include "src/webp/types.h"
+#include "../webp/types.h"
 
-#include "src/utils/utils.h"
+#include "../utils/utils.h"
 
 #ifdef __cplusplus
 extern "C" {

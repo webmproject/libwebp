@@ -1,4 +1,3 @@
-AM_CPPFLAGS += -I$(top_builddir) -I$(top_srcdir)
 noinst_LTLIBRARIES = libwebpencode.la
 
 libwebpencode_la_SOURCES =

@@ -13,8 +13,8 @@
 //          Vikas (vikasa@google.com)
 
 #include <assert.h>
-#include "src/mux/muxi.h"
-#include "src/utils/utils.h"
+#include "./muxi.h"
+#include "../utils/utils.h"
 
 //------------------------------------------------------------------------------
 // Life of a mux object.

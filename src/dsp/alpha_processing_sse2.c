@@ -11,7 +11,7 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
-#include "src/dsp/dsp.h"
+#include "./dsp.h"
 
 #if defined(WEBP_USE_SSE2)
 #include <emmintrin.h>

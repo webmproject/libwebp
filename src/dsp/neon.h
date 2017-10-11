@@ -14,7 +14,7 @@
 
 #include <arm_neon.h>
 
-#include "src/dsp/dsp.h"
+#include "./dsp.h"
 
 // Right now, some intrinsics functions seem slower, so we disable them
 // everywhere except newer clang/gcc or aarch64 where the inline assembly is

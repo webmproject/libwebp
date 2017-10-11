@@ -1,4 +1,3 @@
-AM_CPPFLAGS += -I$(top_builddir) -I$(top_srcdir)
 noinst_LTLIBRARIES = libwebputils.la
 
 if BUILD_LIBWEBPDECODER

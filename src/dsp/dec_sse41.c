@@ -11,13 +11,13 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
-#include "src/dsp/dsp.h"
+#include "./dsp.h"
 
 #if defined(WEBP_USE_SSE41)
 
 #include <smmintrin.h>
-#include "src/dec/vp8i_dec.h"
-#include "src/utils/utils.h"
+#include "../dec/vp8i_dec.h"
+#include "../utils/utils.h"
 
 static void HE16(uint8_t* dst) {     // horizontal
   int j;

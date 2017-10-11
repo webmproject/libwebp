@@ -11,13 +11,13 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
-#include "src/dsp/dsp.h"
+#include "./dsp.h"
 
 #if defined(WEBP_USE_SSE2)
 
-#include "src/dsp/common_sse2.h"
-#include "src/dsp/lossless.h"
-#include "src/dsp/lossless_common.h"
+#include "./common_sse2.h"
+#include "./lossless.h"
+#include "./lossless_common.h"
 #include <assert.h>
 #include <emmintrin.h>
 
