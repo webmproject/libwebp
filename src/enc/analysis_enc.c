@@ -15,9 +15,9 @@
 #include <string.h>
 #include <assert.h>
 
-#include "./vp8i_enc.h"
-#include "./cost_enc.h"
-#include "../utils/utils.h"
+#include "src/enc/vp8i_enc.h"
+#include "src/enc/cost_enc.h"
+#include "src/utils/utils.h"
 
 #define MAX_ITERS_K_MEANS  6
 

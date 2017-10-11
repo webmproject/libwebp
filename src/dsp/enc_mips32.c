@@ -13,13 +13,13 @@
 //            Jovan Zelincevic (jovan.zelincevic@imgtec.com)
 //            Slobodan Prijic  (slobodan.prijic@imgtec.com)
 
-#include "./dsp.h"
+#include "src/dsp/dsp.h"
 
 #if defined(WEBP_USE_MIPS32)
 
-#include "./mips_macro.h"
-#include "../enc/vp8i_enc.h"
-#include "../enc/cost_enc.h"
+#include "src/dsp/mips_macro.h"
+#include "src/enc/vp8i_enc.h"
+#include "src/enc/cost_enc.h"
 
 static const int kC1 = 20091 + (1 << 16);
 static const int kC2 = 35468;

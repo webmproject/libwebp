@@ -113,7 +113,7 @@ endif
 
 AR = ar
 ARFLAGS = r
-CPPFLAGS = -Isrc/ -Wall
+CPPFLAGS = -I. -Isrc/ -Wall
 CFLAGS = -O3 -DNDEBUG $(EXTRA_FLAGS)
 CC = gcc
 INSTALL = install

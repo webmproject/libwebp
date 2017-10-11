@@ -11,17 +11,17 @@
 //
 
 #ifdef HAVE_CONFIG_H
-#include "../webp/config.h"
+#include "src/webp/config.h"
 #endif
 
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "../utils/utils.h"
-#include "../webp/decode.h"     // WebPGetFeatures
-#include "../webp/demux.h"
-#include "../webp/format_constants.h"
+#include "src/utils/utils.h"
+#include "src/webp/decode.h"     // WebPGetFeatures
+#include "src/webp/demux.h"
+#include "src/webp/format_constants.h"
 
 #define DMUX_MAJ_VERSION 0
 #define DMUX_MIN_VERSION 3

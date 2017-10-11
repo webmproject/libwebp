@@ -11,12 +11,12 @@
 //
 // Author(s): Djordje Pesut (djordje.pesut@imgtec.com)
 
-#include "./dsp.h"
+#include "src/dsp/dsp.h"
 
 #if defined(WEBP_USE_MIPS32)
 
 #include <assert.h>
-#include "../utils/rescaler_utils.h"
+#include "src/utils/rescaler_utils.h"
 
 //------------------------------------------------------------------------------
 // Row import

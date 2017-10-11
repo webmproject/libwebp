@@ -11,14 +11,14 @@
 //
 // adapted from libvpx (http://www.webmproject.org/code/)
 
-#include "./dsp.h"
+#include "src/dsp/dsp.h"
 
 #if defined(WEBP_USE_NEON)
 
 #include <assert.h>
 
-#include "./neon.h"
-#include "../enc/vp8i_enc.h"
+#include "src/dsp/neon.h"
+#include "src/enc/vp8i_enc.h"
 
 //------------------------------------------------------------------------------
 // Transforms (Paragraph 14.4)

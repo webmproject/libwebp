@@ -15,12 +15,12 @@
 #define WEBP_DEC_VP8I_H_
 
 #include <string.h>     // for memcpy()
-#include "./common_dec.h"
-#include "./vp8li_dec.h"
-#include "../utils/bit_reader_utils.h"
-#include "../utils/random_utils.h"
-#include "../utils/thread_utils.h"
-#include "../dsp/dsp.h"
+#include "src/dec/common_dec.h"
+#include "src/dec/vp8li_dec.h"
+#include "src/utils/bit_reader_utils.h"
+#include "src/utils/random_utils.h"
+#include "src/utils/thread_utils.h"
+#include "src/dsp/dsp.h"
 
 #ifdef __cplusplus
 extern "C" {

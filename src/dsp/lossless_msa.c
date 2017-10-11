@@ -11,12 +11,12 @@
 //
 // Author: Prashant Patil (prashant.patil@imgtec.com)
 
-#include "./dsp.h"
+#include "src/dsp/dsp.h"
 
 #if defined(WEBP_USE_MSA)
 
-#include "./lossless.h"
-#include "./msa_macro.h"
+#include "src/dsp/lossless.h"
+#include "src/dsp/msa_macro.h"
 
 //------------------------------------------------------------------------------
 // Colorspace conversion functions

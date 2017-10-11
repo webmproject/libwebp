@@ -13,8 +13,8 @@
 #ifndef WEBP_ENC_DELTA_PALETTIZATION_H_
 #define WEBP_ENC_DELTA_PALETTIZATION_H_
 
-#include "../webp/encode.h"
-#include "../enc/vp8li_enc.h"
+#include "src/webp/encode.h"
+#include "src/enc/vp8li_enc.h"
 
 // Replaces enc->argb_[] input by a palettizable approximation of it,
 // and generates optimal enc->palette_[].

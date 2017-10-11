@@ -11,7 +11,7 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
-#include "./extras.h"
+#include "extras/extras.h"
 #include "webp/decode.h"
 
 #include <math.h>

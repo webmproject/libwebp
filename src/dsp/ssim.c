@@ -14,7 +14,7 @@
 #include <assert.h>
 #include <stdlib.h>  // for abs()
 
-#include "./dsp.h"
+#include "src/dsp/dsp.h"
 
 //------------------------------------------------------------------------------
 // SSIM / PSNR

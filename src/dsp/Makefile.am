@@ -1,3 +1,4 @@
+AM_CPPFLAGS += -I$(top_builddir) -I$(top_srcdir)
 noinst_LTLIBRARIES =
 noinst_LTLIBRARIES += libwebpdsp.la
 noinst_LTLIBRARIES += libwebpdsp_avx2.la

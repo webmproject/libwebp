@@ -11,7 +11,7 @@
 //
 // Author: Christian Duvivier (cduvivier@google.com)
 
-#include "./dsp.h"
+#include "src/dsp/dsp.h"
 
 #if defined(WEBP_HAVE_NEON_RTCD)
 #include <stdio.h>

@@ -14,15 +14,15 @@
 
 #include <stdlib.h>
 
-#include "./alphai_dec.h"
-#include "./vp8li_dec.h"
-#include "../dsp/dsp.h"
-#include "../dsp/lossless.h"
-#include "../dsp/lossless_common.h"
-#include "../dsp/yuv.h"
-#include "../utils/endian_inl_utils.h"
-#include "../utils/huffman_utils.h"
-#include "../utils/utils.h"
+#include "src/dec/alphai_dec.h"
+#include "src/dec/vp8li_dec.h"
+#include "src/dsp/dsp.h"
+#include "src/dsp/lossless.h"
+#include "src/dsp/lossless_common.h"
+#include "src/dsp/yuv.h"
+#include "src/utils/endian_inl_utils.h"
+#include "src/utils/huffman_utils.h"
+#include "src/utils/utils.h"
 
 #define NUM_ARGB_CACHE_ROWS          16
 

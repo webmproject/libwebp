@@ -12,12 +12,12 @@
 // Author: Prashant Patil (prashant.patil@imgtec.com)
 
 #include <string.h>
-#include "./dsp.h"
+#include "src/dsp/dsp.h"
 
 #if defined(WEBP_USE_MSA)
 
-#include "./msa_macro.h"
-#include "./yuv.h"
+#include "src/dsp/msa_macro.h"
+#include "src/dsp/yuv.h"
 
 #ifdef FANCY_UPSAMPLING
 

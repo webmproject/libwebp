@@ -13,7 +13,7 @@
 
 #include <string.h>
 
-#include "./vp8i_enc.h"
+#include "src/enc/vp8i_enc.h"
 
 //------------------------------------------------------------------------------
 // VP8Iterator

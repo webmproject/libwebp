@@ -13,8 +13,8 @@
 
 #include <assert.h>
 
-#include "./vp8i_enc.h"
-#include "../dsp/yuv.h"
+#include "src/enc/vp8i_enc.h"
+#include "src/dsp/yuv.h"
 
 static WEBP_INLINE uint32_t MakeARGB32(int r, int g, int b) {
   return (0xff000000u | (r << 16) | (g << 8) | b);
