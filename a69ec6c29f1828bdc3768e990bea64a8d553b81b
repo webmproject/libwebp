@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0ce23aef_e58a3f3d",
+        "filename": "src/webp/demux.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-10-17T19:51:58Z",
+      "side": 1,
+      "message": "could say bit-wise, but either way",
+      "range": {
+        "startLine": 118,
+        "startChar": 32,
+        "endLine": 118,
+        "endChar": 34
+      },
+      "revId": "a69ec6c29f1828bdc3768e990bea64a8d553b81b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
