@@ -115,20 +115,25 @@ WEBP_EXTERN void WebPDemuxDelete(WebPDemuxer* dmux);
 // Data/information extraction.
 
 typedef enum WebPFormatFeature {
-  WEBP_FF_FORMAT_FLAGS,  // Extended format flags present in the 'VP8X' chunk.
+  WEBP_FF_FORMAT_FLAGS,      // bit-wise combination of WebPFeatureFlags
+                             // corresponding to the 'VP8X' chunk (if present).
   WEBP_FF_CANVAS_WIDTH,
   WEBP_FF_CANVAS_HEIGHT,
-  WEBP_FF_LOOP_COUNT,
-  WEBP_FF_BACKGROUND_COLOR,
-  WEBP_FF_FRAME_COUNT    // Number of frames present in the demux object.
-                         // In case of a partial demux, this is the number of
-                         // frames seen so far, with the last frame possibly
-                         // being partial.
+  WEBP_FF_LOOP_COUNT,        // only relevant for animated file
+  WEBP_FF_BACKGROUND_COLOR,  // idem.
+  WEBP_FF_FRAME_COUNT        // Number of frames present in the demux object.
+                             // In case of a partial demux, this is the number
+                             // of frames seen so far, with the last frame
+                             // possibly being partial.
 } WebPFormatFeature;
 
 // Get the 'feature' value from the 'dmux'.
 // NOTE: values are only valid if WebPDemux() was used or WebPDemuxPartial()
 // returned a state > WEBP_DEMUX_PARSING_HEADER.
+// If 'feature' is WEBP_FF_FORMAT_FLAGS, the returned value is a bit-wise
+// combination of WebPFeatureFlags values.
+// If 'feature' is WEBP_FF_LOOP_COUNT, WEBP_FF_BACKGROUND_COLOR, the returned
+// value is only meaningful if the bitstream is animated.
 WEBP_EXTERN uint32_t WebPDemuxGetI(
     const WebPDemuxer* dmux, WebPFormatFeature feature);
 
