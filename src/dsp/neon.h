@@ -48,7 +48,7 @@
 #define WORK_AROUND_GCC
 #endif
 
-static WEBP_INLINE int32x4x4_t Transpose4x4(const int32x4x4_t rows) {
+static WEBP_INLINE int32x4x4_t Transpose4x4_NEON(const int32x4x4_t rows) {
   uint64x2x2_t row01, row23;
 
   row01.val[0] = vreinterpretq_u64_s32(rows.val[0]);

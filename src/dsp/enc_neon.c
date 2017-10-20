@@ -268,10 +268,12 @@ static uint8x16_t Load4x4_NEON(const uint8_t* src) {
 
 #if defined(WEBP_USE_INTRINSICS)
 
-static WEBP_INLINE void Transpose4x4_S16(const int16x4_t A, const int16x4_t B,
-                                         const int16x4_t C, const int16x4_t D,
-                                         int16x8_t* const out01,
-                                         int16x8_t* const out32) {
+static WEBP_INLINE void Transpose4x4_S16_NEON(const int16x4_t A,
+                                              const int16x4_t B,
+                                              const int16x4_t C,
+                                              const int16x4_t D,
+                                              int16x8_t* const out01,
+                                              int16x8_t* const out32) {
   const int16x4x2_t AB = vtrn_s16(A, B);
   const int16x4x2_t CD = vtrn_s16(C, D);
   const int32x2x2_t tmp02 = vtrn_s32(vreinterpret_s32_s16(AB.val[0]),
@@ -303,7 +305,7 @@ static void FTransform_NEON(const uint8_t* src, const uint8_t* ref,
     const int16x4_t D1 = vget_high_s16(D0D1);
     const int16x4_t D2 = vget_low_s16(D2D3);
     const int16x4_t D3 = vget_high_s16(D2D3);
-    Transpose4x4_S16(D0, D1, D2, D3, &d0d1, &d3d2);
+    Transpose4x4_S16_NEON(D0, D1, D2, D3, &d0d1, &d3d2);
   }
   {    // 1rst pass
     const int32x4_t kCst937 = vdupq_n_s32(937);
@@ -321,7 +323,7 @@ static void FTransform_NEON(const uint8_t* src, const uint8_t* ref,
     const int32x4_t a3_m_a2 = vmlsl_n_s16(a3_2217, vget_high_s16(a3a2), 5352);
     const int16x4_t tmp1 = vshrn_n_s32(vaddq_s32(a2_p_a3, kCst1812), 9);
     const int16x4_t tmp3 = vshrn_n_s32(vaddq_s32(a3_m_a2, kCst937), 9);
-    Transpose4x4_S16(tmp0, tmp1, tmp2, tmp3, &d0d1, &d3d2);
+    Transpose4x4_S16_NEON(tmp0, tmp1, tmp2, tmp3, &d0d1, &d3d2);
   }
   {    // 2nd pass
     // the (1<<16) addition is for the replacement: a3!=0  <-> 1-(a3==0)
@@ -519,7 +521,7 @@ static void FTransformWHT_NEON(const int16_t* src, int16_t* out) {
     tmp0.val[3] = vsubq_s32(a0, a1);
   }
   {
-    const int32x4x4_t tmp1 = Transpose4x4(tmp0);
+    const int32x4x4_t tmp1 = Transpose4x4_NEON(tmp0);
     // a0 = tmp[0 + i] + tmp[ 8 + i]
     // a1 = tmp[4 + i] + tmp[12 + i]
     // a2 = tmp[4 + i] - tmp[12 + i]
@@ -563,7 +565,7 @@ static void FTransformWHT_NEON(const int16_t* src, int16_t* out) {
 // a 26ae, b 26ae
 // a 37bf, b 37bf
 //
-static WEBP_INLINE int16x8x4_t DistoTranspose4x4S16(int16x8x4_t q4_in) {
+static WEBP_INLINE int16x8x4_t DistoTranspose4x4S16_NEON(int16x8x4_t q4_in) {
   const int16x8x2_t q2_tmp0 = vtrnq_s16(q4_in.val[0], q4_in.val[1]);
   const int16x8x2_t q2_tmp1 = vtrnq_s16(q4_in.val[2], q4_in.val[3]);
   const int32x4x2_t q2_tmp2 = vtrnq_s32(vreinterpretq_s32_s16(q2_tmp0.val[0]),
@@ -686,7 +688,7 @@ static int Disto4x4_NEON(const uint8_t* const a, const uint8_t* const b,
     const int16x8x4_t q4_v = DistoVerticalPass_NEON(d4_in);
     const int16x4x4_t d4_w = DistoLoadW_NEON(w);
     // horizontal pass
-    const int16x8x4_t q4_t = DistoTranspose4x4S16(q4_v);
+    const int16x8x4_t q4_t = DistoTranspose4x4S16_NEON(q4_v);
     const int16x8x4_t q4_h = DistoHorizontalPass_NEON(q4_t);
     int32x2_t d_sum = DistoSum_NEON(q4_h, d4_w);
 

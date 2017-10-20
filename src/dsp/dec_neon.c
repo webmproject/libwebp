@@ -1219,7 +1219,7 @@ static void TransformWHT_NEON(const int16_t* in, int16_t* out) {
     tmp.val[2] = vsubq_s32(a0, a1);
     tmp.val[3] = vsubq_s32(a3, a2);
     // Arrange the temporary results column-wise.
-    tmp = Transpose4x4(tmp);
+    tmp = Transpose4x4_NEON(tmp);
   }
 
   {
