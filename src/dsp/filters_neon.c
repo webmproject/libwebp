@@ -134,7 +134,7 @@ static WEBP_INLINE void DoVerticalFilter_NEON(const uint8_t* in,
 }
 
 static void VerticalFilter_NEON(const uint8_t* data, int width, int height,
-                               int stride, uint8_t* filtered_data) {
+                                int stride, uint8_t* filtered_data) {
   DoVerticalFilter_NEON(data, width, height, stride, 0, height,
                         filtered_data);
 }
@@ -196,7 +196,7 @@ static WEBP_INLINE void DoGradientFilter_NEON(const uint8_t* in,
 }
 
 static void GradientFilter_NEON(const uint8_t* data, int width, int height,
-                               int stride, uint8_t* filtered_data) {
+                                int stride, uint8_t* filtered_data) {
   DoGradientFilter_NEON(data, width, height, stride, 0, height,
                         filtered_data);
 }
@@ -294,7 +294,7 @@ static void GradientPredictInverse_NEON(const uint8_t* const in,
 #undef GRAD_PROCESS_LANE
 
 static void GradientUnfilter_NEON(const uint8_t* prev, const uint8_t* in,
-                                 uint8_t* out, int width) {
+                                  uint8_t* out, int width) {
   if (prev == NULL) {
     HorizontalUnfilter_NEON(NULL, in, out, width);
   } else {
