@@ -36,8 +36,8 @@ static const uint8_t kGreenShuffle[16] = {
   1, 255, 1, 255, 5, 255, 5, 255, 9, 255, 9, 255, 13, 255, 13, 255
 };
 
-static WEBP_INLINE uint8x16_t DoGreenShuffle(const uint8x16_t argb,
-                                             const uint8x16_t shuffle) {
+static WEBP_INLINE uint8x16_t DoGreenShuffle_NEON(const uint8x16_t argb,
+                                                  const uint8x16_t shuffle) {
   return vcombine_u8(vtbl1q_u8(argb, vget_low_u8(shuffle)),
                      vtbl1q_u8(argb, vget_high_u8(shuffle)));
 }
@@ -45,8 +45,8 @@ static WEBP_INLINE uint8x16_t DoGreenShuffle(const uint8x16_t argb,
 // 255 = byte will be zeroed
 static const uint8_t kGreenShuffle[8] = { 1, 255, 1, 255, 5, 255, 5, 255  };
 
-static WEBP_INLINE uint8x16_t DoGreenShuffle(const uint8x16_t argb,
-                                             const uint8x8_t shuffle) {
+static WEBP_INLINE uint8x16_t DoGreenShuffle_NEON(const uint8x16_t argb,
+                                                  const uint8x8_t shuffle) {
   return vcombine_u8(vtbl1_u8(vget_low_u8(argb), shuffle),
                      vtbl1_u8(vget_high_u8(argb), shuffle));
 }
@@ -62,7 +62,7 @@ static void SubtractGreenFromBlueAndRed_NEON(uint32_t* argb_data,
 #endif
   for (; argb_data < end; argb_data += 4) {
     const uint8x16_t argb = vld1q_u8((uint8_t*)argb_data);
-    const uint8x16_t greens = DoGreenShuffle(argb, shuffle);
+    const uint8x16_t greens = DoGreenShuffle_NEON(argb, shuffle);
     vst1q_u8((uint8_t*)argb_data, vsubq_u8(argb, greens));
   }
   // fallthrough and finish off with plain-C
@@ -103,7 +103,7 @@ static void TransformColor_NEON(const VP8LMultipliers* const m,
   for (i = 0; i + 4 <= num_pixels; i += 4) {
     const uint8x16_t in = vld1q_u8((uint8_t*)(argb_data + i));
     // 0 g 0 g
-    const uint8x16_t greens = DoGreenShuffle(in, shuffle);
+    const uint8x16_t greens = DoGreenShuffle_NEON(in, shuffle);
     // x dr  x db1
     const int16x8_t A = vqdmulhq_s16(vreinterpretq_s16_u8(greens), mults_rb);
     // r 0   b   0
