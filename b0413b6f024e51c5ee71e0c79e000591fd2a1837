@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "a81d687c_b3ff58bb",
+        "filename": "examples/dwebp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-10-20T06:42:31Z",
+      "side": 1,
+      "message": "i was thinking enabling the flags later in makefile.unix, as a safety net",
+      "parentUuid": "d3800a59_c969ce8f",
+      "range": {
+        "startLine": 137,
+        "startChar": 42,
+        "endLine": 137,
+        "endChar": 53
+      },
+      "revId": "b0413b6f024e51c5ee71e0c79e000591fd2a1837",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2346819e_675aa3b8",
         "filename": "src/enc/backward_references_enc.h",
         "patchSetId": 5
@@ -60,6 +84,30 @@
       "writtenOn": "2017-10-11T05:39:40Z",
       "side": 1,
       "message": "oops, forgot to update these when I renamed things",
+      "range": {
+        "startLine": 14,
+        "startChar": 8,
+        "endLine": 14,
+        "endChar": 39
+      },
+      "revId": "b0413b6f024e51c5ee71e0c79e000591fd2a1837",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f1929616_84d2c018",
+        "filename": "src/enc/backward_references_enc.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-10-20T06:42:31Z",
+      "side": 1,
+      "message": "(-\u003e separate patch)",
+      "parentUuid": "2346819e_675aa3b8",
       "range": {
         "startLine": 14,
         "startChar": 8,
