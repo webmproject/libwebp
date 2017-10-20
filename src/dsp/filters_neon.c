@@ -134,7 +134,7 @@ static WEBP_INLINE void DoVerticalFilter_NEON(const uint8_t* in,
 }
 
 static void VerticalFilter_NEON(const uint8_t* data, int width, int height,
-                               int stride, uint8_t* filtered_data) {
+                                int stride, uint8_t* filtered_data) {
   DoVerticalFilter_NEON(data, width, height, stride, 0, height,
                         filtered_data);
 }
@@ -142,7 +142,8 @@ static void VerticalFilter_NEON(const uint8_t* data, int width, int height,
 //------------------------------------------------------------------------------
 // Gradient filter.
 
-static WEBP_INLINE int GradientPredictor_C(uint8_t a, uint8_t b, uint8_t c) {
+static WEBP_INLINE int GradientPredictor_C_NEON(
+    uint8_t a, uint8_t b, uint8_t c) {
   const int g = a + b - c;
   return ((g & ~0xff) == 0) ? g : (g < 0) ? 0 : 255;  // clip to 8bit
 }
@@ -161,7 +162,7 @@ static void GradientPredictDirect_NEON(const uint8_t* const row,
     vst1_u8(&out[i], vsub_u8(F, E));
   }
   for (; i < length; ++i) {
-    out[i] = row[i] - GradientPredictor_C(row[i - 1], top[i], top[i - 1]);
+    out[i] = row[i] - GradientPredictor_C_NEON(row[i - 1], top[i], top[i - 1]);
   }
 }
 
@@ -196,7 +197,7 @@ static WEBP_INLINE void DoGradientFilter_NEON(const uint8_t* in,
 }
 
 static void GradientFilter_NEON(const uint8_t* data, int width, int height,
-                               int stride, uint8_t* filtered_data) {
+                                int stride, uint8_t* filtered_data) {
   DoGradientFilter_NEON(data, width, height, stride, 0, height,
                         filtered_data);
 }
@@ -287,14 +288,14 @@ static void GradientPredictInverse_NEON(const uint8_t* const in,
       vst1_u8(&row[i], out);
     }
     for (; i < length; ++i) {
-      row[i] = in[i] + GradientPredictor_C(row[i - 1], top[i], top[i - 1]);
+      row[i] = in[i] + GradientPredictor_C_NEON(row[i - 1], top[i], top[i - 1]);
     }
   }
 }
 #undef GRAD_PROCESS_LANE
 
 static void GradientUnfilter_NEON(const uint8_t* prev, const uint8_t* in,
-                                 uint8_t* out, int width) {
+                                  uint8_t* out, int width) {
   if (prev == NULL) {
     HorizontalUnfilter_NEON(NULL, in, out, width);
   } else {
