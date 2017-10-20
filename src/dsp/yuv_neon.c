@@ -176,7 +176,7 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitConvertARGBToYUVNEON(void) {
 //------------------------------------------------------------------------------
 
 #define MAX_Y ((1 << 10) - 1)    // 10b precision over 16b-arithmetic
-static uint16_t clip_y(int v) {
+static uint16_t clip_y_NEON(int v) {
   return (v < 0) ? 0 : (v > MAX_Y) ? MAX_Y : (uint16_t)v;
 }
 
@@ -204,7 +204,7 @@ static uint64_t SharpYUVUpdateY_NEON(const uint16_t* ref, const uint16_t* src,
   for (; i < len; ++i) {
     const int diff_y = ref[i] - src[i];
     const int new_y = (int)(dst[i]) + diff_y;
-    dst[i] = clip_y(new_y);
+    dst[i] = clip_y_NEON(new_y);
     diff += (uint64_t)(abs(diff_y));
   }
   return diff;
@@ -264,8 +264,8 @@ static void SharpYUVFilterRow_NEON(const int16_t* A, const int16_t* B, int len,
     const int a0a1b0b1 = a0b1 + a1b0 + 8;
     const int v0 = (8 * A[i + 0] + 2 * a1b0 + a0a1b0b1) >> 4;
     const int v1 = (8 * A[i + 1] + 2 * a0b1 + a0a1b0b1) >> 4;
-    out[2 * i + 0] = clip_y(best_y[2 * i + 0] + v0);
-    out[2 * i + 1] = clip_y(best_y[2 * i + 1] + v1);
+    out[2 * i + 0] = clip_y_NEON(best_y[2 * i + 0] + v0);
+    out[2 * i + 1] = clip_y_NEON(best_y[2 * i + 1] + v1);
   }
 }
 #undef MAX_Y
