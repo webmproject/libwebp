@@ -11,8 +11,8 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
-#ifndef WEBP_WEBP_DECODE_VP8_H_
-#define WEBP_WEBP_DECODE_VP8_H_
+#ifndef WEBP_DEC_VP8_DEC_H_
+#define WEBP_DEC_VP8_DEC_H_
 
 #include "src/webp/decode.h"
 
@@ -182,4 +182,4 @@ WEBP_EXTERN int VP8LGetInfo(
 }    // extern "C"
 #endif
 
-#endif  /* WEBP_WEBP_DECODE_VP8_H_ */
+#endif  /* WEBP_DEC_VP8_DEC_H_ */

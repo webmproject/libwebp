@@ -11,8 +11,8 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
-#ifndef WEBP_ENC_VP8ENCI_H_
-#define WEBP_ENC_VP8ENCI_H_
+#ifndef WEBP_ENC_VP8I_ENC_H_
+#define WEBP_ENC_VP8I_ENC_H_
 
 #include <string.h>     // for memcpy()
 #include "src/dec/common_dec.h"
@@ -505,4 +505,4 @@ void WebPCleanupTransparentAreaLossless(WebPPicture* const pic);
 }    // extern "C"
 #endif
 
-#endif  /* WEBP_ENC_VP8ENCI_H_ */
+#endif  /* WEBP_ENC_VP8I_ENC_H_ */

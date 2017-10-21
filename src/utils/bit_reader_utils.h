@@ -12,8 +12,8 @@
 // Author: Skal (pascal.massimino@gmail.com)
 //         Vikas Arora (vikaas.arora@gmail.com)
 
-#ifndef WEBP_UTILS_BIT_READER_H_
-#define WEBP_UTILS_BIT_READER_H_
+#ifndef WEBP_UTILS_BIT_READER_UTILS_H_
+#define WEBP_UTILS_BIT_READER_UTILS_H_
 
 #include <assert.h>
 #ifdef _MSC_VER
@@ -172,4 +172,4 @@ static WEBP_INLINE void VP8LFillBitWindow(VP8LBitReader* const br) {
 }    // extern "C"
 #endif
 
-#endif  /* WEBP_UTILS_BIT_READER_H_ */
+#endif  /* WEBP_UTILS_BIT_READER_UTILS_H_ */
