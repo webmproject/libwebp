@@ -41,9 +41,9 @@
 #error "MULT_FIX/WEBP_RESCALER_RFIX need some more work"
 #endif
 
-static uint32x4_t Interpolate(const rescaler_t* const frow,
-                              const rescaler_t* const irow,
-                              uint32_t A, uint32_t B) {
+static uint32x4_t Interpolate_NEON(const rescaler_t* const frow,
+                                   const rescaler_t* const irow,
+                                   uint32_t A, uint32_t B) {
   LOAD_32x4(frow, A0);
   LOAD_32x4(irow, B0);
   const uint64x2_t C0 = vmull_n_u32(vget_low_u32(A0), A);
@@ -91,9 +91,9 @@ static void RescalerExportRowExpand_NEON(WebPRescaler* const wrk) {
     const uint32_t A = (uint32_t)(WEBP_RESCALER_ONE - B);
     for (x_out = 0; x_out < max_span; x_out += 8) {
       const uint32x4_t C0 =
-          Interpolate(frow + x_out + 0, irow + x_out + 0, A, B);
+          Interpolate_NEON(frow + x_out + 0, irow + x_out + 0, A, B);
       const uint32x4_t C1 =
-          Interpolate(frow + x_out + 4, irow + x_out + 4, A, B);
+          Interpolate_NEON(frow + x_out + 4, irow + x_out + 4, A, B);
       const uint32x4_t D0 = MULT_FIX(C0, fy_scale_half);
       const uint32x4_t D1 = MULT_FIX(C1, fy_scale_half);
       const uint16x4_t E0 = vmovn_u32(D0);
