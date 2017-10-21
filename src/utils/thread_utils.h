@@ -11,8 +11,8 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
-#ifndef WEBP_UTILS_THREAD_H_
-#define WEBP_UTILS_THREAD_H_
+#ifndef WEBP_UTILS_THREAD_UTILS_H_
+#define WEBP_UTILS_THREAD_UTILS_H_
 
 #ifdef HAVE_CONFIG_H
 #include "src/webp/config.h"
@@ -90,4 +90,4 @@ WEBP_EXTERN const WebPWorkerInterface* WebPGetWorkerInterface(void);
 }    // extern "C"
 #endif
 
-#endif  /* WEBP_UTILS_THREAD_H_ */
+#endif  /* WEBP_UTILS_THREAD_UTILS_H_ */

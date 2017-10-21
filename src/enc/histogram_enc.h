@@ -11,8 +11,8 @@
 //
 // Models the histograms of literal and distance codes.
 
-#ifndef WEBP_ENC_HISTOGRAM_H_
-#define WEBP_ENC_HISTOGRAM_H_
+#ifndef WEBP_ENC_HISTOGRAM_ENC_H_
+#define WEBP_ENC_HISTOGRAM_ENC_H_
 
 #include <string.h>
 
@@ -122,4 +122,4 @@ double VP8LHistogramEstimateBits(const VP8LHistogram* const p);
 }
 #endif
 
-#endif  // WEBP_ENC_HISTOGRAM_H_
+#endif  // WEBP_ENC_HISTOGRAM_ENC_H_

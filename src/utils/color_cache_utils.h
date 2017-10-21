@@ -12,8 +12,8 @@
 // Authors: Jyrki Alakuijala (jyrki@google.com)
 //          Urvang Joshi (urvang@google.com)
 
-#ifndef WEBP_UTILS_COLOR_CACHE_H_
-#define WEBP_UTILS_COLOR_CACHE_H_
+#ifndef WEBP_UTILS_COLOR_CACHE_UTILS_H_
+#define WEBP_UTILS_COLOR_CACHE_UTILS_H_
 
 #include <assert.h>
 
@@ -84,4 +84,4 @@ void VP8LColorCacheClear(VP8LColorCache* const color_cache);
 }
 #endif
 
-#endif  // WEBP_UTILS_COLOR_CACHE_H_
+#endif  // WEBP_UTILS_COLOR_CACHE_UTILS_H_

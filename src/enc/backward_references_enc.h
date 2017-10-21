@@ -10,8 +10,8 @@
 // Author: Jyrki Alakuijala (jyrki@google.com)
 //
 
-#ifndef WEBP_ENC_BACKWARD_REFERENCES_H_
-#define WEBP_ENC_BACKWARD_REFERENCES_H_
+#ifndef WEBP_ENC_BACKWARD_REFERENCES_ENC_H_
+#define WEBP_ENC_BACKWARD_REFERENCES_ENC_H_
 
 #include <assert.h>
 #include <stdlib.h>
@@ -236,4 +236,4 @@ VP8LBackwardRefs* VP8LGetBackwardReferences(
 }
 #endif
 
-#endif  // WEBP_ENC_BACKWARD_REFERENCES_H_
+#endif  // WEBP_ENC_BACKWARD_REFERENCES_ENC_H_

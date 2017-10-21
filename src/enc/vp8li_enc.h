@@ -11,8 +11,8 @@
 //
 // Author: Vikas Arora (vikaas.arora@gmail.com)
 
-#ifndef WEBP_ENC_VP8LI_H_
-#define WEBP_ENC_VP8LI_H_
+#ifndef WEBP_ENC_VP8LI_ENC_H_
+#define WEBP_ENC_VP8LI_ENC_H_
 
 #ifdef HAVE_CONFIG_H
 #include "src/webp/config.h"
@@ -115,4 +115,4 @@ void VP8LColorSpaceTransform(int width, int height, int bits, int quality,
 }    // extern "C"
 #endif
 
-#endif  /* WEBP_ENC_VP8LI_H_ */
+#endif  /* WEBP_ENC_VP8LI_ENC_H_ */
