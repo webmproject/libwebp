@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "db69e3f6_16577e87",
+        "filename": "src/dsp/alpha_processing.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 223,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-10-27T05:40:55Z",
+      "side": 1,
+      "message": "\u003e a bit wordy too. What about having a:\n\u003e \n\u003e #if (defined(__aarch64__) || defined(__ARM_NEON__))\n\u003e #define OMIT_C_VERSION 1\n\u003e #endif\n\u003e \n\u003e in neon.h ?\n\nthat was the nature of my comment a bit further down. can\u0027t do neon.h though because of arm_neon.h",
+      "parentUuid": "d67d4a02_3421ec0d",
+      "range": {
+        "startLine": 223,
+        "startChar": 52,
+        "endLine": 223,
+        "endChar": 0
+      },
+      "revId": "1c06d3299427e9226438f5782ff8f3512064ea8d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b3a79126_cff63f51",
         "filename": "src/dsp/enc.c",
         "patchSetId": 2
