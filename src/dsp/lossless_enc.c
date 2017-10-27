@@ -15,6 +15,7 @@
 
 #include "src/dsp/dsp.h"
 
+#include <assert.h>
 #include <math.h>
 #include <stdlib.h>
 #include "src/dec/vp8li_dec.h"
@@ -870,9 +871,11 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LEncDspInit(void) {
 
   VP8LDspInit();
 
+#if !WEBP_NEON_OMIT_C_CODE
   VP8LSubtractGreenFromBlueAndRed = VP8LSubtractGreenFromBlueAndRed_C;
 
   VP8LTransformColor = VP8LTransformColor_C;
+#endif
 
   VP8LCollectColorBlueTransforms = VP8LCollectColorBlueTransforms_C;
   VP8LCollectColorRedTransforms = VP8LCollectColorRedTransforms_C;
@@ -938,11 +941,6 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LEncDspInit(void) {
 #endif
     }
 #endif
-#if defined(WEBP_USE_NEON)
-    if (VP8GetCPUInfo(kNEON)) {
-      VP8LEncDspInitNEON();
-    }
-#endif
 #if defined(WEBP_USE_MIPS32)
     if (VP8GetCPUInfo(kMIPS32)) {
       VP8LEncDspInitMIPS32();
@@ -959,6 +957,61 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LEncDspInit(void) {
     }
 #endif
   }
+
+#if defined(WEBP_USE_NEON)
+  if (WEBP_NEON_OMIT_C_CODE ||
+      (VP8GetCPUInfo != NULL && VP8GetCPUInfo(kNEON))) {
+    VP8LEncDspInitNEON();
+  }
+#endif
+
+  assert(VP8LSubtractGreenFromBlueAndRed != NULL);
+  assert(VP8LTransformColor != NULL);
+  assert(VP8LCollectColorBlueTransforms != NULL);
+  assert(VP8LCollectColorRedTransforms != NULL);
+  assert(VP8LFastLog2Slow != NULL);
+  assert(VP8LFastSLog2Slow != NULL);
+  assert(VP8LExtraCost != NULL);
+  assert(VP8LExtraCostCombined != NULL);
+  assert(VP8LCombinedShannonEntropy != NULL);
+  assert(VP8LGetEntropyUnrefined != NULL);
+  assert(VP8LGetCombinedEntropyUnrefined != NULL);
+  assert(VP8LHistogramAdd != NULL);
+  assert(VP8LVectorMismatch != NULL);
+  assert(VP8LBundleColorMap != NULL);
+  assert(VP8LPredictorsSub[0] != NULL);
+  assert(VP8LPredictorsSub[1] != NULL);
+  assert(VP8LPredictorsSub[2] != NULL);
+  assert(VP8LPredictorsSub[3] != NULL);
+  assert(VP8LPredictorsSub[4] != NULL);
+  assert(VP8LPredictorsSub[5] != NULL);
+  assert(VP8LPredictorsSub[6] != NULL);
+  assert(VP8LPredictorsSub[7] != NULL);
+  assert(VP8LPredictorsSub[8] != NULL);
+  assert(VP8LPredictorsSub[9] != NULL);
+  assert(VP8LPredictorsSub[10] != NULL);
+  assert(VP8LPredictorsSub[11] != NULL);
+  assert(VP8LPredictorsSub[12] != NULL);
+  assert(VP8LPredictorsSub[13] != NULL);
+  assert(VP8LPredictorsSub[14] != NULL);
+  assert(VP8LPredictorsSub[15] != NULL);
+  assert(VP8LPredictorsSub_C[0] != NULL);
+  assert(VP8LPredictorsSub_C[1] != NULL);
+  assert(VP8LPredictorsSub_C[2] != NULL);
+  assert(VP8LPredictorsSub_C[3] != NULL);
+  assert(VP8LPredictorsSub_C[4] != NULL);
+  assert(VP8LPredictorsSub_C[5] != NULL);
+  assert(VP8LPredictorsSub_C[6] != NULL);
+  assert(VP8LPredictorsSub_C[7] != NULL);
+  assert(VP8LPredictorsSub_C[8] != NULL);
+  assert(VP8LPredictorsSub_C[9] != NULL);
+  assert(VP8LPredictorsSub_C[10] != NULL);
+  assert(VP8LPredictorsSub_C[11] != NULL);
+  assert(VP8LPredictorsSub_C[12] != NULL);
+  assert(VP8LPredictorsSub_C[13] != NULL);
+  assert(VP8LPredictorsSub_C[14] != NULL);
+  assert(VP8LPredictorsSub_C[15] != NULL);
+
   lossless_enc_last_cpuinfo_used = VP8GetCPUInfo;
 }
 

@@ -15,6 +15,7 @@
 
 #include "src/dsp/dsp.h"
 
+#include <assert.h>
 #include <math.h>
 #include <stdlib.h>
 #include "src/dec/vp8li_dec.h"
@@ -606,15 +607,18 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInit(void) {
   COPY_PREDICTOR_ARRAY(PredictorAdd, VP8LPredictorsAdd)
   COPY_PREDICTOR_ARRAY(PredictorAdd, VP8LPredictorsAdd_C)
 
+#if !WEBP_NEON_OMIT_C_CODE
   VP8LAddGreenToBlueAndRed = VP8LAddGreenToBlueAndRed_C;
 
   VP8LTransformColorInverse = VP8LTransformColorInverse_C;
 
-  VP8LConvertBGRAToRGB = VP8LConvertBGRAToRGB_C;
   VP8LConvertBGRAToRGBA = VP8LConvertBGRAToRGBA_C;
+  VP8LConvertBGRAToRGB = VP8LConvertBGRAToRGB_C;
+  VP8LConvertBGRAToBGR = VP8LConvertBGRAToBGR_C;
+#endif
+
   VP8LConvertBGRAToRGBA4444 = VP8LConvertBGRAToRGBA4444_C;
   VP8LConvertBGRAToRGB565 = VP8LConvertBGRAToRGB565_C;
-  VP8LConvertBGRAToBGR = VP8LConvertBGRAToBGR_C;
 
   VP8LMapColor32b = MapARGB_C;
   VP8LMapColor8b = MapAlpha_C;
@@ -624,11 +628,6 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInit(void) {
 #if defined(WEBP_USE_SSE2)
     if (VP8GetCPUInfo(kSSE2)) {
       VP8LDspInitSSE2();
-    }
-#endif
-#if defined(WEBP_USE_NEON)
-    if (VP8GetCPUInfo(kNEON)) {
-      VP8LDspInitNEON();
     }
 #endif
 #if defined(WEBP_USE_MIPS_DSP_R2)
@@ -642,6 +641,24 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInit(void) {
     }
 #endif
   }
+
+#if defined(WEBP_USE_NEON)
+  if (WEBP_NEON_OMIT_C_CODE ||
+      (VP8GetCPUInfo != NULL && VP8GetCPUInfo(kNEON))) {
+    VP8LDspInitNEON();
+  }
+#endif
+
+  assert(VP8LAddGreenToBlueAndRed != NULL);
+  assert(VP8LTransformColorInverse != NULL);
+  assert(VP8LConvertBGRAToRGBA != NULL);
+  assert(VP8LConvertBGRAToRGB != NULL);
+  assert(VP8LConvertBGRAToBGR != NULL);
+  assert(VP8LConvertBGRAToRGBA4444 != NULL);
+  assert(VP8LConvertBGRAToRGB565 != NULL);
+  assert(VP8LMapColor32b != NULL);
+  assert(VP8LMapColor8b != NULL);
+
   lossless_last_cpuinfo_used = VP8GetCPUInfo;
 }
 #undef COPY_PREDICTOR_ARRAY

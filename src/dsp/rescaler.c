@@ -210,20 +210,18 @@ static volatile VP8CPUInfo rescaler_last_cpuinfo_used =
 WEBP_TSAN_IGNORE_FUNCTION void WebPRescalerDspInit(void) {
   if (rescaler_last_cpuinfo_used == VP8GetCPUInfo) return;
 
-  WebPRescalerImportRowExpand = WebPRescalerImportRowExpand_C;
-  WebPRescalerImportRowShrink = WebPRescalerImportRowShrink_C;
+#if !WEBP_NEON_OMIT_C_CODE
   WebPRescalerExportRowExpand = WebPRescalerExportRowExpand_C;
   WebPRescalerExportRowShrink = WebPRescalerExportRowShrink_C;
+#endif
+
+  WebPRescalerImportRowExpand = WebPRescalerImportRowExpand_C;
+  WebPRescalerImportRowShrink = WebPRescalerImportRowShrink_C;
 
   if (VP8GetCPUInfo != NULL) {
 #if defined(WEBP_USE_SSE2)
     if (VP8GetCPUInfo(kSSE2)) {
       WebPRescalerDspInitSSE2();
-    }
-#endif
-#if defined(WEBP_USE_NEON)
-    if (VP8GetCPUInfo(kNEON)) {
-      WebPRescalerDspInitNEON();
     }
 #endif
 #if defined(WEBP_USE_MIPS32)
@@ -242,5 +240,18 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPRescalerDspInit(void) {
     }
 #endif
   }
+
+#if defined(WEBP_USE_NEON)
+  if (WEBP_NEON_OMIT_C_CODE ||
+      (VP8GetCPUInfo != NULL && VP8GetCPUInfo(kNEON))) {
+    WebPRescalerDspInitNEON();
+  }
+#endif
+
+  assert(WebPRescalerExportRowExpand != NULL);
+  assert(WebPRescalerExportRowShrink != NULL);
+  assert(WebPRescalerImportRowExpand != NULL);
+  assert(WebPRescalerImportRowShrink != NULL);
+
   rescaler_last_cpuinfo_used = VP8GetCPUInfo;
 }

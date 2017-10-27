@@ -116,6 +116,22 @@ extern "C" {
 
 #endif  /* EMSCRIPTEN */
 
+#ifndef WEBP_DSP_OMIT_C_CODE
+#define WEBP_DSP_OMIT_C_CODE 1
+#endif
+
+#if (defined(__aarch64__) || defined(__ARM_NEON__)) && WEBP_DSP_OMIT_C_CODE
+#define WEBP_NEON_OMIT_C_CODE 1
+#else
+#define WEBP_NEON_OMIT_C_CODE 0
+#endif
+
+#if !(LOCAL_CLANG_PREREQ(3,8) || LOCAL_GCC_PREREQ(4,8) || defined(__aarch64__))
+#define WEBP_NEON_WORK_AROUND_GCC 1
+#else
+#define WEBP_NEON_WORK_AROUND_GCC 0
+#endif
+
 // This macro prevents thread_sanitizer from reporting known concurrent writes.
 #define WEBP_TSAN_IGNORE_FUNCTION
 #if defined(__has_feature)

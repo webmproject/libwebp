@@ -11,6 +11,8 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
+#include <assert.h>
+
 #include "src/dsp/dsp.h"
 #include "src/dec/vp8i_dec.h"
 #include "src/utils/utils.h"
@@ -38,6 +40,7 @@ static WEBP_INLINE uint8_t clip_8b(int v) {
 #define MUL1(a) ((((a) * 20091) >> 16) + (a))
 #define MUL2(a) (((a) * 35468) >> 16)
 
+#if !WEBP_NEON_OMIT_C_CODE
 static void TransformOne(const int16_t* in, uint8_t* dst) {
   int C[4 * 4], *tmp;
   int i;
@@ -99,12 +102,14 @@ static void TransformTwo(const int16_t* in, uint8_t* dst, int do_two) {
     TransformOne(in + 16, dst + 4);
   }
 }
+#endif  // !WEBP_NEON_OMIT_C_CODE
 
 static void TransformUV(const int16_t* in, uint8_t* dst) {
   VP8Transform(in + 0 * 16, dst, 1);
   VP8Transform(in + 2 * 16, dst + 4 * BPS, 1);
 }
 
+#if !WEBP_NEON_OMIT_C_CODE
 static void TransformDC(const int16_t* in, uint8_t* dst) {
   const int DC = in[0] + 4;
   int i, j;
@@ -114,6 +119,7 @@ static void TransformDC(const int16_t* in, uint8_t* dst) {
     }
   }
 }
+#endif  // !WEBP_NEON_OMIT_C_CODE
 
 static void TransformDCUV(const int16_t* in, uint8_t* dst) {
   if (in[0 * 16]) VP8TransformDC(in + 0 * 16, dst);
@@ -127,6 +133,7 @@ static void TransformDCUV(const int16_t* in, uint8_t* dst) {
 //------------------------------------------------------------------------------
 // Paragraph 14.3
 
+#if !WEBP_NEON_OMIT_C_CODE
 static void TransformWHT(const int16_t* in, int16_t* out) {
   int tmp[16];
   int i;
@@ -153,6 +160,7 @@ static void TransformWHT(const int16_t* in, int16_t* out) {
     out += 64;
   }
 }
+#endif  // !WEBP_NEON_OMIT_C_CODE
 
 void (*VP8TransformWHT)(const int16_t* in, int16_t* out);
 
@@ -161,6 +169,7 @@ void (*VP8TransformWHT)(const int16_t* in, int16_t* out);
 
 #define DST(x, y) dst[(x) + (y) * BPS]
 
+#if !WEBP_NEON_OMIT_C_CODE
 static WEBP_INLINE void TrueMotion(uint8_t* dst, int size) {
   const uint8_t* top = dst - BPS;
   const uint8_t* const clip0 = VP8kclip1 - top[-1];
@@ -233,6 +242,7 @@ static void DC16NoLeft(uint8_t* dst) {  // DC with left samples not available
 static void DC16NoTopLeft(uint8_t* dst) {  // DC with no top and left samples
   Put16(0x80, dst);
 }
+#endif  // !WEBP_NEON_OMIT_C_CODE
 
 VP8PredFunc VP8PredLuma16[NUM_B_DC_MODES];
 
@@ -242,6 +252,7 @@ VP8PredFunc VP8PredLuma16[NUM_B_DC_MODES];
 #define AVG3(a, b, c) ((uint8_t)(((a) + 2 * (b) + (c) + 2) >> 2))
 #define AVG2(a, b) (((a) + (b) + 1) >> 1)
 
+#if !WEBP_NEON_OMIT_C_CODE
 static void VE4(uint8_t* dst) {    // vertical
   const uint8_t* top = dst - BPS;
   const uint8_t vals[4] = {
@@ -255,6 +266,7 @@ static void VE4(uint8_t* dst) {    // vertical
     memcpy(dst + i * BPS, vals, sizeof(vals));
   }
 }
+#endif  // !WEBP_NEON_OMIT_C_CODE
 
 static void HE4(uint8_t* dst) {    // horizontal
   const int A = dst[-1 - BPS];
@@ -268,6 +280,7 @@ static void HE4(uint8_t* dst) {    // horizontal
   WebPUint32ToMem(dst + 3 * BPS, 0x01010101U * AVG3(D, E, E));
 }
 
+#if !WEBP_NEON_OMIT_C_CODE
 static void DC4(uint8_t* dst) {   // DC
   uint32_t dc = 4;
   int i;
@@ -312,6 +325,7 @@ static void LD4(uint8_t* dst) {   // Down-Left
                           DST(3, 2) = DST(2, 3) = AVG3(F, G, H);
                                       DST(3, 3) = AVG3(G, H, H);
 }
+#endif  // !WEBP_NEON_OMIT_C_CODE
 
 static void VR4(uint8_t* dst) {   // Vertical-Right
   const int I = dst[-1 + 0 * BPS];
@@ -404,6 +418,7 @@ VP8PredFunc VP8PredLuma4[NUM_BMODES];
 //------------------------------------------------------------------------------
 // Chroma
 
+#if !WEBP_NEON_OMIT_C_CODE
 static void VE8uv(uint8_t* dst) {    // vertical
   int j;
   for (j = 0; j < 8; ++j) {
@@ -457,12 +472,14 @@ static void DC8uvNoTop(uint8_t* dst) {  // DC with no top samples
 static void DC8uvNoTopLeft(uint8_t* dst) {    // DC with nothing
   Put8x8uv(0x80, dst);
 }
+#endif  // !WEBP_NEON_OMIT_C_CODE
 
 VP8PredFunc VP8PredChroma8[NUM_B_DC_MODES];
 
 //------------------------------------------------------------------------------
 // Edge filtering functions
 
+#if !WEBP_NEON_OMIT_C_CODE || WEBP_NEON_WORK_AROUND_GCC
 // 4 pixels in, 2 pixels out
 static WEBP_INLINE void do_filter2(uint8_t* p, int step) {
   const int p1 = p[-2*step], p0 = p[-step], q0 = p[0], q1 = p[step];
@@ -507,12 +524,16 @@ static WEBP_INLINE int hev(const uint8_t* p, int step, int thresh) {
   const int p1 = p[-2*step], p0 = p[-step], q0 = p[0], q1 = p[step];
   return (VP8kabs0[p1 - p0] > thresh) || (VP8kabs0[q1 - q0] > thresh);
 }
+#endif  // !WEBP_NEON_OMIT_C_CODE || WEBP_NEON_WORK_AROUND_GCC
 
+#if !WEBP_NEON_OMIT_C_CODE
 static WEBP_INLINE int needs_filter(const uint8_t* p, int step, int t) {
   const int p1 = p[-2 * step], p0 = p[-step], q0 = p[0], q1 = p[step];
   return ((4 * VP8kabs0[p0 - q0] + VP8kabs0[p1 - q1]) <= t);
 }
+#endif  // !WEBP_NEON_OMIT_C_CODE
 
+#if !WEBP_NEON_OMIT_C_CODE || WEBP_NEON_WORK_AROUND_GCC
 static WEBP_INLINE int needs_filter2(const uint8_t* p,
                                      int step, int t, int it) {
   const int p3 = p[-4 * step], p2 = p[-3 * step], p1 = p[-2 * step];
@@ -523,10 +544,12 @@ static WEBP_INLINE int needs_filter2(const uint8_t* p,
          VP8kabs0[p1 - p0] <= it && VP8kabs0[q3 - q2] <= it &&
          VP8kabs0[q2 - q1] <= it && VP8kabs0[q1 - q0] <= it;
 }
+#endif  // !WEBP_NEON_OMIT_C_CODE || WEBP_NEON_WORK_AROUND_GCC
 
 //------------------------------------------------------------------------------
 // Simple In-loop filtering (Paragraph 15.2)
 
+#if !WEBP_NEON_OMIT_C_CODE
 static void SimpleVFilter16(uint8_t* p, int stride, int thresh) {
   int i;
   const int thresh2 = 2 * thresh + 1;
@@ -562,10 +585,12 @@ static void SimpleHFilter16i(uint8_t* p, int stride, int thresh) {
     SimpleHFilter16(p, stride, thresh);
   }
 }
+#endif  // !WEBP_NEON_OMIT_C_CODE
 
 //------------------------------------------------------------------------------
 // Complex In-loop filtering (Paragraph 15.3)
 
+#if !WEBP_NEON_OMIT_C_CODE || WEBP_NEON_WORK_AROUND_GCC
 static WEBP_INLINE void FilterLoop26(uint8_t* p,
                                      int hstride, int vstride, int size,
                                      int thresh, int ithresh, int hev_thresh) {
@@ -597,7 +622,9 @@ static WEBP_INLINE void FilterLoop24(uint8_t* p,
     p += vstride;
   }
 }
+#endif  // !WEBP_NEON_OMIT_C_CODE || WEBP_NEON_WORK_AROUND_GCC
 
+#if !WEBP_NEON_OMIT_C_CODE
 // on macroblock edges
 static void VFilter16(uint8_t* p, int stride,
                       int thresh, int ithresh, int hev_thresh) {
@@ -618,7 +645,9 @@ static void VFilter16i(uint8_t* p, int stride,
     FilterLoop24(p, stride, 1, 16, thresh, ithresh, hev_thresh);
   }
 }
+#endif  // !WEBP_NEON_OMIT_C_CODE
 
+#if !WEBP_NEON_OMIT_C_CODE || WEBP_NEON_WORK_AROUND_GCC
 static void HFilter16i(uint8_t* p, int stride,
                        int thresh, int ithresh, int hev_thresh) {
   int k;
@@ -627,31 +656,40 @@ static void HFilter16i(uint8_t* p, int stride,
     FilterLoop24(p, 1, stride, 16, thresh, ithresh, hev_thresh);
   }
 }
+#endif  // !WEBP_NEON_OMIT_C_CODE || WEBP_NEON_WORK_AROUND_GCC
 
+#if !WEBP_NEON_OMIT_C_CODE
 // 8-pixels wide variant, for chroma filtering
 static void VFilter8(uint8_t* u, uint8_t* v, int stride,
                      int thresh, int ithresh, int hev_thresh) {
   FilterLoop26(u, stride, 1, 8, thresh, ithresh, hev_thresh);
   FilterLoop26(v, stride, 1, 8, thresh, ithresh, hev_thresh);
 }
+#endif  // !WEBP_NEON_OMIT_C_CODE
 
+#if !WEBP_NEON_OMIT_C_CODE || WEBP_NEON_WORK_AROUND_GCC
 static void HFilter8(uint8_t* u, uint8_t* v, int stride,
                      int thresh, int ithresh, int hev_thresh) {
   FilterLoop26(u, 1, stride, 8, thresh, ithresh, hev_thresh);
   FilterLoop26(v, 1, stride, 8, thresh, ithresh, hev_thresh);
 }
+#endif  // !WEBP_NEON_OMIT_C_CODE || WEBP_NEON_WORK_AROUND_GCC
 
+#if !WEBP_NEON_OMIT_C_CODE
 static void VFilter8i(uint8_t* u, uint8_t* v, int stride,
                       int thresh, int ithresh, int hev_thresh) {
   FilterLoop24(u + 4 * stride, stride, 1, 8, thresh, ithresh, hev_thresh);
   FilterLoop24(v + 4 * stride, stride, 1, 8, thresh, ithresh, hev_thresh);
 }
+#endif  // !WEBP_NEON_OMIT_C_CODE
 
+#if !WEBP_NEON_OMIT_C_CODE || WEBP_NEON_WORK_AROUND_GCC
 static void HFilter8i(uint8_t* u, uint8_t* v, int stride,
                       int thresh, int ithresh, int hev_thresh) {
   FilterLoop24(u + 4, 1, stride, 8, thresh, ithresh, hev_thresh);
   FilterLoop24(v + 4, 1, stride, 8, thresh, ithresh, hev_thresh);
 }
+#endif  // !WEBP_NEON_OMIT_C_CODE || WEBP_NEON_WORK_AROUND_GCC
 
 //------------------------------------------------------------------------------
 
@@ -709,37 +747,48 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8DspInit(void) {
 
   VP8InitClipTables();
 
+#if !WEBP_NEON_OMIT_C_CODE
   VP8TransformWHT = TransformWHT;
   VP8Transform = TransformTwo;
-  VP8TransformUV = TransformUV;
   VP8TransformDC = TransformDC;
-  VP8TransformDCUV = TransformDCUV;
   VP8TransformAC3 = TransformAC3;
+#endif
+  VP8TransformUV = TransformUV;
+  VP8TransformDCUV = TransformDCUV;
 
+#if !WEBP_NEON_OMIT_C_CODE
   VP8VFilter16 = VFilter16;
+  VP8VFilter16i = VFilter16i;
   VP8HFilter16 = HFilter16;
   VP8VFilter8 = VFilter8;
-  VP8HFilter8 = HFilter8;
-  VP8VFilter16i = VFilter16i;
-  VP8HFilter16i = HFilter16i;
   VP8VFilter8i = VFilter8i;
-  VP8HFilter8i = HFilter8i;
   VP8SimpleVFilter16 = SimpleVFilter16;
   VP8SimpleHFilter16 = SimpleHFilter16;
   VP8SimpleVFilter16i = SimpleVFilter16i;
   VP8SimpleHFilter16i = SimpleHFilter16i;
+#endif
 
+#if !WEBP_NEON_OMIT_C_CODE || WEBP_NEON_WORK_AROUND_GCC
+  VP8HFilter16i = HFilter16i;
+  VP8HFilter8 = HFilter8;
+  VP8HFilter8i = HFilter8i;
+#endif
+
+#if !WEBP_NEON_OMIT_C_CODE
   VP8PredLuma4[0] = DC4;
   VP8PredLuma4[1] = TM4;
   VP8PredLuma4[2] = VE4;
-  VP8PredLuma4[3] = HE4;
   VP8PredLuma4[4] = RD4;
-  VP8PredLuma4[5] = VR4;
   VP8PredLuma4[6] = LD4;
+#endif
+
+  VP8PredLuma4[3] = HE4;
+  VP8PredLuma4[5] = VR4;
   VP8PredLuma4[7] = VL4;
   VP8PredLuma4[8] = HD4;
   VP8PredLuma4[9] = HU4;
 
+#if !WEBP_NEON_OMIT_C_CODE
   VP8PredLuma16[0] = DC16;
   VP8PredLuma16[1] = TM16;
   VP8PredLuma16[2] = VE16;
@@ -755,6 +804,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8DspInit(void) {
   VP8PredChroma8[4] = DC8uvNoTop;
   VP8PredChroma8[5] = DC8uvNoLeft;
   VP8PredChroma8[6] = DC8uvNoTopLeft;
+#endif
 
   VP8DitherCombine8x8 = DitherCombine8x8;
 
@@ -768,11 +818,6 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8DspInit(void) {
         VP8DspInitSSE41();
       }
 #endif
-    }
-#endif
-#if defined(WEBP_USE_NEON)
-    if (VP8GetCPUInfo(kNEON)) {
-      VP8DspInitNEON();
     }
 #endif
 #if defined(WEBP_USE_MIPS32)
@@ -791,5 +836,57 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8DspInit(void) {
     }
 #endif
   }
+
+#if defined(WEBP_USE_NEON)
+  if (WEBP_NEON_OMIT_C_CODE ||
+      (VP8GetCPUInfo != NULL && VP8GetCPUInfo(kNEON))) {
+    VP8DspInitNEON();
+  }
+#endif
+
+  assert(VP8TransformWHT != NULL);
+  assert(VP8Transform != NULL);
+  assert(VP8TransformDC != NULL);
+  assert(VP8TransformAC3 != NULL);
+  assert(VP8TransformUV != NULL);
+  assert(VP8TransformDCUV != NULL);
+  assert(VP8VFilter16 != NULL);
+  assert(VP8HFilter16 != NULL);
+  assert(VP8VFilter8 != NULL);
+  assert(VP8HFilter8 != NULL);
+  assert(VP8VFilter16i != NULL);
+  assert(VP8HFilter16i != NULL);
+  assert(VP8VFilter8i != NULL);
+  assert(VP8HFilter8i != NULL);
+  assert(VP8SimpleVFilter16 != NULL);
+  assert(VP8SimpleHFilter16 != NULL);
+  assert(VP8SimpleVFilter16i != NULL);
+  assert(VP8SimpleHFilter16i != NULL);
+  assert(VP8PredLuma4[0] != NULL);
+  assert(VP8PredLuma4[1] != NULL);
+  assert(VP8PredLuma4[2] != NULL);
+  assert(VP8PredLuma4[3] != NULL);
+  assert(VP8PredLuma4[4] != NULL);
+  assert(VP8PredLuma4[5] != NULL);
+  assert(VP8PredLuma4[6] != NULL);
+  assert(VP8PredLuma4[7] != NULL);
+  assert(VP8PredLuma4[8] != NULL);
+  assert(VP8PredLuma4[9] != NULL);
+  assert(VP8PredLuma16[0] != NULL);
+  assert(VP8PredLuma16[1] != NULL);
+  assert(VP8PredLuma16[2] != NULL);
+  assert(VP8PredLuma16[3] != NULL);
+  assert(VP8PredLuma16[4] != NULL);
+  assert(VP8PredLuma16[5] != NULL);
+  assert(VP8PredLuma16[6] != NULL);
+  assert(VP8PredChroma8[0] != NULL);
+  assert(VP8PredChroma8[1] != NULL);
+  assert(VP8PredChroma8[2] != NULL);
+  assert(VP8PredChroma8[3] != NULL);
+  assert(VP8PredChroma8[4] != NULL);
+  assert(VP8PredChroma8[5] != NULL);
+  assert(VP8PredChroma8[6] != NULL);
+  assert(VP8DitherCombine8x8 != NULL);
+
   dec_last_cpuinfo_used = VP8GetCPUInfo;
 }

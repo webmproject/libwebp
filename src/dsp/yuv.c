@@ -13,6 +13,7 @@
 
 #include "src/dsp/yuv.h"
 
+#include <assert.h>
 #include <stdlib.h>
 
 //-----------------------------------------------------------------------------
@@ -193,6 +194,7 @@ void WebPConvertRGBA32ToUV_C(const uint16_t* rgb,
 
 //-----------------------------------------------------------------------------
 
+#if !WEBP_NEON_OMIT_C_CODE
 #define MAX_Y ((1 << 10) - 1)    // 10b precision over 16b-arithmetic
 static uint16_t clip_y(int v) {
   return (v < 0) ? 0 : (v > MAX_Y) ? MAX_Y : (uint16_t)v;
@@ -230,6 +232,7 @@ static void SharpYUVFilterRow_C(const int16_t* A, const int16_t* B, int len,
     out[2 * i + 1] = clip_y(best_y[2 * i + 1] + v1);
   }
 }
+#endif  // !WEBP_NEON_OMIT_C_CODE
 
 #undef MAX_Y
 
@@ -270,9 +273,11 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitConvertARGBToYUV(void) {
 
   WebPConvertRGBA32ToUV = WebPConvertRGBA32ToUV_C;
 
+#if !WEBP_NEON_OMIT_C_CODE
   WebPSharpYUVUpdateY = SharpYUVUpdateY_C;
   WebPSharpYUVUpdateRGB = SharpYUVUpdateRGB_C;
   WebPSharpYUVFilterRow = SharpYUVFilterRow_C;
+#endif
 
   if (VP8GetCPUInfo != NULL) {
 #if defined(WEBP_USE_SSE2)
@@ -281,13 +286,24 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitConvertARGBToYUV(void) {
       WebPInitSharpYUVSSE2();
     }
 #endif  // WEBP_USE_SSE2
+  }
+
 #if defined(WEBP_USE_NEON)
-    if (VP8GetCPUInfo(kNEON)) {
-      WebPInitConvertARGBToYUVNEON();
-      WebPInitSharpYUVNEON();
-    }
+  if (WEBP_NEON_OMIT_C_CODE ||
+      (VP8GetCPUInfo != NULL && VP8GetCPUInfo(kNEON))) {
+    WebPInitConvertARGBToYUVNEON();
+    WebPInitSharpYUVNEON();
+  }
 #endif  // WEBP_USE_NEON
 
-  }
+  assert(WebPConvertARGBToY != NULL);
+  assert(WebPConvertARGBToUV != NULL);
+  assert(WebPConvertRGB24ToY != NULL);
+  assert(WebPConvertBGR24ToY != NULL);
+  assert(WebPConvertRGBA32ToUV != NULL);
+  assert(WebPSharpYUVUpdateY != NULL);
+  assert(WebPSharpYUVUpdateRGB != NULL);
+  assert(WebPSharpYUVFilterRow != NULL);
+
   rgba_to_yuv_last_cpuinfo_used = VP8GetCPUInfo;
 }

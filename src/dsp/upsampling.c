@@ -93,6 +93,7 @@ static void FUNC_NAME(const uint8_t* top_y, const uint8_t* bottom_y,           \
 }
 
 // All variants implemented.
+#if !WEBP_NEON_OMIT_C_CODE
 UPSAMPLE_FUNC(UpsampleRgbLinePair_C,  VP8YuvToRgb,  3)
 UPSAMPLE_FUNC(UpsampleBgrLinePair_C,  VP8YuvToBgr,  3)
 UPSAMPLE_FUNC(UpsampleRgbaLinePair_C, VP8YuvToRgba, 4)
@@ -100,6 +101,7 @@ UPSAMPLE_FUNC(UpsampleBgraLinePair_C, VP8YuvToBgra, 4)
 UPSAMPLE_FUNC(UpsampleArgbLinePair_C, VP8YuvToArgb, 4)
 UPSAMPLE_FUNC(UpsampleRgba4444LinePair_C, VP8YuvToRgba4444, 2)
 UPSAMPLE_FUNC(UpsampleRgb565LinePair_C,  VP8YuvToRgb565,  2)
+#endif
 
 #undef LOAD_UV
 #undef UPSAMPLE_FUNC
@@ -223,6 +225,7 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitUpsamplers(void) {
   if (upsampling_last_cpuinfo_used2 == VP8GetCPUInfo) return;
 
 #ifdef FANCY_UPSAMPLING
+#if !WEBP_NEON_OMIT_C_CODE
   WebPUpsamplers[MODE_RGB]       = UpsampleRgbLinePair_C;
   WebPUpsamplers[MODE_RGBA]      = UpsampleRgbaLinePair_C;
   WebPUpsamplers[MODE_BGR]       = UpsampleBgrLinePair_C;
@@ -234,17 +237,13 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitUpsamplers(void) {
   WebPUpsamplers[MODE_bgrA]      = UpsampleBgraLinePair_C;
   WebPUpsamplers[MODE_Argb]      = UpsampleArgbLinePair_C;
   WebPUpsamplers[MODE_rgbA_4444] = UpsampleRgba4444LinePair_C;
+#endif
 
   // If defined, use CPUInfo() to overwrite some pointers with faster versions.
   if (VP8GetCPUInfo != NULL) {
 #if defined(WEBP_USE_SSE2)
     if (VP8GetCPUInfo(kSSE2)) {
       WebPInitUpsamplersSSE2();
-    }
-#endif
-#if defined(WEBP_USE_NEON)
-    if (VP8GetCPUInfo(kNEON)) {
-      WebPInitUpsamplersNEON();
     }
 #endif
 #if defined(WEBP_USE_MIPS_DSP_R2)
@@ -258,6 +257,26 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitUpsamplers(void) {
     }
 #endif
   }
+
+#if defined(WEBP_USE_NEON)
+  if (WEBP_NEON_OMIT_C_CODE ||
+      (VP8GetCPUInfo != NULL && VP8GetCPUInfo(kNEON))) {
+    WebPInitUpsamplersNEON();
+  }
+#endif
+
+  assert(WebPUpsamplers[MODE_RGB] != NULL);
+  assert(WebPUpsamplers[MODE_RGBA] != NULL);
+  assert(WebPUpsamplers[MODE_BGR] != NULL);
+  assert(WebPUpsamplers[MODE_BGRA] != NULL);
+  assert(WebPUpsamplers[MODE_ARGB] != NULL);
+  assert(WebPUpsamplers[MODE_RGBA_4444] != NULL);
+  assert(WebPUpsamplers[MODE_RGB_565] != NULL);
+  assert(WebPUpsamplers[MODE_rgbA] != NULL);
+  assert(WebPUpsamplers[MODE_bgrA] != NULL);
+  assert(WebPUpsamplers[MODE_Argb] != NULL);
+  assert(WebPUpsamplers[MODE_rgbA_4444] != NULL);
+
 #endif  // FANCY_UPSAMPLING
   upsampling_last_cpuinfo_used2 = VP8GetCPUInfo;
 }

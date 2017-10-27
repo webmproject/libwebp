@@ -220,6 +220,7 @@ void WebPMultRows(uint8_t* ptr, int stride,
 #define PREMULTIPLY(x, m) (((x) * (m) + (1U << 23)) >> 24)
 #endif
 
+#if !WEBP_NEON_OMIT_C_CODE
 static void ApplyAlphaMultiply_C(uint8_t* rgba, int alpha_first,
                                  int w, int h, int stride) {
   while (h-- > 0) {
@@ -238,6 +239,7 @@ static void ApplyAlphaMultiply_C(uint8_t* rgba, int alpha_first,
     rgba += stride;
   }
 }
+#endif  // !WEBP_NEON_OMIT_C_CODE
 #undef MULTIPLIER
 #undef PREMULTIPLY
 
@@ -287,6 +289,7 @@ static void ApplyAlphaMultiply_16b_C(uint8_t* rgba4444,
 #endif
 }
 
+#if !WEBP_NEON_OMIT_C_CODE
 static int DispatchAlpha_C(const uint8_t* alpha, int alpha_stride,
                            int width, int height,
                            uint8_t* dst, int dst_stride) {
@@ -341,6 +344,7 @@ static void ExtractGreen_C(const uint32_t* argb, uint8_t* alpha, int size) {
   int i;
   for (i = 0; i < size; ++i) alpha[i] = argb[i] >> 8;
 }
+#endif  // !WEBP_NEON_OMIT_C_CODE
 
 //------------------------------------------------------------------------------
 // Simple channel manipulations.
@@ -383,15 +387,16 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitAlphaProcessing(void) {
 
   WebPMultARGBRow = WebPMultARGBRow_C;
   WebPMultRow = WebPMultRow_C;
-  WebPApplyAlphaMultiply = ApplyAlphaMultiply_C;
   WebPApplyAlphaMultiply4444 = ApplyAlphaMultiply_16b_C;
 
+  WebPPackRGB = PackRGB_C;
+#if !WEBP_NEON_OMIT_C_CODE
+  WebPApplyAlphaMultiply = ApplyAlphaMultiply_C;
   WebPDispatchAlpha = DispatchAlpha_C;
   WebPDispatchAlphaToGreen = DispatchAlphaToGreen_C;
   WebPExtractAlpha = ExtractAlpha_C;
   WebPExtractGreen = ExtractGreen_C;
-
-  WebPPackRGB = PackRGB_C;
+#endif
 
   // If defined, use CPUInfo() to overwrite some pointers with faster versions.
   if (VP8GetCPUInfo != NULL) {
@@ -405,16 +410,29 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitAlphaProcessing(void) {
 #endif
     }
 #endif
-#if defined(WEBP_USE_NEON)
-    if (VP8GetCPUInfo(kNEON)) {
-      WebPInitAlphaProcessingNEON();
-    }
-#endif
 #if defined(WEBP_USE_MIPS_DSP_R2)
     if (VP8GetCPUInfo(kMIPSdspR2)) {
       WebPInitAlphaProcessingMIPSdspR2();
     }
 #endif
   }
+
+#if defined(WEBP_USE_NEON)
+  if (WEBP_NEON_OMIT_C_CODE ||
+      (VP8GetCPUInfo != NULL && VP8GetCPUInfo(kNEON))) {
+    WebPInitAlphaProcessingNEON();
+  }
+#endif
+
+  assert(WebPMultARGBRow != NULL);
+  assert(WebPMultRow != NULL);
+  assert(WebPApplyAlphaMultiply != NULL);
+  assert(WebPApplyAlphaMultiply4444 != NULL);
+  assert(WebPDispatchAlpha != NULL);
+  assert(WebPDispatchAlphaToGreen != NULL);
+  assert(WebPExtractAlpha != NULL);
+  assert(WebPExtractGreen != NULL);
+  assert(WebPPackRGB != NULL);
+
   alpha_processing_last_cpuinfo_used = VP8GetCPUInfo;
 }
