@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b3a79126_cff63f51",
+        "filename": "src/dsp/enc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 680,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-10-27T04:40:43Z",
+      "side": 1,
+      "message": "these are too wordy, I\u0027ll make some convenience macros at the file level if it looks OK otherwise",
+      "revId": "1c06d3299427e9226438f5782ff8f3512064ea8d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
