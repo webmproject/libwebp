@@ -145,7 +145,7 @@ int ReadWebP(const uint8_t* const data, size_t data_size,
     pic->width = bitstream->width;
     pic->height = bitstream->height;
     if (pic->use_argb) {
-      stride = (uint64_t)bitstream->width * (has_alpha ? 4 : 3);
+      stride = (uint64_t)bitstream->width * 4;
     } else {
       stride = (uint64_t)bitstream->width * (has_alpha ? 5 : 3) / 2;
       pic->colorspace = has_alpha ? WEBP_YUV420A : WEBP_YUV420;
