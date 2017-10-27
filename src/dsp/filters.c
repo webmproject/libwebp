@@ -28,6 +28,7 @@
   assert(row >= 0 && num_rows > 0 && row + num_rows <= height);                \
   (void)height;  // Silence unused warning.
 
+#if !(defined(__aarch64__) || defined(__ARM_NEON__))
 static WEBP_INLINE void PredictLine_C(const uint8_t* src, const uint8_t* pred,
                                       uint8_t* dst, int length, int inverse) {
   int i;
@@ -112,6 +113,7 @@ static WEBP_INLINE void DoVerticalFilter_C(const uint8_t* in,
     out += stride;
   }
 }
+#endif  // !(defined(__aarch64__) || defined(__ARM_NEON__))
 
 //------------------------------------------------------------------------------
 // Gradient filter.
@@ -121,6 +123,7 @@ static WEBP_INLINE int GradientPredictor_C(uint8_t a, uint8_t b, uint8_t c) {
   return ((g & ~0xff) == 0) ? g : (g < 0) ? 0 : 255;  // clip to 8bit
 }
 
+#if !(defined(__aarch64__) || defined(__ARM_NEON__))
 static WEBP_INLINE void DoGradientFilter_C(const uint8_t* in,
                                            int width, int height, int stride,
                                            int row, int num_rows,
@@ -160,11 +163,13 @@ static WEBP_INLINE void DoGradientFilter_C(const uint8_t* in,
     out += stride;
   }
 }
+#endif  // !(defined(__aarch64__) || defined(__ARM_NEON__))
 
 #undef SANITY_CHECK
 
 //------------------------------------------------------------------------------
 
+#if !(defined(__aarch64__) || defined(__ARM_NEON__))
 static void HorizontalFilter_C(const uint8_t* data, int width, int height,
                                int stride, uint8_t* filtered_data) {
   DoHorizontalFilter_C(data, width, height, stride, 0, height, 0,
@@ -180,7 +185,7 @@ static void GradientFilter_C(const uint8_t* data, int width, int height,
                              int stride, uint8_t* filtered_data) {
   DoGradientFilter_C(data, width, height, stride, 0, height, 0, filtered_data);
 }
-
+#endif  // !(defined(__aarch64__) || defined(__ARM_NEON__))
 
 //------------------------------------------------------------------------------
 
@@ -194,6 +199,7 @@ static void HorizontalUnfilter_C(const uint8_t* prev, const uint8_t* in,
   }
 }
 
+#if !(defined(__aarch64__) || defined(__ARM_NEON__))
 static void VerticalUnfilter_C(const uint8_t* prev, const uint8_t* in,
                                uint8_t* out, int width) {
   if (prev == NULL) {
@@ -203,6 +209,7 @@ static void VerticalUnfilter_C(const uint8_t* prev, const uint8_t* in,
     for (i = 0; i < width; ++i) out[i] = prev[i] + in[i];
   }
 }
+#endif  // !(defined(__aarch64__) || defined(__ARM_NEON__))
 
 static void GradientUnfilter_C(const uint8_t* prev, const uint8_t* in,
                                uint8_t* out, int width) {
@@ -238,14 +245,18 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8FiltersInit(void) {
   if (filters_last_cpuinfo_used == VP8GetCPUInfo) return;
 
   WebPUnfilters[WEBP_FILTER_NONE] = NULL;
+#if !(defined(__aarch64__) || defined(__ARM_NEON__))
   WebPUnfilters[WEBP_FILTER_HORIZONTAL] = HorizontalUnfilter_C;
   WebPUnfilters[WEBP_FILTER_VERTICAL] = VerticalUnfilter_C;
+#endif
   WebPUnfilters[WEBP_FILTER_GRADIENT] = GradientUnfilter_C;
 
   WebPFilters[WEBP_FILTER_NONE] = NULL;
+#if !(defined(__aarch64__) || defined(__ARM_NEON__))
   WebPFilters[WEBP_FILTER_HORIZONTAL] = HorizontalFilter_C;
   WebPFilters[WEBP_FILTER_VERTICAL] = VerticalFilter_C;
   WebPFilters[WEBP_FILTER_GRADIENT] = GradientFilter_C;
+#endif
 
   if (VP8GetCPUInfo != NULL) {
 #if defined(WEBP_USE_SSE2)
@@ -269,5 +280,13 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8FiltersInit(void) {
     }
 #endif
   }
+
+  assert(WebPUnfilters[WEBP_FILTER_HORIZONTAL] != NULL);
+  assert(WebPUnfilters[WEBP_FILTER_VERTICAL] != NULL);
+  assert(WebPUnfilters[WEBP_FILTER_GRADIENT] != NULL);
+  assert(WebPFilters[WEBP_FILTER_HORIZONTAL] != NULL);
+  assert(WebPFilters[WEBP_FILTER_VERTICAL] != NULL);
+  assert(WebPFilters[WEBP_FILTER_GRADIENT] != NULL);
+
   filters_last_cpuinfo_used = VP8GetCPUInfo;
 }

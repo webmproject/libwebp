@@ -210,10 +210,13 @@ static volatile VP8CPUInfo rescaler_last_cpuinfo_used =
 WEBP_TSAN_IGNORE_FUNCTION void WebPRescalerDspInit(void) {
   if (rescaler_last_cpuinfo_used == VP8GetCPUInfo) return;
 
-  WebPRescalerImportRowExpand = WebPRescalerImportRowExpand_C;
-  WebPRescalerImportRowShrink = WebPRescalerImportRowShrink_C;
+#if !(defined(__aarch64__) || defined(__ARM_NEON__))
   WebPRescalerExportRowExpand = WebPRescalerExportRowExpand_C;
   WebPRescalerExportRowShrink = WebPRescalerExportRowShrink_C;
+#endif
+
+  WebPRescalerImportRowExpand = WebPRescalerImportRowExpand_C;
+  WebPRescalerImportRowShrink = WebPRescalerImportRowShrink_C;
 
   if (VP8GetCPUInfo != NULL) {
 #if defined(WEBP_USE_SSE2)
@@ -242,5 +245,11 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPRescalerDspInit(void) {
     }
 #endif
   }
+
+  assert(WebPRescalerExportRowExpand != NULL);
+  assert(WebPRescalerExportRowShrink != NULL);
+  assert(WebPRescalerImportRowExpand != NULL);
+  assert(WebPRescalerImportRowShrink != NULL);
+
   rescaler_last_cpuinfo_used = VP8GetCPUInfo;
 }
