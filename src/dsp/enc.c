@@ -56,6 +56,7 @@ void VP8SetHistogramData(const int distribution[MAX_COEFF_THRESH + 1],
   histo->last_non_zero = last_non_zero;
 }
 
+#if !(defined(__aarch64__) || defined(__ARM_NEON__))
 static void CollectHistogram_C(const uint8_t* ref, const uint8_t* pred,
                                int start_block, int end_block,
                                VP8Histogram* const histo) {
@@ -76,6 +77,7 @@ static void CollectHistogram_C(const uint8_t* ref, const uint8_t* pred,
   }
   VP8SetHistogramData(distribution, histo);
 }
+#endif  // !(defined(__aarch64__) || defined(__ARM_NEON__))
 
 //------------------------------------------------------------------------------
 // run-time tables (~4k)
@@ -140,6 +142,7 @@ static WEBP_INLINE void ITransformOne(const uint8_t* ref, const int16_t* in,
   }
 }
 
+#if !(defined(__aarch64__) || defined(__ARM_NEON__))
 static void ITransform_C(const uint8_t* ref, const int16_t* in, uint8_t* dst,
                          int do_two) {
   ITransformOne(ref, in, dst);
@@ -176,6 +179,7 @@ static void FTransform_C(const uint8_t* src, const uint8_t* ref, int16_t* out) {
     out[12+ i] = ((a3 * 2217 - a2 * 5352 + 51000) >> 16);
   }
 }
+#endif  // !(defined(__aarch64__) || defined(__ARM_NEON__))
 
 static void FTransform2_C(const uint8_t* src, const uint8_t* ref,
                           int16_t* out) {
@@ -183,6 +187,7 @@ static void FTransform2_C(const uint8_t* src, const uint8_t* ref,
   VP8FTransform(src + 4, ref + 4, out + 16);
 }
 
+#if !(defined(__aarch64__) || defined(__ARM_NEON__))
 static void FTransformWHT_C(const int16_t* in, int16_t* out) {
   // input is 12b signed
   int32_t tmp[16];
@@ -212,6 +217,7 @@ static void FTransformWHT_C(const int16_t* in, int16_t* out) {
     out[12 + i] = b3 >> 1;
   }
 }
+#endif  // !(defined(__aarch64__) || defined(__ARM_NEON__))
 
 #undef MUL
 #undef STORE
@@ -524,6 +530,7 @@ static void Intra4Preds_C(uint8_t* dst, const uint8_t* top) {
 //------------------------------------------------------------------------------
 // Metric
 
+#if !(defined(__aarch64__) || defined(__ARM_NEON__))
 static WEBP_INLINE int GetSSE(const uint8_t* a, const uint8_t* b,
                               int w, int h) {
   int count = 0;
@@ -551,6 +558,7 @@ static int SSE8x8_C(const uint8_t* a, const uint8_t* b) {
 static int SSE4x4_C(const uint8_t* a, const uint8_t* b) {
   return GetSSE(a, b, 4, 4);
 }
+#endif  // !(defined(__aarch64__) || defined(__ARM_NEON__))
 
 static void Mean16x4_C(const uint8_t* ref, uint32_t dc[4]) {
   int k, x, y;
@@ -572,6 +580,7 @@ static void Mean16x4_C(const uint8_t* ref, uint32_t dc[4]) {
 // We try to match the spectral content (weighted) between source and
 // reconstructed samples.
 
+#if !(defined(__aarch64__) || defined(__ARM_NEON__))
 // Hadamard transform
 // Returns the weighted sum of the absolute value of transformed coefficients.
 // w[] contains a row-major 4 by 4 symmetric matrix.
@@ -627,6 +636,7 @@ static int Disto16x16_C(const uint8_t* const a, const uint8_t* const b,
   }
   return D;
 }
+#endif  // !(defined(__aarch64__) || defined(__ARM_NEON__))
 
 //------------------------------------------------------------------------------
 // Quantization
@@ -663,6 +673,7 @@ static int QuantizeBlock_C(int16_t in[16], int16_t out[16],
   return (last >= 0);
 }
 
+#if !(defined(__aarch64__) || defined(__ARM_NEON__))
 static int Quantize2Blocks_C(int16_t in[32], int16_t out[32],
                              const VP8Matrix* const mtx) {
   int nz;
@@ -670,6 +681,7 @@ static int Quantize2Blocks_C(int16_t in[32], int16_t out[32],
   nz |= VP8EncQuantizeBlock(in + 1 * 16, out + 1 * 16, mtx) << 1;
   return nz;
 }
+#endif  // !(defined(__aarch64__) || defined(__ARM_NEON__))
 
 //------------------------------------------------------------------------------
 // Block copy
@@ -735,23 +747,30 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInit(void) {
   InitTables();
 
   // default C implementations
-  VP8CollectHistogram = CollectHistogram_C;
+#if !(defined(__aarch64__) || defined(__ARM_NEON__))
   VP8ITransform = ITransform_C;
   VP8FTransform = FTransform_C;
-  VP8FTransform2 = FTransform2_C;
   VP8FTransformWHT = FTransformWHT_C;
+  VP8TDisto4x4 = Disto4x4_C;
+  VP8TDisto16x16 = Disto16x16_C;
+  VP8CollectHistogram = CollectHistogram_C;
+  VP8SSE16x16 = SSE16x16_C;
+  VP8SSE16x8 = SSE16x8_C;
+  VP8SSE8x8 = SSE8x8_C;
+  VP8SSE4x4 = SSE4x4_C;
+#endif
+
+#if !(defined(__aarch64__) || defined(__ARM_NEON__)) || \
+    !(LOCAL_CLANG_PREREQ(3,8) || LOCAL_GCC_PREREQ(4,8) || defined(__aarch64__))
+  VP8EncQuantizeBlock = QuantizeBlock_C;
+  VP8EncQuantize2Blocks = Quantize2Blocks_C;
+#endif
+
+  VP8FTransform2 = FTransform2_C;
   VP8EncPredLuma4 = Intra4Preds_C;
   VP8EncPredLuma16 = Intra16Preds_C;
   VP8EncPredChroma8 = IntraChromaPreds_C;
-  VP8SSE16x16 = SSE16x16_C;
-  VP8SSE8x8 = SSE8x8_C;
-  VP8SSE16x8 = SSE16x8_C;
-  VP8SSE4x4 = SSE4x4_C;
-  VP8TDisto4x4 = Disto4x4_C;
-  VP8TDisto16x16 = Disto16x16_C;
   VP8Mean16x4 = Mean16x4_C;
-  VP8EncQuantizeBlock = QuantizeBlock_C;
-  VP8EncQuantize2Blocks = Quantize2Blocks_C;
   VP8EncQuantizeBlockWHT = QuantizeBlock_C;
   VP8Copy4x4 = Copy4x4_C;
   VP8Copy16x8 = Copy16x8_C;
@@ -794,5 +813,27 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInit(void) {
     }
 #endif
   }
+
+  assert(VP8ITransform != NULL);
+  assert(VP8FTransform != NULL);
+  assert(VP8FTransformWHT != NULL);
+  assert(VP8TDisto4x4 != NULL);
+  assert(VP8TDisto16x16 != NULL);
+  assert(VP8CollectHistogram != NULL);
+  assert(VP8SSE16x16 != NULL);
+  assert(VP8SSE16x8 != NULL);
+  assert(VP8SSE8x8 != NULL);
+  assert(VP8SSE4x4 != NULL);
+  assert(VP8EncQuantizeBlock != NULL);
+  assert(VP8EncQuantize2Blocks != NULL);
+  assert(VP8FTransform2 != NULL);
+  assert(VP8EncPredLuma4 != NULL);
+  assert(VP8EncPredLuma16 != NULL);
+  assert(VP8EncPredChroma8 != NULL);
+  assert(VP8Mean16x4 != NULL);
+  assert(VP8EncQuantizeBlockWHT != NULL);
+  assert(VP8Copy4x4 != NULL);
+  assert(VP8Copy16x8 != NULL);
+
   enc_last_cpuinfo_used = VP8GetCPUInfo;
 }
