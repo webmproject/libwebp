@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "d67d4a02_3421ec0d",
+        "filename": "src/dsp/alpha_processing.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 223,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-10-27T05:07:17Z",
+      "side": 1,
+      "message": "a bit wordy too. What about having a:\n\n#if (defined(__aarch64__) || defined(__ARM_NEON__))\n#define OMIT_C_VERSION 1\n#endif\n\nin neon.h ?",
+      "range": {
+        "startLine": 223,
+        "startChar": 52,
+        "endLine": 223,
+        "endChar": 0
+      },
+      "revId": "1c06d3299427e9226438f5782ff8f3512064ea8d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b3a79126_cff63f51",
         "filename": "src/dsp/enc.c",
         "patchSetId": 2
