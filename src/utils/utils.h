@@ -66,7 +66,7 @@ WEBP_EXTERN void WebPSafeFree(void* const ptr);
 // memcpy() is the safe way of moving potentially unaligned 32b memory.
 static WEBP_INLINE uint32_t WebPMemToUint32(const uint8_t* const ptr) {
   uint32_t A;
-  memcpy(&A, (const int*)ptr, sizeof(A));
+  memcpy(&A, ptr, sizeof(A));
   return A;
 }
 static WEBP_INLINE void WebPUint32ToMem(uint8_t* const ptr, uint32_t val) {
