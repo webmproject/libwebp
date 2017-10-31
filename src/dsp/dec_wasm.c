@@ -119,7 +119,7 @@ static WEBP_INLINE int16x8 _mulhi_int16x8(const int16x8 in, const int32x4 k) {
 #elif defined(ENABLE_NEON_BUILTIN_MULHI_INT16X8)
   const int16x8 k_16bit = splat_int16(k[0]);
   const int16x8 one = (int16x8){1, 1, 1, 1, 1, 1, 1, 1};
-  return ((int16x8)__builtin_neon_vqdmulhq_v((int8x16_t)in, (int8x16_t)k_16bit,
+  return ((int16x8)__builtin_neon_vqdmulhq_v((int8x16)in, (int8x16)k_16bit,
                                              33)) >> one;
 #else
   const int16x8 zero = (int16x8){0, 0, 0, 0, 0, 0, 0, 0};
