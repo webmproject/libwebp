@@ -26,6 +26,13 @@ Building:
  - Note this currently generates native executables only and is incompatible
    with -DWEBP_BUILD_WEBP_JS.
 
+Build options:
+==============
+
+- platform specific multiply high (mulhi) implementation, disabled by default.
+  arm: -DCMAKE_C_FLAGS='-DENABLE_NEON_BUILTIN_MULHI_INT16X8 ...'
+  x86: -DCMAKE_C_FLAGS='-DENABLE_X86_BUILTIN_MULHI_INT16X8 ...'
+
 Cross compilation:
 ==================
 
