@@ -102,7 +102,6 @@ struct WebPConfig {
 
   WebPImageHint image_hint;  // Hint for image type (lossless only for now).
 
-  // Parameters related to lossy compression only:
   int target_size;        // if non-zero, set the desired target size in bytes.
                           // Takes precedence over the 'compression' parameter.
   float target_PSNR;      // if non-zero, specifies the minimal distortion to
