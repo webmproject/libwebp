@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "91f4814c_85230577",
+        "filename": "src/webp/encode.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-11-05T19:35:00Z",
+      "side": 1,
+      "message": "this one is dated too.",
+      "range": {
+        "startLine": 200,
+        "startChar": 46,
+        "endLine": 200,
+        "endChar": 73
+      },
+      "revId": "f643e8e940ba4613d2dea8c2e136052fd64c0184",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
