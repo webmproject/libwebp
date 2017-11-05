@@ -35,12 +35,9 @@ typedef enum {
 // arguments (data1 and data2), and should return false in case of error.
 typedef int (*WebPWorkerHook)(void*, void*);
 
-// Platform-dependent implementation details for the worker.
-typedef struct WebPWorkerImpl WebPWorkerImpl;
-
 // Synchronization object used to launch job in the worker thread
 typedef struct {
-  WebPWorkerImpl* impl_;
+  void* impl_;            // platform-dependent implementation worker details
   WebPWorkerStatus status_;
   WebPWorkerHook hook;    // hook to call
   void* data1;            // first argument passed to 'hook'
