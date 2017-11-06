@@ -201,8 +201,6 @@ static int pthread_cond_wait(pthread_cond_t* const condition,
 
 //------------------------------------------------------------------------------
 
-static void Execute(WebPWorker* const worker);  // Forward declaration.
-
 static THREADFN ThreadLoop(void* ptr) {
   WebPWorker* const worker = (WebPWorker*)ptr;
   int done = 0;
@@ -212,7 +210,7 @@ static THREADFN ThreadLoop(void* ptr) {
       pthread_cond_wait(&worker->impl_->condition_, &worker->impl_->mutex_);
     }
     if (worker->status_ == WORK) {
-      Execute(worker);
+      WebPGetWorkerInterface()->Execute(worker);
       worker->status_ = OK;
     } else if (worker->status_ == NOT_OK) {   // finish the worker
       done = 1;
