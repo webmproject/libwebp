@@ -48,12 +48,8 @@ extern "C" {
 enum {
   YUV_FIX = 16,                    // fixed-point precision for RGB->YUV
   YUV_HALF = 1 << (YUV_FIX - 1),
-  YUV_MASK = (256 << YUV_FIX) - 1,
-  YUV_RANGE_MIN = -227,            // min value of r/g/b output
-  YUV_RANGE_MAX = 256 + 226,       // max value of r/g/b output
 
   YUV_FIX2 = 6,                   // fixed-point precision for YUV->RGB
-  YUV_HALF2 = 1 << YUV_FIX2 >> 1,
   YUV_MASK2 = (256 << YUV_FIX2) - 1
 };
 

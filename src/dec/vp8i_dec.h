@@ -57,7 +57,6 @@ extern "C" {
 //  '|' = left sample,   '-' = top sample,    '+' = top-left sample
 //  't' = extra top-right sample for 4x4 modes
 #define YUV_SIZE (BPS * 17 + BPS * 9)
-#define Y_SIZE   (BPS * 17)
 #define Y_OFF    (BPS * 1 + 8)
 #define U_OFF    (Y_OFF + BPS * 16 + BPS)
 #define V_OFF    (U_OFF + 16)

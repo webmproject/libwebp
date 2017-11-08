@@ -207,7 +207,7 @@ static VP8Encoder* InitVP8Encoder(const WebPConfig* const config,
   enc->preds_w_ = preds_w;
   enc->mb_info_ = (VP8MBInfo*)mem;
   mem += info_size;
-  enc->preds_ = ((uint8_t*)mem) + 1 + enc->preds_w_;
+  enc->preds_ = mem + 1 + enc->preds_w_;
   mem += preds_size;
   enc->nz_ = 1 + (uint32_t*)WEBP_ALIGN(mem);
   mem += nz_size;
@@ -216,7 +216,7 @@ static VP8Encoder* InitVP8Encoder(const WebPConfig* const config,
 
   // top samples (all 16-aligned)
   mem = (uint8_t*)WEBP_ALIGN(mem);
-  enc->y_top_ = (uint8_t*)mem;
+  enc->y_top_ = mem;
   enc->uv_top_ = enc->y_top_ + top_stride;
   mem += 2 * top_stride;
   assert(mem <= (uint8_t*)enc + size);

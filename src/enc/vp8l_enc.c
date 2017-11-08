@@ -28,7 +28,6 @@
 
 #include "src/enc/delta_palettization_enc.h"
 
-#define PALETTE_KEY_RIGHT_SHIFT   22  // Key for 1K buffer.
 // Maximum number of histogram images (sub-blocks).
 #define MAX_HUFF_IMAGE_SIZE       2600
 

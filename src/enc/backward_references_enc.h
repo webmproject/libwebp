@@ -91,11 +91,6 @@ static WEBP_INLINE uint32_t PixOrCopyLength(const PixOrCopy* const p) {
   return p->len;
 }
 
-static WEBP_INLINE uint32_t PixOrCopyArgb(const PixOrCopy* const p) {
-  assert(p->mode == kLiteral);
-  return p->argb_or_distance;
-}
-
 static WEBP_INLINE uint32_t PixOrCopyCacheIdx(const PixOrCopy* const p) {
   assert(p->mode == kCacheIdx);
   assert(p->argb_or_distance < (1U << MAX_COLOR_CACHE_BITS));
