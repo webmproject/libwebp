@@ -103,7 +103,10 @@ endforeach()
 
 ### Define the mandatory libraries.
 # Build the webpdecoder library.
-if(NOT MSVC)
+if(MSVC)
+  # avoid security warnings for e.g., fopen() used in the examples.
+  add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+else()
   add_definitions(-Wall)
 endif()
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${WEBP_DEP_INCLUDE_DIRS})
