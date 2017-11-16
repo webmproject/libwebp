@@ -41,12 +41,16 @@ static const union {
 static int CheckNonOpaque(const uint8_t* alpha, int width, int height,
                           int x_step, int y_step) {
   if (alpha == NULL) return 0;
-  while (height-- > 0) {
-    int x;
-    for (x = 0; x < width * x_step; x += x_step) {
-      if (alpha[x] != 0xff) return 1;  // TODO(skal): check 4/8 bytes at a time.
+  WebPInitAlphaProcessing();
+  if (x_step == 1) {
+    for (; height-- > 0; alpha += y_step) {
+      if (WebPHasAlpha8b(alpha, width)) return 1;
+      
     }
-    alpha += y_step;
+  } else {
+    for (; height-- > 0; alpha += y_step) {
+      if (WebPHasAlpha32b(alpha, width)) return 1;
+    }
   }
   return 0;
 }
@@ -858,7 +862,6 @@ static int ImportYUVAFromRGBA(const uint8_t* r_ptr,
     return 0;
   }
   if (has_alpha) {
-    WebPInitAlphaProcessing();
     assert(step == 4);
 #if defined(USE_GAMMA_COMPRESSION) && defined(USE_INVERSE_ALPHA_TABLE)
     assert(kAlphaFix + kGammaFix <= 31);
