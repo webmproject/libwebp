@@ -41,12 +41,15 @@ static const union {
 static int CheckNonOpaque(const uint8_t* alpha, int width, int height,
                           int x_step, int y_step) {
   if (alpha == NULL) return 0;
-  while (height-- > 0) {
-    int x;
-    for (x = 0; x < width * x_step; x += x_step) {
-      if (alpha[x] != 0xff) return 1;  // TODO(skal): check 4/8 bytes at a time.
+  WebPInitAlphaProcessing();
+  if (x_step == 1) {
+    for (; height-- > 0; alpha += y_step) {
+      if (WebPHasAlpha8b(alpha, width)) return 1;
     }
-    alpha += y_step;
+  } else {
+    for (; height-- > 0; alpha += y_step) {
+      if (WebPHasAlpha32b(alpha, width)) return 1;
+    }
   }
   return 0;
 }
@@ -58,15 +61,10 @@ int WebPPictureHasTransparency(const WebPPicture* picture) {
     return CheckNonOpaque(picture->a, picture->width, picture->height,
                           1, picture->a_stride);
   } else {
-    int x, y;
-    const uint32_t* argb = picture->argb;
-    if (argb == NULL) return 0;
-    for (y = 0; y < picture->height; ++y) {
-      for (x = 0; x < picture->width; ++x) {
-        if (argb[x] < 0xff000000u) return 1;   // test any alpha values != 0xff
-      }
-      argb += picture->argb_stride;
-    }
+    const int alpha_offset = ALPHA_IS_LAST ? 3 : 0;
+    return CheckNonOpaque((const uint8_t*)picture->argb + alpha_offset,
+                          picture->width, picture->height,
+                          4, picture->argb_stride * sizeof(*picture->argb));
   }
   return 0;
 }
@@ -858,7 +856,6 @@ static int ImportYUVAFromRGBA(const uint8_t* r_ptr,
     return 0;
   }
   if (has_alpha) {
-    WebPInitAlphaProcessing();
     assert(step == 4);
 #if defined(USE_GAMMA_COMPRESSION) && defined(USE_INVERSE_ALPHA_TABLE)
     assert(kAlphaFix + kGammaFix <= 31);
