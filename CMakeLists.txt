@@ -103,7 +103,9 @@ endforeach()
 
 ### Define the mandatory libraries.
 # Build the webpdecoder library.
-add_definitions(-Wall)
+if(NOT MSVC)
+  add_definitions(-Wall)
+endif()
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${WEBP_DEP_INCLUDE_DIRS})
 add_library(webpdecode OBJECT ${WEBP_DEC_SRCS})
 add_library(webpdspdecode OBJECT ${WEBP_DSP_COMMON_SRCS} ${WEBP_DSP_DEC_SRCS})
