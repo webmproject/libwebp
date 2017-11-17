@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8e1c8364_f7e1c605",
+        "filename": "imageio/Makefile.am",
+        "patchSetId": 10
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-11-17T07:42:12Z",
+      "side": 1,
+      "message": "we\u0027d have to modify the defaults; --enable-everything controls this one",
+      "revId": "c4b7f20f48ce46bd690e95a264c49dc350302c11",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
