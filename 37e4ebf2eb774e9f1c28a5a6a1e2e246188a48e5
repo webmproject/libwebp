@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "1bab9dbd_21f9628b",
+        "filename": "src/dsp/alpha_processing.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 358,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-11-17T07:24:00Z",
+      "side": 1,
+      "message": "fixed (needs more testing!)",
+      "parentUuid": "17f30b7e_7e659a80",
+      "revId": "37e4ebf2eb774e9f1c28a5a6a1e2e246188a48e5",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d431b6d1_fb4c4fe3",
         "filename": "src/enc/picture_csp_enc.c",
         "patchSetId": 1
@@ -33,6 +51,24 @@
       "revId": "37e4ebf2eb774e9f1c28a5a6a1e2e246188a48e5",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "de21da7f_b0a88d50",
+        "filename": "src/enc/picture_csp_enc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-11-17T07:24:00Z",
+      "side": 1,
+      "message": "moved the test out of loop",
+      "parentUuid": "d431b6d1_fb4c4fe3",
+      "revId": "37e4ebf2eb774e9f1c28a5a6a1e2e246188a48e5",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
