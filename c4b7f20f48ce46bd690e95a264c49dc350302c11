@@ -16,6 +16,24 @@
       "revId": "c4b7f20f48ce46bd690e95a264c49dc350302c11",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "089aa180_41b58838",
+        "filename": "imageio/Makefile.am",
+        "patchSetId": 10
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-11-17T07:44:31Z",
+      "side": 1,
+      "message": "i think we should just --enable-everything by default, always (and make this option a no-op)",
+      "parentUuid": "8e1c8364_f7e1c605",
+      "revId": "c4b7f20f48ce46bd690e95a264c49dc350302c11",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
