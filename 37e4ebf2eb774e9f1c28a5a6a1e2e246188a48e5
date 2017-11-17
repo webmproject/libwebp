@@ -16,6 +16,23 @@
       "revId": "37e4ebf2eb774e9f1c28a5a6a1e2e246188a48e5",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d431b6d1_fb4c4fe3",
+        "filename": "src/enc/picture_csp_enc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-11-17T04:07:47Z",
+      "side": 1,
+      "message": "likely this can be removed automatically from the loop, but it would be good to check. safer would be to manually extract the condition.",
+      "revId": "37e4ebf2eb774e9f1c28a5a6a1e2e246188a48e5",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
