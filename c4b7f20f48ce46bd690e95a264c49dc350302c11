@@ -34,6 +34,24 @@
       "revId": "c4b7f20f48ce46bd690e95a264c49dc350302c11",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2aae4e72_b2ff2ee2",
+        "filename": "imageio/Makefile.am",
+        "patchSetId": 10
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-11-17T07:45:15Z",
+      "side": 1,
+      "message": "(and same for cmake build, actually. Everything \u0027on\u0027 by default.)",
+      "parentUuid": "089aa180_41b58838",
+      "revId": "c4b7f20f48ce46bd690e95a264c49dc350302c11",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
