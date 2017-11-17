@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8875673e_1a054f9b",
+        "filename": "src/enc/picture_csp_enc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-11-17T07:28:03Z",
+      "side": 1,
+      "message": "extra whitespace",
+      "revId": "01ee708e059c983be7e4bfb1195ca0d357df74c3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
