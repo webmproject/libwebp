@@ -76,13 +76,12 @@ int WebPPictureAllocARGB(WebPPicture* const picture, int width, int height) {
     return WebPEncodingSetError(picture, VP8_ENC_ERROR_BAD_DIMENSION);
   }
   // allocate a new buffer.
-  memory = WebPSafeMalloc(argb_size, sizeof(*picture->argb));
+  memory = WebPSafeMalloc(argb_size + WEBP_ALIGN_CST, sizeof(*picture->argb));
   if (memory == NULL) {
     return WebPEncodingSetError(picture, VP8_ENC_ERROR_OUT_OF_MEMORY);
   }
-  // TODO(skal): align plane to cache line?
   picture->memory_argb_ = memory;
-  picture->argb = (uint32_t*)memory;
+  picture->argb = (uint32_t*)WEBP_ALIGN(memory);
   picture->argb_stride = width;
   return 1;
 }
