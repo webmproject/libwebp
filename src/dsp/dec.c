@@ -41,7 +41,7 @@ static WEBP_INLINE uint8_t clip_8b(int v) {
 #define MUL2(a) (((a) * 35468) >> 16)
 
 #if !WEBP_NEON_OMIT_C_CODE
-static void TransformOne(const int16_t* in, uint8_t* dst) {
+static void TransformOne_C(const int16_t* in, uint8_t* dst) {
   int C[4 * 4], *tmp;
   int i;
   tmp = C;
@@ -81,7 +81,7 @@ static void TransformOne(const int16_t* in, uint8_t* dst) {
 }
 
 // Simplified transform when only in[0], in[1] and in[4] are non-zero
-static void TransformAC3(const int16_t* in, uint8_t* dst) {
+static void TransformAC3_C(const int16_t* in, uint8_t* dst) {
   const int a = in[0] + 4;
   const int c4 = MUL2(in[4]);
   const int d4 = MUL1(in[4]);
@@ -96,21 +96,21 @@ static void TransformAC3(const int16_t* in, uint8_t* dst) {
 #undef MUL2
 #undef STORE2
 
-static void TransformTwo(const int16_t* in, uint8_t* dst, int do_two) {
-  TransformOne(in, dst);
+static void TransformTwo_C(const int16_t* in, uint8_t* dst, int do_two) {
+  TransformOne_C(in, dst);
   if (do_two) {
-    TransformOne(in + 16, dst + 4);
+    TransformOne_C(in + 16, dst + 4);
   }
 }
 #endif  // !WEBP_NEON_OMIT_C_CODE
 
-static void TransformUV(const int16_t* in, uint8_t* dst) {
+static void TransformUV_C(const int16_t* in, uint8_t* dst) {
   VP8Transform(in + 0 * 16, dst, 1);
   VP8Transform(in + 2 * 16, dst + 4 * BPS, 1);
 }
 
 #if !WEBP_NEON_OMIT_C_CODE
-static void TransformDC(const int16_t* in, uint8_t* dst) {
+static void TransformDC_C(const int16_t* in, uint8_t* dst) {
   const int DC = in[0] + 4;
   int i, j;
   for (j = 0; j < 4; ++j) {
@@ -121,7 +121,7 @@ static void TransformDC(const int16_t* in, uint8_t* dst) {
 }
 #endif  // !WEBP_NEON_OMIT_C_CODE
 
-static void TransformDCUV(const int16_t* in, uint8_t* dst) {
+static void TransformDCUV_C(const int16_t* in, uint8_t* dst) {
   if (in[0 * 16]) VP8TransformDC(in + 0 * 16, dst);
   if (in[1 * 16]) VP8TransformDC(in + 1 * 16, dst + 4);
   if (in[2 * 16]) VP8TransformDC(in + 2 * 16, dst + 4 * BPS);
@@ -134,7 +134,7 @@ static void TransformDCUV(const int16_t* in, uint8_t* dst) {
 // Paragraph 14.3
 
 #if !WEBP_NEON_OMIT_C_CODE
-static void TransformWHT(const int16_t* in, int16_t* out) {
+static void TransformWHT_C(const int16_t* in, int16_t* out) {
   int tmp[16];
   int i;
   for (i = 0; i < 4; ++i) {
@@ -183,21 +183,21 @@ static WEBP_INLINE void TrueMotion(uint8_t* dst, int size) {
     dst += BPS;
   }
 }
-static void TM4(uint8_t* dst)   { TrueMotion(dst, 4); }
-static void TM8uv(uint8_t* dst) { TrueMotion(dst, 8); }
-static void TM16(uint8_t* dst)  { TrueMotion(dst, 16); }
+static void TM4_C(uint8_t* dst)   { TrueMotion(dst, 4); }
+static void TM8uv_C(uint8_t* dst) { TrueMotion(dst, 8); }
+static void TM16_C(uint8_t* dst)  { TrueMotion(dst, 16); }
 
 //------------------------------------------------------------------------------
 // 16x16
 
-static void VE16(uint8_t* dst) {     // vertical
+static void VE16_C(uint8_t* dst) {     // vertical
   int j;
   for (j = 0; j < 16; ++j) {
     memcpy(dst + j * BPS, dst - BPS, 16);
   }
 }
 
-static void HE16(uint8_t* dst) {     // horizontal
+static void HE16_C(uint8_t* dst) {     // horizontal
   int j;
   for (j = 16; j > 0; --j) {
     memset(dst, dst[-1], 16);
@@ -212,7 +212,7 @@ static WEBP_INLINE void Put16(int v, uint8_t* dst) {
   }
 }
 
-static void DC16(uint8_t* dst) {    // DC
+static void DC16_C(uint8_t* dst) {    // DC
   int DC = 16;
   int j;
   for (j = 0; j < 16; ++j) {
@@ -221,7 +221,7 @@ static void DC16(uint8_t* dst) {    // DC
   Put16(DC >> 5, dst);
 }
 
-static void DC16NoTop(uint8_t* dst) {   // DC with top samples not available
+static void DC16NoTop_C(uint8_t* dst) {   // DC with top samples not available
   int DC = 8;
   int j;
   for (j = 0; j < 16; ++j) {
@@ -230,7 +230,7 @@ static void DC16NoTop(uint8_t* dst) {   // DC with top samples not available
   Put16(DC >> 4, dst);
 }
 
-static void DC16NoLeft(uint8_t* dst) {  // DC with left samples not available
+static void DC16NoLeft_C(uint8_t* dst) {  // DC with left samples not available
   int DC = 8;
   int i;
   for (i = 0; i < 16; ++i) {
@@ -239,7 +239,7 @@ static void DC16NoLeft(uint8_t* dst) {  // DC with left samples not available
   Put16(DC >> 4, dst);
 }
 
-static void DC16NoTopLeft(uint8_t* dst) {  // DC with no top and left samples
+static void DC16NoTopLeft_C(uint8_t* dst) {  // DC with no top and left samples
   Put16(0x80, dst);
 }
 #endif  // !WEBP_NEON_OMIT_C_CODE
@@ -253,7 +253,7 @@ VP8PredFunc VP8PredLuma16[NUM_B_DC_MODES];
 #define AVG2(a, b) (((a) + (b) + 1) >> 1)
 
 #if !WEBP_NEON_OMIT_C_CODE
-static void VE4(uint8_t* dst) {    // vertical
+static void VE4_C(uint8_t* dst) {    // vertical
   const uint8_t* top = dst - BPS;
   const uint8_t vals[4] = {
     AVG3(top[-1], top[0], top[1]),
@@ -268,7 +268,7 @@ static void VE4(uint8_t* dst) {    // vertical
 }
 #endif  // !WEBP_NEON_OMIT_C_CODE
 
-static void HE4(uint8_t* dst) {    // horizontal
+static void HE4_C(uint8_t* dst) {    // horizontal
   const int A = dst[-1 - BPS];
   const int B = dst[-1];
   const int C = dst[-1 + BPS];
@@ -281,7 +281,7 @@ static void HE4(uint8_t* dst) {    // horizontal
 }
 
 #if !WEBP_NEON_OMIT_C_CODE
-static void DC4(uint8_t* dst) {   // DC
+static void DC4_C(uint8_t* dst) {   // DC
   uint32_t dc = 4;
   int i;
   for (i = 0; i < 4; ++i) dc += dst[i - BPS] + dst[-1 + i * BPS];
@@ -289,7 +289,7 @@ static void DC4(uint8_t* dst) {   // DC
   for (i = 0; i < 4; ++i) memset(dst + i * BPS, dc, 4);
 }
 
-static void RD4(uint8_t* dst) {   // Down-right
+static void RD4_C(uint8_t* dst) {   // Down-right
   const int I = dst[-1 + 0 * BPS];
   const int J = dst[-1 + 1 * BPS];
   const int K = dst[-1 + 2 * BPS];
@@ -308,7 +308,7 @@ static void RD4(uint8_t* dst) {   // Down-right
                                       DST(3, 0) = AVG3(D, C, B);
 }
 
-static void LD4(uint8_t* dst) {   // Down-Left
+static void LD4_C(uint8_t* dst) {   // Down-Left
   const int A = dst[0 - BPS];
   const int B = dst[1 - BPS];
   const int C = dst[2 - BPS];
@@ -327,7 +327,7 @@ static void LD4(uint8_t* dst) {   // Down-Left
 }
 #endif  // !WEBP_NEON_OMIT_C_CODE
 
-static void VR4(uint8_t* dst) {   // Vertical-Right
+static void VR4_C(uint8_t* dst) {   // Vertical-Right
   const int I = dst[-1 + 0 * BPS];
   const int J = dst[-1 + 1 * BPS];
   const int K = dst[-1 + 2 * BPS];
@@ -349,7 +349,7 @@ static void VR4(uint8_t* dst) {   // Vertical-Right
   DST(3, 1) =             AVG3(B, C, D);
 }
 
-static void VL4(uint8_t* dst) {   // Vertical-Left
+static void VL4_C(uint8_t* dst) {   // Vertical-Left
   const int A = dst[0 - BPS];
   const int B = dst[1 - BPS];
   const int C = dst[2 - BPS];
@@ -371,7 +371,7 @@ static void VL4(uint8_t* dst) {   // Vertical-Left
               DST(3, 3) = AVG3(F, G, H);
 }
 
-static void HU4(uint8_t* dst) {   // Horizontal-Up
+static void HU4_C(uint8_t* dst) {   // Horizontal-Up
   const int I = dst[-1 + 0 * BPS];
   const int J = dst[-1 + 1 * BPS];
   const int K = dst[-1 + 2 * BPS];
@@ -386,7 +386,7 @@ static void HU4(uint8_t* dst) {   // Horizontal-Up
     DST(0, 3) = DST(1, 3) = DST(2, 3) = DST(3, 3) = L;
 }
 
-static void HD4(uint8_t* dst) {  // Horizontal-Down
+static void HD4_C(uint8_t* dst) {  // Horizontal-Down
   const int I = dst[-1 + 0 * BPS];
   const int J = dst[-1 + 1 * BPS];
   const int K = dst[-1 + 2 * BPS];
@@ -419,14 +419,14 @@ VP8PredFunc VP8PredLuma4[NUM_BMODES];
 // Chroma
 
 #if !WEBP_NEON_OMIT_C_CODE
-static void VE8uv(uint8_t* dst) {    // vertical
+static void VE8uv_C(uint8_t* dst) {    // vertical
   int j;
   for (j = 0; j < 8; ++j) {
     memcpy(dst + j * BPS, dst - BPS, 8);
   }
 }
 
-static void HE8uv(uint8_t* dst) {    // horizontal
+static void HE8uv_C(uint8_t* dst) {    // horizontal
   int j;
   for (j = 0; j < 8; ++j) {
     memset(dst, dst[-1], 8);
@@ -442,7 +442,7 @@ static WEBP_INLINE void Put8x8uv(uint8_t value, uint8_t* dst) {
   }
 }
 
-static void DC8uv(uint8_t* dst) {     // DC
+static void DC8uv_C(uint8_t* dst) {     // DC
   int dc0 = 8;
   int i;
   for (i = 0; i < 8; ++i) {
@@ -451,7 +451,7 @@ static void DC8uv(uint8_t* dst) {     // DC
   Put8x8uv(dc0 >> 4, dst);
 }
 
-static void DC8uvNoLeft(uint8_t* dst) {   // DC with no left samples
+static void DC8uvNoLeft_C(uint8_t* dst) {   // DC with no left samples
   int dc0 = 4;
   int i;
   for (i = 0; i < 8; ++i) {
@@ -460,7 +460,7 @@ static void DC8uvNoLeft(uint8_t* dst) {   // DC with no left samples
   Put8x8uv(dc0 >> 3, dst);
 }
 
-static void DC8uvNoTop(uint8_t* dst) {  // DC with no top samples
+static void DC8uvNoTop_C(uint8_t* dst) {  // DC with no top samples
   int dc0 = 4;
   int i;
   for (i = 0; i < 8; ++i) {
@@ -469,7 +469,7 @@ static void DC8uvNoTop(uint8_t* dst) {  // DC with no top samples
   Put8x8uv(dc0 >> 3, dst);
 }
 
-static void DC8uvNoTopLeft(uint8_t* dst) {    // DC with nothing
+static void DC8uvNoTopLeft_C(uint8_t* dst) {    // DC with nothing
   Put8x8uv(0x80, dst);
 }
 #endif  // !WEBP_NEON_OMIT_C_CODE
@@ -481,7 +481,7 @@ VP8PredFunc VP8PredChroma8[NUM_B_DC_MODES];
 
 #if !WEBP_NEON_OMIT_C_CODE || WEBP_NEON_WORK_AROUND_GCC
 // 4 pixels in, 2 pixels out
-static WEBP_INLINE void do_filter2(uint8_t* p, int step) {
+static WEBP_INLINE void do_filter2_C(uint8_t* p, int step) {
   const int p1 = p[-2*step], p0 = p[-step], q0 = p[0], q1 = p[step];
   const int a = 3 * (q0 - p0) + VP8ksclip1[p1 - q1];  // in [-893,892]
   const int a1 = VP8ksclip2[(a + 4) >> 3];            // in [-16,15]
@@ -534,8 +534,8 @@ static WEBP_INLINE int needs_filter(const uint8_t* p, int step, int t) {
 #endif  // !WEBP_NEON_OMIT_C_CODE
 
 #if !WEBP_NEON_OMIT_C_CODE || WEBP_NEON_WORK_AROUND_GCC
-static WEBP_INLINE int needs_filter2(const uint8_t* p,
-                                     int step, int t, int it) {
+static WEBP_INLINE int needs_filter2_C(const uint8_t* p,
+                                       int step, int t, int it) {
   const int p3 = p[-4 * step], p2 = p[-3 * step], p1 = p[-2 * step];
   const int p0 = p[-step], q0 = p[0];
   const int q1 = p[step], q2 = p[2 * step], q3 = p[3 * step];
@@ -550,39 +550,39 @@ static WEBP_INLINE int needs_filter2(const uint8_t* p,
 // Simple In-loop filtering (Paragraph 15.2)
 
 #if !WEBP_NEON_OMIT_C_CODE
-static void SimpleVFilter16(uint8_t* p, int stride, int thresh) {
+static void SimpleVFilter16_C(uint8_t* p, int stride, int thresh) {
   int i;
   const int thresh2 = 2 * thresh + 1;
   for (i = 0; i < 16; ++i) {
     if (needs_filter(p + i, stride, thresh2)) {
-      do_filter2(p + i, stride);
+      do_filter2_C(p + i, stride);
     }
   }
 }
 
-static void SimpleHFilter16(uint8_t* p, int stride, int thresh) {
+static void SimpleHFilter16_C(uint8_t* p, int stride, int thresh) {
   int i;
   const int thresh2 = 2 * thresh + 1;
   for (i = 0; i < 16; ++i) {
     if (needs_filter(p + i * stride, 1, thresh2)) {
-      do_filter2(p + i * stride, 1);
+      do_filter2_C(p + i * stride, 1);
     }
   }
 }
 
-static void SimpleVFilter16i(uint8_t* p, int stride, int thresh) {
+static void SimpleVFilter16i_C(uint8_t* p, int stride, int thresh) {
   int k;
   for (k = 3; k > 0; --k) {
     p += 4 * stride;
-    SimpleVFilter16(p, stride, thresh);
+    SimpleVFilter16_C(p, stride, thresh);
   }
 }
 
-static void SimpleHFilter16i(uint8_t* p, int stride, int thresh) {
+static void SimpleHFilter16i_C(uint8_t* p, int stride, int thresh) {
   int k;
   for (k = 3; k > 0; --k) {
     p += 4;
-    SimpleHFilter16(p, stride, thresh);
+    SimpleHFilter16_C(p, stride, thresh);
   }
 }
 #endif  // !WEBP_NEON_OMIT_C_CODE
@@ -591,14 +591,15 @@ static void SimpleHFilter16i(uint8_t* p, int stride, int thresh) {
 // Complex In-loop filtering (Paragraph 15.3)
 
 #if !WEBP_NEON_OMIT_C_CODE || WEBP_NEON_WORK_AROUND_GCC
-static WEBP_INLINE void FilterLoop26(uint8_t* p,
-                                     int hstride, int vstride, int size,
-                                     int thresh, int ithresh, int hev_thresh) {
+static WEBP_INLINE void FilterLoop26_C(uint8_t* p,
+                                       int hstride, int vstride, int size,
+                                       int thresh, int ithresh,
+                                       int hev_thresh) {
   const int thresh2 = 2 * thresh + 1;
   while (size-- > 0) {
-    if (needs_filter2(p, hstride, thresh2, ithresh)) {
+    if (needs_filter2_C(p, hstride, thresh2, ithresh)) {
       if (hev(p, hstride, hev_thresh)) {
-        do_filter2(p, hstride);
+        do_filter2_C(p, hstride);
       } else {
         do_filter6(p, hstride);
       }
@@ -607,14 +608,15 @@ static WEBP_INLINE void FilterLoop26(uint8_t* p,
   }
 }
 
-static WEBP_INLINE void FilterLoop24(uint8_t* p,
-                                     int hstride, int vstride, int size,
-                                     int thresh, int ithresh, int hev_thresh) {
+static WEBP_INLINE void FilterLoop24_C(uint8_t* p,
+                                       int hstride, int vstride, int size,
+                                       int thresh, int ithresh,
+                                       int hev_thresh) {
   const int thresh2 = 2 * thresh + 1;
   while (size-- > 0) {
-    if (needs_filter2(p, hstride, thresh2, ithresh)) {
+    if (needs_filter2_C(p, hstride, thresh2, ithresh)) {
       if (hev(p, hstride, hev_thresh)) {
-        do_filter2(p, hstride);
+        do_filter2_C(p, hstride);
       } else {
         do_filter4(p, hstride);
       }
@@ -626,75 +628,75 @@ static WEBP_INLINE void FilterLoop24(uint8_t* p,
 
 #if !WEBP_NEON_OMIT_C_CODE
 // on macroblock edges
-static void VFilter16(uint8_t* p, int stride,
-                      int thresh, int ithresh, int hev_thresh) {
-  FilterLoop26(p, stride, 1, 16, thresh, ithresh, hev_thresh);
+static void VFilter16_C(uint8_t* p, int stride,
+                        int thresh, int ithresh, int hev_thresh) {
+  FilterLoop26_C(p, stride, 1, 16, thresh, ithresh, hev_thresh);
 }
 
-static void HFilter16(uint8_t* p, int stride,
-                      int thresh, int ithresh, int hev_thresh) {
-  FilterLoop26(p, 1, stride, 16, thresh, ithresh, hev_thresh);
+static void HFilter16_C(uint8_t* p, int stride,
+                        int thresh, int ithresh, int hev_thresh) {
+  FilterLoop26_C(p, 1, stride, 16, thresh, ithresh, hev_thresh);
 }
 
 // on three inner edges
-static void VFilter16i(uint8_t* p, int stride,
-                       int thresh, int ithresh, int hev_thresh) {
+static void VFilter16i_C(uint8_t* p, int stride,
+                         int thresh, int ithresh, int hev_thresh) {
   int k;
   for (k = 3; k > 0; --k) {
     p += 4 * stride;
-    FilterLoop24(p, stride, 1, 16, thresh, ithresh, hev_thresh);
+    FilterLoop24_C(p, stride, 1, 16, thresh, ithresh, hev_thresh);
   }
 }
 #endif  // !WEBP_NEON_OMIT_C_CODE
 
 #if !WEBP_NEON_OMIT_C_CODE || WEBP_NEON_WORK_AROUND_GCC
-static void HFilter16i(uint8_t* p, int stride,
-                       int thresh, int ithresh, int hev_thresh) {
+static void HFilter16i_C(uint8_t* p, int stride,
+                         int thresh, int ithresh, int hev_thresh) {
   int k;
   for (k = 3; k > 0; --k) {
     p += 4;
-    FilterLoop24(p, 1, stride, 16, thresh, ithresh, hev_thresh);
+    FilterLoop24_C(p, 1, stride, 16, thresh, ithresh, hev_thresh);
   }
 }
 #endif  // !WEBP_NEON_OMIT_C_CODE || WEBP_NEON_WORK_AROUND_GCC
 
 #if !WEBP_NEON_OMIT_C_CODE
 // 8-pixels wide variant, for chroma filtering
-static void VFilter8(uint8_t* u, uint8_t* v, int stride,
-                     int thresh, int ithresh, int hev_thresh) {
-  FilterLoop26(u, stride, 1, 8, thresh, ithresh, hev_thresh);
-  FilterLoop26(v, stride, 1, 8, thresh, ithresh, hev_thresh);
+static void VFilter8_C(uint8_t* u, uint8_t* v, int stride,
+                       int thresh, int ithresh, int hev_thresh) {
+  FilterLoop26_C(u, stride, 1, 8, thresh, ithresh, hev_thresh);
+  FilterLoop26_C(v, stride, 1, 8, thresh, ithresh, hev_thresh);
 }
 #endif  // !WEBP_NEON_OMIT_C_CODE
 
 #if !WEBP_NEON_OMIT_C_CODE || WEBP_NEON_WORK_AROUND_GCC
-static void HFilter8(uint8_t* u, uint8_t* v, int stride,
-                     int thresh, int ithresh, int hev_thresh) {
-  FilterLoop26(u, 1, stride, 8, thresh, ithresh, hev_thresh);
-  FilterLoop26(v, 1, stride, 8, thresh, ithresh, hev_thresh);
+static void HFilter8_C(uint8_t* u, uint8_t* v, int stride,
+                       int thresh, int ithresh, int hev_thresh) {
+  FilterLoop26_C(u, 1, stride, 8, thresh, ithresh, hev_thresh);
+  FilterLoop26_C(v, 1, stride, 8, thresh, ithresh, hev_thresh);
 }
 #endif  // !WEBP_NEON_OMIT_C_CODE || WEBP_NEON_WORK_AROUND_GCC
 
 #if !WEBP_NEON_OMIT_C_CODE
-static void VFilter8i(uint8_t* u, uint8_t* v, int stride,
-                      int thresh, int ithresh, int hev_thresh) {
-  FilterLoop24(u + 4 * stride, stride, 1, 8, thresh, ithresh, hev_thresh);
-  FilterLoop24(v + 4 * stride, stride, 1, 8, thresh, ithresh, hev_thresh);
+static void VFilter8i_C(uint8_t* u, uint8_t* v, int stride,
+                        int thresh, int ithresh, int hev_thresh) {
+  FilterLoop24_C(u + 4 * stride, stride, 1, 8, thresh, ithresh, hev_thresh);
+  FilterLoop24_C(v + 4 * stride, stride, 1, 8, thresh, ithresh, hev_thresh);
 }
 #endif  // !WEBP_NEON_OMIT_C_CODE
 
 #if !WEBP_NEON_OMIT_C_CODE || WEBP_NEON_WORK_AROUND_GCC
-static void HFilter8i(uint8_t* u, uint8_t* v, int stride,
-                      int thresh, int ithresh, int hev_thresh) {
-  FilterLoop24(u + 4, 1, stride, 8, thresh, ithresh, hev_thresh);
-  FilterLoop24(v + 4, 1, stride, 8, thresh, ithresh, hev_thresh);
+static void HFilter8i_C(uint8_t* u, uint8_t* v, int stride,
+                        int thresh, int ithresh, int hev_thresh) {
+  FilterLoop24_C(u + 4, 1, stride, 8, thresh, ithresh, hev_thresh);
+  FilterLoop24_C(v + 4, 1, stride, 8, thresh, ithresh, hev_thresh);
 }
 #endif  // !WEBP_NEON_OMIT_C_CODE || WEBP_NEON_WORK_AROUND_GCC
 
 //------------------------------------------------------------------------------
 
-static void DitherCombine8x8(const uint8_t* dither, uint8_t* dst,
-                             int dst_stride) {
+static void DitherCombine8x8_C(const uint8_t* dither, uint8_t* dst,
+                               int dst_stride) {
   int i, j;
   for (j = 0; j < 8; ++j) {
     for (i = 0; i < 8; ++i) {
@@ -748,65 +750,65 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8DspInit(void) {
   VP8InitClipTables();
 
 #if !WEBP_NEON_OMIT_C_CODE
-  VP8TransformWHT = TransformWHT;
-  VP8Transform = TransformTwo;
-  VP8TransformDC = TransformDC;
-  VP8TransformAC3 = TransformAC3;
+  VP8TransformWHT = TransformWHT_C;
+  VP8Transform = TransformTwo_C;
+  VP8TransformDC = TransformDC_C;
+  VP8TransformAC3 = TransformAC3_C;
 #endif
-  VP8TransformUV = TransformUV;
-  VP8TransformDCUV = TransformDCUV;
+  VP8TransformUV = TransformUV_C;
+  VP8TransformDCUV = TransformDCUV_C;
 
 #if !WEBP_NEON_OMIT_C_CODE
-  VP8VFilter16 = VFilter16;
-  VP8VFilter16i = VFilter16i;
-  VP8HFilter16 = HFilter16;
-  VP8VFilter8 = VFilter8;
-  VP8VFilter8i = VFilter8i;
-  VP8SimpleVFilter16 = SimpleVFilter16;
-  VP8SimpleHFilter16 = SimpleHFilter16;
-  VP8SimpleVFilter16i = SimpleVFilter16i;
-  VP8SimpleHFilter16i = SimpleHFilter16i;
+  VP8VFilter16 = VFilter16_C;
+  VP8VFilter16i = VFilter16i_C;
+  VP8HFilter16 = HFilter16_C;
+  VP8VFilter8 = VFilter8_C;
+  VP8VFilter8i = VFilter8i_C;
+  VP8SimpleVFilter16 = SimpleVFilter16_C;
+  VP8SimpleHFilter16 = SimpleHFilter16_C;
+  VP8SimpleVFilter16i = SimpleVFilter16i_C;
+  VP8SimpleHFilter16i = SimpleHFilter16i_C;
 #endif
 
 #if !WEBP_NEON_OMIT_C_CODE || WEBP_NEON_WORK_AROUND_GCC
-  VP8HFilter16i = HFilter16i;
-  VP8HFilter8 = HFilter8;
-  VP8HFilter8i = HFilter8i;
+  VP8HFilter16i = HFilter16i_C;
+  VP8HFilter8 = HFilter8_C;
+  VP8HFilter8i = HFilter8i_C;
 #endif
 
 #if !WEBP_NEON_OMIT_C_CODE
-  VP8PredLuma4[0] = DC4;
-  VP8PredLuma4[1] = TM4;
-  VP8PredLuma4[2] = VE4;
-  VP8PredLuma4[4] = RD4;
-  VP8PredLuma4[6] = LD4;
+  VP8PredLuma4[0] = DC4_C;
+  VP8PredLuma4[1] = TM4_C;
+  VP8PredLuma4[2] = VE4_C;
+  VP8PredLuma4[4] = RD4_C;
+  VP8PredLuma4[6] = LD4_C;
 #endif
 
-  VP8PredLuma4[3] = HE4;
-  VP8PredLuma4[5] = VR4;
-  VP8PredLuma4[7] = VL4;
-  VP8PredLuma4[8] = HD4;
-  VP8PredLuma4[9] = HU4;
+  VP8PredLuma4[3] = HE4_C;
+  VP8PredLuma4[5] = VR4_C;
+  VP8PredLuma4[7] = VL4_C;
+  VP8PredLuma4[8] = HD4_C;
+  VP8PredLuma4[9] = HU4_C;
 
 #if !WEBP_NEON_OMIT_C_CODE
-  VP8PredLuma16[0] = DC16;
-  VP8PredLuma16[1] = TM16;
-  VP8PredLuma16[2] = VE16;
-  VP8PredLuma16[3] = HE16;
-  VP8PredLuma16[4] = DC16NoTop;
-  VP8PredLuma16[5] = DC16NoLeft;
-  VP8PredLuma16[6] = DC16NoTopLeft;
+  VP8PredLuma16[0] = DC16_C;
+  VP8PredLuma16[1] = TM16_C;
+  VP8PredLuma16[2] = VE16_C;
+  VP8PredLuma16[3] = HE16_C;
+  VP8PredLuma16[4] = DC16NoTop_C;
+  VP8PredLuma16[5] = DC16NoLeft_C;
+  VP8PredLuma16[6] = DC16NoTopLeft_C;
 
-  VP8PredChroma8[0] = DC8uv;
-  VP8PredChroma8[1] = TM8uv;
-  VP8PredChroma8[2] = VE8uv;
-  VP8PredChroma8[3] = HE8uv;
-  VP8PredChroma8[4] = DC8uvNoTop;
-  VP8PredChroma8[5] = DC8uvNoLeft;
-  VP8PredChroma8[6] = DC8uvNoTopLeft;
+  VP8PredChroma8[0] = DC8uv_C;
+  VP8PredChroma8[1] = TM8uv_C;
+  VP8PredChroma8[2] = VE8uv_C;
+  VP8PredChroma8[3] = HE8uv_C;
+  VP8PredChroma8[4] = DC8uvNoTop_C;
+  VP8PredChroma8[5] = DC8uvNoLeft_C;
+  VP8PredChroma8[6] = DC8uvNoTopLeft_C;
 #endif
 
-  VP8DitherCombine8x8 = DitherCombine8x8;
+  VP8DitherCombine8x8 = DitherCombine8x8_C;
 
   // If defined, use CPUInfo() to overwrite some pointers with faster versions.
   if (VP8GetCPUInfo != NULL) {
