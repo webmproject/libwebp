@@ -481,7 +481,7 @@ VP8PredFunc VP8PredChroma8[NUM_B_DC_MODES];
 
 #if !WEBP_NEON_OMIT_C_CODE || WEBP_NEON_WORK_AROUND_GCC
 // 4 pixels in, 2 pixels out
-static WEBP_INLINE void do_filter2_C(uint8_t* p, int step) {
+static WEBP_INLINE void DoFilter2_C(uint8_t* p, int step) {
   const int p1 = p[-2*step], p0 = p[-step], q0 = p[0], q1 = p[step];
   const int a = 3 * (q0 - p0) + VP8ksclip1[p1 - q1];  // in [-893,892]
   const int a1 = VP8ksclip2[(a + 4) >> 3];            // in [-16,15]
@@ -491,7 +491,7 @@ static WEBP_INLINE void do_filter2_C(uint8_t* p, int step) {
 }
 
 // 4 pixels in, 4 pixels out
-static WEBP_INLINE void do_filter4(uint8_t* p, int step) {
+static WEBP_INLINE void DoFilter4_C(uint8_t* p, int step) {
   const int p1 = p[-2*step], p0 = p[-step], q0 = p[0], q1 = p[step];
   const int a = 3 * (q0 - p0);
   const int a1 = VP8ksclip2[(a + 4) >> 3];
@@ -504,7 +504,7 @@ static WEBP_INLINE void do_filter4(uint8_t* p, int step) {
 }
 
 // 6 pixels in, 6 pixels out
-static WEBP_INLINE void do_filter6(uint8_t* p, int step) {
+static WEBP_INLINE void DoFilter6_C(uint8_t* p, int step) {
   const int p2 = p[-3*step], p1 = p[-2*step], p0 = p[-step];
   const int q0 = p[0], q1 = p[step], q2 = p[2*step];
   const int a = VP8ksclip1[3 * (q0 - p0) + VP8ksclip1[p1 - q1]];
@@ -520,22 +520,22 @@ static WEBP_INLINE void do_filter6(uint8_t* p, int step) {
   p[ 2*step] = VP8kclip1[q2 - a3];
 }
 
-static WEBP_INLINE int hev(const uint8_t* p, int step, int thresh) {
+static WEBP_INLINE int Hev(const uint8_t* p, int step, int thresh) {
   const int p1 = p[-2*step], p0 = p[-step], q0 = p[0], q1 = p[step];
   return (VP8kabs0[p1 - p0] > thresh) || (VP8kabs0[q1 - q0] > thresh);
 }
 #endif  // !WEBP_NEON_OMIT_C_CODE || WEBP_NEON_WORK_AROUND_GCC
 
 #if !WEBP_NEON_OMIT_C_CODE
-static WEBP_INLINE int needs_filter(const uint8_t* p, int step, int t) {
+static WEBP_INLINE int NeedsFilter_C(const uint8_t* p, int step, int t) {
   const int p1 = p[-2 * step], p0 = p[-step], q0 = p[0], q1 = p[step];
   return ((4 * VP8kabs0[p0 - q0] + VP8kabs0[p1 - q1]) <= t);
 }
 #endif  // !WEBP_NEON_OMIT_C_CODE
 
 #if !WEBP_NEON_OMIT_C_CODE || WEBP_NEON_WORK_AROUND_GCC
-static WEBP_INLINE int needs_filter2_C(const uint8_t* p,
-                                       int step, int t, int it) {
+static WEBP_INLINE int NeedsFilter2_C(const uint8_t* p,
+                                      int step, int t, int it) {
   const int p3 = p[-4 * step], p2 = p[-3 * step], p1 = p[-2 * step];
   const int p0 = p[-step], q0 = p[0];
   const int q1 = p[step], q2 = p[2 * step], q3 = p[3 * step];
@@ -554,8 +554,8 @@ static void SimpleVFilter16_C(uint8_t* p, int stride, int thresh) {
   int i;
   const int thresh2 = 2 * thresh + 1;
   for (i = 0; i < 16; ++i) {
-    if (needs_filter(p + i, stride, thresh2)) {
-      do_filter2_C(p + i, stride);
+    if (NeedsFilter_C(p + i, stride, thresh2)) {
+      DoFilter2_C(p + i, stride);
     }
   }
 }
@@ -564,8 +564,8 @@ static void SimpleHFilter16_C(uint8_t* p, int stride, int thresh) {
   int i;
   const int thresh2 = 2 * thresh + 1;
   for (i = 0; i < 16; ++i) {
-    if (needs_filter(p + i * stride, 1, thresh2)) {
-      do_filter2_C(p + i * stride, 1);
+    if (NeedsFilter_C(p + i * stride, 1, thresh2)) {
+      DoFilter2_C(p + i * stride, 1);
     }
   }
 }
@@ -597,11 +597,11 @@ static WEBP_INLINE void FilterLoop26_C(uint8_t* p,
                                        int hev_thresh) {
   const int thresh2 = 2 * thresh + 1;
   while (size-- > 0) {
-    if (needs_filter2_C(p, hstride, thresh2, ithresh)) {
-      if (hev(p, hstride, hev_thresh)) {
-        do_filter2_C(p, hstride);
+    if (NeedsFilter2_C(p, hstride, thresh2, ithresh)) {
+      if (Hev(p, hstride, hev_thresh)) {
+        DoFilter2_C(p, hstride);
       } else {
-        do_filter6(p, hstride);
+        DoFilter6_C(p, hstride);
       }
     }
     p += vstride;
@@ -614,11 +614,11 @@ static WEBP_INLINE void FilterLoop24_C(uint8_t* p,
                                        int hev_thresh) {
   const int thresh2 = 2 * thresh + 1;
   while (size-- > 0) {
-    if (needs_filter2_C(p, hstride, thresh2, ithresh)) {
-      if (hev(p, hstride, hev_thresh)) {
-        do_filter2_C(p, hstride);
+    if (NeedsFilter2_C(p, hstride, thresh2, ithresh)) {
+      if (Hev(p, hstride, hev_thresh)) {
+        DoFilter2_C(p, hstride);
       } else {
-        do_filter4(p, hstride);
+        DoFilter4_C(p, hstride);
       }
     }
     p += vstride;
