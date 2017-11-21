@@ -1127,15 +1127,6 @@ static void VE8uv_SSE2(uint8_t* dst) {    // vertical
   }
 }
 
-static void HE8uv_SSE2(uint8_t* dst) {    // horizontal
-  int j;
-  for (j = 0; j < 8; ++j) {
-    const __m128i values = _mm_set1_epi8(dst[-1]);
-    _mm_storel_epi64((__m128i*)dst, values);
-    dst += BPS;
-  }
-}
-
 // helper for chroma-DC predictions
 static WEBP_INLINE void Put8x8uv_SSE2(uint8_t v, uint8_t* dst) {
   int j;
@@ -1224,7 +1215,6 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8DspInitSSE2(void) {
   VP8PredChroma8[0] = DC8uv_SSE2;
   VP8PredChroma8[1] = TM8uv_SSE2;
   VP8PredChroma8[2] = VE8uv_SSE2;
-  VP8PredChroma8[3] = HE8uv_SSE2;
   VP8PredChroma8[4] = DC8uvNoTop_SSE2;
   VP8PredChroma8[5] = DC8uvNoLeft_SSE2;
   VP8PredChroma8[6] = DC8uvNoTopLeft_SSE2;
