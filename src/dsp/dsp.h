@@ -578,6 +578,11 @@ void WebPMultARGBRow_C(uint32_t* const ptr, int width, int inverse);
 extern void (*WebPPackRGB)(const uint8_t* r, const uint8_t* g, const uint8_t* b,
                            int len, int step, uint32_t* out);
 
+// This function returns true if src[i] contains a value different from 0xff.
+extern int (*WebPHasAlpha8b)(const uint8_t* src, int length);
+// This function returns true if src[4*i] contains a value different from 0xff.
+extern int (*WebPHasAlpha32b)(const uint8_t* src, int length);
+
 // To be called first before using the above.
 void WebPInitAlphaProcessing(void);
 

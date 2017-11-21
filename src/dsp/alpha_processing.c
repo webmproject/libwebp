@@ -347,6 +347,19 @@ static void ExtractGreen_C(const uint32_t* argb, uint8_t* alpha, int size) {
 #endif  // !WEBP_NEON_OMIT_C_CODE
 
 //------------------------------------------------------------------------------
+
+static int HasAlpha8b_C(const uint8_t* src, int length) {
+  while (length-- > 0) if (*src++ != 0xff) return 1;
+  return 0;
+}
+
+static int HasAlpha32b_C(const uint8_t* src, int length) {
+  int x;
+  for (x = 0; length-- > 0; x += 4) if (src[x] != 0xff) return 1;
+  return 0;
+}
+
+//------------------------------------------------------------------------------
 // Simple channel manipulations.
 
 static WEBP_INLINE uint32_t MakeARGB32(int a, int r, int g, int b) {
@@ -370,6 +383,9 @@ int (*WebPExtractAlpha)(const uint8_t*, int, int, int, uint8_t*, int);
 void (*WebPExtractGreen)(const uint32_t* argb, uint8_t* alpha, int size);
 void (*WebPPackRGB)(const uint8_t* r, const uint8_t* g, const uint8_t* b,
                     int len, int step, uint32_t* out);
+
+int (*WebPHasAlpha8b)(const uint8_t* src, int length);
+int (*WebPHasAlpha32b)(const uint8_t* src, int length);
 
 //------------------------------------------------------------------------------
 // Init function
@@ -397,6 +413,9 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitAlphaProcessing(void) {
   WebPExtractAlpha = ExtractAlpha_C;
   WebPExtractGreen = ExtractGreen_C;
 #endif
+
+  WebPHasAlpha8b = HasAlpha8b_C;
+  WebPHasAlpha32b = HasAlpha32b_C;
 
   // If defined, use CPUInfo() to overwrite some pointers with faster versions.
   if (VP8GetCPUInfo != NULL) {
@@ -433,6 +452,8 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitAlphaProcessing(void) {
   assert(WebPExtractAlpha != NULL);
   assert(WebPExtractGreen != NULL);
   assert(WebPPackRGB != NULL);
+  assert(WebPHasAlpha8b != NULL);
+  assert(WebPHasAlpha32b != NULL);
 
   alpha_processing_last_cpuinfo_used = VP8GetCPUInfo;
 }
