@@ -28,8 +28,8 @@
 
 static const int kCodeLengthLiterals = 16;
 static const int kCodeLengthRepeatCode = 16;
-static const int kCodeLengthExtraBits[3] = { 2, 3, 7 };
-static const int kCodeLengthRepeatOffsets[3] = { 3, 3, 11 };
+static const uint8_t kCodeLengthExtraBits[3] = { 2, 3, 7 };
+static const uint8_t kCodeLengthRepeatOffsets[3] = { 3, 3, 11 };
 
 // -----------------------------------------------------------------------------
 //  Five Huffman codes are used at each meta code:
@@ -86,7 +86,7 @@ static const uint8_t kCodeToPlane[CODE_TO_PLANE_CODES] = {
 // All values computed for 8-bit first level lookup with Mark Adler's tool:
 // http://www.hdfgroup.org/ftp/lib-external/zlib/zlib-1.2.5/examples/enough.c
 #define FIXED_TABLE_SIZE (630 * 3 + 410)
-static const int kTableSize[12] = {
+static const uint16_t kTableSize[12] = {
   FIXED_TABLE_SIZE + 654,
   FIXED_TABLE_SIZE + 656,
   FIXED_TABLE_SIZE + 658,

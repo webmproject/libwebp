@@ -735,7 +735,7 @@ static WebPEncodingError StoreImageToBitMask(
       codes = huffman_codes + 5 * histogram_ix;
     }
     if (PixOrCopyIsLiteral(v)) {
-      static const int order[] = { 1, 2, 0, 3 };
+      static const uint8_t order[] = { 1, 2, 0, 3 };
       int k;
       for (k = 0; k < 4; ++k) {
         const int code = PixOrCopyLiteral(v, order[k]);

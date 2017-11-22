@@ -18,7 +18,7 @@
 //------------------------------------------------------------------------------
 // Main reconstruction function.
 
-static const int kScan[16] = {
+static const uint16_t kScan[16] = {
   0 +  0 * BPS,  4 +  0 * BPS, 8 +  0 * BPS, 12 +  0 * BPS,
   0 +  4 * BPS,  4 +  4 * BPS, 8 +  4 * BPS, 12 +  4 * BPS,
   0 +  8 * BPS,  4 +  8 * BPS, 8 +  8 * BPS, 12 +  8 * BPS,
@@ -320,7 +320,7 @@ static void PrecomputeFilterStrengths(VP8Decoder* const dec) {
 #define MIN_DITHER_AMP 4
 
 #define DITHER_AMP_TAB_SIZE 12
-static const int kQuantToDitherAmp[DITHER_AMP_TAB_SIZE] = {
+static const uint8_t kQuantToDitherAmp[DITHER_AMP_TAB_SIZE] = {
   // roughly, it's dqm->uv_mat_[1]
   8, 7, 6, 4, 4, 2, 2, 2, 1, 1, 1, 1
 };

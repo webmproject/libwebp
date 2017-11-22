@@ -21,7 +21,7 @@
 // WebPDecBuffer
 
 // Number of bytes per pixel for the different color-spaces.
-static const int kModeBpp[MODE_LAST] = {
+static const uint8_t kModeBpp[MODE_LAST] = {
   3, 4, 3, 4, 4, 2, 2,
   4, 4, 4, 2,    // pre-multiplied modes
   1, 1 };

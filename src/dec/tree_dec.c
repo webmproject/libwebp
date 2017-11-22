@@ -502,7 +502,7 @@ static const uint8_t
 
 // Paragraph 9.9
 
-static const int kBands[16 + 1] = {
+static const uint8_t kBands[16 + 1] = {
   0, 1, 2, 3, 6, 4, 5, 6, 6, 6, 6, 6, 6, 6, 6, 7,
   0  // extra entry as sentinel
 };
