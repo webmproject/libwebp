@@ -658,7 +658,7 @@ static int StatLoop(VP8Encoder* const enc) {
 // Main loops
 //
 
-static const int kAverageBytesPerMB[8] = { 50, 24, 16, 9, 7, 5, 3, 2 };
+static const uint8_t kAverageBytesPerMB[8] = { 50, 24, 16, 9, 7, 5, 3, 2 };
 
 static int PreLoopInitialize(VP8Encoder* const enc) {
   int p;
