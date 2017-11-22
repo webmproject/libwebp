@@ -316,9 +316,11 @@ typedef double (*VP8SSIMGetFunc)(const uint8_t* src1, int stride1,
 extern VP8SSIMGetFunc VP8SSIMGet;         // unclipped / unchecked
 extern VP8SSIMGetClippedFunc VP8SSIMGetClipped;   // with clipping
 
+#if !defined(WEBP_DISABLE_STATS)
 typedef uint32_t (*VP8AccumulateSSEFunc)(const uint8_t* src1,
                                          const uint8_t* src2, int len);
 extern VP8AccumulateSSEFunc VP8AccumulateSSE;
+#endif
 
 // must be called before using any of the above directly
 void VP8SSIMDspInit(void);

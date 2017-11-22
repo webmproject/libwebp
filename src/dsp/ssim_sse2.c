@@ -20,6 +20,8 @@
 
 #include "src/dsp/common_sse2.h"
 
+#if !defined(WEBP_DISABLE_STATS)
+
 // Helper function
 static WEBP_INLINE void SubtractAndSquare_SSE2(const __m128i a, const __m128i b,
                                                __m128i* const sum) {
@@ -77,6 +79,7 @@ static uint32_t AccumulateSSE_SSE2(const uint8_t* src1,
   }
   return sse2;
 }
+#endif  // !defined(WEBP_DISABLE_STATS)
 
 static uint32_t HorizontalAdd16b_SSE2(const __m128i* const m) {
   uint16_t tmp[8];
@@ -143,7 +146,9 @@ static double SSIMGet_SSE2(const uint8_t* src1, int stride1,
 extern void VP8SSIMDspInitSSE2(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8SSIMDspInitSSE2(void) {
+#if !defined(WEBP_DISABLE_STATS)
   VP8AccumulateSSE = AccumulateSSE_SSE2;
+#endif
   VP8SSIMGet = SSIMGet_SSE2;
 }
 

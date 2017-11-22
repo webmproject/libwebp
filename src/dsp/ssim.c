@@ -109,6 +109,7 @@ static double SSIMGet_C(const uint8_t* src1, int stride1,
 
 //------------------------------------------------------------------------------
 
+#if !defined(WEBP_DISABLE_STATS)
 static uint32_t AccumulateSSE_C(const uint8_t* src1,
                                 const uint8_t* src2, int len) {
   int i;
@@ -120,12 +121,15 @@ static uint32_t AccumulateSSE_C(const uint8_t* src1,
   }
   return sse2;
 }
+#endif
 
 //------------------------------------------------------------------------------
 
 VP8SSIMGetFunc VP8SSIMGet;
 VP8SSIMGetClippedFunc VP8SSIMGetClipped;
+#if !defined(WEBP_DISABLE_STATS)
 VP8AccumulateSSEFunc VP8AccumulateSSE;
+#endif
 
 extern void VP8SSIMDspInitSSE2(void);
 
@@ -138,7 +142,10 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8SSIMDspInit(void) {
   VP8SSIMGetClipped = SSIMGetClipped_C;
   VP8SSIMGet = SSIMGet_C;
 
+#if !defined(WEBP_DISABLE_STATS)
   VP8AccumulateSSE = AccumulateSSE_C;
+#endif
+
   if (VP8GetCPUInfo != NULL) {
 #if defined(WEBP_USE_SSE2)
     if (VP8GetCPUInfo(kSSE2)) {

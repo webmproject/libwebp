@@ -11,6 +11,10 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
+#include "src/webp/encode.h"
+
+#if !defined(WEBP_DISABLE_STATS)
+
 #include <math.h>
 #include <stdlib.h>
 
@@ -210,4 +214,34 @@ int WebPPictureDistortion(const WebPPicture* src, const WebPPicture* ref,
   return ok;
 }
 
-//------------------------------------------------------------------------------
+#else  // defined(WEBP_DISABLE_STATS)
+int WebPPlaneDistortion(const uint8_t* src, size_t src_stride,
+                        const uint8_t* ref, size_t ref_stride,
+                        int width, int height, size_t x_step,
+                        int type, float* distortion, float* result) {
+  (void)src;
+  (void)src_stride;
+  (void)ref;
+  (void)ref_stride;
+  (void)width;
+  (void)height;
+  (void)x_step;
+  (void)type;
+  if (distortion == NULL || result == NULL) return 0;
+  *distortion = 0.f;
+  *result = 0.f;
+  return 1;
+}
+
+int WebPPictureDistortion(const WebPPicture* src, const WebPPicture* ref,
+                          int type, float results[5]) {
+  int i;
+  (void)src;
+  (void)ref;
+  (void)type;
+  if (results == NULL) return 0;
+  for (i = 0; i < 5; ++i) results[i] = 0.f;
+  return 1;
+}
+
+#endif  // !defined(WEBP_DISABLE_STATS)
