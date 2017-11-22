@@ -22,27 +22,6 @@
 //------------------------------------------------------------------------------
 // NxM Loading functions
 
-// Load/Store vertical edge
-#define LOAD8x4(c1, c2, c3, c4, b1, b2, stride)                                \
-  "vld4.8 {" #c1 "[0]," #c2 "[0]," #c3 "[0]," #c4 "[0]}," #b1 "," #stride "\n" \
-  "vld4.8 {" #c1 "[1]," #c2 "[1]," #c3 "[1]," #c4 "[1]}," #b2 "," #stride "\n" \
-  "vld4.8 {" #c1 "[2]," #c2 "[2]," #c3 "[2]," #c4 "[2]}," #b1 "," #stride "\n" \
-  "vld4.8 {" #c1 "[3]," #c2 "[3]," #c3 "[3]," #c4 "[3]}," #b2 "," #stride "\n" \
-  "vld4.8 {" #c1 "[4]," #c2 "[4]," #c3 "[4]," #c4 "[4]}," #b1 "," #stride "\n" \
-  "vld4.8 {" #c1 "[5]," #c2 "[5]," #c3 "[5]," #c4 "[5]}," #b2 "," #stride "\n" \
-  "vld4.8 {" #c1 "[6]," #c2 "[6]," #c3 "[6]," #c4 "[6]}," #b1 "," #stride "\n" \
-  "vld4.8 {" #c1 "[7]," #c2 "[7]," #c3 "[7]," #c4 "[7]}," #b2 "," #stride "\n"
-
-#define STORE8x2(c1, c2, p, stride)                                            \
-  "vst2.8   {" #c1 "[0], " #c2 "[0]}," #p "," #stride " \n"                    \
-  "vst2.8   {" #c1 "[1], " #c2 "[1]}," #p "," #stride " \n"                    \
-  "vst2.8   {" #c1 "[2], " #c2 "[2]}," #p "," #stride " \n"                    \
-  "vst2.8   {" #c1 "[3], " #c2 "[3]}," #p "," #stride " \n"                    \
-  "vst2.8   {" #c1 "[4], " #c2 "[4]}," #p "," #stride " \n"                    \
-  "vst2.8   {" #c1 "[5], " #c2 "[5]}," #p "," #stride " \n"                    \
-  "vst2.8   {" #c1 "[6], " #c2 "[6]}," #p "," #stride " \n"                    \
-  "vst2.8   {" #c1 "[7], " #c2 "[7]}," #p "," #stride " \n"
-
 #if !defined(WORK_AROUND_GCC)
 
 // This intrinsics version makes gcc-4.6.3 crash during Load4x??() compilation
@@ -553,6 +532,27 @@ static void SimpleHFilter16_NEON(uint8_t* p, int stride, int thresh) {
 
 #else
 
+// Load/Store vertical edge
+#define LOAD8x4(c1, c2, c3, c4, b1, b2, stride)                                \
+  "vld4.8 {" #c1 "[0]," #c2 "[0]," #c3 "[0]," #c4 "[0]}," #b1 "," #stride "\n" \
+  "vld4.8 {" #c1 "[1]," #c2 "[1]," #c3 "[1]," #c4 "[1]}," #b2 "," #stride "\n" \
+  "vld4.8 {" #c1 "[2]," #c2 "[2]," #c3 "[2]," #c4 "[2]}," #b1 "," #stride "\n" \
+  "vld4.8 {" #c1 "[3]," #c2 "[3]," #c3 "[3]," #c4 "[3]}," #b2 "," #stride "\n" \
+  "vld4.8 {" #c1 "[4]," #c2 "[4]," #c3 "[4]," #c4 "[4]}," #b1 "," #stride "\n" \
+  "vld4.8 {" #c1 "[5]," #c2 "[5]," #c3 "[5]," #c4 "[5]}," #b2 "," #stride "\n" \
+  "vld4.8 {" #c1 "[6]," #c2 "[6]," #c3 "[6]," #c4 "[6]}," #b1 "," #stride "\n" \
+  "vld4.8 {" #c1 "[7]," #c2 "[7]," #c3 "[7]," #c4 "[7]}," #b2 "," #stride "\n"
+
+#define STORE8x2(c1, c2, p, stride)                                            \
+  "vst2.8   {" #c1 "[0], " #c2 "[0]}," #p "," #stride " \n"                    \
+  "vst2.8   {" #c1 "[1], " #c2 "[1]}," #p "," #stride " \n"                    \
+  "vst2.8   {" #c1 "[2], " #c2 "[2]}," #p "," #stride " \n"                    \
+  "vst2.8   {" #c1 "[3], " #c2 "[3]}," #p "," #stride " \n"                    \
+  "vst2.8   {" #c1 "[4], " #c2 "[4]}," #p "," #stride " \n"                    \
+  "vst2.8   {" #c1 "[5], " #c2 "[5]}," #p "," #stride " \n"                    \
+  "vst2.8   {" #c1 "[6], " #c2 "[6]}," #p "," #stride " \n"                    \
+  "vst2.8   {" #c1 "[7], " #c2 "[7]}," #p "," #stride " \n"
+
 #define QRegs "q0", "q1", "q2", "q3",                                          \
               "q8", "q9", "q10", "q11", "q12", "q13", "q14", "q15"
 
@@ -647,6 +647,9 @@ static void SimpleHFilter16_NEON(uint8_t* p, int stride, int thresh) {
     : "memory", "r4", "r5", "r6", QRegs
   );
 }
+
+#undef LOAD8x4
+#undef STORE8x2
 
 #endif    // WEBP_USE_INTRINSICS
 
