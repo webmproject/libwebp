@@ -261,6 +261,8 @@ static WEBP_INLINE void GetResidual(
         // x is never 0 here so we do not need to update upper_row like below.
       }
 #else
+      (void)max_diffs;
+      (void)height;
       (void)max_quantization;
       (void)used_subtract_green;
       residual = VP8LSubPixels(current_row[x], predict);
@@ -324,9 +326,7 @@ static int GetBestPredictorForTile(int width, int height,
   // when at the right edge.
   uint32_t* upper_row = argb_scratch;
   uint32_t* current_row = upper_row + width + 1;
-#if (WEBP_NEAR_LOSSLESS == 1)
   uint8_t* const max_diffs = (uint8_t*)(current_row + width + 1);
-#endif
   float best_diff = MAX_DIFF_COST;
   int best_mode = 0;
   int mode;
@@ -420,8 +420,8 @@ static void CopyImageWithPrediction(int width, int height,
   // when at the right edge.
   uint32_t* upper_row = argb_scratch;
   uint32_t* current_row = upper_row + width + 1;
-#if (WEBP_NEAR_LOSSLESS == 1)
   uint8_t* current_max_diffs = (uint8_t*)(current_row + width + 1);
+#if (WEBP_NEAR_LOSSLESS == 1)
   uint8_t* lower_max_diffs = current_max_diffs + width;
 #endif
   int y;
