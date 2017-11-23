@@ -46,6 +46,7 @@
     );                                                                         \
   } while (0)
 
+#if !defined(WEBP_REDUCE_CSP)
 static WEBP_INLINE void YuvToRgb(int y, int u, int v, uint8_t* const rgb) {
   int r, g, b;
   YUV_TO_RGB(y, u, v, r, g, b);
@@ -91,10 +92,12 @@ static WEBP_INLINE void YuvToRgba4444(int y, int u, int v,
 #endif
    }
 }
+#endif   // WEBP_REDUCE_CSP
 
 //-----------------------------------------------------------------------------
 // Alpha handling variants
 
+#if !defined(WEBP_REDUCE_CSP)
 static WEBP_INLINE void YuvToArgb(uint8_t y, uint8_t u, uint8_t v,
                                   uint8_t* const argb) {
   int r, g, b;
@@ -104,6 +107,7 @@ static WEBP_INLINE void YuvToArgb(uint8_t y, uint8_t u, uint8_t v,
   argb[2] = g;
   argb[3] = b;
 }
+#endif   // WEBP_REDUCE_CSP
 static WEBP_INLINE void YuvToBgra(uint8_t y, uint8_t u, uint8_t v,
                                   uint8_t* const bgra) {
   int r, g, b;
@@ -197,13 +201,15 @@ static void FUNC_NAME(const uint8_t* top_y, const uint8_t* bottom_y,           \
 }
 
 // All variants implemented.
-UPSAMPLE_FUNC(UpsampleRgbLinePair,      YuvToRgb,      3)
-UPSAMPLE_FUNC(UpsampleBgrLinePair,      YuvToBgr,      3)
 UPSAMPLE_FUNC(UpsampleRgbaLinePair,     YuvToRgba,     4)
 UPSAMPLE_FUNC(UpsampleBgraLinePair,     YuvToBgra,     4)
+#if !defined(WEBP_REDUCE_CSP)
+UPSAMPLE_FUNC(UpsampleRgbLinePair,      YuvToRgb,      3)
+UPSAMPLE_FUNC(UpsampleBgrLinePair,      YuvToBgr,      3)
 UPSAMPLE_FUNC(UpsampleArgbLinePair,     YuvToArgb,     4)
 UPSAMPLE_FUNC(UpsampleRgba4444LinePair, YuvToRgba4444, 2)
 UPSAMPLE_FUNC(UpsampleRgb565LinePair,   YuvToRgb565,   2)
+#endif   // WEBP_REDUCE_CSP
 
 #undef LOAD_UV
 #undef UPSAMPLE_FUNC
@@ -214,17 +220,19 @@ UPSAMPLE_FUNC(UpsampleRgb565LinePair,   YuvToRgb565,   2)
 extern void WebPInitUpsamplersMIPSdspR2(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void WebPInitUpsamplersMIPSdspR2(void) {
-  WebPUpsamplers[MODE_RGB]       = UpsampleRgbLinePair;
   WebPUpsamplers[MODE_RGBA]      = UpsampleRgbaLinePair;
-  WebPUpsamplers[MODE_BGR]       = UpsampleBgrLinePair;
   WebPUpsamplers[MODE_BGRA]      = UpsampleBgraLinePair;
+  WebPUpsamplers[MODE_rgbA]      = UpsampleRgbaLinePair;
+  WebPUpsamplers[MODE_bgrA]      = UpsampleBgraLinePair;
+#if !defined(WEBP_REDUCE_CSP)
+  WebPUpsamplers[MODE_RGB]       = UpsampleRgbLinePair;
+  WebPUpsamplers[MODE_BGR]       = UpsampleBgrLinePair;
   WebPUpsamplers[MODE_ARGB]      = UpsampleArgbLinePair;
   WebPUpsamplers[MODE_RGBA_4444] = UpsampleRgba4444LinePair;
   WebPUpsamplers[MODE_RGB_565]   = UpsampleRgb565LinePair;
-  WebPUpsamplers[MODE_rgbA]      = UpsampleRgbaLinePair;
-  WebPUpsamplers[MODE_bgrA]      = UpsampleBgraLinePair;
   WebPUpsamplers[MODE_Argb]      = UpsampleArgbLinePair;
   WebPUpsamplers[MODE_rgbA_4444] = UpsampleRgba4444LinePair;
+#endif   // WEBP_REDUCE_CSP
 }
 
 #endif  // FANCY_UPSAMPLING
@@ -239,13 +247,15 @@ static void FUNC_NAME(const uint8_t* y, const uint8_t* u, const uint8_t* v,    \
   for (i = 0; i < len; ++i) FUNC(y[i], u[i], v[i], &dst[i * XSTEP]);           \
 }
 
-YUV444_FUNC(Yuv444ToRgb,      YuvToRgb,      3)
-YUV444_FUNC(Yuv444ToBgr,      YuvToBgr,      3)
 YUV444_FUNC(Yuv444ToRgba,     YuvToRgba,     4)
 YUV444_FUNC(Yuv444ToBgra,     YuvToBgra,     4)
+#if !defined(WEBP_REDUCE_CSP)
+YUV444_FUNC(Yuv444ToRgb,      YuvToRgb,      3)
+YUV444_FUNC(Yuv444ToBgr,      YuvToBgr,      3)
 YUV444_FUNC(Yuv444ToArgb,     YuvToArgb,     4)
 YUV444_FUNC(Yuv444ToRgba4444, YuvToRgba4444, 2)
 YUV444_FUNC(Yuv444ToRgb565,   YuvToRgb565,   2)
+#endif   // WEBP_REDUCE_CSP
 
 #undef YUV444_FUNC
 
@@ -255,17 +265,19 @@ YUV444_FUNC(Yuv444ToRgb565,   YuvToRgb565,   2)
 extern void WebPInitYUV444ConvertersMIPSdspR2(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void WebPInitYUV444ConvertersMIPSdspR2(void) {
-  WebPYUV444Converters[MODE_RGB]       = Yuv444ToRgb;
   WebPYUV444Converters[MODE_RGBA]      = Yuv444ToRgba;
-  WebPYUV444Converters[MODE_BGR]       = Yuv444ToBgr;
   WebPYUV444Converters[MODE_BGRA]      = Yuv444ToBgra;
+  WebPYUV444Converters[MODE_rgbA]      = Yuv444ToRgba;
+  WebPYUV444Converters[MODE_bgrA]      = Yuv444ToBgra;
+#if !defined(WEBP_REDUCE_CSP)
+  WebPYUV444Converters[MODE_RGB]       = Yuv444ToRgb;
+  WebPYUV444Converters[MODE_BGR]       = Yuv444ToBgr;
   WebPYUV444Converters[MODE_ARGB]      = Yuv444ToArgb;
   WebPYUV444Converters[MODE_RGBA_4444] = Yuv444ToRgba4444;
   WebPYUV444Converters[MODE_RGB_565]   = Yuv444ToRgb565;
-  WebPYUV444Converters[MODE_rgbA]      = Yuv444ToRgba;
-  WebPYUV444Converters[MODE_bgrA]      = Yuv444ToBgra;
   WebPYUV444Converters[MODE_Argb]      = Yuv444ToArgb;
   WebPYUV444Converters[MODE_rgbA_4444] = Yuv444ToRgba4444;
+#endif   // WEBP_REDUCE_CSP
 }
 
 #else  // !WEBP_USE_MIPS_DSP_R2
