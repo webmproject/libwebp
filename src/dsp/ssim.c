@@ -16,6 +16,8 @@
 
 #include "src/dsp/dsp.h"
 
+#if !defined(WEBP_REDUCE_SIZE)
+
 //------------------------------------------------------------------------------
 // SSIM / PSNR
 
@@ -107,6 +109,8 @@ static double SSIMGet_C(const uint8_t* src1, int stride1,
   return VP8SSIMFromStats(&stats);
 }
 
+#endif  // !defined(WEBP_REDUCE_SIZE)
+
 //------------------------------------------------------------------------------
 
 #if !defined(WEBP_DISABLE_STATS)
@@ -125,8 +129,10 @@ static uint32_t AccumulateSSE_C(const uint8_t* src1,
 
 //------------------------------------------------------------------------------
 
+#if !defined(WEBP_REDUCE_SIZE)
 VP8SSIMGetFunc VP8SSIMGet;
 VP8SSIMGetClippedFunc VP8SSIMGetClipped;
+#endif
 #if !defined(WEBP_DISABLE_STATS)
 VP8AccumulateSSEFunc VP8AccumulateSSE;
 #endif
@@ -139,8 +145,10 @@ static volatile VP8CPUInfo ssim_last_cpuinfo_used =
 WEBP_TSAN_IGNORE_FUNCTION void VP8SSIMDspInit(void) {
   if (ssim_last_cpuinfo_used == VP8GetCPUInfo) return;
 
+#if !defined(WEBP_REDUCE_SIZE)
   VP8SSIMGetClipped = SSIMGetClipped_C;
   VP8SSIMGet = SSIMGet_C;
+#endif
 
 #if !defined(WEBP_DISABLE_STATS)
   VP8AccumulateSSE = AccumulateSSE_C;

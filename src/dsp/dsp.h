@@ -308,6 +308,7 @@ typedef double (*VP8SSIMGetClippedFunc)(const uint8_t* src1, int stride1,
                                         int xo, int yo,  // center position
                                         int W, int H);   // plane dimension
 
+#if !defined(WEBP_REDUCE_SIZE)
 // This version is called with the guarantee that you can load 8 bytes and
 // 8 rows at offset src1 and src2
 typedef double (*VP8SSIMGetFunc)(const uint8_t* src1, int stride1,
@@ -315,6 +316,7 @@ typedef double (*VP8SSIMGetFunc)(const uint8_t* src1, int stride1,
 
 extern VP8SSIMGetFunc VP8SSIMGet;         // unclipped / unchecked
 extern VP8SSIMGetClippedFunc VP8SSIMGetClipped;   // with clipping
+#endif
 
 #if !defined(WEBP_DISABLE_STATS)
 typedef uint32_t (*VP8AccumulateSSEFunc)(const uint8_t* src1,

@@ -13,7 +13,7 @@
 
 #include "src/webp/encode.h"
 
-#if !defined(WEBP_DISABLE_STATS)
+#if !(defined(WEBP_DISABLE_STATS) || defined(WEBP_REDUCE_SIZE))
 
 #include <math.h>
 #include <stdlib.h>

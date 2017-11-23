@@ -11,6 +11,10 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
+#include "src/webp/encode.h"
+
+#if !defined(WEBP_REDUCE_SIZE)
+
 #include <assert.h>
 #include <stdlib.h>
 
@@ -261,4 +265,45 @@ int WebPPictureRescale(WebPPicture* pic, int width, int height) {
   return 1;
 }
 
-//------------------------------------------------------------------------------
+#else  // defined(WEBP_REDUCE_SIZE)
+
+int WebPPictureCopy(const WebPPicture* src, WebPPicture* dst) {
+  (void)src;
+  (void)dst;
+  return 0;
+}
+
+int WebPPictureIsView(const WebPPicture* picture) {
+  (void)picture;
+  return 0;
+}
+
+int WebPPictureView(const WebPPicture* src,
+                    int left, int top, int width, int height,
+                    WebPPicture* dst) {
+  (void)src;
+  (void)left;
+  (void)top;
+  (void)width;
+  (void)height;
+  (void)dst;
+  return 0;
+}
+
+int WebPPictureCrop(WebPPicture* pic,
+                    int left, int top, int width, int height) {
+  (void)pic;
+  (void)left;
+  (void)top;
+  (void)width;
+  (void)height;
+  return 0;
+}
+
+int WebPPictureRescale(WebPPicture* pic, int width, int height) {
+  (void)pic;
+  (void)width;
+  (void)height;
+  return 0;
+}
+#endif  // !defined(WEBP_REDUCE_SIZE)

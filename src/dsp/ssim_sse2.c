@@ -81,6 +81,8 @@ static uint32_t AccumulateSSE_SSE2(const uint8_t* src1,
 }
 #endif  // !defined(WEBP_DISABLE_STATS)
 
+#if !defined(WEBP_REDUCE_SIZE)
+
 static uint32_t HorizontalAdd16b_SSE2(const __m128i* const m) {
   uint16_t tmp[8];
   const __m128i a = _mm_srli_si128(*m, 8);
@@ -143,13 +145,17 @@ static double SSIMGet_SSE2(const uint8_t* src1, int stride1,
   return VP8SSIMFromStats(&stats);
 }
 
+#endif  // !defined(WEBP_REDUCE_SIZE)
+
 extern void VP8SSIMDspInitSSE2(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8SSIMDspInitSSE2(void) {
 #if !defined(WEBP_DISABLE_STATS)
   VP8AccumulateSSE = AccumulateSSE_SSE2;
 #endif
+#if !defined(WEBP_REDUCE_SIZE)
   VP8SSIMGet = SSIMGet_SSE2;
+#endif
 }
 
 #else  // !WEBP_USE_SSE2
