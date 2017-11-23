@@ -210,6 +210,61 @@ static void ApplyAlphaMultiply_SSE2(uint8_t* rgba, int alpha_first,
 #undef MULTIPLIER
 #undef PREMULTIPLY
 
+//------------------------------------------------------------------------------
+// Alpha detection
+
+static int HasAlpha8b_SSE2(const uint8_t* src, int length) {
+  const __m128i all_0xff = _mm_set1_epi8(0xff);
+  int i = 0;
+  for (; i + 16 <= length; i += 16) {
+    const __m128i v = _mm_loadu_si128((const __m128i*)(src + i));
+    const __m128i bits = _mm_cmpeq_epi8(v, all_0xff);
+    const int mask = _mm_movemask_epi8(bits);
+    if (mask != 0xffff) return 1;
+  }
+  for (; i < length; ++i) if (src[i] != 0xff) return 1;
+  return 0;
+}
+
+static int HasAlpha32b_SSE2(const uint8_t* src, int length) {
+  const __m128i alpha_mask = _mm_set1_epi32(0xff);
+  const __m128i all_0xff = _mm_set1_epi8(0xff);
+  int i = 0;
+  // We don't know if we can access the last 3 bytes after the last alpha
+  // value 'src[4 * length - 4]' (because we don't know if alpha is the first
+  // or the last byte of the quadruplet). Hence the '-3' protection below.
+  length = length * 4 - 3;   // size in bytes
+  for (; i + 64 <= length; i += 64) {
+    const __m128i a0 = _mm_loadu_si128((const __m128i*)(src + i +  0));
+    const __m128i a1 = _mm_loadu_si128((const __m128i*)(src + i + 16));
+    const __m128i a2 = _mm_loadu_si128((const __m128i*)(src + i + 32));
+    const __m128i a3 = _mm_loadu_si128((const __m128i*)(src + i + 48));
+    const __m128i b0 = _mm_and_si128(a0, alpha_mask);
+    const __m128i b1 = _mm_and_si128(a1, alpha_mask);
+    const __m128i b2 = _mm_and_si128(a2, alpha_mask);
+    const __m128i b3 = _mm_and_si128(a3, alpha_mask);
+    const __m128i c0 = _mm_packs_epi32(b0, b1);
+    const __m128i c1 = _mm_packs_epi32(b2, b3);
+    const __m128i d  = _mm_packus_epi16(c0, c1);
+    const __m128i bits = _mm_cmpeq_epi8(d, all_0xff);
+    const int mask = _mm_movemask_epi8(bits);
+    if (mask != 0xffff) return 1;
+  }
+  for (; i + 32 <= length; i += 32) {
+    const __m128i a0 = _mm_loadu_si128((const __m128i*)(src + i +  0));
+    const __m128i a1 = _mm_loadu_si128((const __m128i*)(src + i + 16));
+    const __m128i b0 = _mm_and_si128(a0, alpha_mask);
+    const __m128i b1 = _mm_and_si128(a1, alpha_mask);
+    const __m128i c  = _mm_packs_epi32(b0, b1);
+    const __m128i d  = _mm_packus_epi16(c, c);
+    const __m128i bits = _mm_cmpeq_epi8(d, all_0xff);
+    const int mask = _mm_movemask_epi8(bits);
+    if (mask != 0xffff) return 1;
+  }
+  for (; i <= length; i += 4) if (src[i] != 0xff) return 1;
+  return 0;
+}
+
 // -----------------------------------------------------------------------------
 // Apply alpha value to rows
 
@@ -276,6 +331,9 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitAlphaProcessingSSE2(void) {
   WebPDispatchAlpha = DispatchAlpha_SSE2;
   WebPDispatchAlphaToGreen = DispatchAlphaToGreen_SSE2;
   WebPExtractAlpha = ExtractAlpha_SSE2;
+
+  WebPHasAlpha8b = HasAlpha8b_SSE2;
+  WebPHasAlpha32b = HasAlpha32b_SSE2;
 }
 
 #else  // !WEBP_USE_SSE2
