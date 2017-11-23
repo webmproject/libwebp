@@ -267,6 +267,7 @@ static int ApplyFiltersAndEncode(const uint8_t* alpha, int width, int height,
                              reduce_levels, effort_level, NULL, &best);
   }
   if (ok) {
+#if !defined(WEBP_DISABLE_STATS)
     if (stats != NULL) {
       stats->lossless_features = best.stats.lossless_features;
       stats->histogram_bits = best.stats.histogram_bits;
@@ -277,6 +278,9 @@ static int ApplyFiltersAndEncode(const uint8_t* alpha, int width, int height,
       stats->lossless_hdr_size = best.stats.lossless_hdr_size;
       stats->lossless_data_size = best.stats.lossless_data_size;
     }
+#else
+    (void)stats;
+#endif
     *output_size = VP8BitWriterSize(&best.bw);
     *output = VP8BitWriterBuf(&best.bw);
   } else {
@@ -342,10 +346,12 @@ static int EncodeAlpha(VP8Encoder* const enc,
     ok = ApplyFiltersAndEncode(quant_alpha, width, height, data_size, method,
                                filter, reduce_levels, effort_level, output,
                                output_size, pic->stats);
+#if !defined(WEBP_DISABLE_STATS)
     if (pic->stats != NULL) {  // need stats?
       pic->stats->coded_size += (int)(*output_size);
       enc->sse_[3] = sse;
     }
+#endif
   }
 
   WebPSafeFree(quant_alpha);

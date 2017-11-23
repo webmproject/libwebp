@@ -200,11 +200,13 @@ static void SetSegmentProbas(VP8Encoder* const enc) {
     const VP8MBInfo* const mb = &enc->mb_info_[n];
     p[mb->segment_]++;
   }
+#if !defined(WEBP_DISABLE_STATS)
   if (enc->pic_->stats != NULL) {
     for (n = 0; n < NUM_MB_SEGMENTS; ++n) {
       enc->pic_->stats->segment_size[n] = p[n];
     }
   }
+#endif
   if (enc->segment_hdr_.num_segments_ > 1) {
     uint8_t* const probas = enc->proba_.segments_;
     probas[0] = GetProba(p[0] + p[1], p[2] + p[3]);
@@ -452,6 +454,8 @@ static int RecordTokens(VP8EncIterator* const it, const VP8ModeScore* const rd,
 //------------------------------------------------------------------------------
 // ExtraInfo map / Debug function
 
+#if !defined(WEBP_DISABLE_STATS)
+
 #if SEGMENT_VISU
 static void SetBlock(uint8_t* p, int value, int size) {
   int y;
@@ -515,6 +519,20 @@ static void StoreSideInfo(const VP8EncIterator* const it) {
   SetBlock(it->yuv_out_ + V_OFF_ENC, mb->uv_mode_ * 64, 8);
 #endif
 }
+
+#else  // defined(WEBP_DISABLE_STATS)
+static void ResetSSE(VP8Encoder* const enc) {
+  (void)enc;
+}
+static void StoreSideInfo(const VP8EncIterator* const it) {
+  VP8Encoder* const enc = it->enc_;
+  WebPPicture* const pic = enc->pic_;
+  if (pic->extra_info != NULL) {
+    memset(pic->extra_info, 0,
+           enc->mb_w_ * enc->mb_h_ * sizeof(*pic->extra_info));
+  }
+}
+#endif  // !defined(WEBP_DISABLE_STATS)
 
 static double GetPSNR(uint64_t mse, uint64_t size) {
   return (mse > 0 && size > 0) ? 10. * log10(255. * 255. * size / mse) : 99;
@@ -670,6 +688,7 @@ static int PostLoopFinalize(VP8EncIterator* const it, int ok) {
   }
 
   if (ok) {      // All good. Finish up.
+#if !defined(WEBP_DISABLE_STATS)
     if (enc->pic_->stats != NULL) {  // finalize byte counters...
       int i, s;
       for (i = 0; i <= 2; ++i) {
@@ -678,6 +697,7 @@ static int PostLoopFinalize(VP8EncIterator* const it, int ok) {
         }
       }
     }
+#endif
     VP8AdjustFilterStrength(it);     // ...and store filter stats.
   } else {
     // Something bad happened -> need to do some memory cleanup.

@@ -1562,7 +1562,9 @@ static int EncodeStreamHook(void* input, void* data2) {
   const CrunchConfig* const crunch_configs = params->crunch_configs_;
   const int num_crunch_configs = params->num_crunch_configs_;
   const int red_and_blue_always_zero = params->red_and_blue_always_zero_;
+#if !defined(WEBP_DISABLE_STATS)
   WebPAuxStats* const stats = params->stats_;
+#endif
   WebPEncodingError err = VP8_ENC_OK;
   const int quality = (int)config->quality;
   const int low_effort = (config->method == 0);
@@ -1704,6 +1706,7 @@ static int EncodeStreamHook(void* input, void* data2) {
       best_size = VP8LBitWriterNumBytes(bw);
       // Store the BitWriter.
       VP8LBitWriterSwap(bw, &bw_best);
+#if !defined(WEBP_DISABLE_STATS)
       // Update the stats.
       if (stats != NULL) {
         stats->lossless_features = 0;
@@ -1719,6 +1722,7 @@ static int EncodeStreamHook(void* input, void* data2) {
         stats->lossless_hdr_size = hdr_size;
         stats->lossless_data_size = data_size;
       }
+#endif
     }
     // Reset the bit writer for the following iteration if any.
     if (num_crunch_configs > 1) VP8LBitWriterReset(&bw_init, bw);
@@ -1828,11 +1832,13 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
       err = VP8_ENC_ERROR_OUT_OF_MEMORY;
       goto Error;
     }
+#if !defined(WEBP_DISABLE_STATS)
     // This line is here and not in the param initialization above to remove a
     // Clang static analyzer warning.
     if (picture->stats != NULL) {
       memcpy(&stats_side, picture->stats, sizeof(stats_side));
     }
+#endif
     // This line is only useful to remove a Clang static analyzer warning.
     params_side.err_ = VP8_ENC_OK;
     worker_interface->Launch(&worker_side);
@@ -1851,9 +1857,11 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
     }
     if (VP8LBitWriterNumBytes(&bw_side) < VP8LBitWriterNumBytes(bw_main)) {
       VP8LBitWriterSwap(bw_main, &bw_side);
+#if !defined(WEBP_DISABLE_STATS)
       if (picture->stats != NULL) {
         memcpy(picture->stats, &stats_side, sizeof(*picture->stats));
       }
+#endif
     }
   } else {
     if (!ok_main) {
@@ -1945,11 +1953,13 @@ int VP8LEncodeImage(const WebPConfig* const config,
 
   if (!WebPReportProgress(picture, 100, &percent)) goto UserAbort;
 
+#if !defined(WEBP_DISABLE_STATS)
   // Save size.
   if (picture->stats != NULL) {
     picture->stats->coded_size += (int)coded_size;
     picture->stats->lossless_size = (int)coded_size;
   }
+#endif
 
   if (picture->extra_info != NULL) {
     const int mb_w = (width + 15) >> 4;

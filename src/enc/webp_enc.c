@@ -256,6 +256,7 @@ static int DeleteVP8Encoder(VP8Encoder* enc) {
 
 //------------------------------------------------------------------------------
 
+#if !defined(WEBP_DISABLE_STATS)
 static double GetPSNR(uint64_t err, uint64_t size) {
   return (err > 0 && size > 0) ? 10. * log10(255. * 255. * size / err) : 99.;
 }
@@ -270,8 +271,10 @@ static void FinalizePSNR(const VP8Encoder* const enc) {
   stats->PSNR[3] = (float)GetPSNR(sse[0] + sse[1] + sse[2], size * 3 / 2);
   stats->PSNR[4] = (float)GetPSNR(sse[3], size);
 }
+#endif  // !defined(WEBP_DISABLE_STATS)
 
 static void StoreStats(VP8Encoder* const enc) {
+#if !defined(WEBP_DISABLE_STATS)
   WebPAuxStats* const stats = enc->pic_->stats;
   if (stats != NULL) {
     int i, s;
@@ -288,7 +291,9 @@ static void StoreStats(VP8Encoder* const enc) {
       stats->block_count[i] = enc->block_count_[i];
     }
   }
+#else  // defined(WEBP_DISABLE_STATS)
   WebPReportProgress(enc->pic_, 100, &enc->percent_);  // done!
+#endif  // !defined(WEBP_DISABLE_STATS)
 }
 
 int WebPEncodingSetError(const WebPPicture* const pic,
