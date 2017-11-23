@@ -16,7 +16,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#ifdef WEBP_HAVE_GIF
+#if defined(WEBP_HAVE_GIF)
 #include <gif_lib.h>
 #endif
 #include "webp/format_constants.h"
@@ -33,11 +33,13 @@ static const int kNumChannels = 4;
 // -----------------------------------------------------------------------------
 // Common utilities.
 
+#if defined(WEBP_HAVE_GIF)
 // Returns true if the frame covers the full canvas.
 static int IsFullFrame(int width, int height,
                        int canvas_width, int canvas_height) {
   return (width == canvas_width && height == canvas_height);
 }
+#endif // WEBP_HAVE_GIF
 
 static int CheckSizeForOverflow(uint64_t size) {
   return (size == (size_t)size);
@@ -85,6 +87,7 @@ void ClearAnimatedImage(AnimatedImage* const image) {
   }
 }
 
+#if defined(WEBP_HAVE_GIF)
 // Clear the canvas to transparent.
 static void ZeroFillCanvas(uint8_t* rgba,
                            uint32_t canvas_width, uint32_t canvas_height) {
@@ -126,6 +129,7 @@ static void CopyFrameRectangle(const uint8_t* src, uint8_t* dst, int stride,
     dst += stride;
   }
 }
+#endif // WEBP_HAVE_GIF
 
 // Canonicalize all transparent pixels to transparent black to aid comparison.
 static void CleanupTransparentPixels(uint32_t* rgba,
@@ -280,7 +284,7 @@ static int ReadAnimatedWebP(const char filename[],
 // -----------------------------------------------------------------------------
 // GIF Decoding.
 
-#ifdef WEBP_HAVE_GIF
+#if defined(WEBP_HAVE_GIF)
 
 // Returns true if this is a valid GIF bitstream.
 static int IsGIF(const WebPData* const data) {
