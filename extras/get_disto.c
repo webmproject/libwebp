@@ -322,6 +322,7 @@ int main(int argc, const char *argv[]) {
       fprintf(stderr, "Can only compute the difference map in ARGB format.\n");
       goto End;
     }
+#if !defined(WEBP_REDUCE_CSP)
     data_size = WebPEncodeLosslessBGRA((const uint8_t*)pic1.argb,
                                        pic1.width, pic1.height,
                                        pic1.argb_stride * 4,
@@ -333,6 +334,12 @@ int main(int argc, const char *argv[]) {
     ret = ImgIoUtilWriteFile(output, data, data_size) ? 0 : 1;
     WebPFree(data);
     if (ret) goto End;
+#else
+    (void)data;
+    (void)data_size;
+    fprintf(stderr, "Cannot save the difference map. Please recompile "
+                    "without the WEBP_REDUCE_CSP flag.\n");
+#endif  // WEBP_REDUCE_CSP
   }
   ret = 0;
 
