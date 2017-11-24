@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "7f70836f_5444ede6",
+        "filename": "src/dec/io_dec.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 545,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-11-24T22:08:51Z",
+      "side": 1,
+      "message": "thing is: sometimes we reverse the condition and we forget to update the terminal comment.\n\nThat\u0027s why i went with just a reminder of the conditional flag, without explicit mention of the actual test",
+      "parentUuid": "dcef9d34_cbe9683c",
+      "range": {
+        "startLine": 545,
+        "startChar": 11,
+        "endLine": 545,
+        "endChar": 27
+      },
+      "revId": "ab651f1d6e68a4525da3a64651155902fe4be015",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "09fca9a9_f106784a",
         "filename": "src/dec/io_dec.c",
         "patchSetId": 2
@@ -39,6 +63,24 @@
       "revId": "ab651f1d6e68a4525da3a64651155902fe4be015",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4c02f246_6e782fb8",
+        "filename": "src/dec/io_dec.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 573,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-11-24T22:08:51Z",
+      "side": 1,
+      "message": "oops, should have been a error return here.",
+      "parentUuid": "09fca9a9_f106784a",
+      "revId": "ab651f1d6e68a4525da3a64651155902fe4be015",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
