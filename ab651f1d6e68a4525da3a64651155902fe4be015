@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dcef9d34_cbe9683c",
+        "filename": "src/dec/io_dec.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 545,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-11-24T21:33:03Z",
+      "side": 1,
+      "message": "elsewhere I think the condition was spelled out, !defined(WEBP_REDUCE_SIZE)",
+      "range": {
+        "startLine": 545,
+        "startChar": 11,
+        "endLine": 545,
+        "endChar": 27
+      },
+      "revId": "ab651f1d6e68a4525da3a64651155902fe4be015",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "09fca9a9_f106784a",
+        "filename": "src/dec/io_dec.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 573,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-11-24T21:33:03Z",
+      "side": 1,
+      "message": "could be an assert here, if we can\u0027t make it this far with WEBP_REDUCE_SIZE defined",
+      "revId": "ab651f1d6e68a4525da3a64651155902fe4be015",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
