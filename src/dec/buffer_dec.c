@@ -194,7 +194,9 @@ VP8StatusCode WebPAllocateDecBuffer(int width, int height,
       width = cw;
       height = ch;
     }
+
     if (options->use_scaling) {
+#if !defined(WEBP_REDUCE_SIZE)
       int scaled_width = options->scaled_width;
       int scaled_height = options->scaled_height;
       if (!WebPRescalerGetScaledDimensions(
@@ -203,6 +205,9 @@ VP8StatusCode WebPAllocateDecBuffer(int width, int height,
       }
       width = scaled_width;
       height = scaled_height;
+#else
+      return VP8_STATUS_INVALID_PARAM;   // rescaling not supported
+#endif
     }
   }
   buffer->width = width;
