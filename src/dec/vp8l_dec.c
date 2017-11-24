@@ -485,6 +485,7 @@ static int ReadHuffmanCodes(VP8LDecoder* const dec, int xsize, int ysize,
 //------------------------------------------------------------------------------
 // Scaling.
 
+#if !defined(WEBP_REDUCE_SIZE)
 static int AllocateAndInitRescaler(VP8LDecoder* const dec, VP8Io* const io) {
   const int num_channels = 4;
   const int in_width = io->mb_w;
@@ -516,9 +517,12 @@ static int AllocateAndInitRescaler(VP8LDecoder* const dec, VP8Io* const io) {
                    out_width, out_height, 0, num_channels, work);
   return 1;
 }
+#endif   // WEBP_REDUCE_SIZE
 
 //------------------------------------------------------------------------------
 // Export to ARGB
+
+#if !defined(WEBP_REDUCE_SIZE)
 
 // We have special "export" function since we need to convert from BGRA
 static int Export(WebPRescaler* const rescaler, WEBP_CSP_MODE colorspace,
@@ -560,6 +564,8 @@ static int EmitRescaledRowsRGBA(const VP8LDecoder* const dec,
   }
   return num_lines_out;
 }
+
+#endif   // WEBP_REDUCE_SIZE
 
 // Emit rows without any scaling.
 static int EmitRows(WEBP_CSP_MODE colorspace,
@@ -746,9 +752,12 @@ static void ProcessRows(VP8LDecoder* const dec, int row) {
       if (WebPIsRGBMode(output->colorspace)) {  // convert to RGBA
         const WebPRGBABuffer* const buf = &output->u.RGBA;
         uint8_t* const rgba = buf->rgba + dec->last_out_row_ * buf->stride;
-        const int num_rows_out = io->use_scaling ?
+        const int num_rows_out =
+#if !defined(WEBP_REDUCE_SIZE)
+         io->use_scaling ?
             EmitRescaledRowsRGBA(dec, rows_data, in_stride, io->mb_h,
                                  rgba, buf->stride) :
+#endif  // WEBP_REDUCE_SIZE
             EmitRows(output->colorspace, rows_data, in_stride,
                      io->mb_w, io->mb_h, rgba, buf->stride);
         // Update 'last_out_row_'.
@@ -1632,12 +1641,19 @@ int VP8LDecodeImage(VP8LDecoder* const dec) {
 
     if (!AllocateInternalBuffers32b(dec, io->width)) goto Err;
 
+#if !defined(WEBP_REDUCE_SIZE)
     if (io->use_scaling && !AllocateAndInitRescaler(dec, io)) goto Err;
 
     if (io->use_scaling || WebPIsPremultipliedMode(dec->output_->colorspace)) {
       // need the alpha-multiply functions for premultiplied output or rescaling
       WebPInitAlphaProcessing();
     }
+#else
+    if (io->use_scaling) {
+      dec->status_ = VP8_STATUS_INVALID_PARAM;
+      goto Err;
+    }
+#endif
     if (!WebPIsRGBMode(dec->output_->colorspace)) {
       WebPInitConvertARGBToYUV();
       if (dec->output_->u.YUVA.a != NULL) WebPInitAlphaProcessing();

@@ -13,7 +13,7 @@
 
 #include "src/dsp/dsp.h"
 
-#if defined(WEBP_USE_MIPS32)
+#if defined(WEBP_USE_MIPS32) && !defined(WEBP_REDUCE_SIZE)
 
 #include <assert.h>
 #include "src/utils/rescaler_utils.h"

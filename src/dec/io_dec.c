@@ -241,6 +241,7 @@ static int EmitAlphaRGBA4444(const VP8Io* const io, WebPDecParams* const p,
 //------------------------------------------------------------------------------
 // YUV rescaling (no final RGB conversion needed)
 
+#if !defined(WEBP_REDUCE_SIZE)
 static int Rescale(const uint8_t* src, int src_stride,
                    int new_lines, WebPRescaler* const wrk) {
   int num_lines_out = 0;
@@ -541,6 +542,8 @@ static int InitRGBRescaler(const VP8Io* const io, WebPDecParams* const p) {
   return 1;
 }
 
+#endif  // WEBP_REDUCE_SIZE
+
 //------------------------------------------------------------------------------
 // Default custom functions
 
@@ -560,12 +563,16 @@ static int CustomSetup(VP8Io* io) {
   if (is_alpha && WebPIsPremultipliedMode(colorspace)) {
     WebPInitUpsamplers();
   }
+#if !defined(WEBP_REDUCE_SIZE)
   if (io->use_scaling) {
     const int ok = is_rgb ? InitRGBRescaler(io, p) : InitYUVRescaler(io, p);
     if (!ok) {
       return 0;    // memory error
     }
-  } else {
+  }
+#else
+#endif
+  if (!io->use_scaling) {
     if (is_rgb) {
       WebPInitSamplers();
       p->emit = EmitSampledRGB;   // default
