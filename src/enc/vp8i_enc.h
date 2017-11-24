@@ -75,10 +75,10 @@ typedef enum {   // Rate-distortion optimization levels
 #define U_OFF_ENC    (16)
 #define V_OFF_ENC    (16 + 8)
 
-extern const int VP8Scan[16];           // in quant.c
-extern const int VP8UVModeOffsets[4];   // in analyze.c
-extern const int VP8I16ModeOffsets[4];
-extern const int VP8I4ModeOffsets[NUM_BMODES];
+extern const uint16_t VP8Scan[16];
+extern const uint16_t VP8UVModeOffsets[4];
+extern const uint16_t VP8I16ModeOffsets[4];
+extern const uint16_t VP8I4ModeOffsets[NUM_BMODES];
 
 // Layout of prediction blocks
 // intra 16x16
