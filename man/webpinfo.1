@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH WEBPINFO 1 "May 08, 2017"
+.TH WEBPINFO 1 "November 24, 2017"
 .SH NAME
 webpinfo \- print out the chunk level structure of WebP files
 along with basic integrity checks.
@@ -22,16 +22,19 @@ WebP format.
 
 .SH OPTIONS
 .TP
-.B -quiet
+.B \-version
+Print the version number (as major.minor.revision) and exit.
+.TP
+.B \-quiet
 Do not show chunk parsing information.
 .TP
-.B -diag
+.B \-diag
 Show parsing error diagnosis.
 .TP
-.B -summary
+.B \-summary
 Show chunk stats summary.
 .TP
-.BI -bitstream_info
+.BI \-bitstream_info
 Parse bitstream header.
 .TP
 .B \-h, \-help

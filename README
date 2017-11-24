@@ -378,6 +378,7 @@ Usage: webpinfo [options] in_files
 Note: there could be multiple input files;
       options must come before input files.
 Options:
+  -version ........... Print version number and exit.
   -quiet ............. Do not show chunk parsing information.
   -diag .............. Show parsing error diagnosis.
   -summary ........... Show chunk stats summary.
