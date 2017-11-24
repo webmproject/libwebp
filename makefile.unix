@@ -85,6 +85,8 @@ EXTRA_FLAGS += -Wshadow
 EXTRA_FLAGS += -Wformat-security -Wformat-nonliteral
 # EXTRA_FLAGS += -Wvla
 
+EXTRA_FLAGS += -DWEBP_REDUCE_SIZE
+
 # SSE4.1-specific flags:
 ifeq ($(HAVE_SSE41), 1)
 EXTRA_FLAGS += -DWEBP_HAVE_SSE41

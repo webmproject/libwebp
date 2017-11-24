@@ -13,7 +13,7 @@
 
 #include "src/dsp/dsp.h"
 
-#if defined(WEBP_USE_NEON)
+#if defined(WEBP_USE_NEON) && !defined(WEBP_REDUCE_SIZE)
 
 #include <arm_neon.h>
 #include <assert.h>

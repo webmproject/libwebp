@@ -13,7 +13,7 @@
 
 #include "src/dsp/dsp.h"
 
-#if defined(WEBP_USE_MSA)
+#if defined(WEBP_USE_MSA) && !defined(WEBP_REDUCE_SIZE)
 
 #include <assert.h>
 
