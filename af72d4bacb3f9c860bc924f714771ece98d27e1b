@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "98e144ae_251336ec",
+        "filename": "extras/get_disto.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 341,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-11-25T21:18:37Z",
+      "side": 1,
+      "message": "you swapped the function, so I don\u0027t think this is necessary now",
+      "revId": "af72d4bacb3f9c860bc924f714771ece98d27e1b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a3097f3e_ab8dcc5b",
+        "filename": "src/dsp/upsampling.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2017-11-25T21:18:37Z",
+      "side": 1,
+      "message": "trailing whitespace",
+      "revId": "af72d4bacb3f9c860bc924f714771ece98d27e1b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
