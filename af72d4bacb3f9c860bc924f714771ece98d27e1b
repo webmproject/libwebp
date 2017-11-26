@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "43aa575c_9104c551",
+        "filename": "extras/get_disto.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 341,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-11-26T08:17:50Z",
+      "side": 1,
+      "message": "that was an oversight from me. I restored the initial function and kept the error message.",
+      "parentUuid": "98e144ae_251336ec",
+      "revId": "af72d4bacb3f9c860bc924f714771ece98d27e1b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a3097f3e_ab8dcc5b",
         "filename": "src/dsp/upsampling.c",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2017-11-25T21:18:37Z",
       "side": 1,
       "message": "trailing whitespace",
+      "revId": "af72d4bacb3f9c860bc924f714771ece98d27e1b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c53af574_fd6e3675",
+        "filename": "src/dsp/upsampling.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-11-26T08:17:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a3097f3e_ab8dcc5b",
       "revId": "af72d4bacb3f9c860bc924f714771ece98d27e1b",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
