@@ -1134,24 +1134,12 @@ static int Import(WebPPicture* const picture,
 
 // Public API
 
-int WebPPictureImportRGB(WebPPicture* picture,
-                         const uint8_t* rgb, int rgb_stride) {
-  return (picture != NULL && rgb != NULL)
-             ? Import(picture, rgb, rgb_stride, 3, 0, 0)
-             : 0;
-}
+#if !defined(WEBP_REDUCE_CSP)
 
 int WebPPictureImportBGR(WebPPicture* picture,
                          const uint8_t* rgb, int rgb_stride) {
   return (picture != NULL && rgb != NULL)
              ? Import(picture, rgb, rgb_stride, 3, 1, 0)
-             : 0;
-}
-
-int WebPPictureImportRGBA(WebPPicture* picture,
-                          const uint8_t* rgba, int rgba_stride) {
-  return (picture != NULL && rgba != NULL)
-             ? Import(picture, rgba, rgba_stride, 4, 0, 1)
              : 0;
 }
 
@@ -1162,17 +1150,34 @@ int WebPPictureImportBGRA(WebPPicture* picture,
              : 0;
 }
 
-int WebPPictureImportRGBX(WebPPicture* picture,
-                          const uint8_t* rgba, int rgba_stride) {
-  return (picture != NULL && rgba != NULL)
-             ? Import(picture, rgba, rgba_stride, 4, 0, 0)
-             : 0;
-}
 
 int WebPPictureImportBGRX(WebPPicture* picture,
                           const uint8_t* rgba, int rgba_stride) {
   return (picture != NULL && rgba != NULL)
              ? Import(picture, rgba, rgba_stride, 4, 1, 0)
+             : 0;
+}
+
+#endif   // WEBP_REDUCE_CSP
+
+int WebPPictureImportRGB(WebPPicture* picture,
+                         const uint8_t* rgb, int rgb_stride) {
+  return (picture != NULL && rgb != NULL)
+             ? Import(picture, rgb, rgb_stride, 3, 0, 0)
+             : 0;
+}
+
+int WebPPictureImportRGBA(WebPPicture* picture,
+                          const uint8_t* rgba, int rgba_stride) {
+  return (picture != NULL && rgba != NULL)
+             ? Import(picture, rgba, rgba_stride, 4, 0, 1)
+             : 0;
+}
+
+int WebPPictureImportRGBX(WebPPicture* picture,
+                          const uint8_t* rgba, int rgba_stride) {
+  return (picture != NULL && rgba != NULL)
+             ? Import(picture, rgba, rgba_stride, 4, 0, 0)
              : 0;
 }
 
