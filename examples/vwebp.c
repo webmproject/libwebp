@@ -378,13 +378,23 @@ static void HandleDisplay(void) {
     }
   }
   glPopMatrix();
+#if defined(__APPLE__) || defined(_WIN32)
+  glFlush();
+#else
   glutSwapBuffers();
+#endif
 }
 
 static void StartDisplay(void) {
   const int width = kParams.canvas_width;
   const int height = kParams.canvas_height;
+  // TODO(webp:365) GLUT_DOUBLE results in flickering / old frames to be
+  // partially displayed with animated webp + alpha.
+#if defined(__APPLE__) || defined(_WIN32)
+  glutInitDisplayMode(GLUT_RGBA);
+#else
   glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
+#endif
   glutInitWindowSize(width, height);
   glutCreateWindow("WebP viewer");
   glutDisplayFunc(HandleDisplay);

@@ -1106,6 +1106,7 @@ static void HelpLong(void) {
          "Note: there could be multiple input files;\n"
          "      options must come before input files.\n"
          "Options:\n"
+         "  -version ........... Print version number and exit.\n"
          "  -quiet ............. Do not show chunk parsing information.\n"
          "  -diag .............. Show parsing error diagnosis.\n"
          "  -summary ........... Show chunk stats summary.\n"
@@ -1139,6 +1140,11 @@ int main(int argc, const char* argv[]) {
       show_summary = 1;
     } else if (!strcmp(argv[c], "-bitstream_info")) {
       parse_bitstream = 1;
+    } else if (!strcmp(argv[c], "-version")) {
+      const int version = WebPGetDecoderVersion();
+      printf("WebP Decoder version: %d.%d.%d\n",
+             (version >> 16) & 0xff, (version >> 8) & 0xff, version & 0xff);
+      return 0;
     } else {  // Assume the remaining are all input files.
       break;
     }
