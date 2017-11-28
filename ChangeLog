@@ -1,3 +1,5 @@
+f66955de WEBP_REDUCE_CSP: restrict colorspace support
+a289d8e7 update ChangeLog (tag: v0.6.1-rc2)
 c10a493c vwebp: disable double buffering on windows & mac
 0d4466c2 webp_to_sdl.c: fix file mode
 1b27bf8b WEBP_REDUCE_SIZE: disable all rescaler code
