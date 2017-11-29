@@ -65,7 +65,7 @@ static void Help(void) {
 //------------------------------------------------------------------------------
 
 static int ReadImage(const char filename[], WebPPicture* const pic) {
-  const uint8_t* data = NULL;
+  uint8_t* data = NULL;
   size_t data_size = 0;
   WebPImageReader reader;
   int ok;

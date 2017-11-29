@@ -169,7 +169,7 @@ static uint32_t ReadLE32(const uint8_t** data) {
 
 static int ReadFileToWebPData(const char* const filename,
                               WebPData* const webp_data) {
-  const uint8_t* data;
+  uint8_t* data;
   size_t size;
   if (!ImgIoUtilReadFile(filename, &data, &size)) return 0;
   webp_data->bytes = data;

@@ -74,7 +74,7 @@ static int ReadYUV(const uint8_t* const data, size_t data_size,
 static int ReadPicture(const char* const filename, WebPPicture* const pic,
                        int keep_alpha, Metadata* const metadata) {
   int ok = 0;
-  const uint8_t* data = NULL;
+  uint8_t* data = NULL;
   size_t data_size = 0;
   if (pic->width != 0 && pic->height != 0) {
     ok = ImgIoUtilReadFile(filename, &data, &data_size);
@@ -98,7 +98,7 @@ static int ReadPicture(const char* const filename, WebPPicture* const pic,
 
 static int ReadPicture(const char* const filename, WebPPicture* const pic,
                        int keep_alpha, Metadata* const metadata) {
-  const uint8_t* data = NULL;
+  uint8_t* data = NULL;
   size_t data_size = 0;
   int ok = 0;
 

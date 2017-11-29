@@ -32,7 +32,7 @@ FILE* ImgIoUtilSetBinaryMode(FILE* file) {
   return file;
 }
 
-int ImgIoUtilReadFromStdin(const uint8_t** data, size_t* data_size) {
+int ImgIoUtilReadFromStdin(uint8_t** data, size_t* data_size) {
   static const size_t kBlockSize = 16384;  // default initial size
   size_t max_size = 0;
   size_t size = 0;
@@ -47,7 +47,8 @@ int ImgIoUtilReadFromStdin(const uint8_t** data, size_t* data_size) {
   while (!feof(stdin)) {
     // We double the buffer size each time and read as much as possible.
     const size_t extra_size = (max_size == 0) ? kBlockSize : max_size;
-    void* const new_data = realloc(input, max_size + extra_size);
+    // we allocate one extra byte for the \0 terminator
+    void* const new_data = realloc(input, max_size + extra_size + 1);
     if (new_data == NULL) goto Error;
     input = (uint8_t*)new_data;
     max_size += extra_size;
@@ -57,6 +58,7 @@ int ImgIoUtilReadFromStdin(const uint8_t** data, size_t* data_size) {
   if (ferror(stdin)) goto Error;
   *data = input;
   *data_size = size;
+  (*data)[*data_size] = 0;  // convenient 0-terminator
   return 1;
 
  Error:
@@ -66,7 +68,7 @@ int ImgIoUtilReadFromStdin(const uint8_t** data, size_t* data_size) {
 }
 
 int ImgIoUtilReadFile(const char* const file_name,
-                      const uint8_t** data, size_t* data_size) {
+                      uint8_t** data, size_t* data_size) {
   int ok;
   void* file_data;
   size_t file_size;
@@ -87,7 +89,8 @@ int ImgIoUtilReadFile(const char* const file_name,
   fseek(in, 0, SEEK_END);
   file_size = ftell(in);
   fseek(in, 0, SEEK_SET);
-  file_data = malloc(file_size);
+  // we allocate one extra byte for the \0 terminator
+  file_data = malloc(file_size + 1);
   if (file_data == NULL) return 0;
   ok = (fread(file_data, file_size, 1, in) == 1);
   fclose(in);
@@ -98,10 +101,13 @@ int ImgIoUtilReadFile(const char* const file_name,
     free(file_data);
     return 0;
   }
-  *data = (uint8_t*)file_data;
+  *data = file_data;
   *data_size = file_size;
+  (*data)[*data_size] = 0;  // convenient 0-terminator
   return 1;
 }
+
+// -----------------------------------------------------------------------------
 
 int ImgIoUtilWriteFile(const char* const file_name,
                        const uint8_t* data, size_t data_size) {
