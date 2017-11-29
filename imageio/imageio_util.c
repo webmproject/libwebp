@@ -88,7 +88,12 @@ int ImgIoUtilReadFile(const char* const file_name,
   file_size = ftell(in);
   fseek(in, 0, SEEK_SET);
   file_data = malloc(file_size);
-  if (file_data == NULL) return 0;
+  if (file_data == NULL) {
+    fclose(in);
+    fprintf(stderr, "memory allocation failure when reading file %s\n",
+            file_name);
+    return 0;
+  }
   ok = (fread(file_data, file_size, 1, in) == 1);
   fclose(in);
 
