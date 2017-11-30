@@ -1653,6 +1653,11 @@ int VP8LDecodeImage(VP8LDecoder* const dec) {
       dec->status_ = VP8_STATUS_INVALID_PARAM;
       goto Err;
     }
+
+    if (WebPIsPremultipliedMode(dec->output_->colorspace)) {
+      // need the alpha-multiply functions for premultiplied output
+      WebPInitAlphaProcessing();
+    }
 #endif
     if (!WebPIsRGBMode(dec->output_->colorspace)) {
       WebPInitConvertARGBToYUV();
