@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c6edeef7_d2ce177d",
+        "filename": "src/dec/vp8l_dec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1657,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2017-11-30T00:58:18Z",
+      "side": 1,
+      "message": "could be factorized out of the #ifdef at line 1647 too.\n\nUp to you...",
+      "range": {
+        "startLine": 1657,
+        "startChar": 8,
+        "endLine": 1657,
+        "endChar": 31
+      },
+      "revId": "f3257c09b5dde266bf0b09b1f17b770b56a982ed",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
