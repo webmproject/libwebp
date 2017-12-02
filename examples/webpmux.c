@@ -528,7 +528,7 @@ static void DeleteConfig(Config* const config) {
   if (config != NULL) {
     free(config->args_);
     if (config->own_argv_) {
-      free(config->argv_);
+      free((void*)config->argv_);
       WebPDataClear(&config->argv_data_);
     }
     memset(config, 0, sizeof(*config));
