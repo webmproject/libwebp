@@ -85,11 +85,13 @@ dsp_dec_srcs := \
     src/dsp/upsampling_msa.c \
     src/dsp/upsampling_neon.$(NEON) \
     src/dsp/upsampling_sse2.c \
+    src/dsp/upsampling_sse41.c \
     src/dsp/yuv.c \
     src/dsp/yuv_mips32.c \
     src/dsp/yuv_mips_dsp_r2.c \
     src/dsp/yuv_neon.$(NEON) \
     src/dsp/yuv_sse2.c \
+    src/dsp/yuv_sse41.c \
 
 dsp_enc_srcs := \
     src/dsp/cost.c \

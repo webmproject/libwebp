@@ -65,6 +65,8 @@ libwebpdsp_avx2_la_CFLAGS = $(AM_CFLAGS) $(AVX2_FLAGS)
 libwebpdspdecode_sse41_la_SOURCES =
 libwebpdspdecode_sse41_la_SOURCES += alpha_processing_sse41.c
 libwebpdspdecode_sse41_la_SOURCES += dec_sse41.c
+libwebpdspdecode_sse41_la_SOURCES += upsampling_sse41.c
+libwebpdspdecode_sse41_la_SOURCES += yuv_sse41.c
 libwebpdspdecode_sse41_la_CPPFLAGS = $(libwebpdsp_la_CPPFLAGS)
 libwebpdspdecode_sse41_la_CFLAGS = $(AM_CFLAGS) $(SSE41_FLAGS)
 

@@ -71,6 +71,7 @@ void WebPSamplerProcessPlane(const uint8_t* y, int y_stride,
 WebPSamplerRowFunc WebPSamplers[MODE_LAST];
 
 extern void WebPInitSamplersSSE2(void);
+extern void WebPInitSamplersSSE41(void);
 extern void WebPInitSamplersMIPS32(void);
 extern void WebPInitSamplersMIPSdspR2(void);
 
@@ -99,6 +100,11 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitSamplers(void) {
       WebPInitSamplersSSE2();
     }
 #endif  // WEBP_USE_SSE2
+#if defined(WEBP_USE_SSE41)
+    if (VP8GetCPUInfo(kSSE4_1)) {
+      WebPInitSamplersSSE41();
+    }
+#endif  // WEBP_USE_SSE41
 #if defined(WEBP_USE_MIPS32)
     if (VP8GetCPUInfo(kMIPS32)) {
       WebPInitSamplersMIPS32();
@@ -258,6 +264,7 @@ static volatile VP8CPUInfo rgba_to_yuv_last_cpuinfo_used =
     (VP8CPUInfo)&rgba_to_yuv_last_cpuinfo_used;
 
 extern void WebPInitConvertARGBToYUVSSE2(void);
+extern void WebPInitConvertARGBToYUVSSE41(void);
 extern void WebPInitConvertARGBToYUVNEON(void);
 extern void WebPInitSharpYUVSSE2(void);
 extern void WebPInitSharpYUVNEON(void);
@@ -286,6 +293,11 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitConvertARGBToYUV(void) {
       WebPInitSharpYUVSSE2();
     }
 #endif  // WEBP_USE_SSE2
+#if defined(WEBP_USE_SSE41)
+    if (VP8GetCPUInfo(kSSE4_1)) {
+      WebPInitConvertARGBToYUVSSE41();
+    }
+#endif  // WEBP_USE_SSE41
   }
 
 #if defined(WEBP_USE_NEON)
