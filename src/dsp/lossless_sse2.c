@@ -503,11 +503,11 @@ static void ConvertBGRAToRGB_SSE2(const uint32_t* src, int num_pixels,
     __m128i in5 = _mm_loadu_si128(in + 5);
     __m128i in6 = _mm_loadu_si128(in + 6);
     __m128i in7 = _mm_loadu_si128(in + 7);
-    VP8L32bToPlanar(&in0, &in1, &in2, &in3);
-    VP8L32bToPlanar(&in4, &in5, &in6, &in7);
+    VP8L32bToPlanar_SSE2(&in0, &in1, &in2, &in3);
+    VP8L32bToPlanar_SSE2(&in4, &in5, &in6, &in7);
     // At this points, in1/in5 contains red only, in2/in6 green only ...
     // Pack the colors in 24b RGB.
-    VP8PlanarTo24b(&in1, &in5, &in2, &in6, &in3, &in7);
+    VP8PlanarTo24b_SSE2(&in1, &in5, &in2, &in6, &in3, &in7);
     _mm_storeu_si128(out + 0, in1);
     _mm_storeu_si128(out + 1, in5);
     _mm_storeu_si128(out + 2, in2);
