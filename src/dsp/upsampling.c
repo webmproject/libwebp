@@ -217,6 +217,7 @@ WebPYUV444Converter WebPYUV444Converters[MODE_LAST];
 
 extern void WebPInitYUV444ConvertersMIPSdspR2(void);
 extern void WebPInitYUV444ConvertersSSE2(void);
+extern void WebPInitYUV444ConvertersSSE41(void);
 
 static volatile VP8CPUInfo upsampling_last_cpuinfo_used1 =
     (VP8CPUInfo)&upsampling_last_cpuinfo_used1;
@@ -242,6 +243,11 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitYUV444Converters(void) {
       WebPInitYUV444ConvertersSSE2();
     }
 #endif
+#if defined(WEBP_USE_SSE41)
+    if (VP8GetCPUInfo(kSSE4_1)) {
+      WebPInitYUV444ConvertersSSE41();
+    }
+#endif
 #if defined(WEBP_USE_MIPS_DSP_R2)
     if (VP8GetCPUInfo(kMIPSdspR2)) {
       WebPInitYUV444ConvertersMIPSdspR2();
@@ -255,6 +261,7 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitYUV444Converters(void) {
 // Main calls
 
 extern void WebPInitUpsamplersSSE2(void);
+extern void WebPInitUpsamplersSSE41(void);
 extern void WebPInitUpsamplersNEON(void);
 extern void WebPInitUpsamplersMIPSdspR2(void);
 extern void WebPInitUpsamplersMSA(void);
@@ -285,6 +292,11 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitUpsamplers(void) {
 #if defined(WEBP_USE_SSE2)
     if (VP8GetCPUInfo(kSSE2)) {
       WebPInitUpsamplersSSE2();
+    }
+#endif
+#if defined(WEBP_USE_SSE41)
+    if (VP8GetCPUInfo(kSSE4_1)) {
+      WebPInitUpsamplersSSE41();
     }
 #endif
 #if defined(WEBP_USE_MIPS_DSP_R2)
