@@ -826,6 +826,65 @@ static int ReconstructIntra4(VP8EncIterator* const it,
   return nz;
 }
 
+//------------------------------------------------------------------------------
+// DC-error diffusion
+
+static void StoreDiffusionErrors(VP8EncIterator* const it,
+                                 const VP8ModeScore* const rd) {
+  int ch;
+  for (ch = 0; ch <= 1; ++ch) {
+    int16_t* const top = it->top_derr_ + it->x_ * 2 * 2 + ch * 2;
+    int16_t* const left = it->left_derr_[ch];
+    left[0] = rd->derr[ch][0];
+    left[1] = rd->derr[ch][2];
+    top[0] = rd->derr[ch][1];
+    top[1] = rd->derr[ch][2];
+  }
+}
+
+// Quantize as usual, but also compute and return the quantization error.
+static int QuantizeSingle(int16_t* const v, const VP8Matrix* const mtx) {
+  int V = *v;
+  const int sign = V < 0;
+  if (sign) V = -V;
+  if (V > 0) {
+    const int qV = QUANTDIV(V, mtx->iq_[0], BIAS(127)) * mtx->q_[0];
+    const int err = (V - qV) >> 2;   // error is already divided by '4'
+    *v = sign ? -qV : qV;
+    return sign ? -err : err;
+  }
+  return 0;
+}
+
+static void CorrectDCValues(const VP8EncIterator* const it,
+                            const VP8Matrix* const mtx,
+                            int16_t tmp[][16], VP8ModeScore* const rd) {
+  int ch;
+    //         | top[0] | top[1]
+    // --------+--------+---------
+    // left[0] | tmp[0]   tmp[1]  <->   err0 err1
+    // left[1] | tmp[2]   tmp[3]        err2 err3
+  for (ch = 0; ch <= 1; ++ch) {
+    const int16_t* const top = it->top_derr_ + it->x_ * 2 * 2 + ch * 2;
+    const int16_t* const left = it->left_derr_[ch];
+    int16_t (* const c)[16] = &tmp[ch * 4];
+    int err0, err1, err2, err3;
+    c[0][0] += top[0] + left[0] * 3;
+    err0 = QuantizeSingle(&c[0][0], mtx);
+    c[1][0] += top[1] + err0 * 3;
+    err1 = QuantizeSingle(&c[1][0], mtx);
+    c[2][0] += left[1] * 3 + err0;
+    err2 = QuantizeSingle(&c[2][0], mtx);
+    c[3][0] += err1 + err2 * 3;
+    err3 = QuantizeSingle(&c[3][0], mtx);
+    rd->derr[ch][0] = err1;
+    rd->derr[ch][1] = err2;
+    rd->derr[ch][2] = err3;
+  }
+}
+
+//------------------------------------------------------------------------------
+
 static int ReconstructUV(VP8EncIterator* const it, VP8ModeScore* const rd,
                          uint8_t* const yuv_out, int mode) {
   const VP8Encoder* const enc = it->enc_;
@@ -839,6 +898,8 @@ static int ReconstructUV(VP8EncIterator* const it, VP8ModeScore* const rd,
   for (n = 0; n < 8; n += 2) {
     VP8FTransform2(src + VP8ScanUV[n], ref + VP8ScanUV[n], tmp[n]);
   }
+  if (it->top_derr_ != NULL) CorrectDCValues(it, &dqm->uv_, tmp, rd);
+
   if (DO_TRELLIS_UV && it->do_trellis_) {
     int ch, x, y;
     for (ch = 0, n = 0; ch <= 2; ch += 2) {
@@ -1101,6 +1162,9 @@ static void PickBestUV(VP8EncIterator* const it, VP8ModeScore* const rd) {
       CopyScore(&rd_best, &rd_uv);
       rd->mode_uv = mode;
       memcpy(rd->uv_levels, rd_uv.uv_levels, sizeof(rd->uv_levels));
+      if (it->top_derr_ != NULL) {
+        memcpy(rd->derr, rd_uv.derr, sizeof(rd_uv.derr));
+      }
       SwapPtr(&dst, &tmp_dst);
     }
   }
@@ -1108,6 +1172,9 @@ static void PickBestUV(VP8EncIterator* const it, VP8ModeScore* const rd) {
   AddScore(rd, &rd_best);
   if (dst != dst0) {   // copy 16x8 block if needed
     VP8Copy16x8(dst, dst0);
+  }
+  if (it->top_derr_ != NULL) {  // store diffusion errors for later
+    StoreDiffusionErrors(it, rd);
   }
 }
 
