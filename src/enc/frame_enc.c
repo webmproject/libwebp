@@ -871,4 +871,3 @@ int VP8EncTokenLoop(VP8Encoder* const enc) {
 #endif    // DISABLE_TOKEN_BUFFER
 
 //------------------------------------------------------------------------------
-

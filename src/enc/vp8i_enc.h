@@ -120,6 +120,9 @@ static WEBP_INLINE int QUANTDIV(uint32_t n, uint32_t iQ, uint32_t B) {
 // Uncomment the following to remove token-buffer code:
 // #define DISABLE_TOKEN_BUFFER
 
+// quality below which error-diffusion is enabled
+#define ERROR_DIFFUSION_QUALITY 30
+
 //------------------------------------------------------------------------------
 // Headers
 
@@ -213,6 +216,7 @@ typedef struct {
   uint8_t modes_i4[16];       // mode numbers for intra4 predictions
   int mode_uv;                // mode number of chroma prediction
   uint32_t nz;                // non-zero blocks
+  int16_t derr[2][3];         // DC diffusion errors for U/V for blocks #1/2/3
 } VP8ModeScore;
 
 // Iterator structure to iterate through macroblocks, pointing to the
@@ -241,6 +245,9 @@ typedef struct {
   int           count_down_;       // number of mb still to be processed
   int           count_down0_;      // starting counter value (for progress)
   int           percent0_;         // saved initial progress percent
+
+  int16_t       left_derr_[2][2];  // left error diffusion (u/v)
+  int16_t      *top_derr_;         // top diffusion error (u/v) - NULL if disabled
 
   uint8_t* y_left_;    // left luma samples (addressable from index -1 to 15).
   uint8_t* u_left_;    // left u samples (addressable from index -1 to 7)
@@ -401,6 +408,7 @@ struct VP8Encoder {
   uint8_t*   uv_top_;    // top u/v samples.
                          // U and V are packed into 16 bytes (8 U + 8 V)
   LFStats*   lf_stats_;  // autofilter stats (if NULL, autofilter is off)
+  int16_t*   top_derr_;  // diffusion error (NULL if disabled)
 };
 
 //------------------------------------------------------------------------------
