@@ -322,6 +322,7 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitUpsamplers(void) {
   assert(WebPUpsamplers[MODE_BGRA] != NULL);
   assert(WebPUpsamplers[MODE_rgbA] != NULL);
   assert(WebPUpsamplers[MODE_bgrA] != NULL);
+#if !defined(WEBP_REDUCE_CSP) || !WEBP_NEON_OMIT_C_CODE
   assert(WebPUpsamplers[MODE_RGB] != NULL);
   assert(WebPUpsamplers[MODE_BGR] != NULL);
   assert(WebPUpsamplers[MODE_ARGB] != NULL);
@@ -329,6 +330,7 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitUpsamplers(void) {
   assert(WebPUpsamplers[MODE_RGB_565] != NULL);
   assert(WebPUpsamplers[MODE_Argb] != NULL);
   assert(WebPUpsamplers[MODE_rgbA_4444] != NULL);
+#endif
 
 #endif  // FANCY_UPSAMPLING
   upsampling_last_cpuinfo_used2 = VP8GetCPUInfo;
