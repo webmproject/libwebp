@@ -159,8 +159,9 @@ static VP8Encoder* InitVP8Encoder(const WebPConfig* const config,
       + WEBP_ALIGN_CST;                      // align all
   const size_t lf_stats_size =
       config->autofilter ? sizeof(*enc->lf_stats_) + WEBP_ALIGN_CST : 0;
-  const size_t top_derr_size = (config->quality <= ERROR_DIFFUSION_QUALITY) ?
-      mb_w * sizeof(*enc->top_derr_) : 0;
+  const size_t top_derr_size =
+      (config->quality <= ERROR_DIFFUSION_QUALITY || config->pass > 1) ?
+          mb_w * sizeof(*enc->top_derr_) : 0;
   uint8_t* mem;
   const uint64_t size = (uint64_t)sizeof(*enc)   // main struct
                       + WEBP_ALIGN_CST           // cache alignment
