@@ -121,7 +121,7 @@ static WEBP_INLINE int QUANTDIV(uint32_t n, uint32_t iQ, uint32_t B) {
 // #define DISABLE_TOKEN_BUFFER
 
 // quality below which error-diffusion is enabled
-#define ERROR_DIFFUSION_QUALITY 30
+#define ERROR_DIFFUSION_QUALITY 98
 
 //------------------------------------------------------------------------------
 // Headers
@@ -204,7 +204,7 @@ typedef struct {
   score_t i4_penalty_;   // penalty for using Intra4
 } VP8SegmentInfo;
 
-typedef int16_t DError[2 /* u/v */][2 /* top or left */];
+typedef int8_t DError[2 /* u/v */][2 /* top or left */];
 
 // Handy transient struct to accumulate score and info during RD-optimization
 // and mode evaluation.
@@ -218,7 +218,7 @@ typedef struct {
   uint8_t modes_i4[16];       // mode numbers for intra4 predictions
   int mode_uv;                // mode number of chroma prediction
   uint32_t nz;                // non-zero blocks
-  int16_t derr[2][3];         // DC diffusion errors for U/V for blocks #1/2/3
+  int8_t derr[2][3];          // DC diffusion errors for U/V for blocks #1/2/3
 } VP8ModeScore;
 
 // Iterator structure to iterate through macroblocks, pointing to the
