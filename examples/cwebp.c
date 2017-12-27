@@ -140,10 +140,11 @@ static void PrintByteCount(const int bytes[4], int total_size,
   fprintf(stderr, "| %7d  (%.1f%%)\n", total, 100.f * total / total_size);
 }
 
-static void PrintPercents(const int counts[4], int total) {
+static void PrintPercents(const int counts[4]) {
   int s;
+  const int total = counts[0] + counts[1] + counts[2] + counts[3];
   for (s = 0; s < 4; ++s) {
-    fprintf(stderr, "|      %2d%%", 100 * counts[s] / total);
+    fprintf(stderr, "|      %2d%%", (int)(100. * counts[s] / total + .5));
   }
   fprintf(stderr, "| %7d\n", total);
 }
@@ -212,10 +213,11 @@ static void PrintExtraInfoLossy(const WebPPicture* const pic, int short_output,
             stats->PSNR[0], stats->PSNR[1], stats->PSNR[2], stats->PSNR[3]);
     if (total > 0) {
       int totals[4] = { 0, 0, 0, 0 };
-      fprintf(stderr, "block count:  intra4: %d\n"
-                      "              intra16: %d  (-> %.2f%%)\n",
-              num_i4, num_i16, 100.f * num_i16 / total);
-      fprintf(stderr, "              skipped block: %d (%.2f%%)\n",
+      fprintf(stderr, "block count:  intra4:     %6d  (%.2f%%)\n"
+                      "              intra16:    %6d  (%.2f%%)\n"
+                      "              skipped:    %6d  (%.2f%%)\n",
+              num_i4, 100.f * num_i4 / total,
+              num_i16, 100.f * num_i16 / total,
               num_skip, 100.f * num_skip / total);
       fprintf(stderr, "bytes used:  header:         %6d  (%.1f%%)\n"
                       "             mode-partition: %6d  (%.1f%%)\n",
@@ -239,7 +241,7 @@ static void PrintExtraInfoLossy(const WebPPicture* const pic, int short_output,
         PrintByteCount(stats->residual_bytes[2], stats->coded_size, totals);
       }
       fprintf(stderr, "    macroblocks:  ");
-      PrintPercents(stats->segment_size, total);
+      PrintPercents(stats->segment_size);
       fprintf(stderr, "      quantizer:  ");
       PrintValues(stats->segment_quant);
       fprintf(stderr, "   filter level:  ");
