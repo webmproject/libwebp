@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1ae617eb_2fd824f5",
+        "filename": "src/enc/quant_enc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 837,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-01-05T22:41:46Z",
+      "side": 1,
+      "message": "this balances DSHIFT, elsewhere DESCALE is used; fine either way",
+      "range": {
+        "startLine": 837,
+        "startChar": 8,
+        "endLine": 837,
+        "endChar": 14
+      },
+      "revId": "815652de03377339aee55f048dd41f581853f0ef",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
