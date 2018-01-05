@@ -22,6 +22,30 @@
       "revId": "815652de03377339aee55f048dd41f581853f0ef",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "33196ba6_d2b39e41",
+        "filename": "src/enc/quant_enc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 837,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2018-01-05T22:51:43Z",
+      "side": 1,
+      "message": "the \u0027D\u0027 is somehow for \u0027Diffusion\u0027 here, hence the DSCALE instead of DESCALE.",
+      "parentUuid": "1ae617eb_2fd824f5",
+      "range": {
+        "startLine": 837,
+        "startChar": 8,
+        "endLine": 837,
+        "endChar": 14
+      },
+      "revId": "815652de03377339aee55f048dd41f581853f0ef",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
