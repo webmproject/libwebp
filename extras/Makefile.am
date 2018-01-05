@@ -24,7 +24,7 @@ get_disto_LDADD =
 get_disto_LDADD += ../imageio/libimageio_util.la
 get_disto_LDADD += ../imageio/libimagedec.la
 get_disto_LDADD += ../src/libwebp.la
-get_disto_LDADD += $(PNG_LIBS) $(JPEG_LIBS) $(TIFF_LIBS)
+get_disto_LDADD += $(PNG_LIBS) $(JPEG_LIBS) $(TIFF_LIBS) -lm
 
 webp_quality_SOURCES  = webp_quality.c
 webp_quality_CPPFLAGS = $(AM_CPPFLAGS) $(USE_EXPERIMENTAL_CODE)

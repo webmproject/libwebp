@@ -15,6 +15,7 @@
 #include "webp/config.h"
 #endif
 
+#include <math.h>
 #include <stdio.h>
 
 #ifdef WEBP_HAVE_PNG
@@ -126,7 +127,8 @@ static const struct {
 static int ExtractMetadataFromPNG(png_structp png,
                                   png_infop const head_info,
                                   png_infop const end_info,
-                                  Metadata* const metadata) {
+                                  Metadata* const metadata,
+                                  double* const gamma) {
   int p;
 
   for (p = 0; p < 2; ++p)  {
@@ -183,9 +185,15 @@ static int ExtractMetadataFromPNG(png_structp png,
                        &name, &comp_type, &profile, &len) == PNG_INFO_iCCP) {
         if (!MetadataCopy((const char*)profile, len, &metadata->iccp)) return 0;
       }
+      if (p == 0 && png_get_gAMA(png, info, gamma) != PNG_INFO_gAMA) {
+        *gamma = 0;
+      }
     }
   }
-
+  if (metadata->iccp.size > 0) {
+    // if there's an iCCP, we discard the gamma value by resetting it.
+    *gamma = 0.;
+  }
   return 1;
 }
 
@@ -204,6 +212,27 @@ static void ReadFunc(png_structp png_ptr, png_bytep data, png_size_t length) {
   ctx->offset += length;
 }
 
+static void ApplyGamma(uint8_t* rgb, int64_t len, double g) {
+  int64_t i;
+
+  g = 1. / (g * 2.2);   // sRGB approximation
+  if (g == 1.) return;
+
+  if (len < 512) {
+    // for small array, no need to build a LUT.
+    for (i = 0; i < len; ++i) {
+      if (rgb[i] > 0 && rgb[i] < 255) {
+        rgb[i] = (uint8_t)(255. * pow(rgb[i] / 255., g));
+      }
+    }
+  } else {
+    uint8_t lut[256];
+    for (i = 0; i < 256; ++i) lut[i] = i;
+    ApplyGamma(lut, 256, g);
+    for (i = 0; i < len; ++i) rgb[i] = lut[rgb[i]];
+  }
+}
+
 int ReadPNG(const uint8_t* const data, size_t data_size,
             struct WebPPicture* const pic,
             int keep_alpha, struct Metadata* const metadata) {
@@ -219,6 +248,7 @@ int ReadPNG(const uint8_t* const data, size_t data_size,
   png_uint_32 width, height, y;
   int64_t stride;
   uint8_t* volatile rgb = NULL;
+  double gamma = 0.;
 
   if (data == NULL || data_size == 0 || pic == NULL) return 0;
 
@@ -291,10 +321,12 @@ int ReadPNG(const uint8_t* const data, size_t data_size,
   png_read_end(png, end_info);
 
   if (metadata != NULL &&
-      !ExtractMetadataFromPNG(png, info, end_info, metadata)) {
+      !ExtractMetadataFromPNG(png, info, end_info, metadata, &gamma)) {
     fprintf(stderr, "Error extracting PNG metadata!\n");
     goto Error;
   }
+
+  if (gamma != 0) ApplyGamma(rgb, stride * height, gamma);
 
   pic->width = (int)width;
   pic->height = (int)height;
