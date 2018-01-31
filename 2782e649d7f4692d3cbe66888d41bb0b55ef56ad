@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "be95f009_b25de6d9",
+        "filename": "src/dsp/upsampling_msa.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 310,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-01-31T01:08:22Z",
+      "side": 1,
+      "message": "// WEBP_REDUCE_CSP\nto match other areas",
+      "revId": "2782e649d7f4692d3cbe66888d41bb0b55ef56ad",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
