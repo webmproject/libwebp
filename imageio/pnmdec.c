@@ -117,7 +117,7 @@ static size_t ReadPAMFields(PNMInfo* const info, size_t off) {
     }
   }
   if (!(info->seen_flags & TUPLE_FLAG)) {
-    if (info->depth > 0 && info->depth <= 4) {
+    if (info->depth > 0 && info->depth <= 4 && info->depth != 2) {
       info->seen_flags |= TUPLE_FLAG;
       info->bytes_per_px = info->depth * (info->max_value > 255 ? 2 : 1);
     } else {
