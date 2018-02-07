@@ -14,6 +14,8 @@
 #define WEBP_EXAMPLES_EXAMPLE_UTIL_H_
 
 #include "webp/types.h"
+#include "webp/mux_types.h"
+#include "../imageio/imageio_util.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,6 +36,33 @@ float ExUtilGetFloat(const char* const v, int* const error);
 // The result is placed in the output[] array, and the number of integers
 // actually parsed is returned, or -1 if an error occurred.
 int ExUtilGetInts(const char* v, int base, int max_output, int output[]);
+
+// Reads a file named 'filename' into a WebPData structure. The content of
+// webp_data is overwritten. Returns false in case of error.
+int ReadFileToWebPData(const char* const filename, WebPData* const webp_data);
+
+//------------------------------------------------------------------------------
+// Command-line arguments
+
+typedef struct {
+  int argc_;
+  const char** argv_;
+  WebPData argv_data_;
+  int own_argv_;
+} CommandLineArguments;
+
+// Initializes the structure from the command-line parameters. If there is
+// only one parameter and it does not start with a '-', then it is assumed to
+// be a file name. This file will be read and tokenized into command-line
+// arguments. The content of 'args' is overwritten.
+// Returns false in case of error (memory allocation failure, non
+// existing file, too many arguments, ...).
+int InitCommandLineArguments(int argc, const char* argv[],
+                             CommandLineArguments* const args);
+
+// Disallocate all memory and reset 'args'.
+void DeleteCommandLineArguments(CommandLineArguments* const args);
+
 
 #ifdef __cplusplus
 }    // extern "C"
