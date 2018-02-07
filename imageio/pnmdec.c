@@ -203,7 +203,10 @@ int ReadPNM(const uint8_t* const data, size_t data_size,
                     info.width, info.height);
     goto End;
   }
-
+  if (info.depth == 2) {
+    fprintf(stderr, "Unsupported PNM depth %d\n", info.depth);
+    goto End;
+  }
   pixel_bytes = (uint64_t)info.width * info.height * info.bytes_per_px;
   if (data_size < offset + pixel_bytes) {
     fprintf(stderr, "Truncated PNM file (P%d).\n", info.type);
