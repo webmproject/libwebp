@@ -117,14 +117,13 @@ static int SetLoopCount(int loop_count, WebPData* const webp_data) {
 
 //------------------------------------------------------------------------------
 
-int main(int argc, char* argv[]) {
+int main(int argc, const char* argv[]) {
   const char* output = NULL;
   WebPAnimEncoder* enc = NULL;
   int verbose = 0;
   int pic_num = 0;
   int duration = 100;
   int timestamp_ms = 0;
-  int ok = 1;
   int loop_count = 0;
   int width = 0, height = 0;
   WebPAnimEncoderOptions anim_config;
@@ -133,17 +132,23 @@ int main(int argc, char* argv[]) {
   WebPData webp_data;
   int c;
   int have_input = 0;
+  CommandLineArguments cmd_args;
+  int ok = ExUtilInitCommandLineArguments(argc - 1, argv + 1, &cmd_args);
+  if (!ok) return 1;
+  argc = cmd_args.argc_;
+  argv = cmd_args.argv_;
 
   WebPDataInit(&webp_data);
   if (!WebPAnimEncoderOptionsInit(&anim_config) ||
       !WebPConfigInit(&config) ||
       !WebPPictureInit(&pic)) {
     fprintf(stderr, "Library version mismatch!\n");
-    return 1;
+    ok = 0;
+    goto End;
   }
 
   // 1st pass of option parsing
-  for (c = 1; ok && c < argc; ++c) {
+  for (c = 0; ok && c < argc; ++c) {
     if (argv[c][0] == '-') {
       int parse_error = 0;
       if (!strcmp(argv[c], "-o") && c + 1 < argc) {
@@ -171,7 +176,7 @@ int main(int argc, char* argv[]) {
         verbose = 1;
       } else if (!strcmp(argv[c], "-h") || !strcmp(argv[c], "-help")) {
         Help();
-        return 0;
+        goto End;
       } else {
         continue;
       }
@@ -184,13 +189,13 @@ int main(int argc, char* argv[]) {
   }
   if (!have_input) {
     fprintf(stderr, "No input file(s) for generating animation!\n");
-    return 0;
+    goto End;
   }
 
   // image-reading pass
   pic_num = 0;
   config.lossless = 1;
-  for (c = 1; ok && c < argc; ++c) {
+  for (c = 0; ok && c < argc; ++c) {
     if (argv[c] == NULL) continue;
     if (argv[c][0] == '-') {    // parse local options
       int parse_error = 0;
@@ -294,7 +299,7 @@ int main(int argc, char* argv[]) {
     fprintf(stderr, "[%d frames, %u bytes].\n",
             pic_num, (unsigned int)webp_data.size);
   }
-
   WebPDataClear(&webp_data);
+  ExUtilDeleteCommandLineArguments(&cmd_args);
   return ok ? 0 : 1;
 }

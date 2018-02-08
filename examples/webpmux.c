@@ -109,11 +109,7 @@ static const char* const kDescriptions[LAST_FEATURE] = {
 };
 
 typedef struct {
-  // command line arguments
-  int argc_;
-  const char** argv_;
-  WebPData argv_data_;
-  int own_argv_;
+  CommandLineArguments cmd_args_;
 
   ActionType action_type_;
   const char* input_;
@@ -126,12 +122,13 @@ typedef struct {
 //------------------------------------------------------------------------------
 // Helper functions.
 
-static int CountOccurrences(const Config* const config, const char* arg) {
+static int CountOccurrences(const CommandLineArguments* const args,
+                            const char* const arg) {
   int i;
   int num_occurences = 0;
 
-  for (i = 0; i < config->argc_; ++i) {
-    if (!strcmp(config->argv_[i], arg)) {
+  for (i = 0; i < args->argc_; ++i) {
+    if (!strcmp(args->argv_[i], arg)) {
       ++num_occurences;
     }
   }
@@ -386,20 +383,10 @@ static void WarnAboutOddOffset(const WebPMuxFrameInfo* const info) {
   }
 }
 
-static int ReadFileToWebPData(const char* const filename,
-                              WebPData* const webp_data) {
-  const uint8_t* data;
-  size_t size;
-  if (!ImgIoUtilReadFile(filename, &data, &size)) return 0;
-  webp_data->bytes = data;
-  webp_data->size = size;
-  return 1;
-}
-
 static int CreateMux(const char* const filename, WebPMux** mux) {
   WebPData bitstream;
   assert(mux != NULL);
-  if (!ReadFileToWebPData(filename, &bitstream)) return 0;
+  if (!ExUtilReadFileToWebPData(filename, &bitstream)) return 0;
   *mux = WebPMuxCreate(&bitstream, 1);
   WebPDataClear(&bitstream);
   if (*mux != NULL) return 1;
@@ -527,12 +514,8 @@ static int ParseBgcolorArgs(const char* args, uint32_t* const bgcolor) {
 static void DeleteConfig(Config* const config) {
   if (config != NULL) {
     free(config->args_);
-    if (config->own_argv_) {
-      free((void*)config->argv_);
-      WebPDataClear(&config->argv_data_);
-    }
+    ExUtilDeleteCommandLineArguments(&config->cmd_args_);
     memset(config, 0, sizeof(*config));
-    WebPDataInit(&config->argv_data_);
   }
 }
 
@@ -543,7 +526,7 @@ static void DeleteConfig(Config* const config) {
 // Returns 1 on valid, 0 otherwise.
 // Also fills up num_feature_args to be number of feature arguments given.
 // (e.g. if there are 4 '-frame's and 1 '-loop', then num_feature_args = 5).
-static int ValidateCommandLine(const Config* const config,
+static int ValidateCommandLine(const CommandLineArguments* const cmd_args,
                                int* num_feature_args) {
   int num_frame_args;
   int num_loop_args;
@@ -555,27 +538,27 @@ static int ValidateCommandLine(const Config* const config,
   *num_feature_args = 0;
 
   // Simple checks.
-  if (CountOccurrences(config, "-get") > 1) {
+  if (CountOccurrences(cmd_args, "-get") > 1) {
     ERROR_GOTO1("ERROR: Multiple '-get' arguments specified.\n", ErrValidate);
   }
-  if (CountOccurrences(config, "-set") > 1) {
+  if (CountOccurrences(cmd_args, "-set") > 1) {
     ERROR_GOTO1("ERROR: Multiple '-set' arguments specified.\n", ErrValidate);
   }
-  if (CountOccurrences(config, "-strip") > 1) {
+  if (CountOccurrences(cmd_args, "-strip") > 1) {
     ERROR_GOTO1("ERROR: Multiple '-strip' arguments specified.\n", ErrValidate);
   }
-  if (CountOccurrences(config, "-info") > 1) {
+  if (CountOccurrences(cmd_args, "-info") > 1) {
     ERROR_GOTO1("ERROR: Multiple '-info' arguments specified.\n", ErrValidate);
   }
-  if (CountOccurrences(config, "-o") > 1) {
+  if (CountOccurrences(cmd_args, "-o") > 1) {
     ERROR_GOTO1("ERROR: Multiple output files specified.\n", ErrValidate);
   }
 
   // Compound checks.
-  num_frame_args = CountOccurrences(config, "-frame");
-  num_loop_args = CountOccurrences(config, "-loop");
-  num_bgcolor_args = CountOccurrences(config, "-bgcolor");
-  num_durations_args = CountOccurrences(config, "-duration");
+  num_frame_args = CountOccurrences(cmd_args, "-frame");
+  num_loop_args = CountOccurrences(cmd_args, "-loop");
+  num_bgcolor_args = CountOccurrences(cmd_args, "-bgcolor");
+  num_durations_args = CountOccurrences(cmd_args, "-duration");
 
   if (num_loop_args > 1) {
     ERROR_GOTO1("ERROR: Multiple loop counts specified.\n", ErrValidate);
@@ -630,8 +613,8 @@ static int ParseCommandLine(Config* config) {
   int i = 0;
   int feature_arg_index = 0;
   int ok = 1;
-  int argc = config->argc_;
-  const char* const* argv = config->argv_;
+  int argc = config->cmd_args_.argc_;
+  const char* const* argv = config->cmd_args_.argv_;
 
   while (i < argc) {
     FeatureArg* const arg = &config->args_[feature_arg_index];
@@ -820,52 +803,19 @@ static int ValidateConfig(Config* const config) {
   return ok;
 }
 
-#define MAX_ARGC 16384
-static int SetArguments(int argc, const char* argv[],
-                        Config* const config) {
-  assert(config != NULL);
-  memset(config, 0, sizeof(*config));
-  WebPDataInit(&config->argv_data_);
-  if (argc == 1 && argv[0][0] != '-') {
-    char* cur;
-    const char sep[] = " \t\r\n\f\v";
-    if (!ReadFileToWebPData(argv[0], &config->argv_data_)) {
-      return 0;
-    }
-    config->own_argv_ = 1;
-    config->argv_ = (const char**)malloc(MAX_ARGC * sizeof(*config->argv_));
-    if (config->argv_ == NULL) return 0;
-
-    argc = 0;
-    for (cur = strtok((char*)config->argv_data_.bytes, sep);
-         cur != NULL;
-         cur = strtok(NULL, sep)) {
-      if (argc == MAX_ARGC) {
-        fprintf(stderr, "ERROR: Arguments limit %d reached\n", MAX_ARGC);
-        return 0;
-      }
-      assert(strlen(cur) != 0);
-      config->argv_[argc++] = cur;
-    }
-    config->argc_ = argc;
-  } else {
-    config->argc_ = argc;
-    config->argv_ = argv;
-    config->own_argv_ = 0;
-  }
-  return 1;
-}
-
 // Create config object from command-line arguments.
 static int InitializeConfig(int argc, const char* argv[],
                             Config* const config) {
   int num_feature_args = 0;
-  int ok = SetArguments(argc, argv, config);
+  int ok;
 
+  memset(config, 0, sizeof(*config));
+
+  ok = ExUtilInitCommandLineArguments(argc, argv, &config->cmd_args_);
   if (!ok) return 0;
 
   // Validate command-line arguments.
-  if (!ValidateCommandLine(config, &num_feature_args)) {
+  if (!ValidateCommandLine(&config->cmd_args_, &num_feature_args)) {
     ERROR_GOTO1("Exiting due to command-line parsing error.\n", Err1);
   }
 
@@ -1009,8 +959,8 @@ static int Process(const Config* config) {
               case SUBTYPE_ANMF: {
                 WebPMuxFrameInfo frame;
                 frame.id = WEBP_CHUNK_ANMF;
-                ok = ReadFileToWebPData(config->args_[i].filename_,
-                                        &frame.bitstream);
+                ok = ExUtilReadFileToWebPData(config->args_[i].filename_,
+                                              &frame.bitstream);
                 if (!ok) goto Err2;
                 ok = ParseFrameArgs(config->args_[i].params_, &frame);
                 if (!ok) {
@@ -1045,7 +995,7 @@ static int Process(const Config* config) {
         case FEATURE_XMP: {
           ok = CreateMux(config->input_, &mux);
           if (!ok) goto Err2;
-          ok = ReadFileToWebPData(config->args_[0].filename_, &chunk);
+          ok = ExUtilReadFileToWebPData(config->args_[0].filename_, &chunk);
           if (!ok) goto Err2;
           err = WebPMuxSetChunk(mux, kFourccList[config->type_], &chunk, 1);
           free((void*)chunk.bytes);
