@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e4601824_d91ad8cf",
+        "filename": "examples/example_util.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-02-08T06:50:53Z",
+      "side": 1,
+      "message": "I think mostly once we exposed things in example_util and imageio* we added parameter checks to display best practices; webp_data could be validated.",
+      "revId": "e7c6ba46b1cc1964748173c2fb92ba6849845ad0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6ee965b0_a04df6a5",
+        "filename": "imageio/pnmdec.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-02-08T06:50:53Z",
+      "side": 1,
+      "message": "you picked this one up from the pnm change",
+      "revId": "e7c6ba46b1cc1964748173c2fb92ba6849845ad0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
