@@ -187,11 +187,9 @@ static void Help(void) {
   printf("  -min_psnr <float> ... minimum per-frame PSNR\n");
   printf("  -raw_comparison ..... if this flag is not used, RGB is\n");
   printf("                        premultiplied before comparison\n");
-#ifdef WEBP_EXPERIMENTAL_FEATURES
   printf("  -max_diff <int> ..... maximum allowed difference per channel "
          "                        between corresponding pixels in subsequent"
          "                        frames\n");
-#endif
 }
 
 int main(int argc, const char* argv[]) {
@@ -236,7 +234,6 @@ int main(int argc, const char* argv[]) {
       }
     } else if (!strcmp(argv[c], "-raw_comparison")) {
       premultiply = 0;
-#ifdef WEBP_EXPERIMENTAL_FEATURES
     } else if (!strcmp(argv[c], "-max_diff")) {
       if (c < argc - 1) {
         const char* const v = argv[++c];
@@ -250,7 +247,6 @@ int main(int argc, const char* argv[]) {
       } else {
         parse_error = 1;
       }
-#endif
     } else {
       if (!got_input1) {
         files[0] = argv[c];
