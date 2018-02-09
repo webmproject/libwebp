@@ -123,7 +123,6 @@ enc_srcs := \
     src/enc/backward_references_enc.c \
     src/enc/config_enc.c \
     src/enc/cost_enc.c \
-    src/enc/delta_palettization_enc.c \
     src/enc/filter_enc.c \
     src/enc/frame_enc.c \
     src/enc/histogram_enc.c \
