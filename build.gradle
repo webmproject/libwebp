@@ -198,7 +198,6 @@ model {
             include "backward_references_enc.c"
             include "config_enc.c"
             include "cost_enc.c"
-            include "delta_palettization_enc.c"
             include "filter_enc.c"
             include "frame_enc.c"
             include "histogram_enc.c"

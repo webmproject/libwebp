@@ -11,7 +11,6 @@ option(WEBP_BUILD_IMG2WEBP "Build the img2webp animation tool." OFF)
 option(WEBP_BUILD_WEBPINFO "Build the webpinfo command line tool." OFF)
 option(WEBP_BUILD_WEBP_JS "Emscripten build of webp.js." OFF)
 option(WEBP_ENABLE_NEAR_LOSSLESS "Enable near-lossless encoding" ON)
-option(WEBP_EXPERIMENTAL_FEATURES "Build with experimental features." OFF)
 option(WEBP_ENABLE_SWAP_16BIT_CSP "Enable byte swap for 16 bit colorspaces." OFF)
 
 if(WEBP_BUILD_WEBP_JS)
