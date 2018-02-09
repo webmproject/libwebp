@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "52321ec2_f2c1eeaf",
+        "filename": "examples/anim_diff.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 190,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2018-02-09T08:28:37Z",
+      "side": 0,
+      "message": "not sure why this one was considered experimental. Seemed useful to me. Oh well.",
+      "range": {
+        "startLine": 190,
+        "startChar": 7,
+        "endLine": 190,
+        "endChar": 33
+      },
+      "revId": "fc09e6e252087d2b6b1bec43f8bb1a94ce9cbb40",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
