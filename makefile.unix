@@ -63,9 +63,6 @@ endif
 # 'make -f makefile.unix EXTRA_FLAGS=-m32' to that effect.
 # EXTRA_FLAGS += -m32
 
-# Extra flags to enable experimental features and code
-# EXTRA_FLAGS += -DWEBP_EXPERIMENTAL_FEATURES
-
 # Extra flags to enable byte swap for 16 bit colorspaces.
 # EXTRA_FLAGS += -DWEBP_SWAP_16BIT_CSP=1
 
@@ -214,7 +211,6 @@ ENC_OBJS = \
     src/enc/backward_references_enc.o \
     src/enc/config_enc.o \
     src/enc/cost_enc.o \
-    src/enc/delta_palettization_enc.o \
     src/enc/filter_enc.o \
     src/enc/frame_enc.o \
     src/enc/histogram_enc.o \
@@ -312,7 +308,6 @@ HDRS = \
     src/dsp/yuv.h \
     src/enc/backward_references_enc.h \
     src/enc/cost_enc.h \
-    src/enc/delta_palettization_enc.h \
     src/enc/histogram_enc.h \
     src/enc/vp8i_enc.h \
     src/enc/vp8li_enc.h \

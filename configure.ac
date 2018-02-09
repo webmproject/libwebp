@@ -676,19 +676,6 @@ fi
 AC_MSG_RESULT(${enable_swap_16bit_csp-no})
 AC_SUBST(USE_SWAP_16BIT_CSP)
 
-dnl === If --enable-experimental is defined, add -DWEBP_EXPERIMENTAL_FEATURES
-
-USE_EXPERIMENTAL_CODE=""
-AC_MSG_CHECKING(if --enable-experimental option is specified)
-AC_ARG_ENABLE([experimental], AS_HELP_STRING([--enable-experimental],
-                                             [Activate experimental features]))
-if test "$enable_experimental" = "yes"; then
-  AC_DEFINE(WEBP_EXPERIMENTAL_FEATURES, [1], [Enable experimental code])
-  USE_EXPERIMENTAL_CODE="-DWEBP_EXPERIMENTAL_FEATURES"
-fi
-AC_MSG_RESULT(${enable_experimental-no})
-AC_SUBST(USE_EXPERIMENTAL_CODE)
-
 dnl === If --disable-near-lossless is defined, add -DWEBP_NEAR_LOSSLESS=0
 
 AC_DEFINE(WEBP_NEAR_LOSSLESS, [1], [Enable near lossless encoding])

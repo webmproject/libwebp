@@ -141,7 +141,7 @@ noinst_HEADERS += ../webp/decode.h
 
 libwebpdsp_la_CPPFLAGS =
 libwebpdsp_la_CPPFLAGS += $(AM_CPPFLAGS)
-libwebpdsp_la_CPPFLAGS += $(USE_EXPERIMENTAL_CODE) $(USE_SWAP_16BIT_CSP)
+libwebpdsp_la_CPPFLAGS += $(USE_SWAP_16BIT_CSP)
 libwebpdsp_la_LDFLAGS = -lm
 libwebpdsp_la_LIBADD =
 libwebpdsp_la_LIBADD += libwebpdsp_avx2.la
