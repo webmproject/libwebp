@@ -9,6 +9,10 @@
 //
 // WebP decode.
 
+#ifdef HAVE_CONFIG_H
+#include "webp/config.h"
+#endif
+
 #include "./webpdec.h"
 
 #include <stdio.h>
@@ -150,7 +154,11 @@ int ReadWebP(const uint8_t* const data, size_t data_size,
       break;
     }
     if (pic->use_argb) {
+#ifdef WORDS_BIGENDIAN
+      output_buffer->colorspace = MODE_ARGB;
+#else
       output_buffer->colorspace = MODE_BGRA;
+#endif
       output_buffer->u.RGBA.rgba = (uint8_t*)pic->argb;
       output_buffer->u.RGBA.stride = pic->argb_stride * sizeof(uint32_t);
       output_buffer->u.RGBA.size = output_buffer->u.RGBA.stride * pic->height;
