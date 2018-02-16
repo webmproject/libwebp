@@ -200,14 +200,9 @@ static WEBP_INLINE double BitsEntropyRefine(const VP8LBitEntropy* entropy) {
   }
 }
 
-double VP8LBitsEntropy(const uint32_t* const array, int n,
-                       uint32_t* const trivial_symbol) {
+double VP8LBitsEntropy(const uint32_t* const array, int n) {
   VP8LBitEntropy entropy;
   VP8LBitsEntropyUnrefined(array, n, &entropy);
-  if (trivial_symbol != NULL) {
-    *trivial_symbol =
-        (entropy.nonzeros == 1) ? entropy.nonzero_code : VP8L_NON_TRIVIAL_SYM;
-  }
 
   return BitsEntropyRefine(&entropy);
 }
@@ -605,7 +600,7 @@ static void HistogramCombineEntropyBin(VP8LHistogramSet* const image_histo,
 }
 
 // Implement a Lehmer random number generator with a multiplicative constant of
-// 48271 and a modulo constant of 2^31 − 1.
+// 48271 and a modulo constant of 2^31 - 1.
 static uint32_t MyRand(uint32_t* const seed) {
   *seed = (uint32_t)(((uint64_t)(*seed) * 48271u) % 2147483647u);
   assert(*seed > 0);

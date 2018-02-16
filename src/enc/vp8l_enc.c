@@ -257,7 +257,7 @@ static int AnalyzeEntropy(const uint32_t* argb,
       ++histo[kHistoAlphaPred * 256];
 
       for (j = 0; j < kHistoTotal; ++j) {
-        entropy_comp[j] = VP8LBitsEntropy(&histo[j * 256], 256, NULL);
+        entropy_comp[j] = VP8LBitsEntropy(&histo[j * 256], 256);
       }
       entropy[kDirect] = entropy_comp[kHistoAlpha] +
           entropy_comp[kHistoRed] +
