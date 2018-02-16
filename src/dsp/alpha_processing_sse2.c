@@ -14,7 +14,11 @@
 #include "src/dsp/dsp.h"
 
 #if defined(WEBP_USE_SSE2)
+#include <assert.h>
 #include <emmintrin.h>
+#include <string.h>
+
+#include "src/dsp/lossless.h"
 
 //------------------------------------------------------------------------------
 
@@ -211,6 +215,24 @@ static void ApplyAlphaMultiply_SSE2(uint8_t* rgba, int alpha_first,
 #undef PREMULTIPLY
 
 //------------------------------------------------------------------------------
+// Simple channel manipulations.
+
+static void PackARGB_SSE2(const uint8_t* a, const uint8_t* r, const uint8_t* g,
+                          const uint8_t* b, int len, uint32_t* out) {
+  (void)a;
+  if (g == r + 1) {  // RGBA input order. Need to swap R and B.
+    assert(b == r + 2);
+    assert(a == r + 3);
+    VP8LConvertBGRAToRGBA((const uint32_t*)r, len, (uint8_t*)out);
+  } else {
+    assert(g == b + 1);
+    assert(r == b + 2);
+    assert(a == b + 3);
+    memcpy(out, b, len * 4);
+  }
+}
+
+//------------------------------------------------------------------------------
 // Alpha detection
 
 static int HasAlpha8b_SSE2(const uint8_t* src, int length) {
@@ -331,6 +353,8 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitAlphaProcessingSSE2(void) {
   WebPDispatchAlpha = DispatchAlpha_SSE2;
   WebPDispatchAlphaToGreen = DispatchAlphaToGreen_SSE2;
   WebPExtractAlpha = ExtractAlpha_SSE2;
+
+  WebPPackARGB = PackARGB_SSE2;
 
   WebPHasAlpha8b = HasAlpha8b_SSE2;
   WebPHasAlpha32b = HasAlpha32b_SSE2;

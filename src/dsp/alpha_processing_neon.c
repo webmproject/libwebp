@@ -14,7 +14,10 @@
 #include "src/dsp/dsp.h"
 
 #if defined(WEBP_USE_NEON)
+#include <assert.h>
+#include <string.h>
 
+#include "src/dsp/lossless.h"
 #include "src/dsp/neon.h"
 
 //------------------------------------------------------------------------------
@@ -173,6 +176,24 @@ static void ExtractGreen_NEON(const uint32_t* argb,
 }
 
 //------------------------------------------------------------------------------
+// Simple channel manipulations.
+
+static void PackARGB_NEON(const uint8_t* a, const uint8_t* r, const uint8_t* g,
+                          const uint8_t* b, int len, uint32_t* out) {
+  (void)a;
+  if (g == r + 1) {  // RGBA input order. Need to swap R and B.
+    assert(b == r + 2);
+    assert(a == r + 3);
+    VP8LConvertBGRAToRGBA((const uint32_t*)r, len, (uint8_t*)out);
+  } else {
+    assert(g == b + 1);
+    assert(r == b + 2);
+    assert(a == b + 3);
+    memcpy(out, b, len * 4);
+  }
+}
+
+//------------------------------------------------------------------------------
 
 extern void WebPInitAlphaProcessingNEON(void);
 
@@ -182,6 +203,7 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitAlphaProcessingNEON(void) {
   WebPDispatchAlphaToGreen = DispatchAlphaToGreen_NEON;
   WebPExtractAlpha = ExtractAlpha_NEON;
   WebPExtractGreen = ExtractGreen_NEON;
+  WebPPackARGB = PackARGB_NEON;
 }
 
 #else  // !WEBP_USE_NEON
