@@ -440,10 +440,17 @@ void VP8LConvertBGRAToRGBA_C(const uint32_t* src,
   const uint32_t* const src_end = src + num_pixels;
   while (src < src_end) {
     const uint32_t argb = *src++;
-    *dst++ = (argb >> 16) & 0xff;
-    *dst++ = (argb >>  8) & 0xff;
-    *dst++ = (argb >>  0) & 0xff;
-    *dst++ = (argb >> 24) & 0xff;
+#ifdef WORDS_BIGENDIAN
+    *dst++ = (argb >>  0) & 0xff;  // A
+    *dst++ = (argb >> 24) & 0xff;  // R
+    *dst++ = (argb >> 16) & 0xff;  // G
+    *dst++ = (argb >>  8) & 0xff;  // B
+#else
+    *dst++ = (argb >> 16) & 0xff;  // B
+    *dst++ = (argb >>  8) & 0xff;  // G
+    *dst++ = (argb >>  0) & 0xff;  // R
+    *dst++ = (argb >> 24) & 0xff;  // A
+#endif
   }
 }
 
