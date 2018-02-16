@@ -166,6 +166,13 @@ extern "C" {
 #define WEBP_SWAP_16BIT_CSP 0
 #endif
 
+// some endian fix (e.g.: mips-gcc doesn't define __BIG_ENDIAN__)
+#if !defined(WORDS_BIGENDIAN) && \
+    (defined(__BIG_ENDIAN__) || defined(_M_PPC) || \
+     (defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)))
+#define WORDS_BIGENDIAN
+#endif
+
 typedef enum {
   kSSE2,
   kSSE3,
@@ -577,6 +584,13 @@ void WebPMultRows(uint8_t* ptr, int stride,
 void WebPMultRow_C(uint8_t* const ptr, const uint8_t* const alpha,
                    int width, int inverse);
 void WebPMultARGBRow_C(uint32_t* const ptr, int width, int inverse);
+
+#ifdef WORDS_BIGENDIAN
+// ARGB packing function: a/r/g/b input is rgba or bgra order.
+extern void (*WebPPackARGB)(const uint8_t* a, const uint8_t* r,
+                            const uint8_t* g, const uint8_t* b, int len,
+                            uint32_t* out);
+#endif
 
 // RGB packing function. 'step' can be 3 or 4. r/g/b input is rgb or bgr order.
 extern void (*WebPPackRGB)(const uint8_t* r, const uint8_t* g, const uint8_t* b,
