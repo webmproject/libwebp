@@ -1110,10 +1110,14 @@ static int Import(WebPPicture* const picture,
     uint32_t* dst = picture->argb;
     const int do_copy = (ALPHA_OFFSET == 3) && swap_rb;
     assert(step == 4);
-    for (y = 0; y < height; ++y) {
-      if (do_copy) {
+    if (do_copy) {
+      for (y = 0; y < height; ++y) {
         memcpy(dst, rgb, width * 4);
-      } else {
+        rgb += rgb_stride;
+        dst += picture->argb_stride;
+      }
+    } else {
+      for (y = 0; y < height; ++y) {
 #ifdef WORDS_BIGENDIAN
         // BGRA or RGBA input order.
         const uint8_t* a_ptr = rgb + 3;
@@ -1125,9 +1129,9 @@ static int Import(WebPPicture* const picture,
         // RGBA input order. Need to swap R and B.
         VP8LConvertBGRAToRGBA((const uint32_t*)rgb, width, (uint8_t*)dst);
 #endif
+        rgb += rgb_stride;
+        dst += picture->argb_stride;
       }
-      rgb += rgb_stride;
-      dst += picture->argb_stride;
     }
   } else {
     uint32_t* dst = picture->argb;
