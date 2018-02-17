@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fd00607f_7b00b2bf",
+        "filename": "src/dsp/alpha_processing_sse2.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-02-17T19:34:52Z",
+      "side": 1,
+      "message": "this duplicates the check at the call site. it\u0027s possible the branch is being extracted from the loop when inlined there. should we just restore this function for big-endian targets or did I miss a Convert case that would cover this there?",
+      "revId": "cd2886504fc70f03fe5bed8ec2f76905dcb08db0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
