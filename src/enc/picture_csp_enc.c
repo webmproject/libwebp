@@ -28,11 +28,11 @@
 // If defined, use table to compute x / alpha.
 #define USE_INVERSE_ALPHA_TABLE
 
-static const union {
-  uint32_t argb;
-  uint8_t  bytes[4];
-} test_endian = { 0xff000000u };
-#define ALPHA_IS_LAST (test_endian.bytes[3] == 0xff)
+#ifdef WORDS_BIGENDIAN
+#define ALPHA_OFFSET 0   // uint32_t 0xff000000 is 0xff,00,00,00 in memory
+#else
+#define ALPHA_OFFSET 3   // uint32_t 0xff000000 is 0x00,00,00,ff in memory
+#endif
 
 //------------------------------------------------------------------------------
 // Detection of non-trivial transparency
@@ -61,7 +61,7 @@ int WebPPictureHasTransparency(const WebPPicture* picture) {
     return CheckNonOpaque(picture->a, picture->width, picture->height,
                           1, picture->a_stride);
   } else {
-    const int alpha_offset = ALPHA_IS_LAST ? 3 : 0;
+    const int alpha_offset = ALPHA_OFFSET;
     return CheckNonOpaque((const uint8_t*)picture->argb + alpha_offset,
                           picture->width, picture->height,
                           4, picture->argb_stride * sizeof(*picture->argb));
@@ -990,10 +990,10 @@ static int PictureARGBToYUVA(WebPPicture* picture, WebPEncCSP colorspace,
     return WebPEncodingSetError(picture, VP8_ENC_ERROR_INVALID_CONFIGURATION);
   } else {
     const uint8_t* const argb = (const uint8_t*)picture->argb;
-    const uint8_t* const r = ALPHA_IS_LAST ? argb + 2 : argb + 1;
-    const uint8_t* const g = ALPHA_IS_LAST ? argb + 1 : argb + 2;
-    const uint8_t* const b = ALPHA_IS_LAST ? argb + 0 : argb + 3;
-    const uint8_t* const a = ALPHA_IS_LAST ? argb + 3 : argb + 0;
+    const uint8_t* const a = argb + (0 ^ ALPHA_OFFSET);
+    const uint8_t* const r = argb + (1 ^ ALPHA_OFFSET);
+    const uint8_t* const g = argb + (2 ^ ALPHA_OFFSET);
+    const uint8_t* const b = argb + (3 ^ ALPHA_OFFSET);
 
     picture->colorspace = WEBP_YUV420;
     return ImportYUVAFromRGBA(r, g, b, a, 4, 4 * picture->argb_stride,
@@ -1044,7 +1044,8 @@ int WebPPictureYUVAToARGB(WebPPicture* picture) {
     const int argb_stride = 4 * picture->argb_stride;
     uint8_t* dst = (uint8_t*)picture->argb;
     const uint8_t *cur_u = picture->u, *cur_v = picture->v, *cur_y = picture->y;
-    WebPUpsampleLinePairFunc upsample = WebPGetLinePairConverter(ALPHA_IS_LAST);
+    WebPUpsampleLinePairFunc upsample =
+        WebPGetLinePairConverter(ALPHA_OFFSET > 0);
 
     // First row, with replicated top samples.
     upsample(cur_y, NULL, cur_u, cur_v, cur_u, cur_v, dst, NULL, width);
@@ -1087,6 +1088,7 @@ static int Import(WebPPicture* const picture,
                   const uint8_t* rgb, int rgb_stride,
                   int step, int swap_rb, int import_alpha) {
   int y;
+  // swap_rb -> b,g,r,a , !swap_rb -> r,g,b,a
   const uint8_t* r_ptr = rgb + (swap_rb ? 2 : 0);
   const uint8_t* g_ptr = rgb + 1;
   const uint8_t* b_ptr = rgb + (swap_rb ? 0 : 2);
@@ -1104,19 +1106,32 @@ static int Import(WebPPicture* const picture,
   WebPInitAlphaProcessing();
 
   if (import_alpha) {
+    // dst[] byte order is {a,r,g,b} for big-endian, {b,g,r,a} for little endian
     uint32_t* dst = picture->argb;
-    const int do_copy =
-        (!swap_rb && !ALPHA_IS_LAST) || (swap_rb && ALPHA_IS_LAST);
+    const int do_copy = (ALPHA_OFFSET == 3) && swap_rb;
     assert(step == 4);
-    for (y = 0; y < height; ++y) {
-      if (do_copy) {
+    if (do_copy) {
+      for (y = 0; y < height; ++y) {
         memcpy(dst, rgb, width * 4);
-      } else {
+        rgb += rgb_stride;
+        dst += picture->argb_stride;
+      }
+    } else {
+      for (y = 0; y < height; ++y) {
+#ifdef WORDS_BIGENDIAN
+        // BGRA or RGBA input order.
+        const uint8_t* a_ptr = rgb + 3;
+        WebPPackARGB(a_ptr, r_ptr, g_ptr, b_ptr, width, dst);
+        r_ptr += rgb_stride;
+        g_ptr += rgb_stride;
+        b_ptr += rgb_stride;
+#else
         // RGBA input order. Need to swap R and B.
         VP8LConvertBGRAToRGBA((const uint32_t*)rgb, width, (uint8_t*)dst);
+#endif
+        rgb += rgb_stride;
+        dst += picture->argb_stride;
       }
-      rgb += rgb_stride;
-      dst += picture->argb_stride;
     }
   } else {
     uint32_t* dst = picture->argb;
