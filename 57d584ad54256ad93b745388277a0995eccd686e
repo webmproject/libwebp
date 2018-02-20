@@ -22,6 +22,30 @@
       "revId": "57d584ad54256ad93b745388277a0995eccd686e",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bd8689cb_2e1be287",
+        "filename": "src/enc/picture_psnr_enc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 172,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-02-20T19:51:23Z",
+      "side": 1,
+      "message": "\u003e btw, are we sure config.h is included at this point?\n\nfor complete correctness we were relying dsp.h, I make that explicit here",
+      "parentUuid": "0c0b3dd1_f13ffb05",
+      "range": {
+        "startLine": 172,
+        "startChar": 7,
+        "endLine": 172,
+        "endChar": 22
+      },
+      "revId": "57d584ad54256ad93b745388277a0995eccd686e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
