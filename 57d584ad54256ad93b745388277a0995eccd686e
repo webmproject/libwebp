@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0c0b3dd1_f13ffb05",
+        "filename": "src/enc/picture_psnr_enc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 172,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2018-02-20T07:29:05Z",
+      "side": 1,
+      "message": "btw, are we sure config.h is included at this point?",
+      "range": {
+        "startLine": 172,
+        "startChar": 7,
+        "endLine": 172,
+        "endChar": 22
+      },
+      "revId": "57d584ad54256ad93b745388277a0995eccd686e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
