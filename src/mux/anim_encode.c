@@ -88,9 +88,10 @@ struct WebPAnimEncoder {
                                   // frame would be a sub-frame or a key-frame.
 
   // Misc.
-  int is_first_frame_;  // True if first frame is yet to be added/being added.
-  int got_null_frame_;  // True if WebPAnimEncoderAdd() has already been called
-                        // with a NULL frame.
+  int is_first_frame_;   // True if first frame is yet to be added/being added.
+  int allow_frame_skip;  // True if frames can be dropped.
+  int got_null_frame_;   // True if WebPAnimEncoderAdd() has already been called
+                         // with a NULL frame.
 
   size_t in_frame_count_;   // Number of input frames processed so far.
   size_t out_frame_count_;  // Number of frames added to mux so far. This may be
@@ -1072,7 +1073,7 @@ static WebPEncodingError SetFrame(WebPAnimEncoder* const enc,
 
   // First frame cannot be skipped as there is no 'previous frame' to merge it
   // to. So, empty rectangle is not allowed for the first frame.
-  const int empty_rect_allowed_none = !is_first_frame;
+  const int empty_rect_allowed_none = !is_first_frame && enc->allow_frame_skip;
 
   // Even if there is exact pixel match between 'disposed previous canvas' and
   // 'current canvas', we can't skip current frame, as there may not be exact
@@ -1358,8 +1359,10 @@ int WebPAnimEncoderAdd(WebPAnimEncoder* enc, WebPPicture* frame, int timestamp,
     if (!IncreasePreviousDuration(enc, (int)prev_frame_duration)) {
       return 0;
     }
+    enc->allow_frame_skip = (prev_frame_duration != 0);
   } else {
     enc->first_timestamp_ = timestamp;
+    enc->allow_frame_skip = 0;
   }
 
   if (frame == NULL) {  // Special: last call.
