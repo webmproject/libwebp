@@ -593,6 +593,9 @@ static int ReadAnimatedGIF(const char filename[], AnimatedImage* const image,
     curr_frame = &image->frames[i];
     curr_rgba = curr_frame->rgba;
     curr_frame->duration = GetFrameDurationGIF(gif, i);
+    // Force frames with a small or no duration to 100ms to be consistent
+    // with web browsers and other transcoding tools (like gif2webp itself).
+    if (curr_frame->duration <= 10) curr_frame->duration = 100;
 
     if (i == 0) {  // Initialize as transparent.
       curr_frame->is_key_frame = 1;
