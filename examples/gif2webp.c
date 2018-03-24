@@ -361,6 +361,14 @@ int main(int argc, const char *argv[]) {
         GIFDisposeFrame(orig_dispose, &gif_rect, &prev_canvas, &curr_canvas);
         GIFCopyPixels(&curr_canvas, &prev_canvas);
 
+        // Force frames with a small or no duration to 100ms to be consistent
+        // with web browsers and other transcoding tools. This also avoids
+        // incorrect durations between frames when padding frames are
+        // discarded.
+        if (frame_duration <= 10) {
+          frame_duration = 100;
+        }
+
         // Update timestamp (for next frame).
         frame_timestamp += frame_duration;
 
