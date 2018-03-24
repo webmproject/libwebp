@@ -22,6 +22,30 @@
       "revId": "09333097ed4fd474916edf723d1ad07f72a9ab4d",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "88368119_84a458bf",
+        "filename": "examples/anim_util.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 596,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-03-24T19:29:44Z",
+      "side": 1,
+      "message": "\u003e i wonder if we should use some versioning here, to keep bwd compatibility. Like:\n\u003e \n\u003e #if (LIBWEBP_VERSION \u003e 6.1) \n\u003e \n\u003e ...\n\u003e \n\u003e #endif\n\u003e \n\u003e This would keep gif2webp and anim_diff consistent. But maybe it\u0027s overkill.\n\nmight be. we haven\u0027t applied that to other features/bugs, but this one could be unique.",
+      "parentUuid": "8eba9a20_d1dcbdbd",
+      "range": {
+        "startLine": 596,
+        "startChar": 4,
+        "endLine": 596,
+        "endChar": 5
+      },
+      "revId": "09333097ed4fd474916edf723d1ad07f72a9ab4d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
