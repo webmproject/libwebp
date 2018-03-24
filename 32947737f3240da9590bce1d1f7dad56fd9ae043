@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "86a346ad_04364dcd",
+        "filename": "examples/gif2webp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 368,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-03-24T06:15:55Z",
+      "side": 1,
+      "message": "given we know the behavior is this we could special case 0 only as well; that might help anim_diff which will probably need some updating too.",
+      "revId": "32947737f3240da9590bce1d1f7dad56fd9ae043",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
