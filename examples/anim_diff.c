@@ -187,8 +187,8 @@ static void Help(void) {
   printf("  -min_psnr <float> ... minimum per-frame PSNR\n");
   printf("  -raw_comparison ..... if this flag is not used, RGB is\n");
   printf("                        premultiplied before comparison\n");
-  printf("  -max_diff <int> ..... maximum allowed difference per channel "
-         "                        between corresponding pixels in subsequent"
+  printf("  -max_diff <int> ..... maximum allowed difference per channel\n"
+         "                        between corresponding pixels in subsequent\n"
          "                        frames\n");
 }
 
