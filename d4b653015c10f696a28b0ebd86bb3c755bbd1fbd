@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "64bb986b_7018b42a",
+        "filename": "imageio/webpdec.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2018-03-27T06:05:45Z",
+      "side": 1,
+      "message": "WebPDemuxer* const demux \u003d ...",
+      "range": {
+        "startLine": 114,
+        "startChar": 15,
+        "endLine": 114,
+        "endChar": 20
+      },
+      "revId": "d4b653015c10f696a28b0ebd86bb3c755bbd1fbd",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
