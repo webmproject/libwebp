@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "52eee9ec_b1cb3ac9",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 14
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-03-28T06:28:30Z",
+      "side": 1,
+      "message": "long line",
+      "revId": "e402be99d5b5c40b65d319e5d1751ce8acd01997",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c79b8e4e_78a7020a",
+        "filename": "imageio/webpdec.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-03-28T06:28:30Z",
+      "side": 1,
+      "message": "this could be sorted",
+      "revId": "e402be99d5b5c40b65d319e5d1751ce8acd01997",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b8d67238_684ef1ca",
+        "filename": "imageio/webpdec.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-03-28T06:28:30Z",
+      "side": 1,
+      "message": "dead store",
+      "revId": "e402be99d5b5c40b65d319e5d1751ce8acd01997",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "38e2ae36_a6f48ed5",
+        "filename": "imageio/webpdec.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 240,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-03-28T06:28:30Z",
+      "side": 1,
+      "message": "need to cleanup picture here if !ok",
+      "revId": "e402be99d5b5c40b65d319e5d1751ce8acd01997",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
