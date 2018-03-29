@@ -407,10 +407,9 @@ static int StoreHuffmanCode(VP8LBitWriter* const bw,
 }
 
 static void WriteHuffmanCode(VP8LBitWriter* const bw,
-                             const HuffmanTreeCode* const code,
-                             int code_index) {
-  const int depth = code->code_lengths[code_index];
-  const int symbol = code->codes[code_index];
+                             const HuffmanTreeCode* const code, int index) {
+  const int depth = code->code_lengths[index];
+  const int symbol = code->codes[index];
   VP8LWriteBits(bw, depth, symbol);
 }
 
@@ -578,10 +577,10 @@ static int EncodeImageInternal(VP8LBitWriter* const bw,
       uint32_t i;
       if (histogram_argb == NULL) goto Error;
       for (i = 0; i < histogram_image_xysize; ++i) {
-        const int symbol_index = histogram_symbols[i] & 0xffff;
-        histogram_argb[i] = 0xff000000 | (symbol_index << 8);
-        if (symbol_index >= max_index) {
-          max_index = symbol_index + 1;
+        const int index = histogram_symbols[i] & 0xffff;
+        histogram_argb[i] = 0xff000000 | (index << 8);
+        if (index >= max_index) {
+          max_index = index + 1;
         }
       }
       histogram_image_size = max_index;

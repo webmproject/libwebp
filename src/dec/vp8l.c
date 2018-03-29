@@ -327,10 +327,10 @@ static int ReadHuffmanCodes(VP8LDecoder* const dec, int xsize, int ysize,
     hdr->huffman_subsample_bits_ = huffman_precision;
     for (i = 0; i < huffman_pixs; ++i) {
       // The huffman data is stored in red and green bytes.
-      const int group = (huffman_image[i] >> 8) & 0xffff;
-      huffman_image[i] = group;
-      if (group >= num_htree_groups) {
-        num_htree_groups = group + 1;
+      const int index = (huffman_image[i] >> 8) & 0xffff;
+      huffman_image[i] = index;
+      if (index >= num_htree_groups) {
+        num_htree_groups = index + 1;
       }
     }
   }
