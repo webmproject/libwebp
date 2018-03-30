@@ -601,7 +601,7 @@ AS_IF([test "x$enable_gif" != "xno"], [
 AM_CONDITIONAL([BUILD_ANIMDIFF], [test "${build_anim_diff}" = "yes"])
 AM_CONDITIONAL([BUILD_GIF2WEBP], [test "${build_gif2webp}" = "yes"])
 
-if test "$enable_libwebpmux" = "yes"; then
+if test "$enable_libwebpdemux" = "yes" -a "$enable_libwebpmux" = "yes"; then
   build_img2webp=yes
 fi
 AM_CONDITIONAL([BUILD_IMG2WEBP], [test "${build_img2webp}" = "yes"])
@@ -702,8 +702,9 @@ AM_CONDITIONAL([WANT_MUX], [test "$enable_libwebpmux" = "yes"])
 dnl === Check whether libwebpdemux should be built
 AC_MSG_CHECKING(whether libwebpdemux is to be built)
 AC_ARG_ENABLE([libwebpdemux],
-              AS_HELP_STRING([--enable-libwebpdemux],
-                             [Build libwebpdemux @<:@default=no@:>@]))
+              AS_HELP_STRING([--disable-libwebpdemux],
+                             [Disable libwebpdemux @<:@default=no@:>@]),
+              [], [enable_libwebpdemux=yes])
 AC_MSG_RESULT(${enable_libwebpdemux-no})
 AM_CONDITIONAL([WANT_DEMUX], [test "$enable_libwebpdemux" = "yes"])
 
@@ -752,14 +753,14 @@ libwebpmux: ${enable_libwebpmux-no}
 libwebpextras: ${enable_libwebpextras-no}
 
 Tools:
-cwebp : yes
+cwebp : ${enable_libwebpdemux-no}
   Input format support
   ====================
   JPEG : ${jpeg_support-no}
   PNG  : ${png_support-no}
   TIFF : ${tiff_support-no}
   WIC  : ${wic_support-no}
-dwebp : yes
+dwebp : ${enable_libwebpdemux-no}
   Output format support
   =====================
   PNG  : ${png_support-no}
