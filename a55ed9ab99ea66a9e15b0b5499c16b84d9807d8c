@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0ce77ca4_1b2f7259",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 5
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-03-31T00:35:34Z",
+      "side": 1,
+      "message": "it\u0027s src/webp/config.h and webp/config.h now and you may have lost the include_directories() that this was attached to.",
+      "revId": "a55ed9ab99ea66a9e15b0b5499c16b84d9807d8c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "77ed1923_d81bf7e6",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 5
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-03-31T00:35:34Z",
+      "side": 1,
+      "message": "trailing whitespace",
+      "revId": "a55ed9ab99ea66a9e15b0b5499c16b84d9807d8c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "54dda8ca_2a2090c1",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 5
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-03-31T00:35:34Z",
+      "side": 1,
+      "message": "are separate \"\"s not merged?",
+      "revId": "a55ed9ab99ea66a9e15b0b5499c16b84d9807d8c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
