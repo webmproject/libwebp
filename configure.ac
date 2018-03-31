@@ -347,6 +347,8 @@ AS_IF([test "x$enable_gl" != "xno"], [
       # override with --with-gl*
       glut_cflags="$glut_cflags|-framework GLUT -framework OpenGL"
       glut_ldflags="$glut_ldflags|-framework GLUT -framework OpenGL"
+      # quiet deprecation warnings for glut
+      TEST_AND_ADD_CFLAGS([AM_CFLAGS], [-Wno-deprecated-declarations])
       ;;
   esac
 
