@@ -443,31 +443,54 @@ AC_ARG_ENABLE([sdl],
                               @<:@default=auto@:>@]))
 AS_IF([test "x$enable_sdl" != "xno"], [
   CLEAR_LIBVARS([SDL])
+  AC_PATH_PROGS([LIBSDL_CONFIG], [sdl-config])
+  if test -n "$LIBSDL_CONFIG"; then
+    SDL_INCLUDES=`$LIBSDL_CONFIG --cflags`
+    SDL_LIBS="`$LIBSDL_CONFIG --libs`"
+  fi
+
   WITHLIB_OPTION([sdl], [SDL])
 
   sdl_header="no"
   LIBCHECK_PROLOGUE([SDL])
-  AC_CHECK_HEADER([SDL/SDL.h], [sdl_header="SDL_SDL.h"],
+  AC_CHECK_HEADER([SDL/SDL.h], [sdl_header="SDL/SDL.h"],
                   [AC_CHECK_HEADER([SDL.h], [sdl_header="SDL.h"],
                   [AC_MSG_WARN(SDL library not available - no sdl.h)])])
   if test x"$sdl_header" != "xno"; then
-    AC_CHECK_LIB(SDL, SDL_Init,
-                 [SDL_LIBS="-lSDL"
-                  SDL_INCLUDES="-DWEBP_HAVE_SDL"
-                  AC_DEFINE(WEBP_HAVE_SDL, [1],
-                            [Set to 1 if SDL library is installed])
-                  sdl_support=yes
-                 ],
-                 AC_MSG_WARN(Optional SDL library not found),
-                 [$MATH_LIBS])
+    AC_LANG_PUSH(C)
+    SDL_SAVED_LIBS="$LIBS"
+    for lib in "" "-lSDL" "-lSDLmain -lSDL"; do
+      LIBS="$SDL_SAVED_LIBS $lib"
+      # Perform a full link to ensure SDL_main is resolved if needed.
+      AC_LINK_IFELSE(
+        [AC_LANG_SOURCE([
+           #include <$sdl_header>
+           int main(int argc, char** argv) {
+             SDL_Init(0);
+             return 0;
+           }])],
+        [SDL_LIBS="$LDFLAGS $LIBS"
+         SDL_INCLUDES="$SDL_INCLUDES -DWEBP_HAVE_SDL"
+         AC_DEFINE(WEBP_HAVE_SDL, [1],
+                   [Set to 1 if SDL library is installed])
+         sdl_support=yes]
+      )
+      if test x"$sdl_support" = "xyes"; then
+        break
+      fi
+    done
+    # LIBS is restored by LIBCHECK_EPILOGUE
+    AC_LANG_POP
     if test x"$sdl_header" = "xSDL.h"; then
       SDL_INCLUDES="$SDL_INCLUDES -DWEBP_HAVE_JUST_SDL_H"
     fi
   fi
   LIBCHECK_EPILOGUE([SDL])
 
-  if test "$sdl_support" = "yes"; then
+  if test x"$sdl_support" = "xyes"; then
     build_vwebp_sdl=yes
+  else
+    AC_MSG_WARN(Optional SDL library not found)
   fi
 ])
 
