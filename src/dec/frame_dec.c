@@ -400,7 +400,9 @@ static void DitherRow(VP8Decoder* const dec) {
 #define MACROBLOCK_VPOS(mb_y)  ((mb_y) * 16)    // vertical position of a MB
 
 // Finalize and transmit a complete row. Return false in case of user-abort.
-static int FinishRow(VP8Decoder* const dec, VP8Io* const io) {
+static int FinishRow(void* arg1, void* arg2) {
+  VP8Decoder* const dec = (VP8Decoder*)arg1;
+  VP8Io* const io = (VP8Io*)arg2;
   int ok = 1;
   const VP8ThreadContext* const ctx = &dec->thread_ctx_;
   const int cache_id = ctx->id_;
@@ -647,7 +649,7 @@ static int InitThreadContext(VP8Decoder* const dec) {
     }
     worker->data1 = dec;
     worker->data2 = (void*)&dec->thread_ctx_.io_;
-    worker->hook = (WebPWorkerHook)FinishRow;
+    worker->hook = FinishRow;
     dec->num_caches_ =
       (dec->filter_type_ > 0) ? MT_CACHE_LINES : MT_CACHE_LINES - 1;
   } else {
