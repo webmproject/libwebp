@@ -1754,7 +1754,7 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
       worker_interface->Init(worker);
       worker->data1 = param;
       worker->data2 = NULL;
-      worker->hook = (WebPWorkerHook)EncodeStreamHook;
+      worker->hook = EncodeStreamHook;
     }
   }
 
