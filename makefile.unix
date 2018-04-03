@@ -474,7 +474,7 @@ dist: all
 	for m in man/[cdv]webp.1 man/gif2webp.1 man/webpmux.1 \
                  man/img2webp.1 man/webpinfo.1; do \
 	  basenam=$$(basename $$m .1); \
-	  $(GROFF) -t -e -man -T utf8 $$m \
+	  $(GROFF) -t -e -man -T ascii $$m \
 	    | $(COL) -bx >$(DESTDIR)/doc/$${basenam}.txt; \
 	  $(GROFF) -t -e -man -T html $$m \
 	    | $(COL) -bx >$(DESTDIR)/doc/$${basenam}.html; \
