@@ -289,7 +289,8 @@ if(WEBP_BUILD_WEBP_JS)
   target_link_libraries(webp_js webpdecoder SDL)
   set(WEBP_HAVE_SDL 1)
   set_target_properties(webp_js PROPERTIES LINK_FLAGS
-      "-s EXPORTED_FUNCTIONS='[\"_WebpToSDL\"]' -s INVOKE_RUN=0")
+      "-s EXPORTED_FUNCTIONS='[\"_WebpToSDL\"]' -s INVOKE_RUN=0 \
+       -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"cwrap\"]'")
   set_target_properties(webp_js PROPERTIES OUTPUT_NAME webp)
   target_compile_definitions(webp_js PUBLIC EMSCRIPTEN WEBP_HAVE_SDL)
 
@@ -299,7 +300,8 @@ if(WEBP_BUILD_WEBP_JS)
   target_link_libraries(webp_wasm webpdecoder SDL)
   set_target_properties(webp_wasm PROPERTIES LINK_FLAGS
       "-s WASM=1 -s 'BINARYEN_METHOD=\"native-wasm\"' \
-      -s EXPORTED_FUNCTIONS='[\"_WebpToSDL\"]' -s INVOKE_RUN=0")
+       -s EXPORTED_FUNCTIONS='[\"_WebpToSDL\"]' -s INVOKE_RUN=0 \
+       -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"cwrap\"]'")
   target_compile_definitions(webp_wasm PUBLIC EMSCRIPTEN WEBP_HAVE_SDL)
 
   target_compile_definitions(webpdecoder PUBLIC EMSCRIPTEN)
