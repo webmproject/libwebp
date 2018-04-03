@@ -786,3 +786,9 @@ void GetDiffAndPSNR(const uint8_t rgba1[], const uint8_t rgba2[],
     *psnr = 4.3429448 * log(255. * 255. / sse);
   }
 }
+
+void GetAnimatedImageVersions(int* const decoder_version,
+                              int* const demux_version) {
+  *decoder_version = WebPGetDecoderVersion();
+  *demux_version = WebPGetDemuxVersion();
+}

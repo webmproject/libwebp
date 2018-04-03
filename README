@@ -458,6 +458,7 @@ File-level options (only used at the start of compression):
  -mixed ............... use mixed lossy/lossless automatic mode
  -v ................... verbose mode
  -h ................... this help
+ -version ............. print version number and exit
 
 Per-frame options (only used for subsequent images input):
  -d <int> ............. frame duration in ms (default: 100)
@@ -527,6 +528,8 @@ Options:
   -max_diff <int> ..... maximum allowed difference per channel
                         between corresponding pixels in subsequent
                         frames
+  -h .................. this help
+  -version ............ print version number and exit
 
 Building:
 ---------

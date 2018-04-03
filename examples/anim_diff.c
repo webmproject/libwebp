@@ -190,6 +190,8 @@ static void Help(void) {
   printf("  -max_diff <int> ..... maximum allowed difference per channel\n"
          "                        between corresponding pixels in subsequent\n"
          "                        frames\n");
+  printf("  -h .................. this help\n");
+  printf("  -version ............ print version number and exit\n");
 }
 
 int main(int argc, const char* argv[]) {
@@ -204,11 +206,6 @@ int main(int argc, const char* argv[]) {
   int i, c;
   const char* files[2] = { NULL, NULL };
   AnimatedImage images[2];
-
-  if (argc < 3) {
-    Help();
-    return -1;
-  }
 
   for (c = 1; c < argc; ++c) {
     int parse_error = 0;
@@ -247,6 +244,18 @@ int main(int argc, const char* argv[]) {
       } else {
         parse_error = 1;
       }
+    } else if (!strcmp(argv[c], "-h") || !strcmp(argv[c], "-help")) {
+      Help();
+      return 0;
+    } else if (!strcmp(argv[c], "-version")) {
+      int dec_version, demux_version;
+      GetAnimatedImageVersions(&dec_version, &demux_version);
+      printf("WebP Decoder version: %d.%d.%d\nWebP Demux version: %d.%d.%d\n",
+             (dec_version >> 16) & 0xff, (dec_version >> 8) & 0xff,
+             (dec_version >> 0) & 0xff,
+             (demux_version >> 16) & 0xff, (demux_version >> 8) & 0xff,
+             (demux_version >> 0) & 0xff);
+      return 0;
     } else {
       if (!got_input1) {
         files[0] = argv[c];
@@ -263,6 +272,12 @@ int main(int argc, const char* argv[]) {
       return -1;
     }
   }
+  if (argc < 3) {
+    Help();
+    return -1;
+  }
+
+
   if (!got_input2) {
     Help();
     return -1;
