@@ -1026,7 +1026,7 @@ int VP8LGetHistoImageSymbols(int xsize, int ysize,
     }
   }
 
-  // TODO(vikasa): Optimize HistogramRemap for low-effort compression mode also.
+  // TODO(vrabaud): Optimize HistogramRemap for low-effort compression mode.
   // Find the optimal map from original histograms to the final ones.
   HistogramRemap(orig_histo, image_histo, histogram_symbols);
 

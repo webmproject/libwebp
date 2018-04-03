@@ -382,8 +382,7 @@ static int EncoderAnalyze(VP8LEncoder* const enc,
       AnalyzeAndCreatePalette(pic, low_effort,
                               enc->palette_, &enc->palette_size_);
 
-  // TODO(jyrki): replace the decision to be based on an actual estimate
-  // of entropy, or even spatial variance of entropy.
+  // Empirical bit sizes.
   enc->histo_bits_ = GetHistoBits(method, use_palette,
                                   pic->width, pic->height);
   enc->transform_bits_ = GetTransformBits(method, enc->histo_bits_);
@@ -754,7 +753,6 @@ static WebPEncodingError StoreImageToBitMask(
       // Don't write the distance with the extra bits code since
       // the distance can be up to 18 bits of extra bits, and the prefix
       // 15 bits, totaling to 33, and our PutBits only supports up to 32 bits.
-      // TODO(jyrki): optimize this further.
       VP8LPrefixEncode(distance, &code, &n_bits, &bits);
       WriteHuffmanCode(bw, codes + 4, code);
       VP8LPutBits(bw, bits, n_bits);
@@ -1876,7 +1874,6 @@ int VP8LEncodeImage(const WebPConfig* const config,
   err = VP8LEncodeStream(config, picture, &bw, 1 /*use_cache*/);
   if (err != VP8_ENC_OK) goto Error;
 
-  // TODO(skal): have a fine-grained progress report in VP8LEncodeStream().
   if (!WebPReportProgress(picture, 90, &percent)) goto UserAbort;
 
   // Finish the RIFF chunk.
