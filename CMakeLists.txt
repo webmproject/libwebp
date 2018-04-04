@@ -135,7 +135,8 @@ target_link_libraries(webpdecoder ${WEBP_DEP_LIBRARIES})
 target_include_directories(webpdecoder
   PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
           ${CMAKE_CURRENT_SOURCE_DIR}
-  INTERFACE $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+  INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 set_target_properties(webpdecoder PROPERTIES PUBLIC_HEADER
 "${CMAKE_CURRENT_SOURCE_DIR}/src/webp/decode.h;\
@@ -265,26 +266,22 @@ endif()
 
 if(WEBP_BUILD_DWEBP)
   # dwebp
-  include_directories(${WEBP_DEP_IMG_INCLUDE_DIRS})
   parse_Makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/examples "DWEBP_SRCS"
     "dwebp")
   add_executable(dwebp ${DWEBP_SRCS})
-  target_link_libraries(dwebp exampleutil imagedec imageenc webpdecoder)
+  target_link_libraries(dwebp exampleutil imagedec imageenc)
+  target_include_directories(dwebp PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src)
   install(TARGETS dwebp RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-  set_property(TARGET dwebp PROPERTY INCLUDE_DIRECTORIES
-    ${CMAKE_CURRENT_BINARY_DIR}/src)
 endif()
 
 if(WEBP_BUILD_CWEBP)
   # cwebp
-  include_directories(${WEBP_DEP_IMG_INCLUDE_DIRS})
   parse_Makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/examples "CWEBP_SRCS"
     "cwebp")
   add_executable(cwebp ${CWEBP_SRCS})
   target_link_libraries(cwebp exampleutil imagedec webp)
+  target_include_directories(cwebp PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src)
   install(TARGETS cwebp RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-  set_property(TARGET cwebp PROPERTY INCLUDE_DIRECTORIES
-    ${CMAKE_CURRENT_BINARY_DIR}/src)
 endif()
 
 if(WEBP_BUILD_GIF2WEBP AND NOT GIF_FOUND)
@@ -297,8 +294,7 @@ if(WEBP_BUILD_GIF2WEBP OR WEBP_BUILD_IMG2WEBP)
   add_library(webpmux ${WEBP_MUX_SRCS})
   target_link_libraries(webpmux webp)
   target_include_directories(webpmux
-                             PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
-                             ${CMAKE_CURRENT_SOURCE_DIR})
+    PRIVATE ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
   parse_version(mux/Makefile.am webpmux WEBP_MUX_SOVERSION)
   set_target_properties(webpmux PROPERTIES VERSION ${PACKAGE_VERSION}
     SOVERSION ${WEBP_MUX_SOVERSION})
@@ -318,9 +314,8 @@ if(WEBP_BUILD_GIF2WEBP)
   add_executable(gif2webp ${GIF2WEBP_SRCS})
   target_link_libraries(gif2webp exampleutil imageioutil webp webpmux
     ${WEBP_DEP_GIF_LIBRARIES})
+  target_include_directories(gif2webp PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src)
   install(TARGETS gif2webp RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-  set_property(TARGET gif2webp PROPERTY INCLUDE_DIRECTORIES
-    ${CMAKE_CURRENT_BINARY_DIR}/src)
 endif()
 
 if(WEBP_BUILD_IMG2WEBP)
@@ -330,9 +325,8 @@ if(WEBP_BUILD_IMG2WEBP)
     "img2webp")
   add_executable(img2webp ${IMG2WEBP_SRCS})
   target_link_libraries(img2webp exampleutil imagedec imageioutil webp webpmux)
+  target_include_directories(img2webp PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src)
   install(TARGETS img2webp RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-  set_property(TARGET img2webp PROPERTY INCLUDE_DIRECTORIES
-    ${CMAKE_CURRENT_BINARY_DIR}/src)
 endif()
 
 if (WEBP_BUILD_WEBPINFO)
@@ -342,16 +336,15 @@ if (WEBP_BUILD_WEBPINFO)
     "webpinfo")
   add_executable(webpinfo ${WEBPINFO_SRCS})
   target_link_libraries(webpinfo exampleutil imageioutil)
+  target_include_directories(webpinfo PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src)
   install(TARGETS webpinfo RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-  set_property(TARGET webpinfo PROPERTY INCLUDE_DIRECTORIES
-    ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_BINARY_DIR}/src)
 endif()
 
 if(WEBP_BUILD_WEBP_JS)
   # JavaScript version
-  add_executable(webp_js
-                 ${CMAKE_CURRENT_SOURCE_DIR}/extras/webp_to_sdl.c)
+  add_executable(webp_js ${CMAKE_CURRENT_SOURCE_DIR}/extras/webp_to_sdl.c)
   target_link_libraries(webp_js webpdecoder SDL)
+  target_include_directories(webp_js PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
   set(WEBP_HAVE_SDL 1)
   set_target_properties(webp_js PROPERTIES LINK_FLAGS
       "-s EXPORTED_FUNCTIONS='[\"_WebpToSDL\"]' -s INVOKE_RUN=0 \
@@ -360,16 +353,16 @@ if(WEBP_BUILD_WEBP_JS)
   target_compile_definitions(webp_js PUBLIC EMSCRIPTEN WEBP_HAVE_SDL)
 
   # WASM version
-  add_executable(webp_wasm
-                 ${CMAKE_CURRENT_SOURCE_DIR}/extras/webp_to_sdl.c)
+  add_executable(webp_wasm ${CMAKE_CURRENT_SOURCE_DIR}/extras/webp_to_sdl.c)
   target_link_libraries(webp_wasm webpdecoder SDL)
+  target_include_directories(webp_wasm PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
   set_target_properties(webp_wasm PROPERTIES LINK_FLAGS
       "-s WASM=1 -s 'BINARYEN_METHOD=\"native-wasm\"' \
        -s EXPORTED_FUNCTIONS='[\"_WebpToSDL\"]' -s INVOKE_RUN=0 \
        -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"cwrap\"]'")
   target_compile_definitions(webp_wasm PUBLIC EMSCRIPTEN WEBP_HAVE_SDL)
 
-  target_compile_definitions(webpdecoder PUBLIC EMSCRIPTEN)
+  target_compile_definitions(webpdspdecode PUBLIC EMSCRIPTEN)
 endif()
 
 # Install the different headers and libraries.
