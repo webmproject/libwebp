@@ -1,3 +1,11 @@
+2f930e08 Revert "Use proper targets for CMake."
+8165e8fb Use proper targets for CMake.
+3f157dd5 Remove some very hard TODOs.
+cd758a17 {de,}mux/Makefile.am: add missing headers
+b892b8ba makefile.unix,dist: use ascii for text output
+64a57d05 add -version option to anim_dump,anim_diff and img2webp
+fc1b8e3a webp_js: fix webp_js demo html
+15aa48d9 update ChangeLog
 e607dabc update AUTHORS
 38410c08 [CFI] Remove function pointer casts
 c57b2736 bump version to 1.0.0
