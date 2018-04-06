@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c187289a_1035f748",
+        "filename": "src/dsp/dsp.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-04-06T18:10:20Z",
+      "side": 0,
+      "message": "are these safe with the update? does sse2 get picked up now? can this be brought in separately?",
+      "revId": "1c8f358df4bf6f5b514a1e3ff43f24a2d8f3103c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
