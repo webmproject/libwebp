@@ -1047,7 +1047,8 @@ int main(int argc, const char *argv[]) {
   // Write info
   if (dump_file) {
     if (picture.use_argb) {
-      fprintf(stderr, "Warning: can't dump file (-d option) in lossless mode.");
+      fprintf(stderr, "Warning: can't dump file (-d option) "
+                      "in lossless mode.\n");
     } else if (!DumpPicture(&picture, dump_file)) {
       fprintf(stderr, "Warning, couldn't dump picture %s\n", dump_file);
     }
