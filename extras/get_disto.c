@@ -293,7 +293,7 @@ int main(int argc, const char *argv[]) {
   printf("%u %.2f    %.2f %.2f %.2f %.2f [ %.2f bpp ]\n",
          (unsigned int)size1,
          disto[4], disto[0], disto[1], disto[2], disto[3],
-         1.f * size1 / pic1.width / pic1.height);
+         8.f * size1 / pic1.width / pic1.height);
 
   if (output != NULL) {
     uint8_t* data = NULL;

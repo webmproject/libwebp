@@ -188,7 +188,7 @@ static void PrintExtraInfoLossless(const WebPPicture* const pic,
     fprintf(stderr, "File:      %s\n", file_name);
     fprintf(stderr, "Dimension: %d x %d\n", pic->width, pic->height);
     fprintf(stderr, "Output:    %d bytes (%.2f bpp)\n", stats->coded_size,
-            1.f * stats->coded_size / pic->width / pic->height);
+            8.f * stats->coded_size / pic->width / pic->height);
     PrintFullLosslessInfo(stats, "ARGB");
   }
 }
@@ -213,7 +213,7 @@ static void PrintExtraInfoLossy(const WebPPicture* const pic, int short_output,
             "           (%.2f bpp)\n",
             stats->coded_size,
             stats->PSNR[0], stats->PSNR[1], stats->PSNR[2], stats->PSNR[3],
-            1.f * stats->coded_size / pic->width / pic->height);
+            8.f * stats->coded_size / pic->width / pic->height);
     if (total > 0) {
       int totals[4] = { 0, 0, 0, 0 };
       fprintf(stderr, "block count:  intra4:     %6d  (%.2f%%)\n"
