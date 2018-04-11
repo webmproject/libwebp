@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cf89f851_40a2820a",
+        "filename": "src/utils/thread_once.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2018-04-11T05:50:44Z",
+      "side": 1,
+      "message": "this is where we could add WEBP_TSAN_IGNORE_FUNCTION() \n(and remove these from the .c)",
+      "range": {
+        "startLine": 70,
+        "startChar": 8,
+        "endLine": 70,
+        "endChar": 17
+      },
+      "revId": "aaece294dee57bd91dad5c164bfd71cbf732665e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
