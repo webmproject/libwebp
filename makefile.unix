@@ -112,7 +112,12 @@ endif
 AR = ar
 ARFLAGS = r
 CPPFLAGS = -I. -Isrc/ -Wall
-CFLAGS = -O3 -DNDEBUG $(EXTRA_FLAGS)
+ifeq ($(DEBUG), 1)
+  CFLAGS = -g
+else
+  CFLAGS = -O3 -DNDEBUG
+endif
+CFLAGS += $(EXTRA_FLAGS)
 CC = gcc
 INSTALL = install
 GROFF = /usr/bin/groff
