@@ -22,6 +22,30 @@
       "revId": "aaece294dee57bd91dad5c164bfd71cbf732665e",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8f3cf920_e88b6c80",
+        "filename": "src/utils/thread_once.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-04-11T18:17:37Z",
+      "side": 1,
+      "message": "\u003e this is where we could add WEBP_TSAN_IGNORE_FUNCTION() \n\u003e (and remove these from the .\n\npossibly or undef it. given the call structure we can inline disable this code, but the function itself would still be open. maybe applying the attribute to the callable function won\u0027t be a problem here, just need to test.",
+      "parentUuid": "cf89f851_40a2820a",
+      "range": {
+        "startLine": 70,
+        "startChar": 8,
+        "endLine": 70,
+        "endChar": 17
+      },
+      "revId": "aaece294dee57bd91dad5c164bfd71cbf732665e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
