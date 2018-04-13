@@ -68,6 +68,10 @@ static BOOL CALLBACK InitOnceCallback(PINIT_ONCE init_once, PVOID init_func,
 
 #endif  // WEBP_USE_THREAD
 
+#ifndef WEBP_USE_THREAD
+#error WEBP_USE_THREAD is undefined
+#endif
+
 #if !defined(WEBP_ONCE)
 
 // This macro prevents thread_sanitizer from reporting known concurrent writes.
