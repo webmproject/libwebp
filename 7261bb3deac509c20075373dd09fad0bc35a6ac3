@@ -22,6 +22,30 @@
       "revId": "7261bb3deac509c20075373dd09fad0bc35a6ac3",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "11473b4f_07f11409",
+        "filename": "src/dsp/enc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2018-04-13T07:30:40Z",
+      "side": 1,
+      "message": "i\u0027d go with \u0027static WEBP_TSAN ...\u0027 for clarity.",
+      "parentUuid": "2e096557_02789eac",
+      "range": {
+        "startLine": 94,
+        "startChar": 0,
+        "endLine": 94,
+        "endChar": 32
+      },
+      "revId": "7261bb3deac509c20075373dd09fad0bc35a6ac3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
