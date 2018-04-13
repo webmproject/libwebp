@@ -46,6 +46,30 @@
       "revId": "7261bb3deac509c20075373dd09fad0bc35a6ac3",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c97573fe_4f4a2e6c",
+        "filename": "src/dsp/enc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-04-13T07:59:48Z",
+      "side": 1,
+      "message": "Done. It does make it more readable.",
+      "parentUuid": "11473b4f_07f11409",
+      "range": {
+        "startLine": 94,
+        "startChar": 0,
+        "endLine": 94,
+        "endChar": 32
+      },
+      "revId": "7261bb3deac509c20075373dd09fad0bc35a6ac3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
