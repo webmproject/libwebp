@@ -96,6 +96,30 @@
     },
     {
       "key": {
+        "uuid": "5f9933c4_b72ff215",
+        "filename": "src/dsp/dsp.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-04-17T07:13:38Z",
+      "side": 1,
+      "message": "\u003e \u003e is this one needed?\n\u003e \n\u003e it\u0027s used mostly for the table inits. we might just be able to stick with the tsan annotation though; pthread should just call it once when the annotation is gone.\n\ndropped. these work as expected with the annotation in non-pthread mode",
+      "parentUuid": "8fb1d8e4_af96f03a",
+      "range": {
+        "startLine": 181,
+        "startChar": 8,
+        "endLine": 181,
+        "endChar": 33
+      },
+      "revId": "2786054e77776f3b7f9ea61fd524135c0b44b95d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f301091f_b8d72ee4",
         "filename": "src/enc/picture_csp_enc.c",
         "patchSetId": 2
