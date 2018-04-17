@@ -491,7 +491,7 @@ static int GetCoeffsAlt(VP8BitReader* const br,
   return 16;
 }
 
-WEBP_TSAN_IGNORE_FUNCTION static void InitGetCoeffs(void) {
+static WEBP_TSAN_IGNORE_FUNCTION void GetCoeffsInit(void) {
   if (GetCoeffs == NULL) {
     if (VP8GetCPUInfo != NULL && VP8GetCPUInfo(kSlowSSSE3)) {
       GetCoeffs = GetCoeffsAlt;
@@ -499,6 +499,10 @@ WEBP_TSAN_IGNORE_FUNCTION static void InitGetCoeffs(void) {
       GetCoeffs = GetCoeffsFast;
     }
   }
+}
+
+static WEBP_TSAN_IGNORE_FUNCTION void InitGetCoeffs(void) {
+  WEBP_DSP_INIT(GetCoeffsInit);
 }
 
 static WEBP_INLINE uint32_t NzCodeBits(uint32_t nz_coeffs, int nz, int dc_nz) {

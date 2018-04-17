@@ -141,6 +141,28 @@ extern "C" {
 #endif
 #endif
 
+#if defined(WEBP_USE_THREAD) && !defined(_WIN32)
+#include <pthread.h>  // NOLINT
+
+#define WEBP_DSP_INIT(func) do {                                    \
+  static volatile VP8CPUInfo func ## _last_cpuinfo_used =           \
+      (VP8CPUInfo)&func ## _last_cpuinfo_used;                      \
+  static pthread_mutex_t func ## _lock = PTHREAD_MUTEX_INITIALIZER; \
+  if (pthread_mutex_lock(&func ## _lock)) break;                    \
+  if (func ## _last_cpuinfo_used != VP8GetCPUInfo) func();          \
+  func ## _last_cpuinfo_used = VP8GetCPUInfo;                       \
+  (void)pthread_mutex_unlock(&func ## _lock);                       \
+} while (0)
+#else  // !(defined(WEBP_USE_THREAD) && !defined(_WIN32))
+#define WEBP_DSP_INIT(func) do {                                    \
+  static volatile VP8CPUInfo func ## _last_cpuinfo_used =           \
+      (VP8CPUInfo)&func ## _last_cpuinfo_used;                      \
+  if (func ## _last_cpuinfo_used == VP8GetCPUInfo) break;           \
+  func();                                                           \
+  func ## _last_cpuinfo_used = VP8GetCPUInfo;                       \
+} while (0)
+#endif // defined(WEBP_USE_THREAD) && !defined(_WIN32)
+
 #define WEBP_UBSAN_IGNORE_UNDEF
 #define WEBP_UBSAN_IGNORE_UNSIGNED_OVERFLOW
 #if defined(__clang__) && defined(__has_attribute)
@@ -196,7 +218,7 @@ WEBP_EXTERN VP8CPUInfo VP8GetCPUInfo;
 // avoiding a compiler warning.
 #define WEBP_DSP_INIT_STUB(func) \
   extern void func(void); \
-  WEBP_TSAN_IGNORE_FUNCTION void func(void) {}
+  void func(void) {}
 
 //------------------------------------------------------------------------------
 // Encoding
