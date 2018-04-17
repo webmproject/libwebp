@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "41c8e306_10991c30",
+        "filename": "src/dec/vp8_dec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 494,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2018-04-17T05:44:19Z",
+      "side": 1,
+      "message": "maybe we should be more systematic with the naming convention, otherwise GetCoeffsInit / InitGetCoeffs might be confusing.\n\nI wonder if we could have everything into a single macro:\n\n#define DSP_INIT_FUNC(name) \\\nstatic WEBP_TSAN_IGNORE_FUNCTION void Init ## _body(void);  \\\nstatic WEBP_TSAN_IGNORE_FUNCTION void name (void) { \\\n  WEBP_DSP_INIT(Init ## _body); \\\n} \\\nstatic WEBP_TSAN_IGNORE_FUNCTION void Init ## name ## _body (void)\n\n?\n\nThis way we would just have:\n\nDSP_INIT_FUNC(InitGetCoeffs) {\n  if (GetCoeffs \u003d\u003d NULL)  ... etc.\n}\n\nNot sure if it\u0027d work though...",
+      "range": {
+        "startLine": 494,
+        "startChar": 38,
+        "endLine": 494,
+        "endChar": 51
+      },
+      "revId": "0dd4e1c758b2a19b252fa6584e37680022e38cdf",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
