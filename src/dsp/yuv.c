@@ -75,12 +75,7 @@ extern void WebPInitSamplersSSE41(void);
 extern void WebPInitSamplersMIPS32(void);
 extern void WebPInitSamplersMIPSdspR2(void);
 
-static volatile VP8CPUInfo yuv_last_cpuinfo_used =
-    (VP8CPUInfo)&yuv_last_cpuinfo_used;
-
-WEBP_TSAN_IGNORE_FUNCTION void WebPInitSamplers(void) {
-  if (yuv_last_cpuinfo_used == VP8GetCPUInfo) return;
-
+WEBP_DSP_INIT_FUNC(WebPInitSamplers) {
   WebPSamplers[MODE_RGB]       = YuvToRgbRow;
   WebPSamplers[MODE_RGBA]      = YuvToRgbaRow;
   WebPSamplers[MODE_BGR]       = YuvToBgrRow;
@@ -116,7 +111,6 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitSamplers(void) {
     }
 #endif  // WEBP_USE_MIPS_DSP_R2
   }
-  yuv_last_cpuinfo_used = VP8GetCPUInfo;
 }
 
 //-----------------------------------------------------------------------------
@@ -260,18 +254,13 @@ void (*WebPSharpYUVUpdateRGB)(const int16_t* ref, const int16_t* src,
 void (*WebPSharpYUVFilterRow)(const int16_t* A, const int16_t* B, int len,
                               const uint16_t* best_y, uint16_t* out);
 
-static volatile VP8CPUInfo rgba_to_yuv_last_cpuinfo_used =
-    (VP8CPUInfo)&rgba_to_yuv_last_cpuinfo_used;
-
 extern void WebPInitConvertARGBToYUVSSE2(void);
 extern void WebPInitConvertARGBToYUVSSE41(void);
 extern void WebPInitConvertARGBToYUVNEON(void);
 extern void WebPInitSharpYUVSSE2(void);
 extern void WebPInitSharpYUVNEON(void);
 
-WEBP_TSAN_IGNORE_FUNCTION void WebPInitConvertARGBToYUV(void) {
-  if (rgba_to_yuv_last_cpuinfo_used == VP8GetCPUInfo) return;
-
+WEBP_DSP_INIT_FUNC(WebPInitConvertARGBToYUV) {
   WebPConvertARGBToY = ConvertARGBToY_C;
   WebPConvertARGBToUV = WebPConvertARGBToUV_C;
 
@@ -316,6 +305,4 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitConvertARGBToYUV(void) {
   assert(WebPSharpYUVUpdateY != NULL);
   assert(WebPSharpYUVUpdateRGB != NULL);
   assert(WebPSharpYUVFilterRow != NULL);
-
-  rgba_to_yuv_last_cpuinfo_used = VP8GetCPUInfo;
 }
