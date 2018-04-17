@@ -22,6 +22,30 @@
       "revId": "0dd4e1c758b2a19b252fa6584e37680022e38cdf",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7ba18b10_d4738fe6",
+        "filename": "src/dec/vp8_dec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 494,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-04-17T05:57:55Z",
+      "side": 1,
+      "message": "\u003e maybe we should be more systematic with the naming convention, otherwise GetCoeffsInit / InitGetCoeffs might be confusing.\n\u003e \n\u003e I wonder if we could have everything into a single macro:\n\u003e \n\u003e #define DSP_INIT_FUNC(name) \\\n\u003e static WEBP_TSAN_IGNORE_FUNCTION void Init ## _body(void);  \\\n\u003e static WEBP_TSAN_IGNORE_FUNCTION void name (void) { \\\n\u003e   WEBP_DSP_INIT(Init ## _body); \\\n\u003e } \\\n\u003e static WEBP_TSAN_IGNORE_FUNCTION void Init ## name ## _body (void)\n\u003e \n\u003e ?\n\u003e \n\u003e This way we would just have:\n\u003e \n\u003e DSP_INIT_FUNC(InitGetCoeffs) {\n\u003e   if (GetCoeffs \u003d\u003d NULL)  ... etc.\n\u003e }\n\u003e \n\u003e Not sure if it\u0027d work though...\n\nI was thinking along those lines too. the split and duplicate tsan annotation is unfortunate; this might work",
+      "parentUuid": "41c8e306_10991c30",
+      "range": {
+        "startLine": 494,
+        "startChar": 38,
+        "endLine": 494,
+        "endChar": 51
+      },
+      "revId": "0dd4e1c758b2a19b252fa6584e37680022e38cdf",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
