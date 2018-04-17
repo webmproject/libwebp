@@ -126,7 +126,7 @@ static WEBP_INLINE int LinearToGamma(uint32_t base_value, int shift) {
 
 #else
 
-static WEBP_TSAN_IGNORE_FUNCTION void InitGammaTables(void) {}
+static void InitGammaTables(void) {}
 static WEBP_INLINE uint32_t GammaToLinear(uint8_t v) { return v; }
 static WEBP_INLINE int LinearToGamma(uint32_t base_value, int shift) {
   return (int)(base_value << shift);
@@ -238,7 +238,7 @@ static WEBP_INLINE uint32_t LinearToGammaS(uint32_t value) {
 
 #else
 
-static WEBP_TSAN_IGNORE_FUNCTION void InitGammaTablesS(void) {}
+static void InitGammaTablesS(void) {}
 static WEBP_INLINE uint32_t GammaToLinearS(int v) {
   return (v << GAMMA_TO_LINEAR_BITS) / MAX_Y_T;
 }
