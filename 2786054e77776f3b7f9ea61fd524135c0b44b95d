@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "7ca5c621_a9785c2a",
+        "filename": "src/dsp/dec_clip_tables.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 353,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-04-17T06:45:54Z",
+      "side": 1,
+      "message": "\u003e this variable is probably no longer needed now, but we can leave that for a later patch\n\ntrue, but we key off the cpu info function, so would reinit if that changed. though in practice it won\u0027t.",
+      "parentUuid": "227904d6_8d260f8b",
+      "range": {
+        "startLine": 353,
+        "startChar": 7,
+        "endLine": 353,
+        "endChar": 16
+      },
+      "revId": "2786054e77776f3b7f9ea61fd524135c0b44b95d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f301091f_b8d72ee4",
         "filename": "src/enc/picture_csp_enc.c",
         "patchSetId": 2
