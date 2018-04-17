@@ -46,6 +46,30 @@
       "revId": "0dd4e1c758b2a19b252fa6584e37680022e38cdf",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "47d1d507_233f9c5a",
+        "filename": "src/dec/vp8_dec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 494,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-04-17T06:46:25Z",
+      "side": 1,
+      "message": "done",
+      "parentUuid": "7ba18b10_d4738fe6",
+      "range": {
+        "startLine": 494,
+        "startChar": 38,
+        "endLine": 494,
+        "endChar": 51
+      },
+      "revId": "0dd4e1c758b2a19b252fa6584e37680022e38cdf",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
