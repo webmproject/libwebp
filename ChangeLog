@@ -1,3 +1,10 @@
+0d5fad46 add WEBP_DSP_INIT / WEBP_DSP_INIT_FUNC
+c1cb86af fix 16b overflow in SSE2
+e577feb7 makefile.unix: add DEBUG flag for compiling w/ debug-symbol
+99be34b3 cwebp,get_disto: fix bpp output
+f5565ca8 cmake: Make sure we use near-lossless by default.
+d898dc14 fix bug in WebPImport565: alpha value was not set
+882784b0 update ChangeLog (tag: v1.0.0-rc2)
 2f930e08 Revert "Use proper targets for CMake."
 8165e8fb Use proper targets for CMake.
 3f157dd5 Remove some very hard TODOs.
@@ -5,7 +12,7 @@ cd758a17 {de,}mux/Makefile.am: add missing headers
 b892b8ba makefile.unix,dist: use ascii for text output
 64a57d05 add -version option to anim_dump,anim_diff and img2webp
 fc1b8e3a webp_js: fix webp_js demo html
-15aa48d9 update ChangeLog
+15aa48d9 update ChangeLog (tag: v1.0.0-rc1)
 e607dabc update AUTHORS
 38410c08 [CFI] Remove function pointer casts
 c57b2736 bump version to 1.0.0
