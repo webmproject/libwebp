@@ -51,10 +51,8 @@ set(WEBP_USE_THREAD ${Threads_FOUND})
 set(LT_OBJDIR ".libs/")
 
 # Only useful for vwebp, so useless for now.
-# find_package(OpenGL)
-# set(WEBP_HAVE_GL ${OPENGL_FOUND})
-# set(WEBP_DEP_INCLUDE_DIRS ${WEBP_DEP_INCLUDE_DIRS} ${OPENGL_INCLUDE_DIRS})
-# set(WEBP_DEP_LIBRARIES ${WEBP_DEP_LIBRARIES} ${OPENGL_LIBRARIES})
+find_package(OpenGL)
+set(WEBP_HAVE_GL ${OPENGL_FOUND})
 
 # Find the standard C math library.
 find_library(MATH_LIBRARY NAMES m)
