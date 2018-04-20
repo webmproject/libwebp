@@ -8,6 +8,7 @@ option(WEBP_BUILD_CWEBP "Build the cwebp command line tool." ON)
 option(WEBP_BUILD_DWEBP "Build the dwebp command line tool." ON)
 option(WEBP_BUILD_GIF2WEBP "Build the gif2webp conversion tool." ON)
 option(WEBP_BUILD_IMG2WEBP "Build the img2webp animation tool." ON)
+option(WEBP_BUILD_VWEBP "Build the vwebp viewer tool." ON)
 option(WEBP_BUILD_WEBPINFO "Build the webpinfo command line tool." ON)
 option(WEBP_BUILD_WEBP_JS "Emscripten build of webp.js." OFF)
 option(WEBP_NEAR_LOSSLESS "Enable near-lossless encoding" ON)
@@ -230,8 +231,8 @@ foreach(I_FILE RANGE ${WEBP_SIMD_FILES_TO_INCLUDE_RANGE})
 endforeach()
 
 # Build the executables if asked for.
-if(WEBP_BUILD_CWEBP OR WEBP_BUILD_DWEBP OR
-   WEBP_BUILD_GIF2WEBP OR WEBP_BUILD_IMG2WEBP OR WEBP_BUILD_WEBP_JS)
+if(WEBP_BUILD_CWEBP OR WEBP_BUILD_DWEBP OR WEBP_BUILD_GIF2WEBP OR
+   WEBP_BUILD_IMG2WEBP OR WEBP_BUILD_VWEBP OR WEBP_BUILD_WEBP_JS)
   # Example utility library.
   parse_Makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/examples "EXAMPLEUTIL_SRCS"
     "example_util_[^ ]*")
@@ -327,6 +328,22 @@ if(WEBP_BUILD_IMG2WEBP)
   target_link_libraries(img2webp exampleutil imagedec imageioutil webp webpmux)
   target_include_directories(img2webp PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src)
   install(TARGETS img2webp RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
+
+if(WEBP_BUILD_VWEBP)
+  # vwebp
+  find_package(GLUT)
+  if(GLUT_FOUND)
+    include_directories(${WEBP_DEP_IMG_INCLUDE_DIRS})
+    parse_Makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/examples "VWEBP_SRCS"
+      "vwebp")
+    add_executable(vwebp ${VWEBP_SRCS})
+    target_link_libraries(vwebp ${OPENGL_LIBRARIES} exampleutil GLUT::GLUT
+      imageioutil webp webpdemux)
+    target_include_directories(vwebp PRIVATE GLUT::GLUT
+      ${CMAKE_CURRENT_BINARY_DIR}/src ${OPENGL_INCLUDE_DIR})
+    install(TARGETS vwebp RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+  endif()
 endif()
 
 if (WEBP_BUILD_WEBPINFO)
