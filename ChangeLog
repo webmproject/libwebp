@@ -1,3 +1,6 @@
+8d510751 webp-container-spec: correct frame duration=0 note
+e6b2164e vwebp: Copy Chrome's behavior w/frame duration == 0
+d20b7707 update ChangeLog (tag: v1.0.0-rc3)
 0d5fad46 add WEBP_DSP_INIT / WEBP_DSP_INIT_FUNC
 c1cb86af fix 16b overflow in SSE2
 e577feb7 makefile.unix: add DEBUG flag for compiling w/ debug-symbol
