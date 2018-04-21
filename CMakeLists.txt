@@ -343,6 +343,12 @@ if(WEBP_BUILD_VWEBP)
     target_include_directories(vwebp PRIVATE GLUT::GLUT
       ${CMAKE_CURRENT_BINARY_DIR}/src ${OPENGL_INCLUDE_DIR})
     install(TARGETS vwebp RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+    if(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
+      check_c_compiler_flag("-Wno-deprecated-declarations" HAS_NO_DEPRECATED)
+      if(HAS_NO_DEPRECATED)
+        target_compile_options(vwebp PRIVATE "-Wno-deprecated-declarations")
+      endif()
+    endif()
   endif()
 endif()
 
