@@ -48,6 +48,7 @@ static void Help(void) {
   printf(" -mixed ............... use mixed lossy/lossless automatic mode\n");
   printf(" -v ................... verbose mode\n");
   printf(" -h ................... this help\n");
+  printf(" -version ............. print version number and exit\n");
   printf("\n");
 
   printf("Per-frame options (only used for subsequent images input):\n");
@@ -176,6 +177,14 @@ int main(int argc, const char* argv[]) {
         verbose = 1;
       } else if (!strcmp(argv[c], "-h") || !strcmp(argv[c], "-help")) {
         Help();
+        goto End;
+      } else if (!strcmp(argv[c], "-version")) {
+        const int enc_version = WebPGetEncoderVersion();
+        const int mux_version = WebPGetMuxVersion();
+        printf("WebP Encoder version: %d.%d.%d\nWebP Mux version: %d.%d.%d\n",
+               (enc_version >> 16) & 0xff, (enc_version >> 8) & 0xff,
+               enc_version & 0xff, (mux_version >> 16) & 0xff,
+               (mux_version >> 8) & 0xff, mux_version & 0xff);
         goto End;
       } else {
         continue;
