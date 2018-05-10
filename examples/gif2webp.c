@@ -478,7 +478,7 @@ int main(int argc, const char *argv[]) {
         stored_loop_count = 1;
         loop_count = 1;
       }
-    } else if (loop_count > 0) {
+    } else if (loop_count > 0 && loop_count < 65535) {
       // adapt GIF's semantic to WebP's (except in the infinite-loop case)
       loop_count += 1;
     }
