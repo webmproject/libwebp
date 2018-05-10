@@ -275,6 +275,7 @@ static int ReadAnimatedWebP(const char filename[],
     prev_frame_timestamp = timestamp;
   }
   ok = dump_ok;
+  if (ok) image->format = ANIM_WEBP;
 
  End:
   WebPAnimDecoderDelete(dec);
@@ -684,6 +685,7 @@ static int ReadAnimatedGIF(const char filename[], AnimatedImage* const image,
       }
     }
   }
+  image->format = ANIM_GIF;
   DGifCloseFile(gif, NULL);
   return 1;
 }
