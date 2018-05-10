@@ -143,8 +143,18 @@ static int CompareAnimatedImagePair(const AnimatedImage* const img1,
   if (!ok) return 0;  // These are fatal failures, can't proceed.
 
   if (is_multi_frame_image) {  // Checks relevant for multi-frame images only.
-    ok = CompareValues(img1->loop_count, img2->loop_count,
-                       "Loop count mismatch") && ok;
+    int max_loop_count_workaround = 0;
+    // Transcodes to webp increase the gif loop count by 1 for compatibility.
+    // When the gif has the maximum value the webp value will be off by one.
+    if ((img1->format == ANIM_GIF && img1->loop_count == 65536 &&
+         img2->format == ANIM_WEBP && img2->loop_count == 65535) ||
+        (img1->format == ANIM_WEBP && img1->loop_count == 65535 &&
+         img2->format == ANIM_GIF && img2->loop_count == 65536)) {
+      max_loop_count_workaround = 1;
+    }
+    ok = (max_loop_count_workaround ||
+          CompareValues(img1->loop_count, img2->loop_count,
+                        "Loop count mismatch")) && ok;
     ok = CompareBackgroundColor(img1->bgcolor, img2->bgcolor,
                                 premultiply) && ok;
   }
