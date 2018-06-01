@@ -11,6 +11,7 @@ option(WEBP_BUILD_IMG2WEBP "Build the img2webp animation tool." ON)
 option(WEBP_BUILD_VWEBP "Build the vwebp viewer tool." ON)
 option(WEBP_BUILD_WEBPINFO "Build the webpinfo command line tool." ON)
 option(WEBP_BUILD_WEBP_JS "Emscripten build of webp.js." OFF)
+option(WEBP_BUILD_ANIM_UTILS "Build animation utilities." ON)
 option(WEBP_NEAR_LOSSLESS "Enable near-lossless encoding" ON)
 option(WEBP_ENABLE_SWAP_16BIT_CSP "Enable byte swap for 16 bit colorspaces." OFF)
 
@@ -232,7 +233,7 @@ endforeach()
 
 # Build the executables if asked for.
 if(WEBP_BUILD_CWEBP OR WEBP_BUILD_DWEBP OR WEBP_BUILD_GIF2WEBP OR
-   WEBP_BUILD_IMG2WEBP OR WEBP_BUILD_VWEBP OR WEBP_BUILD_WEBP_JS)
+   WEBP_BUILD_IMG2WEBP OR WEBP_BUILD_VWEBP OR WEBP_BUILD_WEBP_JS OR WEBP_BUILD_ANIM_UTILS)
   # Example utility library.
   parse_Makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/examples "EXAMPLEUTIL_SRCS"
     "example_util_[^ ]*")
@@ -386,6 +387,28 @@ if(WEBP_BUILD_WEBP_JS)
   target_compile_definitions(webp_wasm PUBLIC EMSCRIPTEN WEBP_HAVE_SDL)
 
   target_compile_definitions(webpdspdecode PUBLIC EMSCRIPTEN)
+endif()
+
+if(WEBP_BUILD_ANIM_UTILS)
+  # anim_diff
+  include_directories(${WEBP_DEP_IMG_INCLUDE_DIRS} ${WEBP_DEP_GIF_INCLUDE_DIRS})
+  parse_Makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/examples "ANIM_DIFF_SRCS"
+    "anim_diff")
+  add_executable(anim_diff ${ANIM_DIFF_SRCS})
+  target_link_libraries(anim_diff exampleutil imagedec imageenc imageioutil webp webpmux webpdemux
+    ${WEBP_DEP_GIF_LIBRARIES})
+  target_include_directories(anim_diff PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src)
+  install(TARGETS anim_diff RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+  # anim_dump
+  include_directories(${WEBP_DEP_IMG_INCLUDE_DIRS} ${WEBP_DEP_GIF_INCLUDE_DIRS})
+  parse_Makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/examples "ANIM_DUMP_SRCS"
+    "anim_dump")
+  add_executable(anim_dump ${ANIM_DUMP_SRCS})
+  target_link_libraries(anim_dump exampleutil imagedec imageenc imageioutil webp webpmux webpdemux
+    ${WEBP_DEP_GIF_LIBRARIES})
+  target_include_directories(anim_dump PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src)
+  install(TARGETS anim_dump RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
 # Install the different headers and libraries.
