@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "207c70e0_4c5465e6",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 2
+      },
+      "lineNbr": 289,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-06-01T22:48:15Z",
+      "side": 1,
+      "message": "you\u0027ll want to disable the utils if gif support isn\u0027t detected.",
+      "revId": "5ca04f4f1a110a87c64674fedb696977bd7a19fa",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1fa910a9_357e7434",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 2
+      },
+      "lineNbr": 398,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-06-01T22:48:15Z",
+      "side": 1,
+      "message": "break this line after imagioutil to keep it under 80 characters",
+      "revId": "5ca04f4f1a110a87c64674fedb696977bd7a19fa",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b02f5229_aba43072",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 2
+      },
+      "lineNbr": 408,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-06-01T22:48:15Z",
+      "side": 1,
+      "message": "this one too",
+      "revId": "5ca04f4f1a110a87c64674fedb696977bd7a19fa",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
