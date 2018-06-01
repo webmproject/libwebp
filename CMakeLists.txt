@@ -4,6 +4,7 @@ project(WebP C)
 
 # Options for coder / decoder executables.
 option(WEBP_ENABLE_SIMD "Enable any SIMD optimization." ON)
+option(WEBP_BUILD_ANIM_UTILS "Build animation utilities." ON)
 option(WEBP_BUILD_CWEBP "Build the cwebp command line tool." ON)
 option(WEBP_BUILD_DWEBP "Build the dwebp command line tool." ON)
 option(WEBP_BUILD_GIF2WEBP "Build the gif2webp conversion tool." ON)
@@ -231,8 +232,9 @@ foreach(I_FILE RANGE ${WEBP_SIMD_FILES_TO_INCLUDE_RANGE})
 endforeach()
 
 # Build the executables if asked for.
-if(WEBP_BUILD_CWEBP OR WEBP_BUILD_DWEBP OR WEBP_BUILD_GIF2WEBP OR
-   WEBP_BUILD_IMG2WEBP OR WEBP_BUILD_VWEBP OR WEBP_BUILD_WEBP_JS)
+if(WEBP_BUILD_ANIM_UTILS OR WEBP_BUILD_CWEBP OR WEBP_BUILD_DWEBP OR
+   WEBP_BUILD_GIF2WEBP OR WEBP_BUILD_IMG2WEBP OR WEBP_BUILD_VWEBP OR
+   WEBP_BUILD_WEBP_JS)
   # Example utility library.
   parse_Makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/examples "EXAMPLEUTIL_SRCS"
     "example_util_[^ ]*")
@@ -386,6 +388,32 @@ if(WEBP_BUILD_WEBP_JS)
   target_compile_definitions(webp_wasm PUBLIC EMSCRIPTEN WEBP_HAVE_SDL)
 
   target_compile_definitions(webpdspdecode PUBLIC EMSCRIPTEN)
+endif()
+
+if(WEBP_BUILD_ANIM_UTILS AND NOT GIF_FOUND)
+  unset(WEBP_BUILD_ANIM_UTILS CACHE)
+endif()
+
+if(WEBP_BUILD_ANIM_UTILS)
+  # anim_diff
+  include_directories(${WEBP_DEP_IMG_INCLUDE_DIRS}
+    ${WEBP_DEP_GIF_INCLUDE_DIRS})
+  parse_Makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/examples "ANIM_DIFF_SRCS"
+    "anim_diff")
+  add_executable(anim_diff ${ANIM_DIFF_SRCS})
+  target_link_libraries(anim_diff exampleutil imagedec imageenc imageioutil
+    webp webpmux webpdemux ${WEBP_DEP_GIF_LIBRARIES})
+  target_include_directories(anim_diff PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src)
+
+  # anim_dump
+  include_directories(${WEBP_DEP_IMG_INCLUDE_DIRS}
+    ${WEBP_DEP_GIF_INCLUDE_DIRS})
+  parse_Makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/examples "ANIM_DUMP_SRCS"
+    "anim_dump")
+  add_executable(anim_dump ${ANIM_DUMP_SRCS})
+  target_link_libraries(anim_dump exampleutil imagedec imageenc imageioutil
+    webp webpmux webpdemux ${WEBP_DEP_GIF_LIBRARIES})
+  target_include_directories(anim_dump PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src)
 endif()
 
 # Install the different headers and libraries.
