@@ -329,7 +329,8 @@ if(WEBP_BUILD_IMG2WEBP)
   parse_Makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/examples "IMG2WEBP_SRCS"
     "img2webp")
   add_executable(img2webp ${IMG2WEBP_SRCS})
-  target_link_libraries(img2webp exampleutil imagedec imageioutil webp libwebpmux)
+  target_link_libraries(img2webp exampleutil imagedec imageioutil webp
+    libwebpmux)
   target_include_directories(img2webp PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src)
   install(TARGETS img2webp RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
@@ -356,7 +357,7 @@ if(WEBP_BUILD_VWEBP)
   endif()
 endif()
 
-if (WEBP_BUILD_WEBPINFO)
+if(WEBP_BUILD_WEBPINFO)
   # webpinfo
   include_directories(${WEBP_DEP_IMG_INCLUDE_DIRS})
   parse_Makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/examples "WEBPINFO_SRCS"
