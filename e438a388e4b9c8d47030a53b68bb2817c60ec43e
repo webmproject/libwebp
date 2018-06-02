@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ef67805f_bbcf955a",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 372,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2018-06-02T21:58:14Z",
+      "side": 1,
+      "message": "just remove this commented line if it\u0027s not needed",
+      "range": {
+        "startLine": 372,
+        "startChar": 4,
+        "endLine": 372,
+        "endChar": 23
+      },
+      "revId": "e438a388e4b9c8d47030a53b68bb2817c60ec43e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
