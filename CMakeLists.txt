@@ -356,7 +356,7 @@ if(WEBP_BUILD_VWEBP)
   endif()
 endif()
 
-if (WEBP_BUILD_WEBPINFO)
+if(WEBP_BUILD_WEBPINFO)
   # webpinfo
   include_directories(${WEBP_DEP_IMG_INCLUDE_DIRS})
   parse_Makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/examples "WEBPINFO_SRCS"
