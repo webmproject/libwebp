@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c28fc4d5_c7b5b9e0",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 4
+      },
+      "lineNbr": 407,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-06-02T02:24:35Z",
+      "side": 1,
+      "message": "configure doesn\u0027t install these currently; I\u0027ll remove it for now to keep it in sync.",
+      "revId": "5816b36829a591eb236a3c5552f1d970fb9b87d9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
