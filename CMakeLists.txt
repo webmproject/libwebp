@@ -11,6 +11,7 @@ option(WEBP_BUILD_GIF2WEBP "Build the gif2webp conversion tool." ON)
 option(WEBP_BUILD_IMG2WEBP "Build the img2webp animation tool." ON)
 option(WEBP_BUILD_VWEBP "Build the vwebp viewer tool." ON)
 option(WEBP_BUILD_WEBPINFO "Build the webpinfo command line tool." ON)
+option(WEBP_BUILD_WEBPMUX "Build the webpmux command line tool." ON)
 option(WEBP_BUILD_WEBP_JS "Emscripten build of webp.js." OFF)
 option(WEBP_NEAR_LOSSLESS "Enable near-lossless encoding" ON)
 option(WEBP_ENABLE_SWAP_16BIT_CSP "Enable byte swap for 16 bit colorspaces." OFF)
@@ -294,19 +295,20 @@ endif()
 if(WEBP_BUILD_GIF2WEBP OR WEBP_BUILD_IMG2WEBP)
   parse_Makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/src/mux "WEBP_MUX_SRCS"
     "")
-  add_library(webpmux ${WEBP_MUX_SRCS})
-  target_link_libraries(webpmux webp)
-  target_include_directories(webpmux
+  add_library(libwebpmux ${WEBP_MUX_SRCS})
+  target_link_libraries(libwebpmux webp)
+  target_include_directories(libwebpmux
     PRIVATE ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
   parse_version(mux/Makefile.am webpmux WEBP_MUX_SOVERSION)
-  set_target_properties(webpmux PROPERTIES VERSION ${PACKAGE_VERSION}
+  set_target_properties(libwebpmux PROPERTIES VERSION ${PACKAGE_VERSION}
     SOVERSION ${WEBP_MUX_SOVERSION})
-  set_target_properties(webpmux PROPERTIES PUBLIC_HEADER
+  set_target_properties(libwebpmux PROPERTIES PUBLIC_HEADER
 "${CMAKE_CURRENT_SOURCE_DIR}/src/webp/mux.h;\
 ${CMAKE_CURRENT_SOURCE_DIR}/src/webp/mux_types.h;\
 ${CMAKE_CURRENT_SOURCE_DIR}/src/webp/types.h;"
   )
-  list(APPEND INSTALLED_LIBRARIES webpmux)
+  set_target_properties(libwebpmux PROPERTIES OUTPUT_NAME webpmux)
+  list(APPEND INSTALLED_LIBRARIES libwebpmux)
 endif()
 
 if(WEBP_BUILD_GIF2WEBP)
@@ -315,7 +317,7 @@ if(WEBP_BUILD_GIF2WEBP)
   parse_Makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/examples "GIF2WEBP_SRCS"
     "gif2webp")
   add_executable(gif2webp ${GIF2WEBP_SRCS})
-  target_link_libraries(gif2webp exampleutil imageioutil webp webpmux
+  target_link_libraries(gif2webp exampleutil imageioutil webp libwebpmux
     ${WEBP_DEP_GIF_LIBRARIES})
   target_include_directories(gif2webp PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src)
   install(TARGETS gif2webp RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
@@ -327,7 +329,7 @@ if(WEBP_BUILD_IMG2WEBP)
   parse_Makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/examples "IMG2WEBP_SRCS"
     "img2webp")
   add_executable(img2webp ${IMG2WEBP_SRCS})
-  target_link_libraries(img2webp exampleutil imagedec imageioutil webp webpmux)
+  target_link_libraries(img2webp exampleutil imagedec imageioutil webp libwebpmux)
   target_include_directories(img2webp PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src)
   install(TARGETS img2webp RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
@@ -363,6 +365,16 @@ if (WEBP_BUILD_WEBPINFO)
   target_link_libraries(webpinfo exampleutil imageioutil)
   target_include_directories(webpinfo PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src)
   install(TARGETS webpinfo RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
+
+if(WEBP_BUILD_WEBPMUX)
+  # webpmux
+  parse_Makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/examples "WEBPMUX_SRCS"
+    "webpmux")
+  add_executable(webpmux ${WEBPMUX_SRCS})
+  target_link_libraries(webpmux exampleutil imageioutil libwebpmux webp)
+  target_include_directories(webpmux PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src)
+  install(TARGETS webpmux RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
 if(WEBP_BUILD_WEBP_JS)
@@ -402,7 +414,7 @@ if(WEBP_BUILD_ANIM_UTILS)
     "anim_diff")
   add_executable(anim_diff ${ANIM_DIFF_SRCS})
   target_link_libraries(anim_diff exampleutil imagedec imageenc imageioutil
-    webp webpmux webpdemux ${WEBP_DEP_GIF_LIBRARIES})
+    webp libwebpmux webpdemux ${WEBP_DEP_GIF_LIBRARIES})
   target_include_directories(anim_diff PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src)
 
   # anim_dump
@@ -412,7 +424,7 @@ if(WEBP_BUILD_ANIM_UTILS)
     "anim_dump")
   add_executable(anim_dump ${ANIM_DUMP_SRCS})
   target_link_libraries(anim_dump exampleutil imagedec imageenc imageioutil
-    webp webpmux webpdemux ${WEBP_DEP_GIF_LIBRARIES})
+    webp libwebpmux webpdemux ${WEBP_DEP_GIF_LIBRARIES})
   target_include_directories(anim_dump PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src)
 endif()
 
