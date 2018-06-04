@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "e9805957_19657e90",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 372,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-06-04T22:45:29Z",
+      "side": 1,
+      "message": "\u003e just remove this commented line if it\u0027s not needed\n\noops, good catch. I thought it would have been after adding imageioutil, but maybe I was confusing that one with imageenc/dec.",
+      "parentUuid": "ef67805f_bbcf955a",
+      "range": {
+        "startLine": 372,
+        "startChar": 4,
+        "endLine": 372,
+        "endChar": 23
+      },
+      "revId": "e438a388e4b9c8d47030a53b68bb2817c60ec43e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "111239c9_100fa45b",
         "filename": "CMakeLists.txt",
         "patchSetId": 1
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "b10afdcb_d7c6b0e4",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 418,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-06-04T22:45:29Z",
+      "side": 1,
+      "message": "\u003e remove webpdemux, it\u0027s a binary.\n\nwebpdemux is defined at line 184 with add_library(). Some normalization of the names might make sense after this commit. I don\u0027t believe either one of these needs the muxer either. That can be a separate commit.",
+      "parentUuid": "111239c9_100fa45b",
+      "range": {
+        "startLine": 418,
+        "startChar": 20,
+        "endLine": 418,
+        "endChar": 29
+      },
+      "revId": "e438a388e4b9c8d47030a53b68bb2817c60ec43e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "11e02bba_c1a0a977",
         "filename": "CMakeLists.txt",
         "patchSetId": 1
@@ -68,6 +116,30 @@
       "revId": "e438a388e4b9c8d47030a53b68bb2817c60ec43e",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "12f91d31_12d984c5",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 428,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-06-04T22:45:29Z",
+      "side": 1,
+      "message": "\u003e remove webpdemux\n\nsame as above",
+      "parentUuid": "11e02bba_c1a0a977",
+      "range": {
+        "startLine": 428,
+        "startChar": 20,
+        "endLine": 428,
+        "endChar": 29
+      },
+      "revId": "e438a388e4b9c8d47030a53b68bb2817c60ec43e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
