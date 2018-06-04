@@ -1,5 +1,5 @@
 man_MANS = cwebp.1 dwebp.1
-if WANT_MUX
+if BUILD_MUX
   man_MANS += webpmux.1
 endif
 if BUILD_GIF2WEBP

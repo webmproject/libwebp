@@ -1,7 +1,7 @@
 AM_CPPFLAGS += -I$(top_builddir)/src -I$(top_srcdir)/src
 
 bin_PROGRAMS =
-if WANT_DEMUX
+if BUILD_DEMUX
   bin_PROGRAMS += dwebp cwebp
 endif
 if BUILD_ANIMDIFF
@@ -13,7 +13,7 @@ endif
 if BUILD_IMG2WEBP
   bin_PROGRAMS += img2webp
 endif
-if WANT_MUX
+if BUILD_MUX
   bin_PROGRAMS += webpmux
 endif
 if BUILD_VWEBP
