@@ -174,7 +174,7 @@ LOCAL_SRC_FILES := \
     $(utils_dec_srcs) \
 
 LOCAL_CFLAGS := $(WEBP_CFLAGS)
-LOCAL_C_INCLUDES += $(LOCAL_PATH)/src
+LOCAL_EXPORT_C_INCLUDES += $(LOCAL_PATH)/src
 
 # prefer arm over thumb mode for performance gains
 LOCAL_ARM_MODE := arm
@@ -208,7 +208,7 @@ LOCAL_SRC_FILES := \
     $(utils_enc_srcs) \
 
 LOCAL_CFLAGS := $(WEBP_CFLAGS)
-LOCAL_C_INCLUDES += $(LOCAL_PATH)/src
+LOCAL_EXPORT_C_INCLUDES += $(LOCAL_PATH)/src
 
 # prefer arm over thumb mode for performance gains
 LOCAL_ARM_MODE := arm
@@ -231,7 +231,7 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := $(demux_srcs)
 
 LOCAL_CFLAGS := $(WEBP_CFLAGS)
-LOCAL_C_INCLUDES += $(LOCAL_PATH)/src
+LOCAL_EXPORT_C_INCLUDES += $(LOCAL_PATH)/src
 
 # prefer arm over thumb mode for performance gains
 LOCAL_ARM_MODE := arm
@@ -254,7 +254,7 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := $(mux_srcs)
 
 LOCAL_CFLAGS := $(WEBP_CFLAGS)
-LOCAL_C_INCLUDES += $(LOCAL_PATH)/src
+LOCAL_EXPORT_C_INCLUDES += $(LOCAL_PATH)/src
 
 # prefer arm over thumb mode for performance gains
 LOCAL_ARM_MODE := arm
