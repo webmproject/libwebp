@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0bc1bce5_b71cbd2a",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-06-13T23:48:57Z",
+      "side": 1,
+      "message": "385 became the canonical bug once 384 was deleted. I updated it to have the commit ref.",
+      "revId": "569001f19fc81fcb5ab358f587a54c62e7c4665c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
