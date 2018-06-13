@@ -283,10 +283,8 @@ static void RestoreContext(const MBContext* context, VP8Decoder* const dec,
 
 static VP8StatusCode IDecError(WebPIDecoder* const idec, VP8StatusCode error) {
   if (idec->state_ == STATE_VP8_DATA) {
-    VP8Io* const io = &idec->io_;
-    if (io->teardown != NULL) {
-      io->teardown(io);
-    }
+    // Synchronize the thread, clean-up and check for errors.
+    VP8ExitCritical((VP8Decoder*)idec->dec_, &idec->io_);
   }
   idec->state_ = STATE_ERROR;
   return error;
