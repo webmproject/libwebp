@@ -187,7 +187,7 @@ WebPMux* WebPMuxCreateInternal(const WebPData* bitstream, int copy_data,
   size = bitstream->size;
 
   if (data == NULL) return NULL;
-  if (size < RIFF_HEADER_SIZE) return NULL;
+  if (size < RIFF_HEADER_SIZE + CHUNK_HEADER_SIZE) return NULL;
   if (GetLE32(data + 0) != MKFOURCC('R', 'I', 'F', 'F') ||
       GetLE32(data + CHUNK_HEADER_SIZE) != MKFOURCC('W', 'E', 'B', 'P')) {
     return NULL;
@@ -195,8 +195,6 @@ WebPMux* WebPMuxCreateInternal(const WebPData* bitstream, int copy_data,
 
   mux = WebPMuxNew();
   if (mux == NULL) return NULL;
-
-  if (size < RIFF_HEADER_SIZE + TAG_SIZE) goto Err;
 
   tag = GetLE32(data + RIFF_HEADER_SIZE);
   if (tag != kChunks[IDX_VP8].tag &&
@@ -206,12 +204,11 @@ WebPMux* WebPMuxCreateInternal(const WebPData* bitstream, int copy_data,
   }
 
   riff_size = SizeWithPadding(GetLE32(data + TAG_SIZE));
-  if (riff_size > MAX_CHUNK_PAYLOAD || riff_size > size) {
-    goto Err;
-  } else {
-    if (riff_size < size) {  // Redundant data after last chunk.
-      size = riff_size;  // To make sure we don't read any data beyond mux_size.
-    }
+  if (riff_size < CHUNK_HEADER_SIZE) goto Err;
+  if (riff_size > MAX_CHUNK_PAYLOAD || riff_size > size) goto Err;
+  // There's no point in reading past the end of the RIFF chunk.
+  if (size > riff_size + CHUNK_HEADER_SIZE) {
+    size = riff_size + CHUNK_HEADER_SIZE;
   }
 
   end = data + size;
