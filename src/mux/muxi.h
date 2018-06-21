@@ -14,6 +14,7 @@
 #ifndef WEBP_MUX_MUXI_H_
 #define WEBP_MUX_MUXI_H_
 
+#include <assert.h>
 #include <stdlib.h>
 #include "src/dec/vp8i_dec.h"
 #include "src/dec/vp8li_dec.h"
@@ -143,13 +144,13 @@ void ChunkListDelete(WebPChunk** const chunk_list);
 
 // Returns size of the chunk including chunk header and padding byte (if any).
 static WEBP_INLINE size_t SizeWithPadding(size_t chunk_size) {
+  assert(chunk_size <= MAX_CHUNK_PAYLOAD);
   return CHUNK_HEADER_SIZE + ((chunk_size + 1) & ~1U);
 }
 
 // Size of a chunk including header and padding.
 static WEBP_INLINE size_t ChunkDiskSize(const WebPChunk* chunk) {
   const size_t data_size = chunk->data_.size;
-  assert(data_size < MAX_CHUNK_PAYLOAD);
   return SizeWithPadding(data_size);
 }
 
