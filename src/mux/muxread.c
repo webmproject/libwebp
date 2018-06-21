@@ -59,6 +59,7 @@ static WebPMuxError ChunkVerifyAndAssign(WebPChunk* chunk,
   // Sanity checks.
   if (data_size < CHUNK_HEADER_SIZE) return WEBP_MUX_NOT_ENOUGH_DATA;
   chunk_size = GetLE32(data + TAG_SIZE);
+  if (chunk_size > MAX_CHUNK_PAYLOAD) return WEBP_MUX_BAD_DATA;
 
   {
     const size_t chunk_disk_size = SizeWithPadding(chunk_size);
@@ -203,9 +204,14 @@ WebPMux* WebPMuxCreateInternal(const WebPData* bitstream, int copy_data,
     goto Err;  // First chunk should be VP8, VP8L or VP8X.
   }
 
-  riff_size = SizeWithPadding(GetLE32(data + TAG_SIZE));
+  riff_size = GetLE32(data + TAG_SIZE);
+  if (riff_size > MAX_CHUNK_PAYLOAD) goto Err;
+
+  // Note this padding is historical and differs from demux.c which does not
+  // pad the file size.
+  riff_size = SizeWithPadding(riff_size);
   if (riff_size < CHUNK_HEADER_SIZE) goto Err;
-  if (riff_size > MAX_CHUNK_PAYLOAD || riff_size > size) goto Err;
+  if (riff_size > size) goto Err;
   // There's no point in reading past the end of the RIFF chunk.
   if (size > riff_size + CHUNK_HEADER_SIZE) {
     size = riff_size + CHUNK_HEADER_SIZE;
