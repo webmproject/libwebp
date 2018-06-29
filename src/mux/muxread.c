@@ -138,6 +138,7 @@ static int MuxImageParse(const WebPChunk* const chunk, int copy_data,
         wpi->is_partial_ = 1;  // Waiting for a VP8 chunk.
         break;
       case WEBP_CHUNK_IMAGE:
+        if (wpi->img_ != NULL) goto Fail;  // Only 1 image chunk allowed.
         if (ChunkSetNth(&subchunk, &wpi->img_, 1) != WEBP_MUX_OK) goto Fail;
         if (!MuxImageFinalize(wpi)) goto Fail;
         wpi->is_partial_ = 0;  // wpi is completely filled.
