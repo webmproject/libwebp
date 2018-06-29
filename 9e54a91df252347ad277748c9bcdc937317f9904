@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9eb32cb8_10e609d9",
+        "filename": "src/mux/muxread.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-06-29T08:16:20Z",
+      "side": 1,
+      "message": "demux.c treats this a bit differently, it\u0027s tolerant of a mix. A more compatible change would be to delete wpi-\u003eimg_ as a list on failure.",
+      "revId": "9e54a91df252347ad277748c9bcdc937317f9904",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
