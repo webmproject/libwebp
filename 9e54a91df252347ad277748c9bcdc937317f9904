@@ -16,6 +16,24 @@
       "revId": "9e54a91df252347ad277748c9bcdc937317f9904",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1c0fb557_49f74d68",
+        "filename": "src/mux/muxread.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-06-29T16:43:36Z",
+      "side": 1,
+      "message": "\u003e demux.c treats this a bit differently, it\u0027s tolerant of a mix. A more compatible change would be to delete wpi-\u003eimg_ as a list on failure.\n\nactually this is consistent, the check in demux is a level up:\n\nhttps://chromium.googlesource.com/webm/libwebp/+/1.0.0/src/demux/demux.c#461",
+      "parentUuid": "9eb32cb8_10e609d9",
+      "revId": "9e54a91df252347ad277748c9bcdc937317f9904",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
