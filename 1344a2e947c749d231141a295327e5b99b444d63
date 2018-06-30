@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ebe4fd1b_28b28806",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-06-30T06:09:06Z",
+      "side": 1,
+      "message": "Note BUG\u003doss-fuzz:NNN will work better in future commits.",
+      "revId": "1344a2e947c749d231141a295327e5b99b444d63",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
