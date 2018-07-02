@@ -489,6 +489,7 @@ static VP8StatusCode DecodeRemaining(WebPIDecoder* const idec) {
   }
   // Synchronize the thread and check for errors.
   if (!VP8ExitCritical(dec, io)) {
+    idec->state_ = STATE_ERROR;  // prevent re-entry in IDecError
     return IDecError(idec, VP8_STATUS_USER_ABORT);
   }
   dec->ready_ = 0;
