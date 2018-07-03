@@ -264,6 +264,7 @@ WebPMux* WebPMuxCreateInternal(const WebPData* bitstream, int copy_data,
         chunk_list = MuxGetChunkListFromId(mux, id);  // List to add this chunk.
         if (ChunkSetNth(&chunk, chunk_list, 0) != WEBP_MUX_OK) goto Err;
         if (id == WEBP_CHUNK_VP8X) {  // grab global specs
+          if (data_size < CHUNK_HEADER_SIZE + VP8X_CHUNK_SIZE) goto Err;
           mux->canvas_width_ = GetLE24(data + 12) + 1;
           mux->canvas_height_ = GetLE24(data + 15) + 1;
         }
