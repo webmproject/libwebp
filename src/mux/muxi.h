@@ -127,11 +127,14 @@ WebPChunk* ChunkSearchList(WebPChunk* first, uint32_t nth, uint32_t tag);
 WebPMuxError ChunkAssignData(WebPChunk* chunk, const WebPData* const data,
                              int copy_data, uint32_t tag);
 
-// Sets 'chunk' at nth position in the 'chunk_list'.
-// nth = 0 has the special meaning "last of the list".
+// Sets 'chunk' as the only element in 'chunk_list' if it is empty.
 // On success ownership is transferred from 'chunk' to the 'chunk_list'.
-WebPMuxError ChunkSetNth(WebPChunk* chunk, WebPChunk** chunk_list,
-                         uint32_t nth);
+WebPMuxError ChunkSetHead(WebPChunk* chunk, WebPChunk** chunk_list);
+// Sets 'chunk' at last position in the 'chunk_list'.
+// On success ownership is transferred from 'chunk' to the 'chunk_list'.
+// *chunk_list also points towards the last valid element of the initial
+// *chunk_list.
+WebPMuxError ChunkAppend(WebPChunk* chunk, WebPChunk*** chunk_list);
 
 // Releases chunk and returns chunk->next_.
 WebPChunk* ChunkRelease(WebPChunk* const chunk);
