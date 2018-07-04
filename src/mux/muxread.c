@@ -390,6 +390,10 @@ static WebPMuxError SynthesizeBitstream(const WebPMuxImage* const wpi,
                                         WebPData* const bitstream) {
   uint8_t* dst;
 
+  // There should be at most one alpha_ chunk and exactly one img_ chunk.
+  assert(wpi->alpha_ == NULL || wpi->alpha_->next_ == NULL);
+  assert(wpi->img_ != NULL && wpi->img_->next_ == NULL);
+
   // Allocate data.
   const int need_vp8x = (wpi->alpha_ != NULL);
   const size_t vp8x_size = need_vp8x ? CHUNK_HEADER_SIZE + VP8X_CHUNK_SIZE : 0;
