@@ -129,12 +129,12 @@ WebPMuxError ChunkAssignData(WebPChunk* chunk, const WebPData* const data,
 
 // Sets 'chunk' as the only element in 'chunk_list' if it is empty.
 // On success ownership is transferred from 'chunk' to the 'chunk_list'.
-WebPMuxError ChunkSetHead(WebPChunk* chunk, WebPChunk** chunk_list);
+WebPMuxError ChunkSetHead(WebPChunk* const chunk, WebPChunk** const chunk_list);
 // Sets 'chunk' at last position in the 'chunk_list'.
 // On success ownership is transferred from 'chunk' to the 'chunk_list'.
 // *chunk_list also points towards the last valid element of the initial
 // *chunk_list.
-WebPMuxError ChunkAppend(WebPChunk* chunk, WebPChunk*** chunk_list);
+WebPMuxError ChunkAppend(WebPChunk* const chunk, WebPChunk*** const chunk_list);
 
 // Releases chunk and returns chunk->next_.
 WebPChunk* ChunkRelease(WebPChunk* const chunk);
