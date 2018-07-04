@@ -227,9 +227,11 @@ void MuxImageInit(WebPMuxImage* const wpi) {
 WebPMuxImage* MuxImageRelease(WebPMuxImage* const wpi) {
   WebPMuxImage* next;
   if (wpi == NULL) return NULL;
-  ChunkDelete(wpi->header_);
-  ChunkDelete(wpi->alpha_);
-  ChunkDelete(wpi->img_);
+  // There should be at most one chunk of header_, alpha_, img_ but we call
+  // ChunkListDelete to be safe
+  ChunkListDelete(&wpi->header_);
+  ChunkListDelete(&wpi->alpha_);
+  ChunkListDelete(&wpi->img_);
   ChunkListDelete(&wpi->unknown_);
 
   next = wpi->next_;
