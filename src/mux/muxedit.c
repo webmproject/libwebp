@@ -266,14 +266,14 @@ WebPMuxError WebPMuxPushFrame(WebPMux* mux, const WebPMuxFrameInfo* info,
                               int copy_data) {
   WebPMuxImage wpi;
   WebPMuxError err;
-  const WebPData* const bitstream = &info->bitstream;
 
   // Sanity checks.
   if (mux == NULL || info == NULL) return WEBP_MUX_INVALID_ARGUMENT;
 
   if (info->id != WEBP_CHUNK_ANMF) return WEBP_MUX_INVALID_ARGUMENT;
 
-  if (bitstream->bytes == NULL || bitstream->size > MAX_CHUNK_PAYLOAD) {
+  if (info->bitstream.bytes == NULL ||
+      info->bitstream.size > MAX_CHUNK_PAYLOAD) {
     return WEBP_MUX_INVALID_ARGUMENT;
   }
 
@@ -287,7 +287,7 @@ WebPMuxError WebPMuxPushFrame(WebPMux* mux, const WebPMuxFrameInfo* info,
   }
 
   MuxImageInit(&wpi);
-  err = SetAlphaAndImageChunks(bitstream, copy_data, &wpi);
+  err = SetAlphaAndImageChunks(&info->bitstream, copy_data, &wpi);
   if (err != WEBP_MUX_OK) goto Err;
   assert(wpi.img_ != NULL);  // As SetAlphaAndImageChunks() was successful.
 

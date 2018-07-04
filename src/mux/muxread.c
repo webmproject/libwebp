@@ -400,6 +400,10 @@ static WebPMuxError SynthesizeBitstream(const WebPMuxImage* const wpi,
   uint8_t* const data = (uint8_t*)WebPSafeMalloc(1ULL, size);
   if (data == NULL) return WEBP_MUX_MEMORY_ERROR;
 
+  // There should be at most one alpha_ chunk and exactly one img_ chunk.
+  assert(wpi->alpha_ == NULL || wpi->alpha_->next_ == NULL);
+  assert(wpi->img_ != NULL && wpi->img_->next_ == NULL);
+
   // Main RIFF header.
   dst = MuxEmitRiffHeader(data, size);
 
