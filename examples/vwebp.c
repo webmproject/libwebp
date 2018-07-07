@@ -286,7 +286,7 @@ static void PrintString(const char* const text) {
 }
 
 static float GetColorf(uint32_t color, int shift) {
-  return (color >> shift) / 255.f;
+  return ((color >> shift) & 0xff) / 255.f;
 }
 
 static void DrawCheckerBoard(void) {
