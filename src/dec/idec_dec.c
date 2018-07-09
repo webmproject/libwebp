@@ -449,7 +449,10 @@ static VP8StatusCode DecodeRemaining(WebPIDecoder* const idec) {
   VP8Decoder* const dec = (VP8Decoder*)idec->dec_;
   VP8Io* const io = &idec->io_;
 
-  assert(dec->ready_);
+  // Make sure partition #0 has been read before, to set dec to ready_.
+  if (!dec->ready_) {
+    return IDecError(idec, VP8_STATUS_BITSTREAM_ERROR);
+  }
   for (; dec->mb_y_ < dec->mb_h_; ++dec->mb_y_) {
     if (idec->last_mb_y_ != dec->mb_y_) {
       if (!VP8ParseIntraModeRow(&dec->br_, dec)) {
@@ -570,6 +573,10 @@ static VP8StatusCode IDecode(WebPIDecoder* idec) {
     status = DecodePartition0(idec);
   }
   if (idec->state_ == STATE_VP8_DATA) {
+    const VP8Decoder* const dec = (VP8Decoder*)idec->dec_;
+    if (dec == NULL) {
+      return VP8_STATUS_SUSPENDED;  // can't continue if we have no decoder.
+    }
     status = DecodeRemaining(idec);
   }
   if (idec->state_ == STATE_VP8L_HEADER) {
