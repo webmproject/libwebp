@@ -920,6 +920,7 @@ static WEBP_INLINE void CopyBlock8b(uint8_t* const dst, int dist, int length) {
   const uint8_t* src = dst - dist;
   if (length >= 8) {
     uint32_t pattern = 0;
+    printf("GO! %d dist=%d\n", length, dist);
     switch (dist) {
       case 1:
         pattern = src[0];
@@ -933,7 +934,11 @@ static WEBP_INLINE void CopyBlock8b(uint8_t* const dst, int dist, int length) {
 #endif
         break;
       case 2:
+#if 1// !defined(WORDS_BIGENDIAN)
         memcpy(&pattern, src, sizeof(uint16_t));
+#else
+        pattern = ((uint32_t)src[0] << 8) | src[1];
+#endif
 #if defined(__arm__) || defined(_M_ARM)
         pattern |= pattern << 16;
 #elif defined(WEBP_USE_MIPS_DSP_R2)
