@@ -617,6 +617,7 @@ static int BackwardReferencesHashChainDistanceOnly(
                                   cost_manager->costs_, dist_array);
 
     // If we are dealing with a non-literal.
+    if (offset == 2) { len = 1; offset = 1; }  // BUGFIX (#393)
     if (len >= 2) {
       if (offset != offset_prev) {
         const int code = VP8LDistanceToPlaneCode(xsize, offset);

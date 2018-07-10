@@ -501,6 +501,7 @@ static int BackwardReferencesLz77(int xsize, int ysize,
     }
     // Go with literal or backward reference.
     assert(len > 0);
+    if (offset == 2) len = 1;   // BUGFIX (#393)
     if (len == 1) {
       AddSingleLiteral(argb[i], use_color_cache, &hashers, refs);
     } else {
