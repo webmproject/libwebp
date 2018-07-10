@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3ba20a38_b95f7b65",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-07-10T23:25:10Z",
+      "side": 1,
+      "message": "try to remember to use BUG\u003d..., this makes the fixes easier to track",
+      "revId": "5f0f5c07c460c286c8da25f986e1b152079a79b8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
