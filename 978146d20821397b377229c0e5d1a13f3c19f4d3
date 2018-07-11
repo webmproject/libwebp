@@ -16,6 +16,24 @@
       "revId": "978146d20821397b377229c0e5d1a13f3c19f4d3",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f733ef27_f6134752",
+        "filename": "src/dsp/rescaler_mips_dsp_r2.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 300,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2018-07-11T22:35:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "04ec0719_4601dacc",
+      "revId": "978146d20821397b377229c0e5d1a13f3c19f4d3",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
