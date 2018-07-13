@@ -1576,7 +1576,6 @@ int VP8LDecodeAlphaHeader(ALPHDecoder* const alph_dec,
   if (dec == NULL) return 0;
 
   assert(alph_dec != NULL);
-  alph_dec->vp8l_dec_ = dec;
 
   dec->width_ = alph_dec->width_;
   dec->height_ = alph_dec->height_;
@@ -1608,11 +1607,12 @@ int VP8LDecodeAlphaHeader(ALPHDecoder* const alph_dec,
 
   if (!ok) goto Err;
 
+  // Only set here, once we are sure it is valid (to avoid thread races).
+  alph_dec->vp8l_dec_ = dec;
   return 1;
 
  Err:
-  VP8LDelete(alph_dec->vp8l_dec_);
-  alph_dec->vp8l_dec_ = NULL;
+  VP8LDelete(dec);
   return 0;
 }
 
