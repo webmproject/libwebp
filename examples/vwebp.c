@@ -408,9 +408,9 @@ static void StartDisplay(void) {
   glutKeyboardFunc(HandleKey);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glEnable(GL_BLEND);
-  glClearColor(GetColorf(kParams.bg_color, 0),
+  glClearColor(GetColorf(kParams.bg_color, 16),  // BGRA from spec
                GetColorf(kParams.bg_color, 8),
-               GetColorf(kParams.bg_color, 16),
+               GetColorf(kParams.bg_color, 0),
                GetColorf(kParams.bg_color, 24));
   glClear(GL_COLOR_BUFFER_BIT);
   DrawCheckerBoard();
