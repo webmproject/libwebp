@@ -473,6 +473,12 @@ static VP8StatusCode DecodeRemaining(WebPIDecoder* const idec) {
             MemDataSize(&idec->mem_) > MAX_MB_SIZE) {
           return IDecError(idec, VP8_STATUS_BITSTREAM_ERROR);
         }
+        // Synchronize the threads.
+        if (dec->mt_method_ > 0) {
+          if (!WebPGetWorkerInterface()->Sync(&dec->worker_)) {
+            return IDecError(idec, VP8_STATUS_BITSTREAM_ERROR);
+          }
+        }
         RestoreContext(&context, dec, token_br);
         return VP8_STATUS_SUSPENDED;
       }
