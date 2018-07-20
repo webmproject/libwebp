@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a12932e8_f6ed3661",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-07-20T23:55:58Z",
+      "side": 1,
+      "message": "try to keep line length \u003c\u003d 80 chars (72 is often suggested):\n\nhttps://git-scm.com/book/en/v2/Distributed-Git-Contributing-to-a-Project",
+      "revId": "4649b3c422b59c2413d3582d41b5de1e164599be",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
