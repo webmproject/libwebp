@@ -334,6 +334,24 @@ static void DrawBackground(void) {
   }
 }
 
+// Draw background in a scissored rectangle.
+static void DrawBackgroundScissored(int window_x, int window_y, int frame_w,
+                                    int frame_h) {
+  // Only update the requested area, not the whole canvas.
+  window_x = window_x * kParams.viewport_width / kParams.canvas_width;
+  window_y = window_y * kParams.viewport_height / kParams.canvas_height;
+  frame_w = frame_w * kParams.viewport_width / kParams.canvas_width;
+  frame_h = frame_h * kParams.viewport_height / kParams.canvas_height;
+
+  // glScissor() takes window coordinates (0,0 at bottom left).
+  window_y = kParams.viewport_height - window_y - frame_h;
+
+  glEnable(GL_SCISSOR_TEST);
+  glScissor(window_x, window_y, frame_w, frame_h);
+  DrawBackground();
+  glDisable(GL_SCISSOR_TEST);
+}
+
 static void HandleDisplay(void) {
   const WebPDecBuffer* const pic = kParams.pic;
   const WebPIterator* const curr = &kParams.curr_frame;
@@ -351,36 +369,20 @@ static void HandleDisplay(void) {
 
   if (kParams.only_deltas) {
     DrawBackground();
-  } else if (prev->dispose_method == WEBP_MUX_DISPOSE_BACKGROUND ||
-      curr->blend_method == WEBP_MUX_NO_BLEND) {
-    // glScissor() takes window coordinates (0,0 at bottom left).
-    int window_x, window_y;
-    int frame_w, frame_h;
+  } else {
+    // The rectangle of the previous frame might be different than the current
+    // frame, so we may need to DrawBackgroundScissored for both.
     if (prev->dispose_method == WEBP_MUX_DISPOSE_BACKGROUND) {
       // Clear the previous frame rectangle.
-      window_x = prev->x_offset;
-      window_y = kParams.canvas_height - prev->y_offset - prev->height;
-      frame_w = prev->width;
-      frame_h = prev->height;
-    } else {  // curr->blend_method == WEBP_MUX_NO_BLEND.
-      // We simulate no-blending behavior by first clearing the current frame
-      // rectangle (to a checker-board) and then alpha-blending against it.
-      window_x = curr->x_offset;
-      window_y = kParams.canvas_height - curr->y_offset - curr->height;
-      frame_w = curr->width;
-      frame_h = curr->height;
+      DrawBackgroundScissored(prev->x_offset, prev->y_offset, prev->width,
+                              prev->height);
     }
-    glEnable(GL_SCISSOR_TEST);
-    // Only update the requested area, not the whole canvas.
-    window_x = window_x * kParams.viewport_width / kParams.canvas_width;
-    window_y = window_y * kParams.viewport_height / kParams.canvas_height;
-    frame_w = frame_w * kParams.viewport_width / kParams.canvas_width;
-    frame_h = frame_h * kParams.viewport_height / kParams.canvas_height;
-    glScissor(window_x, window_y, frame_w, frame_h);
-
-    DrawBackground();
-
-    glDisable(GL_SCISSOR_TEST);
+    if (curr->blend_method == WEBP_MUX_NO_BLEND) {
+      // We simulate no-blending behavior by first clearing the current frame
+      // rectangle and then alpha-blending against it.
+      DrawBackgroundScissored(curr->x_offset, curr->y_offset, curr->width,
+                              curr->height);
+    }
   }
 
   *prev = *curr;
