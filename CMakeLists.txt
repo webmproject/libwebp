@@ -213,6 +213,10 @@ set_target_properties(webpdecoder PROPERTIES VERSION ${PACKAGE_VERSION}
 parse_version(demux/Makefile.am webpdemux WEBP_DEMUX_SOVERSION)
 set_target_properties(webpdemux PROPERTIES VERSION ${PACKAGE_VERSION}
   SOVERSION ${WEBP_DEMUX_SOVERSION})
+file(READ ${CMAKE_CURRENT_SOURCE_DIR}/configure.ac CONFIGURE_FILE)
+string(REGEX MATCH "AC_INIT\\([^\n]*\\[[0-9\\.]+\\]" TMP
+  ${CONFIGURE_FILE})
+string(REGEX MATCH "[0-9\\.]+" PROJECT_VERSION ${TMP})
 
 # Define the libraries to install.
 set(INSTALLED_LIBRARIES webpdecoder webp webpdemux)
