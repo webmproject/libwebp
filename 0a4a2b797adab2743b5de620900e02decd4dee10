@@ -16,6 +16,24 @@
       "revId": "0a4a2b797adab2743b5de620900e02decd4dee10",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ccd9103a_15e894cb",
+        "filename": "cmake/WebPConfig.cmake.in",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2018-07-25T12:09:10Z",
+      "side": 1,
+      "message": "You\u0027re right, the variable was not set, I now read it from configure.ac in the main CMakeLists.txt",
+      "parentUuid": "bf2fdcf3_b4d2e680",
+      "revId": "0a4a2b797adab2743b5de620900e02decd4dee10",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
