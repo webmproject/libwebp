@@ -679,4 +679,4 @@ void VP8FiltersInit(void);
 }    // extern "C"
 #endif
 
-#endif  /* WEBP_DSP_DSP_H_ */
+#endif  // WEBP_DSP_DSP_H_

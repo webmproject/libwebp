@@ -316,4 +316,4 @@ const uint8_t* VP8DecompressAlphaRows(VP8Decoder* const dec,
 }    // extern "C"
 #endif
 
-#endif  /* WEBP_DEC_VP8I_DEC_H_ */
+#endif  // WEBP_DEC_VP8I_DEC_H_
