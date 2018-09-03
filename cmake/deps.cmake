@@ -54,10 +54,19 @@ set(LT_OBJDIR ".libs/")
 find_package(OpenGL)
 set(WEBP_HAVE_GL ${OPENGL_FOUND})
 
-# Find the standard C math library.
-find_library(MATH_LIBRARY NAMES m)
-if(MATH_LIBRARY)
-  list(APPEND WEBP_DEP_LIBRARIES ${MATH_LIBRARY})
+# Check if we need to link to the C math library.
+# We do not look for it as it is not found when
+# cross-compiling, while it is here.
+check_c_source_compiles("
+    #include <cmath>
+    int main(void) {
+      return std::pow(2, 2.5);
+    }
+  "
+  HAVE_MATH_LIBRARY
+)
+if(NOT HAVE_MATH_LIBRARY)
+  list(APPEND WEBP_DEP_LIBRARIES m)
 endif()
 
 # Find the standard image libraries.
