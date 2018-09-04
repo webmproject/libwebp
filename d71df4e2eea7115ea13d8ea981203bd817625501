@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e1e75192_fe51670f",
+        "filename": "cmake/deps.cmake",
+        "patchSetId": 3
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-09-04T23:07:09Z",
+      "side": 1,
+      "message": "libwebp doesn\u0027t require c++ support. this could be math.h and pow()",
+      "revId": "d71df4e2eea7115ea13d8ea981203bd817625501",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
