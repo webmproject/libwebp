@@ -16,6 +16,24 @@
       "revId": "435f21dd53ef6bc33315e70e8af7e476439df563",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "AAAAdn//DJM\u003d",
+        "filename": "src/dsp/Makefile.am",
+        "patchSetId": 6
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-09-07T06:59:14Z",
+      "side": 1,
+      "message": "fixed here and the mismatch in configure.ac; kSSE4_1 is the odd one out currently",
+      "parentUuid": "AAAAdn//DJc\u003d",
+      "revId": "435f21dd53ef6bc33315e70e8af7e476439df563",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
