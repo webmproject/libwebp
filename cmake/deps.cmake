@@ -58,14 +58,15 @@ set(WEBP_HAVE_GL ${OPENGL_FOUND})
 # We do not look for it as it is not found when
 # cross-compiling, while it is here.
 check_c_source_compiles("
-    #include <cmath>
-    int main(void) {
-      return std::pow(2, 2.5);
-    }
+#include <math.h>
+int main(int argc, char** argv) {
+  return pow(argc, 2.5);
+}
   "
   HAVE_MATH_LIBRARY
 )
 if(NOT HAVE_MATH_LIBRARY)
+  message(STATUS "Adding -lm flag.")
   list(APPEND WEBP_DEP_LIBRARIES m)
 endif()
 
