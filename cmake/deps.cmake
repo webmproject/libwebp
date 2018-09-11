@@ -58,9 +58,9 @@ set(WEBP_HAVE_GL ${OPENGL_FOUND})
 # We do not look for it as it is not found when
 # cross-compiling, while it is here.
 check_c_source_compiles("
-    #include <cmath>
+    #include <math.h>
     int main(void) {
-      return std::pow(2, 2.5);
+      return pow(2, 2.5);
     }
   "
   HAVE_MATH_LIBRARY
