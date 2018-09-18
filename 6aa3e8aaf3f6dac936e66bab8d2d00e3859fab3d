@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da6fd4e2_a52138a6",
+        "filename": "cmake/deps.cmake",
+        "patchSetId": 3
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-09-18T00:29:21Z",
+      "side": 1,
+      "message": "was the dropping of the indent intentional?",
+      "revId": "6aa3e8aaf3f6dac936e66bab8d2d00e3859fab3d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b9e39aca_74cff110",
+        "filename": "cmake/deps.cmake",
+        "patchSetId": 3
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-09-18T00:29:21Z",
+      "side": 1,
+      "message": "you might want to cast this to int to avoid any potential flag/warning conflicts",
+      "revId": "6aa3e8aaf3f6dac936e66bab8d2d00e3859fab3d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
