@@ -933,6 +933,12 @@ int main(int argc, const char *argv[]) {
                       " encoding. Ignoring this option!\n");
     }
   }
+
+  if (config.exact && config.alpha_quality < 100) {
+    fprintf(stderr, "Warning: an -alpha_q value < 100 (%d) will disable"
+            " -exact!\n", config.alpha_quality);
+  }
+
   // If a target size or PSNR was given, but somehow the -pass option was
   // omitted, force a reasonable value.
   if (config.target_size > 0 || config.target_PSNR > 0) {

@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH CWEBP 1 "January 20, 2017"
+.TH CWEBP 1 "September 21, 2018"
 .SH NAME
 cwebp \- compress an image file to a WebP file
 .SH SYNOPSIS
@@ -259,6 +259,8 @@ no compression, 1 uses WebP lossless format for compression. The default is 1.
 .B \-exact
 Preserve RGB values in transparent area. The default is off, to help
 compressibility.
+
+Note: this option is incompatible with \-alpha_q values != 100.
 .TP
 .BI \-blend_alpha " int
 This option blends the alpha channel (if present) with the source using the
