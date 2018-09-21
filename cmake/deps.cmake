@@ -58,10 +58,10 @@ set(WEBP_HAVE_GL ${OPENGL_FOUND})
 # We do not look for it as it is not found when
 # cross-compiling, while it is here.
 check_c_source_compiles("
-#include <math.h>
-int main(int argc, char** argv) {
-  return pow(argc, 2.5);
-}
+    #include <math.h>
+    int main(int argc, char** argv) {
+      return (int)pow(argc, 2.5);
+    }
   "
   HAVE_MATH_LIBRARY
 )
