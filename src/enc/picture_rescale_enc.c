@@ -208,6 +208,8 @@ int WebPPictureRescale(WebPPicture* pic, int width, int height) {
     return 0;
   }
 
+  if (width == prev_width && height == prev_height) return 1;
+
   PictureGrabSpecs(pic, &tmp);
   tmp.width = width;
   tmp.height = height;
