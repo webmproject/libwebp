@@ -195,7 +195,8 @@ static void AlphaMultiplyY(WebPPicture* const pic, int inverse) {
   }
 }
 
-int WebPPictureRescale(WebPPicture* pic, int width, int height) {
+static int WebPPictureRescaleInternal(WebPPicture* const pic, int width,
+                                      int height, int premultiply) {
   WebPPicture tmp;
   int prev_width, prev_height;
   rescaler_t* work;
@@ -228,10 +229,10 @@ int WebPPictureRescale(WebPPicture* pic, int width, int height) {
 
     // We take transparency into account on the luma plane only. That's not
     // totally exact blending, but still is a good approximation.
-    AlphaMultiplyY(pic, 0);
+    if (premultiply) AlphaMultiplyY(pic, 0);
     RescalePlane(pic->y, prev_width, prev_height, pic->y_stride,
                  tmp.y, width, height, tmp.y_stride, work, 1);
-    AlphaMultiplyY(&tmp, 1);
+    if (premultiply) AlphaMultiplyY(&tmp, 1);
 
     RescalePlane(pic->u,
                  HALVE(prev_width), HALVE(prev_height), pic->uv_stride,
@@ -251,18 +252,31 @@ int WebPPictureRescale(WebPPicture* pic, int width, int height) {
     // weighting first (black-matting), scale the RGB values, and remove
     // the premultiplication afterward (while preserving the alpha channel).
     WebPInitAlphaProcessing();
-    AlphaMultiplyARGB(pic, 0);
+    if (premultiply) AlphaMultiplyARGB(pic, 0);
     RescalePlane((const uint8_t*)pic->argb, prev_width, prev_height,
                  pic->argb_stride * 4,
                  (uint8_t*)tmp.argb, width, height,
                  tmp.argb_stride * 4,
                  work, 4);
-    AlphaMultiplyARGB(&tmp, 1);
+    if (premultiply) AlphaMultiplyARGB(&tmp, 1);
   }
   WebPPictureFree(pic);
   WebPSafeFree(work);
   *pic = tmp;
   return 1;
+}
+
+int WebPPictureRescale(WebPPicture* pic, int width, int height) {
+  return WebPPictureRescaleInternal(pic, width, height, 1);
+}
+
+// Keep color data in fully transparent areas. Color may leak around sharp alpha
+// edges. Used by cwebp -exact.
+extern int WebPPictureRescaleNoPremultiply(WebPPicture* pic, int width,
+                                           int height);
+
+int WebPPictureRescaleNoPremultiply(WebPPicture* pic, int width, int height) {
+  return WebPPictureRescaleInternal(pic, width, height, 0);
 }
 
 #else  // defined(WEBP_REDUCE_SIZE)
