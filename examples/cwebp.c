@@ -38,6 +38,14 @@ extern void* VP8GetCPUInfo;   // opaque forward declaration.
 #endif
 #endif  // WEBP_DLL
 
+// Undocumented.
+extern
+#ifdef __cplusplus
+"C"
+#endif
+int WebPPictureRescaleNoPremultiply(WebPPicture* pic, int width,
+                                    int height);
+
 //------------------------------------------------------------------------------
 
 static int verbose = 0;
@@ -1012,9 +1020,17 @@ int main(int argc, const char *argv[]) {
     }
   }
   if ((resize_w | resize_h) > 0) {
-    if (!WebPPictureRescale(&picture, resize_w, resize_h)) {
-      fprintf(stderr, "Error! Cannot resize picture\n");
-      goto Error;
+    // If -exact, we can't premultiply RGB by A otherwise RGB is lost if A = 0.
+    if (config.exact) {
+      if (!WebPPictureRescaleNoPremultiply(&picture, resize_w, resize_h)) {
+        fprintf(stderr, "Error! Cannot resize picture\n");
+        goto Error;
+      }
+    } else {
+      if (!WebPPictureRescale(&picture, resize_w, resize_h)) {
+        fprintf(stderr, "Error! Cannot resize picture\n");
+        goto Error;
+      }
     }
   }
   if (verbose && (crop != 0 || (resize_w | resize_h) > 0)) {
