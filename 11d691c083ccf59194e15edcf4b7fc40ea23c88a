@@ -16,6 +16,24 @@
       "revId": "11d691c083ccf59194e15edcf4b7fc40ea23c88a",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ce58bd87_97d7efa8",
+        "filename": "src/enc/picture_rescale_enc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 281,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2018-09-26T15:29:34Z",
+      "side": 1,
+      "message": "indeed. But we discussed that this case was not main-stream enough to warrant inclusion in the official API. It mostly affects only cwebp \u0027arcane\u0027 option.\n\nSo we\u0027re trying to just make cwebp use this hidden API without an incompatible version bump.",
+      "parentUuid": "c5d064aa_600adbd0",
+      "revId": "11d691c083ccf59194e15edcf4b7fc40ea23c88a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
