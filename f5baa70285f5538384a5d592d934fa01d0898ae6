@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fe9f7747_f2e1f13d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 8
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-09-28T17:06:28Z",
+      "side": 1,
+      "message": "this should be BUG\u003dwebp:397 to have the bot auto-update the bug on submit",
+      "revId": "f5baa70285f5538384a5d592d934fa01d0898ae6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
