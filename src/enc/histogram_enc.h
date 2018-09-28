@@ -44,6 +44,7 @@ typedef struct {
   double literal_cost_;      // Cached values of dominant entropy costs:
   double red_cost_;          // literal, red & blue.
   double blue_cost_;
+  uint8_t is_used_[5];       // 5 for literal, red, blue, alpha, distance
 } VP8LHistogram;
 
 // Collection of histograms with fixed capacity, allocated as one
@@ -113,7 +114,7 @@ double VP8LBitsEntropy(const uint32_t* const array, int n);
 
 // Estimate how many bits the combined entropy of literals and distance
 // approximately maps to.
-double VP8LHistogramEstimateBits(const VP8LHistogram* const p);
+double VP8LHistogramEstimateBits(VP8LHistogram* const p);
 
 #ifdef __cplusplus
 }
