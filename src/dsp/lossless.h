@@ -163,7 +163,7 @@ extern VP8LCostCombinedFunc VP8LExtraCostCombined;
 extern VP8LCombinedShannonEntropyFunc VP8LCombinedShannonEntropy;
 
 typedef struct {        // small struct to hold counters
-  int counts[2];        // index: 0=zero steak, 1=non-zero streak
+  int counts[2];        // index: 0=zero streak, 1=non-zero streak
   int streaks[2][2];    // [zero/non-zero][streak<3 / streak>=3]
 } VP8LStreaks;
 

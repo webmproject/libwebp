@@ -632,6 +632,27 @@ static double ExtraCostCombined_C(const uint32_t* X, const uint32_t* Y,
 
 //------------------------------------------------------------------------------
 
+#define ADD_FOR1(X, ARG, LEN)                                                  \
+if (a->is_empty_[X]) {                                                         \
+  memcpy(&out->ARG[0], &b->ARG[0], LEN*sizeof(out->ARG[0]));                   \
+} else if (b->is_empty_[X]) {                                                  \
+  memcpy(&out->ARG[0], &a->ARG[0], LEN*sizeof(out->ARG[0]));                   \
+} else {                                                                       \
+  for (i = 0; i < LEN; ++i) {                                                  \
+    out->ARG[i] = a->ARG[i] + b->ARG[i];                                       \
+  }                                                                            \
+}
+
+#define ADD_FOR2(X, ARG, LEN)                                                  \
+if (a->is_empty_[X]) {                                                         \
+} else if (b->is_empty_[X]) {                                                  \
+  memcpy(&out->ARG[0], &a->ARG[0], LEN*sizeof(out->ARG[0]));                   \
+} else {                                                                       \
+  for (i = 0; i < LEN; ++i) {                                                  \
+    out->ARG[i] += a->ARG[i];                                                  \
+  }                                                                            \
+}
+
 static void HistogramAdd_C(const VP8LHistogram* const a,
                            const VP8LHistogram* const b,
                            VP8LHistogram* const out) {
@@ -639,31 +660,39 @@ static void HistogramAdd_C(const VP8LHistogram* const a,
   const int literal_size = VP8LHistogramNumCodes(a->palette_code_bits_);
   assert(a->palette_code_bits_ == b->palette_code_bits_);
   if (b != out) {
-    for (i = 0; i < literal_size; ++i) {
-      out->literal_[i] = a->literal_[i] + b->literal_[i];
+    ADD_FOR1(0, literal_, literal_size)
+    if (a->is_empty_[1] || a->is_empty_[2] || a->is_empty_[3] || b->is_empty_[1]
+        || b->is_empty_[2] || b->is_empty_[3]) {
+      ADD_FOR1(1, red_, NUM_LITERAL_CODES)
+      ADD_FOR1(2, blue_, NUM_LITERAL_CODES)
+      ADD_FOR1(3, alpha_, NUM_LITERAL_CODES)
+    } else {
+      for (i = 0; i < NUM_LITERAL_CODES; ++i) {
+        out->red_[i] = a->red_[i] + b->red_[i];
+        out->blue_[i] = a->blue_[i] + b->blue_[i];
+        out->alpha_[i] = a->alpha_[i] + b->alpha_[i];
+      }
     }
-    for (i = 0; i < NUM_DISTANCE_CODES; ++i) {
-      out->distance_[i] = a->distance_[i] + b->distance_[i];
-    }
-    for (i = 0; i < NUM_LITERAL_CODES; ++i) {
-      out->red_[i] = a->red_[i] + b->red_[i];
-      out->blue_[i] = a->blue_[i] + b->blue_[i];
-      out->alpha_[i] = a->alpha_[i] + b->alpha_[i];
-    }
+    ADD_FOR1(4, distance_, NUM_DISTANCE_CODES)
   } else {
-    for (i = 0; i < literal_size; ++i) {
-      out->literal_[i] += a->literal_[i];
+    ADD_FOR2(0, literal_, literal_size)
+    if (a->is_empty_[1] || a->is_empty_[2] || a->is_empty_[3] || b->is_empty_[1]
+        || b->is_empty_[2] || b->is_empty_[3]) {
+      ADD_FOR2(1, red_, NUM_LITERAL_CODES)
+      ADD_FOR2(2, blue_, NUM_LITERAL_CODES)
+      ADD_FOR2(3, alpha_, NUM_LITERAL_CODES)
+    } else {
+      for (i = 0; i < NUM_LITERAL_CODES; ++i) {
+        out->red_[i] += a->red_[i];
+        out->blue_[i] += a->blue_[i];
+        out->alpha_[i] += a->alpha_[i];
+      }
     }
-    for (i = 0; i < NUM_DISTANCE_CODES; ++i) {
-      out->distance_[i] += a->distance_[i];
-    }
-    for (i = 0; i < NUM_LITERAL_CODES; ++i) {
-      out->red_[i] += a->red_[i];
-      out->blue_[i] += a->blue_[i];
-      out->alpha_[i] += a->alpha_[i];
-    }
+    ADD_FOR2(4, distance_, NUM_DISTANCE_CODES)
   }
 }
+#undef ADD_FOR1
+#undef ADD_FOR2
 
 //------------------------------------------------------------------------------
 // Image transforms.
