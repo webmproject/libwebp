@@ -18,6 +18,9 @@
 #include <stdio.h>
 
 #ifdef WEBP_HAVE_PNG
+#ifndef PNG_USER_MEM_SUPPORTED
+#define PNG_USER_MEM_SUPPORTED  // for png_create_read_struct_2
+#endif
 #include <png.h>
 #include <setjmp.h>   // note: this must be included *after* png.h
 #include <stdlib.h>
@@ -30,6 +33,18 @@
 static void PNGAPI error_function(png_structp png, png_const_charp error) {
   if (error != NULL) fprintf(stderr, "libpng error: %s\n", error);
   longjmp(png_jmpbuf(png), 1);
+}
+
+static png_voidp MallocFunc(png_structp png_ptr, png_alloc_size_t size) {
+  (void)png_ptr;
+  if (size != (size_t)size) return NULL;
+  if (!ImgIoUtilCheckSizeArgumentsOverflow(size, 1)) return NULL;
+  return (png_voidp)malloc((size_t)size);
+}
+
+static void FreeFunc(png_structp png_ptr, png_voidp ptr) {
+  (void)png_ptr;
+  free(ptr);
 }
 
 // Converts the NULL terminated 'hexstring' which contains 2-byte character
@@ -224,7 +239,8 @@ int ReadPNG(const uint8_t* const data, size_t data_size,
   context.data = data;
   context.data_size = data_size;
 
-  png = png_create_read_struct(PNG_LIBPNG_VER_STRING, 0, 0, 0);
+  png = png_create_read_struct_2(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL,
+                                 NULL, MallocFunc, FreeFunc);
   if (png == NULL) goto End;
 
   png_set_error_fn(png, 0, error_function, NULL);
