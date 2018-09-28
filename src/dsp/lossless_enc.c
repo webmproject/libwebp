@@ -643,25 +643,56 @@ static void AddVectorEq_C(const uint32_t* a, uint32_t* out, int size) {
   for (i = 0; i < size; ++i) out[i] += a[i];
 }
 
+#define ADD(X, ARG, LEN) do {                                                  \
+  if (a->is_used_[X]) {                                                        \
+    if (b->is_used_[X]) {                                                      \
+      VP8LAddVector(a->ARG, b->ARG, out->ARG, (LEN));                          \
+    } else {                                                                   \
+      memcpy(&out->ARG[0], &a->ARG[0], (LEN) * sizeof(out->ARG[0]));           \
+    }                                                                          \
+  } else if (b->is_used_[X]) {                                                 \
+    memcpy(&out->ARG[0], &b->ARG[0], (LEN) * sizeof(out->ARG[0]));             \
+  } else {                                                                     \
+    memset(&out->ARG[0], 0, (LEN) * sizeof(out->ARG[0]));                      \
+  }                                                                            \
+} while (0)
+
+#define ADD_EQ(X, ARG, LEN) do {                                               \
+  if (a->is_used_[X]) {                                                        \
+    if (out->is_used_[X]) {                                                    \
+      VP8LAddVectorEq(a->ARG, out->ARG, (LEN));                                \
+    } else {                                                                   \
+      memcpy(&out->ARG[0], &a->ARG[0], (LEN) * sizeof(out->ARG[0]));           \
+    }                                                                          \
+  }                                                                            \
+} while (0)
+
 void VP8LHistogramAdd(const VP8LHistogram* const a,
                       const VP8LHistogram* const b, VP8LHistogram* const out) {
+  int i;
   const int literal_size = VP8LHistogramNumCodes(a->palette_code_bits_);
   assert(a->palette_code_bits_ == b->palette_code_bits_);
+
   if (b != out) {
-    VP8LAddVector(a->literal_, b->literal_, out->literal_, literal_size);
-    VP8LAddVector(a->distance_, b->distance_, out->distance_,
-                  NUM_DISTANCE_CODES);
-    VP8LAddVector(a->red_, b->red_, out->red_, NUM_LITERAL_CODES);
-    VP8LAddVector(a->blue_, b->blue_, out->blue_, NUM_LITERAL_CODES);
-    VP8LAddVector(a->alpha_, b->alpha_, out->alpha_, NUM_LITERAL_CODES);
+    ADD(0, literal_, literal_size);
+    ADD(1, red_, NUM_LITERAL_CODES);
+    ADD(2, blue_, NUM_LITERAL_CODES);
+    ADD(3, alpha_, NUM_LITERAL_CODES);
+    ADD(4, distance_, NUM_DISTANCE_CODES);
+    for (i = 0; i < 5; ++i) {
+      out->is_used_[i] = (a->is_used_[i] | b->is_used_[i]);
+    }
   } else {
-    VP8LAddVectorEq(a->literal_, out->literal_, literal_size);
-    VP8LAddVectorEq(a->distance_, out->distance_, NUM_DISTANCE_CODES);
-    VP8LAddVectorEq(a->red_, out->red_, NUM_LITERAL_CODES);
-    VP8LAddVectorEq(a->blue_, out->blue_, NUM_LITERAL_CODES);
-    VP8LAddVectorEq(a->alpha_, out->alpha_, NUM_LITERAL_CODES);
+    ADD_EQ(0, literal_, literal_size);
+    ADD_EQ(1, red_, NUM_LITERAL_CODES);
+    ADD_EQ(2, blue_, NUM_LITERAL_CODES);
+    ADD_EQ(3, alpha_, NUM_LITERAL_CODES);
+    ADD_EQ(4, distance_, NUM_DISTANCE_CODES);
+    for (i = 0; i < 5; ++i) out->is_used_[i] |= a->is_used_[i];
   }
 }
+#undef ADD
+#undef ADD_EQ
 
 //------------------------------------------------------------------------------
 // Image transforms.
