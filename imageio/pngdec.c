@@ -30,12 +30,22 @@
 #include "./imageio_util.h"
 #include "./metadata.h"
 
+#define LOCAL_PNG_VERSION ((PNG_LIBPNG_VER_MAJOR << 8) | PNG_LIBPNG_VER_MINOR)
+#define LOCAL_PNG_PREREQ(maj, min) \
+   (LOCAL_PNG_VERSION >= (((maj) << 8) | (min)))
+
 static void PNGAPI error_function(png_structp png, png_const_charp error) {
   if (error != NULL) fprintf(stderr, "libpng error: %s\n", error);
   longjmp(png_jmpbuf(png), 1);
 }
 
-static png_voidp MallocFunc(png_structp png_ptr, png_alloc_size_t size) {
+#if LOCAL_PNG_PREREQ(1,4)
+typedef png_alloc_size_t LocalPngAllocSize;
+#else
+typedef png_size_t LocalPngAllocSize;
+#endif
+
+static png_voidp MallocFunc(png_structp png_ptr, LocalPngAllocSize size) {
   (void)png_ptr;
   if (size != (size_t)size) return NULL;
   if (!ImgIoUtilCheckSizeArgumentsOverflow(size, 1)) return NULL;
@@ -186,11 +196,10 @@ static int ExtractMetadataFromPNG(png_structp png,
     {
       png_charp name;
       int comp_type;
-#if ((PNG_LIBPNG_VER_MAJOR << 8) | PNG_LIBPNG_VER_MINOR << 0) < \
-    ((1 << 8) | (5 << 0))
-      png_charp profile;
-#else  // >= libpng 1.5.0
+#if LOCAL_PNG_PREREQ(1,5)
       png_bytep profile;
+#else
+      png_charp profile;
 #endif
       png_uint_32 len;
 
