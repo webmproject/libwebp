@@ -236,6 +236,14 @@ foreach(I_FILE RANGE ${WEBP_SIMD_FILES_TO_INCLUDE_RANGE})
   )
 endforeach()
 
+if(WEBP_BUILD_GIF2WEBP AND NOT GIF_FOUND)
+  set(WEBP_BUILD_GIF2WEBP OFF)
+endif()
+
+if(WEBP_BUILD_ANIM_UTILS AND NOT GIF_FOUND)
+  set(WEBP_BUILD_ANIM_UTILS OFF)
+endif()
+
 # Build the executables if asked for.
 if(WEBP_BUILD_ANIM_UTILS OR WEBP_BUILD_CWEBP OR WEBP_BUILD_DWEBP OR
    WEBP_BUILD_GIF2WEBP OR WEBP_BUILD_IMG2WEBP OR WEBP_BUILD_VWEBP OR
@@ -290,10 +298,6 @@ if(WEBP_BUILD_CWEBP)
   target_link_libraries(cwebp exampleutil imagedec webp)
   target_include_directories(cwebp PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src)
   install(TARGETS cwebp RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-endif()
-
-if(WEBP_BUILD_GIF2WEBP AND NOT GIF_FOUND)
-  unset(WEBP_BUILD_GIF2WEBP CACHE)
 endif()
 
 if(WEBP_BUILD_GIF2WEBP OR WEBP_BUILD_IMG2WEBP)
@@ -405,10 +409,6 @@ if(WEBP_BUILD_WEBP_JS)
   target_compile_definitions(webp_wasm PUBLIC EMSCRIPTEN WEBP_HAVE_SDL)
 
   target_compile_definitions(webpdspdecode PUBLIC EMSCRIPTEN)
-endif()
-
-if(WEBP_BUILD_ANIM_UTILS AND NOT GIF_FOUND)
-  unset(WEBP_BUILD_ANIM_UTILS CACHE)
 endif()
 
 if(WEBP_BUILD_ANIM_UTILS)
