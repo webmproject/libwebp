@@ -20,6 +20,7 @@
 #include <string.h>  // for 'strcmp'.
 
 #include "./anim_util.h"
+#include "./example_util.h"
 
 #if defined(_MSC_VER) && _MSC_VER < 1900
 #define snprintf _snprintf
@@ -228,14 +229,7 @@ int main(int argc, const char* argv[]) {
       }
     } else if (!strcmp(argv[c], "-min_psnr")) {
       if (c < argc - 1) {
-        const char* const v = argv[++c];
-        char* end = NULL;
-        const double d = strtod(v, &end);
-        if (end == v) {
-          parse_error = 1;
-          fprintf(stderr, "Error! '%s' is not a floating point number.\n", v);
-        }
-        min_psnr = d;
+        min_psnr = ExUtilGetFloat(argv[++c], &parse_error);
       } else {
         parse_error = 1;
       }
@@ -243,14 +237,7 @@ int main(int argc, const char* argv[]) {
       premultiply = 0;
     } else if (!strcmp(argv[c], "-max_diff")) {
       if (c < argc - 1) {
-        const char* const v = argv[++c];
-        char* end = NULL;
-        const int n = (int)strtol(v, &end, 10);
-        if (end == v) {
-          parse_error = 1;
-          fprintf(stderr, "Error! '%s' is not an integer.\n", v);
-        }
-        max_diff = n;
+        max_diff = ExUtilGetInt(argv[++c], 0, &parse_error);
       } else {
         parse_error = 1;
       }
