@@ -1248,14 +1248,20 @@ static WebPEncodingError MakeInputImageCopy(VP8LEncoder* const enc) {
   const WebPPicture* const picture = enc->pic_;
   const int width = picture->width;
   const int height = picture->height;
-  int y;
+
   err = AllocateTransformBuffer(enc, width, height);
   if (err != VP8_ENC_OK) return err;
   if (enc->argb_content_ == kEncoderARGB) return VP8_ENC_OK;
-  for (y = 0; y < height; ++y) {
-    memcpy(enc->argb_ + y * width,
-           picture->argb + y * picture->argb_stride,
-           width * sizeof(*enc->argb_));
+
+  {
+    uint32_t* dst = enc->argb_;
+    const uint32_t* src = picture->argb;
+    int y;
+    for (y = 0; y < height; ++y) {
+      memcpy(dst, src, width * sizeof(*dst));
+      dst += width;
+      src += picture->argb_stride;
+    }
   }
   enc->argb_content_ = kEncoderARGB;
   assert(enc->current_width_ == width);
