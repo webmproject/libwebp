@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "db0ccd87_8ce08893",
+        "filename": "src/enc/picture_tools_enc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2018-10-02T08:31:39Z",
+      "side": 1,
+      "message": "u_ptr for consistency",
+      "range": {
+        "startLine": 212,
+        "startChar": 14,
+        "endLine": 212,
+        "endChar": 15
+      },
+      "revId": "5cac3214185c1c85503e47dcd9c8e242c7bf30c1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e38642c0_5b95ba7c",
+        "filename": "src/enc/picture_tools_enc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2018-10-02T08:31:39Z",
+      "side": 1,
+      "message": "pic-\u003ev and not pic-\u003eu (well, pic-\u003ev_ptr actually)",
+      "revId": "5cac3214185c1c85503e47dcd9c8e242c7bf30c1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
