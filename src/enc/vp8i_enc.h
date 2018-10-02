@@ -278,7 +278,7 @@ int VP8IteratorIsDone(const VP8EncIterator* const it);
 // Import uncompressed samples from source.
 // If tmp_32 is not NULL, import boundary samples too.
 // tmp_32 is a 32-bytes scratch buffer that must be aligned in memory.
-void VP8IteratorImport(VP8EncIterator* const it, uint8_t* tmp_32);
+void VP8IteratorImport(VP8EncIterator* const it, uint8_t* const tmp_32);
 // export decimated samples
 void VP8IteratorExport(const VP8EncIterator* const it);
 // go to next macroblock. Returns false if not finished.
