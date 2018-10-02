@@ -100,7 +100,6 @@ int main(int argc, const char *argv[]) {
   WebPMuxError err = WEBP_MUX_OK;
   int ok = 0;
   const char *in_file = NULL, *out_file = NULL;
-  FILE* out = NULL;
   GifFileType* gif = NULL;
   int frame_duration = 0;
   int frame_timestamp = 0;
@@ -578,7 +577,6 @@ int main(int argc, const char *argv[]) {
   WebPPictureFree(&curr_canvas);
   WebPPictureFree(&prev_canvas);
   WebPAnimEncoderDelete(enc);
-  if (out != NULL && out_file != NULL) fclose(out);
 
   if (gif_error != GIF_OK) {
     GIFDisplayError(gif, gif_error);
