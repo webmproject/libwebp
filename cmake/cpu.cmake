@@ -29,16 +29,16 @@ function(webp_check_compiler_flag WEBP_SIMD_FLAG ENABLE_SIMD)
 endfunction()
 
 # those are included in the names of WEBP_USE_* in c++ code.
-set(WEBP_SIMD_FLAGS "SSE2;SSE41;AVX2;MIPS32;MIPS_DSP_R2;NEON;MSA")
-set(WEBP_SIMD_FILE_EXTENSIONS "_sse2.c;_sse41.c;_avx2.c;_mips32.c;_mips_dsp_r2.c;_neon.c;_msa.c")
+set(WEBP_SIMD_FLAGS "AVX;SSE41;SSE2;MIPS32;MIPS_DSP_R2;NEON;MSA")
+set(WEBP_SIMD_FILE_EXTENSIONS "_avx2.c;_sse41.c;_sse2.c;_mips32.c;_mips_dsp_r2.c;_neon.c;_msa.c")
 if(MSVC)
   # MSVC does not have a SSE4 flag but AVX2 support implies
   # SSE4 support.
-  set(SIMD_ENABLE_FLAGS "/arch:SSE2;/arch:AVX2;/arch:AVX2;;;;")
+  set(SIMD_ENABLE_FLAGS "/arch:AVX2;/arch:AVX2;/arch:SSE2;;;;")
   set(SIMD_DISABLE_FLAGS)
 else()
-  set(SIMD_ENABLE_FLAGS "-msse2;-msse4.1;-mavx2;-mips32;-mdspr2;-mfpu=neon;-mmsa")
-  set(SIMD_DISABLE_FLAGS "-mno-sse2;-mno-sse4.1;-mno-avx2;;-mno-dspr2;;-mno-msa")
+  set(SIMD_ENABLE_FLAGS "-mavx2;-msse4.1;-msse2;-mips32;-mdspr2;-mfpu=neon;-mmsa")
+  set(SIMD_DISABLE_FLAGS "-mno-avx2;-mno-avx4.1;-mno-sse2;;-mno-dspr2;;-mno-msa")
 endif()
 
 set(WEBP_SIMD_FILES_TO_NOT_INCLUDE)
@@ -57,8 +57,14 @@ endif()
 
 list(LENGTH WEBP_SIMD_FLAGS WEBP_SIMD_FLAGS_LENGTH)
 math(EXPR WEBP_SIMD_FLAGS_RANGE "${WEBP_SIMD_FLAGS_LENGTH} - 1")
+set(DONE_WITH_X86 0)
 
 foreach(I_SIMD RANGE ${WEBP_SIMD_FLAGS_RANGE})
+  # Skip further SSE check to limit the number of flags.
+  if(DONE_WITH_X86)
+    continue()
+  endif()
+
   list(GET WEBP_SIMD_FLAGS ${I_SIMD} WEBP_SIMD_FLAG)
 
   # First try with no extra flag added as the compiler might have default flags
@@ -72,7 +78,11 @@ foreach(I_SIMD RANGE ${WEBP_SIMD_FLAGS_RANGE})
     set(CMAKE_REQUIRED_FLAGS ${SIMD_COMPILE_FLAG})
     webp_check_compiler_flag(${WEBP_SIMD_FLAG} ${WEBP_ENABLE_SIMD})
   else()
-    set(SIMD_COMPILE_FLAG " ")
+    if(MSVC)
+      list(GET SIMD_ENABLE_FLAGS ${I_SIMD} SIMD_COMPILE_FLAG)
+    else()
+      set(SIMD_COMPILE_FLAG " ")
+    endif()
   endif()
   # Check which files we should include or not.
   list(GET WEBP_SIMD_FILE_EXTENSIONS ${I_SIMD} WEBP_SIMD_FILE_EXTENSION)
@@ -80,6 +90,9 @@ foreach(I_SIMD RANGE ${WEBP_SIMD_FLAGS_RANGE})
     "src/dsp/*${WEBP_SIMD_FILE_EXTENSION}"
   )
   if(WEBP_HAVE_${WEBP_SIMD_FLAG})
+    if(${I_SIMD} LESS 3)
+      set(DONE_WITH_X86 1)
+    endif()
     # Memorize the file and flags.
     foreach(FILE ${SIMD_FILES})
       list(APPEND WEBP_SIMD_FILES_TO_INCLUDE ${FILE})
