@@ -63,6 +63,8 @@
 #include "../examples/example_util.h"
 #include "../imageio/imageio_util.h"
 
+#include "./unicode.h"
+
 //------------------------------------------------------------------------------
 // Config object to parse command-line arguments.
 
@@ -85,8 +87,8 @@ typedef enum {
 
 typedef struct {
   FeatureSubType subtype_;
-  const char* filename_;
-  const char* params_;
+  const GCHAR* filename_;
+  const GCHAR* params_;
 } FeatureArg;
 
 typedef enum {
@@ -112,8 +114,8 @@ typedef struct {
   CommandLineArguments cmd_args_;
 
   ActionType action_type_;
-  const char* input_;
-  const char* output_;
+  const GCHAR* input_;
+  const GCHAR* output_;
   FeatureType type_;
   FeatureArg* args_;
   int arg_count_;
@@ -123,12 +125,12 @@ typedef struct {
 // Helper functions.
 
 static int CountOccurrences(const CommandLineArguments* const args,
-                            const char* const arg) {
+                            const GCHAR* const arg) {
   int i;
   int num_occurences = 0;
 
   for (i = 0; i < args->argc_; ++i) {
-    if (!strcmp(args->argv_[i], arg)) {
+    if (!STRCMP_NO_LITERAL((const GCHAR*)args->argv_[i], arg)) {
       ++num_occurences;
     }
   }
@@ -167,6 +169,13 @@ static const char* ErrorString(WebPMuxError err) {
 #define ERROR_GOTO2(ERR_MSG, FORMAT_STR, LABEL)                      \
   do {                                                               \
     fprintf(stderr, ERR_MSG, FORMAT_STR);                            \
+    ok = 0;                                                          \
+    goto LABEL;                                                      \
+  } while (0)
+
+#define ERROR_GOTO2_GCHAR(ERR_MSG, FORMAT_STR, LABEL)                \
+  do {                                                               \
+    FPRINTF(stderr, ERR_MSG, FORMAT_STR);                            \
     ok = 0;                                                          \
     goto LABEL;                                                      \
   } while (0)
@@ -383,29 +392,29 @@ static void WarnAboutOddOffset(const WebPMuxFrameInfo* const info) {
   }
 }
 
-static int CreateMux(const char* const filename, WebPMux** mux) {
+static int CreateMux(const GCHAR* const filename, WebPMux** mux) {
   WebPData bitstream;
   assert(mux != NULL);
-  if (!ExUtilReadFileToWebPData(filename, &bitstream)) return 0;
+  if (!ExUtilReadFileToWebPData((const char*)filename, &bitstream)) return 0;
   *mux = WebPMuxCreate(&bitstream, 1);
   WebPDataClear(&bitstream);
   if (*mux != NULL) return 1;
-  fprintf(stderr, "Failed to create mux object from file %s.\n", filename);
+  FPRINTF(stderr, "Failed to create mux object from file %s.\n", filename);
   return 0;
 }
 
-static int WriteData(const char* filename, const WebPData* const webpdata) {
+static int WriteData(const GCHAR* filename, const WebPData* const webpdata) {
   int ok = 0;
-  FILE* fout = strcmp(filename, "-") ? fopen(filename, "wb")
+  FILE* fout = STRCMP(filename, "-") ? FOPEN(filename, "wb")
                                      : ImgIoUtilSetBinaryMode(stdout);
   if (fout == NULL) {
-    fprintf(stderr, "Error opening output WebP file %s!\n", filename);
+    FPRINTF(stderr, "Error opening output WebP file %s!\n", filename);
     return 0;
   }
   if (fwrite(webpdata->bytes, webpdata->size, 1, fout) != 1) {
-    fprintf(stderr, "Error writing file %s!\n", filename);
+    FPRINTF(stderr, "Error writing file %s!\n", filename);
   } else {
-    fprintf(stderr, "Saved file %s (%d bytes)\n",
+    FPRINTF(stderr, "Saved file %s (%d bytes)\n",
             filename, (int)webpdata->size);
     ok = 1;
   }
@@ -413,7 +422,7 @@ static int WriteData(const char* filename, const WebPData* const webpdata) {
   return ok;
 }
 
-static int WriteWebP(WebPMux* const mux, const char* filename) {
+static int WriteWebP(WebPMux* const mux, const GCHAR* filename) {
   int ok;
   WebPData webp_data;
   const WebPMuxError err = WebPMuxAssemble(mux, &webp_data);
@@ -465,10 +474,10 @@ static WebPMux* DuplicateMuxHeader(const WebPMux* const mux) {
   return new_mux;
 }
 
-static int ParseFrameArgs(const char* args, WebPMuxFrameInfo* const info) {
+static int ParseFrameArgs(const GCHAR* args, WebPMuxFrameInfo* const info) {
   int dispose_method, dummy;
-  char plus_minus, blend_method;
-  const int num_args = sscanf(args, "+%d+%d+%d+%d%c%c+%d", &info->duration,
+  GCHAR plus_minus, blend_method;
+  const int num_args = SSCANF(args, "+%d+%d+%d+%d%c%c+%d", &info->duration,
                               &info->x_offset, &info->y_offset, &dispose_method,
                               &plus_minus, &blend_method, &dummy);
   switch (num_args) {
@@ -477,8 +486,8 @@ static int ParseFrameArgs(const char* args, WebPMuxFrameInfo* const info) {
     case 3:
       dispose_method = 0;  // fall through
     case 4:
-      plus_minus = '+';
-      blend_method = 'b';  // fall through
+      plus_minus = TO_GCHAR('+');
+      blend_method = TO_GCHAR('b');  // fall through
     case 6:
       break;
     case 2:
@@ -493,16 +502,16 @@ static int ParseFrameArgs(const char* args, WebPMuxFrameInfo* const info) {
   // WebPMuxPushFrame().
   info->dispose_method = (WebPMuxAnimDispose)dispose_method;
 
-  if (blend_method != 'b') return 0;
-  if (plus_minus != '-' && plus_minus != '+') return 0;
+  if (blend_method != TO_GCHAR('b')) return 0;
+  if (plus_minus != TO_GCHAR('-') && plus_minus != TO_GCHAR('+')) return 0;
   info->blend_method =
-      (plus_minus == '+') ? WEBP_MUX_BLEND : WEBP_MUX_NO_BLEND;
+      (plus_minus == TO_GCHAR('+')) ? WEBP_MUX_BLEND : WEBP_MUX_NO_BLEND;
   return 1;
 }
 
-static int ParseBgcolorArgs(const char* args, uint32_t* const bgcolor) {
+static int ParseBgcolorArgs(const GCHAR* args, uint32_t* const bgcolor) {
   uint32_t a, r, g, b;
-  if (sscanf(args, "%u,%u,%u,%u", &a, &r, &g, &b) != 4) return 0;
+  if (SSCANF(args, "%u,%u,%u,%u", &a, &r, &g, &b) != 4) return 0;
   if (a >= 256 || r >= 256 || g >= 256 || b >= 256) return 0;
   *bgcolor = (a << 24) | (r << 16) | (g << 8) | (b << 0);
   return 1;
@@ -538,27 +547,27 @@ static int ValidateCommandLine(const CommandLineArguments* const cmd_args,
   *num_feature_args = 0;
 
   // Simple checks.
-  if (CountOccurrences(cmd_args, "-get") > 1) {
+  if (CountOccurrences(cmd_args, TO_GCHAR("-get")) > 1) {
     ERROR_GOTO1("ERROR: Multiple '-get' arguments specified.\n", ErrValidate);
   }
-  if (CountOccurrences(cmd_args, "-set") > 1) {
+  if (CountOccurrences(cmd_args, TO_GCHAR("-set")) > 1) {
     ERROR_GOTO1("ERROR: Multiple '-set' arguments specified.\n", ErrValidate);
   }
-  if (CountOccurrences(cmd_args, "-strip") > 1) {
+  if (CountOccurrences(cmd_args, TO_GCHAR("-strip")) > 1) {
     ERROR_GOTO1("ERROR: Multiple '-strip' arguments specified.\n", ErrValidate);
   }
-  if (CountOccurrences(cmd_args, "-info") > 1) {
+  if (CountOccurrences(cmd_args, TO_GCHAR("-info")) > 1) {
     ERROR_GOTO1("ERROR: Multiple '-info' arguments specified.\n", ErrValidate);
   }
-  if (CountOccurrences(cmd_args, "-o") > 1) {
+  if (CountOccurrences(cmd_args, TO_GCHAR("-o")) > 1) {
     ERROR_GOTO1("ERROR: Multiple output files specified.\n", ErrValidate);
   }
 
   // Compound checks.
-  num_frame_args = CountOccurrences(cmd_args, "-frame");
-  num_loop_args = CountOccurrences(cmd_args, "-loop");
-  num_bgcolor_args = CountOccurrences(cmd_args, "-bgcolor");
-  num_durations_args = CountOccurrences(cmd_args, "-duration");
+  num_frame_args = CountOccurrences(cmd_args, TO_GCHAR("-frame"));
+  num_loop_args = CountOccurrences(cmd_args, TO_GCHAR("-loop"));
+  num_bgcolor_args = CountOccurrences(cmd_args, TO_GCHAR("-bgcolor"));
+  num_durations_args = CountOccurrences(cmd_args, TO_GCHAR("-duration"));
 
   if (num_loop_args > 1) {
     ERROR_GOTO1("ERROR: Multiple loop counts specified.\n", ErrValidate);
@@ -597,13 +606,13 @@ static int ValidateCommandLine(const CommandLineArguments* const cmd_args,
 
 #define CHECK_NUM_ARGS_AT_LEAST(NUM, LABEL)                              \
   if (argc < i + (NUM)) {                                                \
-    fprintf(stderr, "ERROR: Too few arguments for '%s'.\n", argv[i]);    \
+    FPRINTF(stderr, "ERROR: Too few arguments for '%s'.\n", argv[i]);    \
     goto LABEL;                                                          \
   }
 
 #define CHECK_NUM_ARGS_AT_MOST(NUM, LABEL)                               \
   if (argc > i + (NUM)) {                                                \
-    fprintf(stderr, "ERROR: Too many arguments for '%s'.\n", argv[i]);   \
+    FPRINTF(stderr, "ERROR: Too many arguments for '%s'.\n", argv[i]);   \
     goto LABEL;                                                          \
   }
 
@@ -618,19 +627,19 @@ static int ParseCommandLine(Config* config) {
   int feature_arg_index = 0;
   int ok = 1;
   int argc = config->cmd_args_.argc_;
-  const char* const* argv = config->cmd_args_.argv_;
+  const GCHAR* const* argv = (const GCHAR* const*)config->cmd_args_.argv_;
 
   while (i < argc) {
     FeatureArg* const arg = &config->args_[feature_arg_index];
-    if (argv[i][0] == '-') {  // One of the action types or output.
-      if (!strcmp(argv[i], "-set")) {
+    if (argv[i][0] == TO_GCHAR('-')) {  // One of the action types or output.
+      if (!STRCMP(argv[i], "-set")) {
         if (ACTION_IS_NIL) {
           config->action_type_ = ACTION_SET;
         } else {
           ERROR_GOTO1("ERROR: Multiple actions specified.\n", ErrParse);
         }
         ++i;
-      } else if (!strcmp(argv[i], "-duration")) {
+      } else if (!STRCMP(argv[i], "-duration")) {
         CHECK_NUM_ARGS_AT_LEAST(2, ErrParse);
         if (ACTION_IS_NIL || config->action_type_ == ACTION_DURATION) {
           config->action_type_ = ACTION_DURATION;
@@ -645,14 +654,14 @@ static int ParseCommandLine(Config* config) {
         arg->params_ = argv[i + 1];
         ++feature_arg_index;
         i += 2;
-      } else if (!strcmp(argv[i], "-get")) {
+      } else if (!STRCMP(argv[i], "-get")) {
         if (ACTION_IS_NIL) {
           config->action_type_ = ACTION_GET;
         } else {
           ERROR_GOTO1("ERROR: Multiple actions specified.\n", ErrParse);
         }
         ++i;
-      } else if (!strcmp(argv[i], "-strip")) {
+      } else if (!STRCMP(argv[i], "-strip")) {
         if (ACTION_IS_NIL) {
           config->action_type_ = ACTION_STRIP;
           config->arg_count_ = 0;
@@ -660,7 +669,7 @@ static int ParseCommandLine(Config* config) {
           ERROR_GOTO1("ERROR: Multiple actions specified.\n", ErrParse);
         }
         ++i;
-      } else if (!strcmp(argv[i], "-frame")) {
+      } else if (!STRCMP(argv[i], "-frame")) {
         CHECK_NUM_ARGS_AT_LEAST(3, ErrParse);
         if (ACTION_IS_NIL || config->action_type_ == ACTION_SET) {
           config->action_type_ = ACTION_SET;
@@ -677,7 +686,7 @@ static int ParseCommandLine(Config* config) {
         arg->params_ = argv[i + 2];
         ++feature_arg_index;
         i += 3;
-      } else if (!strcmp(argv[i], "-loop") || !strcmp(argv[i], "-bgcolor")) {
+      } else if (!STRCMP(argv[i], "-loop") || !STRCMP(argv[i], "-bgcolor")) {
         CHECK_NUM_ARGS_AT_LEAST(2, ErrParse);
         if (ACTION_IS_NIL || config->action_type_ == ACTION_SET) {
           config->action_type_ = ACTION_SET;
@@ -690,15 +699,15 @@ static int ParseCommandLine(Config* config) {
           ERROR_GOTO1("ERROR: Multiple features specified.\n", ErrParse);
         }
         arg->subtype_ =
-            !strcmp(argv[i], "-loop") ? SUBTYPE_LOOP : SUBTYPE_BGCOLOR;
+            !STRCMP(argv[i], "-loop") ? SUBTYPE_LOOP : SUBTYPE_BGCOLOR;
         arg->params_ = argv[i + 1];
         ++feature_arg_index;
         i += 2;
-      } else if (!strcmp(argv[i], "-o")) {
+      } else if (!STRCMP(argv[i], "-o")) {
         CHECK_NUM_ARGS_AT_LEAST(2, ErrParse);
         config->output_ = argv[i + 1];
         i += 2;
-      } else if (!strcmp(argv[i], "-info")) {
+      } else if (!STRCMP(argv[i], "-info")) {
         CHECK_NUM_ARGS_EXACTLY(2, ErrParse);
         if (config->action_type_ != NIL_ACTION) {
           ERROR_GOTO1("ERROR: Multiple actions specified.\n", ErrParse);
@@ -708,40 +717,41 @@ static int ParseCommandLine(Config* config) {
           config->input_ = argv[i + 1];
         }
         i += 2;
-      } else if (!strcmp(argv[i], "-h") || !strcmp(argv[i], "-help")) {
+      } else if (!STRCMP(argv[i], "-h") || !STRCMP(argv[i], "-help")) {
         PrintHelp();
         DeleteConfig(config);
         exit(0);
-      } else if (!strcmp(argv[i], "-version")) {
+      } else if (!STRCMP(argv[i], "-version")) {
         const int version = WebPGetMuxVersion();
         printf("%d.%d.%d\n",
                (version >> 16) & 0xff, (version >> 8) & 0xff, version & 0xff);
         DeleteConfig(config);
         exit(0);
-      } else if (!strcmp(argv[i], "--")) {
+      } else if (!STRCMP(argv[i], "--")) {
         if (i < argc - 1) {
           ++i;
           if (config->input_ == NULL) {
             config->input_ = argv[i];
           } else {
-            ERROR_GOTO2("ERROR at '%s': Multiple input files specified.\n",
-                        argv[i], ErrParse);
+            ERROR_GOTO2_GCHAR(
+                "ERROR at '%s': Multiple input files specified.\n", argv[i],
+                ErrParse);
           }
         }
         break;
       } else {
-        ERROR_GOTO2("ERROR: Unknown option: '%s'.\n", argv[i], ErrParse);
+        ERROR_GOTO2_GCHAR("ERROR: Unknown option: '%s'.\n", argv[i], ErrParse);
       }
     } else {  // One of the feature types or input.
       if (ACTION_IS_NIL) {
         ERROR_GOTO1("ERROR: Action must be specified before other arguments.\n",
                     ErrParse);
       }
-      if (!strcmp(argv[i], "icc") || !strcmp(argv[i], "exif") ||
-          !strcmp(argv[i], "xmp")) {
+      if (!STRCMP(argv[i], "icc") || !STRCMP(argv[i], "exif") ||
+          !STRCMP(argv[i], "xmp")) {
         if (FEATURETYPE_IS_NIL) {
-          config->type_ = (!strcmp(argv[i], "icc")) ? FEATURE_ICCP :
-              (!strcmp(argv[i], "exif")) ? FEATURE_EXIF : FEATURE_XMP;
+          config->type_ = (!STRCMP(argv[i], "icc")) ? FEATURE_ICCP :
+              (!STRCMP(argv[i], "exif")) ? FEATURE_EXIF : FEATURE_XMP;
         } else {
           ERROR_GOTO1("ERROR: Multiple features specified.\n", ErrParse);
         }
@@ -753,7 +763,7 @@ static int ParseCommandLine(Config* config) {
         } else {
           ++i;
         }
-      } else if (!strcmp(argv[i], "frame") &&
+      } else if (!STRCMP(argv[i], "frame") &&
                  (config->action_type_ == ACTION_GET)) {
         CHECK_NUM_ARGS_AT_LEAST(2, ErrParse);
         config->type_ = FEATURE_ANMF;
@@ -764,8 +774,8 @@ static int ParseCommandLine(Config* config) {
         if (config->input_ == NULL) {
           config->input_ = argv[i];
         } else {
-          ERROR_GOTO2("ERROR at '%s': Multiple input files specified.\n",
-                      argv[i], ErrParse);
+          ERROR_GOTO2_GCHAR("ERROR at '%s': Multiple input files specified.\n",
+                            argv[i], ErrParse);
         }
         ++i;
       }
@@ -808,14 +818,15 @@ static int ValidateConfig(Config* const config) {
 }
 
 // Create config object from command-line arguments.
-static int InitializeConfig(int argc, const char* argv[],
+static int InitializeConfig(int argc, const GCHAR* argv[],
                             Config* const config) {
   int num_feature_args = 0;
   int ok;
 
   memset(config, 0, sizeof(*config));
 
-  ok = ExUtilInitCommandLineArguments(argc, argv, &config->cmd_args_);
+  ok = ExUtilInitCommandLineArguments(argc, (const char**)argv,
+                                      &config->cmd_args_);
   if (!ok) return 0;
 
   // Validate command-line arguments.
@@ -857,7 +868,7 @@ static int GetFrame(const WebPMux* mux, const Config* config) {
   WebPMuxFrameInfo info;
   WebPDataInit(&info.bitstream);
 
-  num = ExUtilGetInt(config->args_[0].params_, 10, &parse_error);
+  num = EXUTILGETINT(config->args_[0].params_, 10, &parse_error);
   if (num < 0) {
     ERROR_GOTO1("ERROR: Frame/Fragment index must be non-negative.\n", ErrGet);
   }
@@ -948,7 +959,7 @@ static int Process(const Config* config) {
               case SUBTYPE_LOOP: {
                 int parse_error = 0;
                 const int loop_count =
-                    ExUtilGetInt(config->args_[i].params_, 10, &parse_error);
+                    EXUTILGETINT(config->args_[i].params_, 10, &parse_error);
                 if (loop_count < 0 || loop_count > 65535) {
                   // Note: This is only a 'necessary' condition for loop_count
                   // to be valid. The 'sufficient' conditioned in checked in
@@ -964,8 +975,8 @@ static int Process(const Config* config) {
               case SUBTYPE_ANMF: {
                 WebPMuxFrameInfo frame;
                 frame.id = WEBP_CHUNK_ANMF;
-                ok = ExUtilReadFileToWebPData(config->args_[i].filename_,
-                                              &frame.bitstream);
+                ok = ExUtilReadFileToWebPData(
+                    (const char*)config->args_[i].filename_, &frame.bitstream);
                 if (!ok) goto Err2;
                 ok = ParseFrameArgs(config->args_[i].params_, &frame);
                 if (!ok) {
@@ -1000,7 +1011,8 @@ static int Process(const Config* config) {
         case FEATURE_XMP: {
           ok = CreateMux(config->input_, &mux);
           if (!ok) goto Err2;
-          ok = ExUtilReadFileToWebPData(config->args_[0].filename_, &chunk);
+          ok = ExUtilReadFileToWebPData((const char*)config->args_[0].filename_,
+                                        &chunk);
           if (!ok) goto Err2;
           err = WebPMuxSetChunk(mux, kFourccList[config->type_], &chunk, 1);
           free((void*)chunk.bytes);
@@ -1046,7 +1058,7 @@ static int Process(const Config* config) {
           int k;
           int args[3];
           int duration, start, end;
-          const int nb_args = ExUtilGetInts(config->args_[i].params_,
+          const int nb_args = EXUTILGETINTS(config->args_[i].params_,
                                             10, 3, args);
           ok = (nb_args >= 1);
           if (!ok) goto Err3;
@@ -1138,7 +1150,7 @@ static int Process(const Config* config) {
 //------------------------------------------------------------------------------
 // Main.
 
-int main(int argc, const char* argv[]) {
+int MAIN(int argc, const GCHAR* argv[]) {
   Config config;
   int ok = InitializeConfig(argc - 1, argv + 1, &config);
   if (ok) {
