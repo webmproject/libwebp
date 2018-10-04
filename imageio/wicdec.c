@@ -29,6 +29,7 @@
                          // code with COBJMACROS.
 #include <ole2.h>  // CreateStreamOnHGlobal()
 #include <shlwapi.h>
+#include <wchar.h>
 #include <windows.h>
 #include <wincodec.h>
 
@@ -83,12 +84,12 @@ WEBP_DEFINE_GUID(GUID_WICPixelFormat64bppRGBA_,
                  0x6fddc324, 0x4e03, 0x4bfe,
                  0xb1, 0x85, 0x3d, 0x77, 0x76, 0x8d, 0xc9, 0x16);
 
-static HRESULT OpenInputStream(const char* filename, IStream** stream) {
+static HRESULT OpenInputStream(const wchar_t* filename, IStream** stream) {
   HRESULT hr = S_OK;
-  if (!strcmp(filename, "-")) {
+  if (!wcscmp(filename, L"-")) {
     const uint8_t* data = NULL;
     size_t data_size = 0;
-    const int ok = ImgIoUtilReadFile(filename, &data, &data_size);
+    const int ok = ImgIoUtilReadFile((const char*)filename, &data, &data_size);
     if (ok) {
       HGLOBAL image = GlobalAlloc(GMEM_MOVEABLE, data_size);
       if (image != NULL) {
@@ -108,11 +109,11 @@ static HRESULT OpenInputStream(const char* filename, IStream** stream) {
       hr = E_FAIL;
     }
   } else {
-    IFS(SHCreateStreamOnFileA(filename, STGM_READ, stream));
+    IFS(SHCreateStreamOnFileW(filename, STGM_READ, stream));
   }
 
   if (FAILED(hr)) {
-    fprintf(stderr, "Error opening input file %s (%08lx)\n", filename, hr);
+    fwprintf(stderr, L"Error opening input file %s (%08lx)\n", filename, hr);
   }
   return hr;
 }
@@ -290,7 +291,7 @@ int ReadPictureWithWIC(const char* const filename,
             "Use -s for the available YUV input.\n");
   }
   // Prepare for image decoding.
-  IFS(OpenInputStream(filename, &stream));
+  IFS(OpenInputStream((const wchar_t*)filename, &stream));
   IFS(IWICImagingFactory_CreateDecoderFromStream(
           factory, stream, NULL,
           WICDecodeMetadataCacheOnDemand, &decoder));

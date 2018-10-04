@@ -24,6 +24,8 @@
 #include "webp/format_constants.h"
 #include "webp/mux_types.h"
 
+#include "./unicode.h"
+
 #if defined(_MSC_VER) && _MSC_VER < 1900
 #define snprintf _snprintf
 #endif
@@ -167,11 +169,11 @@ static uint32_t ReadLE32(const uint8_t** data) {
   return val;
 }
 
-static int ReadFileToWebPData(const char* const filename,
+static int ReadFileToWebPData(const GCHAR* const filename,
                               WebPData* const webp_data) {
   const uint8_t* data;
   size_t size;
-  if (!ImgIoUtilReadFile(filename, &data, &size)) return 0;
+  if (!ImgIoUtilReadFile((const char*)filename, &data, &size)) return 0;
   webp_data->bytes = data;
   webp_data->size = size;
   return 1;
@@ -1113,7 +1115,7 @@ static void HelpLong(void) {
          "  -bitstream_info .... Parse bitstream header.\n");
 }
 
-int main(int argc, const char* argv[]) {
+int MAIN(int argc, const GCHAR* argv[]) {
   int c, quiet = 0, show_diag = 0, show_summary = 0;
   int parse_bitstream = 0;
   WebPInfoStatus webp_info_status = WEBP_INFO_OK;
@@ -1126,21 +1128,21 @@ int main(int argc, const char* argv[]) {
 
   // Parse command-line input.
   for (c = 1; c < argc; ++c) {
-    if (!strcmp(argv[c], "-h") || !strcmp(argv[c], "-help")) {
+    if (!STRCMP(argv[c], "-h") || !STRCMP(argv[c], "-help")) {
       HelpShort();
       return WEBP_INFO_OK;
-    } else if (!strcmp(argv[c], "-H") || !strcmp(argv[c], "-longhelp")) {
+    } else if (!STRCMP(argv[c], "-H") || !STRCMP(argv[c], "-longhelp")) {
       HelpLong();
       return WEBP_INFO_OK;
-    } else if (!strcmp(argv[c], "-quiet")) {
+    } else if (!STRCMP(argv[c], "-quiet")) {
       quiet = 1;
-    } else if (!strcmp(argv[c], "-diag")) {
+    } else if (!STRCMP(argv[c], "-diag")) {
       show_diag = 1;
-    } else if (!strcmp(argv[c], "-summary")) {
+    } else if (!STRCMP(argv[c], "-summary")) {
       show_summary = 1;
-    } else if (!strcmp(argv[c], "-bitstream_info")) {
+    } else if (!STRCMP(argv[c], "-bitstream_info")) {
       parse_bitstream = 1;
-    } else if (!strcmp(argv[c], "-version")) {
+    } else if (!STRCMP(argv[c], "-version")) {
       const int version = WebPGetDecoderVersion();
       printf("WebP Decoder version: %d.%d.%d\n",
              (version >> 16) & 0xff, (version >> 8) & 0xff, version & 0xff);
@@ -1158,7 +1160,7 @@ int main(int argc, const char* argv[]) {
   // Process input files one by one.
   for (; c < argc; ++c) {
     WebPData webp_data;
-    const char* in_file = NULL;
+    const GCHAR* in_file = NULL;
     WebPInfoInit(&webp_info);
     webp_info.quiet_ = quiet;
     webp_info.show_diagnosis_ = show_diag;
@@ -1167,10 +1169,10 @@ int main(int argc, const char* argv[]) {
     in_file = argv[c];
     if (in_file == NULL || !ReadFileToWebPData(in_file, &webp_data)) {
       webp_info_status = WEBP_INFO_INVALID_COMMAND;
-      fprintf(stderr, "Failed to open input file %s.\n", in_file);
+      FPRINTF(stderr, "Failed to open input file %s.\n", in_file);
       continue;
     }
-    if (!webp_info.quiet_) printf("File: %s\n", in_file);
+    if (!webp_info.quiet_) PRINTF("File: %s\n", in_file);
     webp_info_status = AnalyzeWebP(&webp_info, &webp_data);
     WebPDataClear(&webp_data);
   }

@@ -14,25 +14,27 @@
 #include "extras/extras.h"
 #include "imageio/imageio_util.h"
 
-int main(int argc, const char *argv[]) {
+#include "../examples/unicode.h"
+
+int MAIN(int argc, const GCHAR* argv[]) {
   int c;
   int quiet = 0;
   int ok = 1;
   for (c = 1; ok && c < argc; ++c) {
-    if (!strcmp(argv[c], "-quiet")) {
+    if (!STRCMP(argv[c], "-quiet")) {
       quiet = 1;
-    } else if (!strcmp(argv[c], "-help") || !strcmp(argv[c], "-h")) {
+    } else if (!STRCMP(argv[c], "-help") || !STRCMP(argv[c], "-h")) {
       printf("webp_quality [-h][-quiet] webp_files...\n");
       return 0;
     } else {
-      const char* const filename = argv[c];
+      const GCHAR* const filename = argv[c];
       const uint8_t* data = NULL;
       size_t data_size = 0;
       int q;
-      ok = ImgIoUtilReadFile(filename, &data, &data_size);
+      ok = ImgIoUtilReadFile((const char*)filename, &data, &data_size);
       if (!ok) break;
       q = VP8EstimateQuality(data, data_size);
-      if (!quiet) printf("[%s] ", filename);
+      if (!quiet) PRINTF("[%s] ", filename);
       if (q < 0) {
         fprintf(stderr, "Not a WebP file, or not a lossy WebP file.\n");
         ok = 0;

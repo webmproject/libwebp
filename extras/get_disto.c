@@ -27,12 +27,14 @@
 #include "imageio/image_dec.h"
 #include "imageio/imageio_util.h"
 
-static size_t ReadPicture(const char* const filename, WebPPicture* const pic,
+#include "../examples/unicode.h"
+
+static size_t ReadPicture(const GCHAR* const filename, WebPPicture* const pic,
                           int keep_alpha) {
   const uint8_t* data = NULL;
   size_t data_size = 0;
   WebPImageReader reader = NULL;
-  int ok = ImgIoUtilReadFile(filename, &data, &data_size);
+  int ok = ImgIoUtilReadFile((const char*)filename, &data, &data_size);
   if (!ok) goto End;
 
   pic->use_argb = 1;  // force ARGB
@@ -40,7 +42,7 @@ static size_t ReadPicture(const char* const filename, WebPPicture* const pic,
 #ifdef HAVE_WINCODEC_H
   // Try to decode the file using WIC falling back to the other readers for
   // e.g., WebP.
-  ok = ReadPictureWithWIC(filename, pic, keep_alpha, NULL);
+  ok = ReadPictureWithWIC((const char*)filename, pic, keep_alpha, NULL);
   if (ok) goto End;
 #endif
   reader = WebPGuessImageReader(data, data_size);
@@ -48,7 +50,7 @@ static size_t ReadPicture(const char* const filename, WebPPicture* const pic,
 
  End:
   if (!ok) {
-    fprintf(stderr, "Error! Could not process file %s\n", filename);
+    FPRINTF(stderr, "Error! Could not process file %s\n", filename);
   }
   free((void*)data);
   return ok ? data_size : 0;
@@ -224,7 +226,7 @@ static void Help(void) {
           " Also handles PNG, JPG and TIFF files, in addition to WebP.\n");
 }
 
-int main(int argc, const char *argv[]) {
+int MAIN(int argc, const GCHAR* argv[]) {
   WebPPicture pic1, pic2;
   size_t size1 = 0, size2 = 0;
   int ret = 1;
@@ -235,9 +237,9 @@ int main(int argc, const char *argv[]) {
   int keep_alpha = 0;
   int scale = 0;
   int use_gray = 0;
-  const char* name1 = NULL;
-  const char* name2 = NULL;
-  const char* output = NULL;
+  const GCHAR* name1 = NULL;
+  const GCHAR* name2 = NULL;
+  const GCHAR* output = NULL;
 
   if (!WebPPictureInit(&pic1) || !WebPPictureInit(&pic2)) {
     fprintf(stderr, "Can't init pictures\n");
@@ -245,22 +247,22 @@ int main(int argc, const char *argv[]) {
   }
 
   for (c = 1; c < argc; ++c) {
-    if (!strcmp(argv[c], "-ssim")) {
+    if (!STRCMP(argv[c], "-ssim")) {
       type = 1;
-    } else if (!strcmp(argv[c], "-psnr")) {
+    } else if (!STRCMP(argv[c], "-psnr")) {
       type = 0;
-    } else if (!strcmp(argv[c], "-alpha")) {
+    } else if (!STRCMP(argv[c], "-alpha")) {
       keep_alpha = 1;
-    } else if (!strcmp(argv[c], "-scale")) {
+    } else if (!STRCMP(argv[c], "-scale")) {
       scale = 1;
-    } else if (!strcmp(argv[c], "-gray")) {
+    } else if (!STRCMP(argv[c], "-gray")) {
       use_gray = 1;
-    } else if (!strcmp(argv[c], "-h")) {
+    } else if (!STRCMP(argv[c], "-h")) {
       help = 1;
       ret = 0;
-    } else if (!strcmp(argv[c], "-o")) {
+    } else if (!STRCMP(argv[c], "-o")) {
       if (++c == argc) {
-        fprintf(stderr, "missing file name after %s option.\n", argv[c - 1]);
+        FPRINTF(stderr, "missing file name after %s option.\n", argv[c - 1]);
         goto End;
       }
       output = argv[c];
@@ -332,7 +334,7 @@ int main(int argc, const char *argv[]) {
       fprintf(stderr, "Error during lossless encoding.\n");
       goto End;
     }
-    ret = ImgIoUtilWriteFile(output, data, data_size) ? 0 : 1;
+    ret = ImgIoUtilWriteFile((const char*)output, data, data_size) ? 0 : 1;
     WebPFree(data);
     if (ret) goto End;
 #else
