@@ -26,6 +26,8 @@
 #include "./stopwatch.h"
 #include "webp/encode.h"
 
+#include "./unicode.h"
+
 #ifndef WEBP_DLL
 #ifdef __cplusplus
 extern "C" {
@@ -71,24 +73,24 @@ static int ReadYUV(const uint8_t* const data, size_t data_size,
 
 #ifdef HAVE_WINCODEC_H
 
-static int ReadPicture(const char* const filename, WebPPicture* const pic,
+static int ReadPicture(const GCHAR* const filename, WebPPicture* const pic,
                        int keep_alpha, Metadata* const metadata) {
   int ok = 0;
   const uint8_t* data = NULL;
   size_t data_size = 0;
   if (pic->width != 0 && pic->height != 0) {
-    ok = ImgIoUtilReadFile(filename, &data, &data_size);
+    ok = ImgIoUtilReadFile((const char*)filename, &data, &data_size);
     ok = ok && ReadYUV(data, data_size, pic);
   } else {
     // If no size specified, try to decode it using WIC.
-    ok = ReadPictureWithWIC(filename, pic, keep_alpha, metadata);
+    ok = ReadPictureWithWIC((const char*)filename, pic, keep_alpha, metadata);
     if (!ok) {
-      ok = ImgIoUtilReadFile(filename, &data, &data_size);
+      ok = ImgIoUtilReadFile((const char*)filename, &data, &data_size);
       ok = ok && ReadWebP(data, data_size, pic, keep_alpha, metadata);
     }
   }
   if (!ok) {
-    fprintf(stderr, "Error! Could not process file %s\n", filename);
+    FPRINTF(stderr, "Error! Could not process file %s\n", filename);
   }
   free((void*)data);
   return ok;
@@ -96,13 +98,13 @@ static int ReadPicture(const char* const filename, WebPPicture* const pic,
 
 #else  // !HAVE_WINCODEC_H
 
-static int ReadPicture(const char* const filename, WebPPicture* const pic,
+static int ReadPicture(const GCHAR* const filename, WebPPicture* const pic,
                        int keep_alpha, Metadata* const metadata) {
   const uint8_t* data = NULL;
   size_t data_size = 0;
   int ok = 0;
 
-  ok = ImgIoUtilReadFile(filename, &data, &data_size);
+  ok = ImgIoUtilReadFile((const char*)filename, &data, &data_size);
   if (!ok) goto End;
 
   if (pic->width == 0 || pic->height == 0) {
@@ -114,7 +116,7 @@ static int ReadPicture(const char* const filename, WebPPicture* const pic,
   }
  End:
   if (!ok) {
-    fprintf(stderr, "Error! Could not process file %s\n", filename);
+    FPRINTF(stderr, "Error! Could not process file %s\n", filename);
   }
   free((void*)data);
   return ok;
@@ -180,12 +182,12 @@ static void PrintFullLosslessInfo(const WebPAuxStats* const stats,
 
 static void PrintExtraInfoLossless(const WebPPicture* const pic,
                                    int short_output,
-                                   const char* const file_name) {
+                                   const GCHAR* const file_name) {
   const WebPAuxStats* const stats = pic->stats;
   if (short_output) {
     fprintf(stderr, "%7d %2.2f\n", stats->coded_size, stats->PSNR[3]);
   } else {
-    fprintf(stderr, "File:      %s\n", file_name);
+    FPRINTF(stderr, "File:      %s\n", file_name);
     fprintf(stderr, "Dimension: %d x %d\n", pic->width, pic->height);
     fprintf(stderr, "Output:    %d bytes (%.2f bpp)\n", stats->coded_size,
             8.f * stats->coded_size / pic->width / pic->height);
@@ -195,7 +197,7 @@ static void PrintExtraInfoLossless(const WebPPicture* const pic,
 
 static void PrintExtraInfoLossy(const WebPPicture* const pic, int short_output,
                                 int full_details,
-                                const char* const file_name) {
+                                const GCHAR* const file_name) {
   const WebPAuxStats* const stats = pic->stats;
   if (short_output) {
     fprintf(stderr, "%7d %2.2f\n", stats->coded_size, stats->PSNR[3]);
@@ -204,7 +206,7 @@ static void PrintExtraInfoLossy(const WebPPicture* const pic, int short_output,
     const int num_i16 = stats->block_count[1];
     const int num_skip = stats->block_count[2];
     const int total = num_i4 + num_i16;
-    fprintf(stderr, "File:      %s\n", file_name);
+    FPRINTF(stderr, "File:      %s\n", file_name);
     fprintf(stderr, "Dimension: %d x %d%s\n",
             pic->width, pic->height,
             stats->alpha_data_size ? " (with alpha)" : "");
@@ -297,7 +299,7 @@ static int MyWriter(const uint8_t* data, size_t data_size,
 }
 
 // Dumps a picture as a PGM file using the IMC4 layout.
-static int DumpPicture(const WebPPicture* const picture, const char* PGM_name) {
+static int DumpPicture(const WebPPicture* const picture, const GCHAR* PGM_name) {
   int y;
   const int uv_width = (picture->width + 1) / 2;
   const int uv_height = (picture->height + 1) / 2;
@@ -309,7 +311,7 @@ static int DumpPicture(const WebPPicture* const picture, const char* PGM_name) {
   const int alpha_height =
       WebPPictureHasTransparency(picture) ? picture->height : 0;
   const int height = picture->height + uv_height + alpha_height;
-  FILE* const f = fopen(PGM_name, "wb");
+  FILE* const f = FOPEN(PGM_name, "wb");
   if (f == NULL) return 0;
   fprintf(f, "P5\n%d %d\n255\n", stride, height);
   for (y = 0; y < picture->height; ++y) {
@@ -637,9 +639,9 @@ static const char* const kErrorMessages[VP8_ENC_ERROR_LAST] = {
 
 //------------------------------------------------------------------------------
 
-int main(int argc, const char *argv[]) {
+int MAIN(int argc, const GCHAR* argv[]) {
   int return_value = -1;
-  const char *in_file = NULL, *out_file = NULL, *dump_file = NULL;
+  const GCHAR *in_file = NULL, *out_file = NULL, *dump_file = NULL;
   FILE *out = NULL;
   int c;
   int short_output = 0;
@@ -679,31 +681,31 @@ int main(int argc, const char *argv[]) {
 
   for (c = 1; c < argc; ++c) {
     int parse_error = 0;
-    if (!strcmp(argv[c], "-h") || !strcmp(argv[c], "-help")) {
+    if (!STRCMP((argv[c]), "-h") || !STRCMP(argv[c], "-help")) {
       HelpShort();
       return 0;
-    } else if (!strcmp(argv[c], "-H") || !strcmp(argv[c], "-longhelp")) {
+    } else if (!STRCMP(argv[c], "-H") || !STRCMP(argv[c], "-longhelp")) {
       HelpLong();
       return 0;
-    } else if (!strcmp(argv[c], "-o") && c < argc - 1) {
+    } else if (!STRCMP(argv[c], "-o") && c < argc - 1) {
       out_file = argv[++c];
-    } else if (!strcmp(argv[c], "-d") && c < argc - 1) {
+    } else if (!STRCMP(argv[c], "-d") && c < argc - 1) {
       dump_file = argv[++c];
       config.show_compressed = 1;
-    } else if (!strcmp(argv[c], "-print_psnr")) {
+    } else if (!STRCMP(argv[c], "-print_psnr")) {
       config.show_compressed = 1;
       print_distortion = 0;
-    } else if (!strcmp(argv[c], "-print_ssim")) {
+    } else if (!STRCMP(argv[c], "-print_ssim")) {
       config.show_compressed = 1;
       print_distortion = 1;
-    } else if (!strcmp(argv[c], "-print_lsim")) {
+    } else if (!STRCMP(argv[c], "-print_lsim")) {
       config.show_compressed = 1;
       print_distortion = 2;
-    } else if (!strcmp(argv[c], "-short")) {
+    } else if (!STRCMP(argv[c], "-short")) {
       ++short_output;
-    } else if (!strcmp(argv[c], "-s") && c < argc - 2) {
-      picture.width = ExUtilGetInt(argv[++c], 0, &parse_error);
-      picture.height = ExUtilGetInt(argv[++c], 0, &parse_error);
+    } else if (!STRCMP(argv[c], "-s") && c < argc - 2) {
+      picture.width = EXUTILGETINT(argv[++c], 0, &parse_error);
+      picture.height = EXUTILGETINT(argv[++c], 0, &parse_error);
       if (picture.width > WEBP_MAX_DIMENSION || picture.width < 0 ||
           picture.height > WEBP_MAX_DIMENSION ||  picture.height < 0) {
         fprintf(stderr,
@@ -711,162 +713,162 @@ int main(int argc, const char *argv[]) {
                 picture.width, picture.height);
         goto Error;
       }
-    } else if (!strcmp(argv[c], "-m") && c < argc - 1) {
-      config.method = ExUtilGetInt(argv[++c], 0, &parse_error);
+    } else if (!STRCMP(argv[c], "-m") && c < argc - 1) {
+      config.method = EXUTILGETINT(argv[++c], 0, &parse_error);
       use_lossless_preset = 0;   // disable -z option
-    } else if (!strcmp(argv[c], "-q") && c < argc - 1) {
-      config.quality = ExUtilGetFloat(argv[++c], &parse_error);
+    } else if (!STRCMP(argv[c], "-q") && c < argc - 1) {
+      config.quality = EXUTILGETFLOAT(argv[++c], &parse_error);
       use_lossless_preset = 0;   // disable -z option
-    } else if (!strcmp(argv[c], "-z") && c < argc - 1) {
-      lossless_preset = ExUtilGetInt(argv[++c], 0, &parse_error);
+    } else if (!STRCMP(argv[c], "-z") && c < argc - 1) {
+      lossless_preset = EXUTILGETINT(argv[++c], 0, &parse_error);
       if (use_lossless_preset != 0) use_lossless_preset = 1;
-    } else if (!strcmp(argv[c], "-alpha_q") && c < argc - 1) {
-      config.alpha_quality = ExUtilGetInt(argv[++c], 0, &parse_error);
-    } else if (!strcmp(argv[c], "-alpha_method") && c < argc - 1) {
-      config.alpha_compression = ExUtilGetInt(argv[++c], 0, &parse_error);
-    } else if (!strcmp(argv[c], "-alpha_cleanup")) {
+    } else if (!STRCMP(argv[c], "-alpha_q") && c < argc - 1) {
+      config.alpha_quality = EXUTILGETINT(argv[++c], 0, &parse_error);
+    } else if (!STRCMP(argv[c], "-alpha_method") && c < argc - 1) {
+      config.alpha_compression = EXUTILGETINT(argv[++c], 0, &parse_error);
+    } else if (!STRCMP(argv[c], "-alpha_cleanup")) {
       // This flag is obsolete, does opposite of -exact.
       config.exact = 0;
-    } else if (!strcmp(argv[c], "-exact")) {
+    } else if (!STRCMP(argv[c], "-exact")) {
       config.exact = 1;
-    } else if (!strcmp(argv[c], "-blend_alpha") && c < argc - 1) {
+    } else if (!STRCMP(argv[c], "-blend_alpha") && c < argc - 1) {
       blend_alpha = 1;
       // background color is given in hex with an optional '0x' prefix
-      background_color = ExUtilGetInt(argv[++c], 16, &parse_error);
+      background_color = EXUTILGETINT(argv[++c], 16, &parse_error);
       background_color = background_color & 0x00ffffffu;
-    } else if (!strcmp(argv[c], "-alpha_filter") && c < argc - 1) {
+    } else if (!STRCMP(argv[c], "-alpha_filter") && c < argc - 1) {
       ++c;
-      if (!strcmp(argv[c], "none")) {
+      if (!STRCMP(argv[c], "none")) {
         config.alpha_filtering = 0;
-      } else if (!strcmp(argv[c], "fast")) {
+      } else if (!STRCMP(argv[c], "fast")) {
         config.alpha_filtering = 1;
-      } else if (!strcmp(argv[c], "best")) {
+      } else if (!STRCMP(argv[c], "best")) {
         config.alpha_filtering = 2;
       } else {
-        fprintf(stderr, "Error! Unrecognized alpha filter: %s\n", argv[c]);
+        FPRINTF(stderr, "Error! Unrecognized alpha filter: %s\n", argv[c]);
         goto Error;
       }
-    } else if (!strcmp(argv[c], "-noalpha")) {
+    } else if (!STRCMP(argv[c], "-noalpha")) {
       keep_alpha = 0;
-    } else if (!strcmp(argv[c], "-lossless")) {
+    } else if (!STRCMP(argv[c], "-lossless")) {
       config.lossless = 1;
-    } else if (!strcmp(argv[c], "-near_lossless") && c < argc - 1) {
-      config.near_lossless = ExUtilGetInt(argv[++c], 0, &parse_error);
+    } else if (!STRCMP(argv[c], "-near_lossless") && c < argc - 1) {
+      config.near_lossless = EXUTILGETINT(argv[++c], 0, &parse_error);
       config.lossless = 1;  // use near-lossless only with lossless
-    } else if (!strcmp(argv[c], "-hint") && c < argc - 1) {
+    } else if (!STRCMP(argv[c], "-hint") && c < argc - 1) {
       ++c;
-      if (!strcmp(argv[c], "photo")) {
+      if (!STRCMP(argv[c], "photo")) {
         config.image_hint = WEBP_HINT_PHOTO;
-      } else if (!strcmp(argv[c], "picture")) {
+      } else if (!STRCMP(argv[c], "picture")) {
         config.image_hint = WEBP_HINT_PICTURE;
-      } else if (!strcmp(argv[c], "graph")) {
+      } else if (!STRCMP(argv[c], "graph")) {
         config.image_hint = WEBP_HINT_GRAPH;
       } else {
-        fprintf(stderr, "Error! Unrecognized image hint: %s\n", argv[c]);
+        FPRINTF(stderr, "Error! Unrecognized image hint: %s\n", argv[c]);
         goto Error;
       }
-    } else if (!strcmp(argv[c], "-size") && c < argc - 1) {
-      config.target_size = ExUtilGetInt(argv[++c], 0, &parse_error);
-    } else if (!strcmp(argv[c], "-psnr") && c < argc - 1) {
-      config.target_PSNR = ExUtilGetFloat(argv[++c], &parse_error);
-    } else if (!strcmp(argv[c], "-sns") && c < argc - 1) {
-      config.sns_strength = ExUtilGetInt(argv[++c], 0, &parse_error);
-    } else if (!strcmp(argv[c], "-f") && c < argc - 1) {
-      config.filter_strength = ExUtilGetInt(argv[++c], 0, &parse_error);
-    } else if (!strcmp(argv[c], "-af")) {
+    } else if (!STRCMP(argv[c], "-size") && c < argc - 1) {
+      config.target_size = EXUTILGETINT(argv[++c], 0, &parse_error);
+    } else if (!STRCMP(argv[c], "-psnr") && c < argc - 1) {
+      config.target_PSNR = EXUTILGETFLOAT(argv[++c], &parse_error);
+    } else if (!STRCMP(argv[c], "-sns") && c < argc - 1) {
+      config.sns_strength = EXUTILGETINT(argv[++c], 0, &parse_error);
+    } else if (!STRCMP(argv[c], "-f") && c < argc - 1) {
+      config.filter_strength = EXUTILGETINT(argv[++c], 0, &parse_error);
+    } else if (!STRCMP(argv[c], "-af")) {
       config.autofilter = 1;
-    } else if (!strcmp(argv[c], "-jpeg_like")) {
+    } else if (!STRCMP(argv[c], "-jpeg_like")) {
       config.emulate_jpeg_size = 1;
-    } else if (!strcmp(argv[c], "-mt")) {
+    } else if (!STRCMP(argv[c], "-mt")) {
       ++config.thread_level;  // increase thread level
-    } else if (!strcmp(argv[c], "-low_memory")) {
+    } else if (!STRCMP(argv[c], "-low_memory")) {
       config.low_memory = 1;
-    } else if (!strcmp(argv[c], "-strong")) {
+    } else if (!STRCMP(argv[c], "-strong")) {
       config.filter_type = 1;
-    } else if (!strcmp(argv[c], "-nostrong")) {
+    } else if (!STRCMP(argv[c], "-nostrong")) {
       config.filter_type = 0;
-    } else if (!strcmp(argv[c], "-sharpness") && c < argc - 1) {
-      config.filter_sharpness = ExUtilGetInt(argv[++c], 0, &parse_error);
-    } else if (!strcmp(argv[c], "-sharp_yuv")) {
+    } else if (!STRCMP(argv[c], "-sharpness") && c < argc - 1) {
+      config.filter_sharpness = EXUTILGETINT(argv[++c], 0, &parse_error);
+    } else if (!STRCMP(argv[c], "-sharp_yuv")) {
       config.use_sharp_yuv = 1;
-    } else if (!strcmp(argv[c], "-pass") && c < argc - 1) {
-      config.pass = ExUtilGetInt(argv[++c], 0, &parse_error);
-    } else if (!strcmp(argv[c], "-pre") && c < argc - 1) {
-      config.preprocessing = ExUtilGetInt(argv[++c], 0, &parse_error);
-    } else if (!strcmp(argv[c], "-segments") && c < argc - 1) {
-      config.segments = ExUtilGetInt(argv[++c], 0, &parse_error);
-    } else if (!strcmp(argv[c], "-partition_limit") && c < argc - 1) {
-      config.partition_limit = ExUtilGetInt(argv[++c], 0, &parse_error);
-    } else if (!strcmp(argv[c], "-map") && c < argc - 1) {
-      picture.extra_info_type = ExUtilGetInt(argv[++c], 0, &parse_error);
-    } else if (!strcmp(argv[c], "-crop") && c < argc - 4) {
+    } else if (!STRCMP(argv[c], "-pass") && c < argc - 1) {
+      config.pass = EXUTILGETINT(argv[++c], 0, &parse_error);
+    } else if (!STRCMP(argv[c], "-pre") && c < argc - 1) {
+      config.preprocessing = EXUTILGETINT(argv[++c], 0, &parse_error);
+    } else if (!STRCMP(argv[c], "-segments") && c < argc - 1) {
+      config.segments = EXUTILGETINT(argv[++c], 0, &parse_error);
+    } else if (!STRCMP(argv[c], "-partition_limit") && c < argc - 1) {
+      config.partition_limit = EXUTILGETINT(argv[++c], 0, &parse_error);
+    } else if (!STRCMP(argv[c], "-map") && c < argc - 1) {
+      picture.extra_info_type = EXUTILGETINT(argv[++c], 0, &parse_error);
+    } else if (!STRCMP(argv[c], "-crop") && c < argc - 4) {
       crop = 1;
-      crop_x = ExUtilGetInt(argv[++c], 0, &parse_error);
-      crop_y = ExUtilGetInt(argv[++c], 0, &parse_error);
-      crop_w = ExUtilGetInt(argv[++c], 0, &parse_error);
-      crop_h = ExUtilGetInt(argv[++c], 0, &parse_error);
-    } else if (!strcmp(argv[c], "-resize") && c < argc - 2) {
-      resize_w = ExUtilGetInt(argv[++c], 0, &parse_error);
-      resize_h = ExUtilGetInt(argv[++c], 0, &parse_error);
+      crop_x = EXUTILGETINT(argv[++c], 0, &parse_error);
+      crop_y = EXUTILGETINT(argv[++c], 0, &parse_error);
+      crop_w = EXUTILGETINT(argv[++c], 0, &parse_error);
+      crop_h = EXUTILGETINT(argv[++c], 0, &parse_error);
+    } else if (!STRCMP(argv[c], "-resize") && c < argc - 2) {
+      resize_w = EXUTILGETINT(argv[++c], 0, &parse_error);
+      resize_h = EXUTILGETINT(argv[++c], 0, &parse_error);
 #ifndef WEBP_DLL
-    } else if (!strcmp(argv[c], "-noasm")) {
+    } else if (!STRCMP(argv[c], "-noasm")) {
       VP8GetCPUInfo = NULL;
 #endif
-    } else if (!strcmp(argv[c], "-version")) {
+    } else if (!STRCMP(argv[c], "-version")) {
       const int version = WebPGetEncoderVersion();
       printf("%d.%d.%d\n",
              (version >> 16) & 0xff, (version >> 8) & 0xff, version & 0xff);
       return 0;
-    } else if (!strcmp(argv[c], "-progress")) {
+    } else if (!STRCMP(argv[c], "-progress")) {
       show_progress = 1;
-    } else if (!strcmp(argv[c], "-quiet")) {
+    } else if (!STRCMP(argv[c], "-quiet")) {
       quiet = 1;
-    } else if (!strcmp(argv[c], "-preset") && c < argc - 1) {
+    } else if (!STRCMP(argv[c], "-preset") && c < argc - 1) {
       WebPPreset preset;
       ++c;
-      if (!strcmp(argv[c], "default")) {
+      if (!STRCMP(argv[c], "default")) {
         preset = WEBP_PRESET_DEFAULT;
-      } else if (!strcmp(argv[c], "photo")) {
+      } else if (!STRCMP(argv[c], "photo")) {
         preset = WEBP_PRESET_PHOTO;
-      } else if (!strcmp(argv[c], "picture")) {
+      } else if (!STRCMP(argv[c], "picture")) {
         preset = WEBP_PRESET_PICTURE;
-      } else if (!strcmp(argv[c], "drawing")) {
+      } else if (!STRCMP(argv[c], "drawing")) {
         preset = WEBP_PRESET_DRAWING;
-      } else if (!strcmp(argv[c], "icon")) {
+      } else if (!STRCMP(argv[c], "icon")) {
         preset = WEBP_PRESET_ICON;
-      } else if (!strcmp(argv[c], "text")) {
+      } else if (!STRCMP(argv[c], "text")) {
         preset = WEBP_PRESET_TEXT;
       } else {
-        fprintf(stderr, "Error! Unrecognized preset: %s\n", argv[c]);
+        FPRINTF(stderr, "Error! Unrecognized preset: %s\n", argv[c]);
         goto Error;
       }
       if (!WebPConfigPreset(&config, preset, config.quality)) {
         fprintf(stderr, "Error! Could initialize configuration with preset.\n");
         goto Error;
       }
-    } else if (!strcmp(argv[c], "-metadata") && c < argc - 1) {
+    } else if (!STRCMP(argv[c], "-metadata") && c < argc - 1) {
       static const struct {
-        const char* option;
+        const GCHAR* option;
         int flag;
       } kTokens[] = {
-        { "all",  METADATA_ALL },
-        { "none", 0 },
-        { "exif", METADATA_EXIF },
-        { "icc",  METADATA_ICC },
-        { "xmp",  METADATA_XMP },
+        { TO_GCHAR("all"),  METADATA_ALL },
+        { TO_GCHAR("none"), 0 },
+        { TO_GCHAR("exif"), METADATA_EXIF },
+        { TO_GCHAR("icc"),  METADATA_ICC },
+        { TO_GCHAR("xmp"),  METADATA_XMP },
       };
       const size_t kNumTokens = sizeof(kTokens) / sizeof(kTokens[0]);
-      const char* start = argv[++c];
-      const char* const end = start + strlen(start);
+      const GCHAR* start = argv[++c];
+      const GCHAR* const end = start + STRLEN(start);
 
       while (start < end) {
         size_t i;
-        const char* token = strchr(start, ',');
+        const GCHAR* token = STRCHR(start, TO_GCHAR(','));
         if (token == NULL) token = end;
 
         for (i = 0; i < kNumTokens; ++i) {
-          if ((size_t)(token - start) == strlen(kTokens[i].option) &&
-              !strncmp(start, kTokens[i].option, strlen(kTokens[i].option))) {
+          if ((size_t)(token - start) == STRLEN(kTokens[i].option) &&
+              !STRNCMP(start, kTokens[i].option, STRLEN(kTokens[i].option))) {
             if (kTokens[i].flag != 0) {
               keep_metadata |= kTokens[i].flag;
             } else {
@@ -876,8 +878,8 @@ int main(int argc, const char *argv[]) {
           }
         }
         if (i == kNumTokens) {
-          fprintf(stderr, "Error! Unknown metadata type '%.*s'\n",
-                  (int)(token - start), start);
+          FPRINTF(stderr, "Error! Unknown metadata type '%.*s'\n",
+                   (int)(token - start), start);
           HelpLong();
           return -1;
         }
@@ -890,13 +892,13 @@ int main(int argc, const char *argv[]) {
                         " supported on this platform!\n");
       }
 #endif
-    } else if (!strcmp(argv[c], "-v")) {
+    } else if (!STRCMP(argv[c], "-v")) {
       verbose = 1;
-    } else if (!strcmp(argv[c], "--")) {
+    } else if (!STRCMP(argv[c], "--")) {
       if (c < argc - 1) in_file = argv[++c];
       break;
-    } else if (argv[c][0] == '-') {
-      fprintf(stderr, "Error! Unknown option '%s'\n", argv[c]);
+    } else if (argv[c][0] == TO_GCHAR('-')) {
+      FPRINTF(stderr, "Error! Unknown option '%s'\n", argv[c]);
       HelpLong();
       return -1;
     } else {
@@ -955,7 +957,7 @@ int main(int argc, const char *argv[]) {
   }
   if (!ReadPicture(in_file, &picture, keep_alpha,
                    (keep_metadata == 0) ? NULL : &metadata)) {
-    fprintf(stderr, "Error! Cannot read input picture file '%s'\n", in_file);
+    FPRINTF(stderr, "Error! Cannot read input picture file '%s'\n", in_file);
     goto Error;
   }
   picture.progress_hook = (show_progress && !quiet) ? ProgressReport : NULL;
@@ -971,14 +973,14 @@ int main(int argc, const char *argv[]) {
 
   // Open the output
   if (out_file != NULL) {
-    const int use_stdout = !strcmp(out_file, "-");
-    out = use_stdout ? ImgIoUtilSetBinaryMode(stdout) : fopen(out_file, "wb");
+    const int use_stdout = !STRCMP(out_file, "-");
+    out = use_stdout ? ImgIoUtilSetBinaryMode(stdout) : FOPEN(out_file, "wb");
     if (out == NULL) {
-      fprintf(stderr, "Error! Cannot open output file '%s'\n", out_file);
+      FPRINTF(stderr, "Error! Cannot open output file '%s'\n", out_file);
       goto Error;
     } else {
       if (!short_output && !quiet) {
-        fprintf(stderr, "Saving file '%s'\n", out_file);
+        FPRINTF(stderr, "Saving file '%s'\n", out_file);
       }
     }
     if (keep_metadata == 0) {
@@ -1093,7 +1095,7 @@ int main(int argc, const char *argv[]) {
       fprintf(stderr, "Warning: can't dump file (-d option) "
                       "in lossless mode.\n");
     } else if (!DumpPicture(&picture, dump_file)) {
-      fprintf(stderr, "Warning, couldn't dump picture %s\n", dump_file);
+      FPRINTF(stderr, "Warning, couldn't dump picture %s\n", dump_file);
     }
   }
 

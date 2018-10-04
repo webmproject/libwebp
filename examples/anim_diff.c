@@ -22,6 +22,8 @@
 #include "./anim_util.h"
 #include "./example_util.h"
 
+#include "./unicode.h"
+
 #if defined(_MSC_VER) && _MSC_VER < 1900
 #define snprintf _snprintf
 #endif
@@ -205,46 +207,46 @@ static void Help(void) {
   printf("  -version ............ print version number and exit\n");
 }
 
-int main(int argc, const char* argv[]) {
+int MAIN(int argc, const GCHAR* argv[]) {
   int return_code = -1;
   int dump_frames = 0;
-  const char* dump_folder = NULL;
+  const GCHAR* dump_folder = NULL;
   double min_psnr = 0.;
   int got_input1 = 0;
   int got_input2 = 0;
   int premultiply = 1;
   int max_diff = 0;
   int i, c;
-  const char* files[2] = { NULL, NULL };
+  const GCHAR* files[2] = { NULL, NULL };
   AnimatedImage images[2];
 
   for (c = 1; c < argc; ++c) {
     int parse_error = 0;
-    if (!strcmp(argv[c], "-dump_frames")) {
+    if (!STRCMP(argv[c], "-dump_frames")) {
       if (c < argc - 1) {
         dump_frames = 1;
         dump_folder = argv[++c];
       } else {
         parse_error = 1;
       }
-    } else if (!strcmp(argv[c], "-min_psnr")) {
+    } else if (!STRCMP(argv[c], "-min_psnr")) {
       if (c < argc - 1) {
-        min_psnr = ExUtilGetFloat(argv[++c], &parse_error);
+        min_psnr = EXUTILGETFLOAT(argv[++c], &parse_error);
       } else {
         parse_error = 1;
       }
-    } else if (!strcmp(argv[c], "-raw_comparison")) {
+    } else if (!STRCMP(argv[c], "-raw_comparison")) {
       premultiply = 0;
-    } else if (!strcmp(argv[c], "-max_diff")) {
+    } else if (!STRCMP(argv[c], "-max_diff")) {
       if (c < argc - 1) {
-        max_diff = ExUtilGetInt(argv[++c], 0, &parse_error);
+        max_diff = EXUTILGETINT(argv[++c], 0, &parse_error);
       } else {
         parse_error = 1;
       }
-    } else if (!strcmp(argv[c], "-h") || !strcmp(argv[c], "-help")) {
+    } else if (!STRCMP(argv[c], "-h") || !STRCMP(argv[c], "-help")) {
       Help();
       return 0;
-    } else if (!strcmp(argv[c], "-version")) {
+    } else if (!STRCMP(argv[c], "-version")) {
       int dec_version, demux_version;
       GetAnimatedImageVersions(&dec_version, &demux_version);
       printf("WebP Decoder version: %d.%d.%d\nWebP Demux version: %d.%d.%d\n",
@@ -281,14 +283,15 @@ int main(int argc, const char* argv[]) {
   }
 
   if (dump_frames) {
-    printf("Dumping decoded frames in: %s\n", dump_folder);
+    PRINTF("Dumping decoded frames in: %s\n", dump_folder);
   }
 
   memset(images, 0, sizeof(images));
   for (i = 0; i < 2; ++i) {
-    printf("Decoding file: %s\n", files[i]);
-    if (!ReadAnimatedImage(files[i], &images[i], dump_frames, dump_folder)) {
-      fprintf(stderr, "Error decoding file: %s\n Aborting.\n", files[i]);
+    PRINTF("Decoding file: %s\n", files[i]);
+    if (!ReadAnimatedImage((const char*)files[i], &images[i], dump_frames,
+                           (const char*)dump_folder)) {
+      FPRINTF(stderr, "Error decoding file: %s\n Aborting.\n", files[i]);
       return_code = -2;
       goto End;
     } else {
@@ -298,10 +301,10 @@ int main(int argc, const char* argv[]) {
 
   if (!CompareAnimatedImagePair(&images[0], &images[1],
                                 premultiply, min_psnr)) {
-    fprintf(stderr, "\nFiles %s and %s differ.\n", files[0], files[1]);
+    FPRINTF(stderr, "\nFiles %s and %s differ.\n", files[0], files[1]);
     return_code = -3;
   } else {
-    printf("\nFiles %s and %s are identical.\n", files[0], files[1]);
+    PRINTF("\nFiles %s and %s are identical.\n", files[0], files[1]);
     return_code = 0;
   }
  End:

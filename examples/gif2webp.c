@@ -13,6 +13,7 @@
 //          Urvang (urvang@google.com)
 
 #include <assert.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -33,6 +34,8 @@
 #include "../examples/example_util.h"
 #include "../imageio/imageio_util.h"
 #include "./gifdec.h"
+
+#include "./unicode.h"
 
 #if !defined(STDIN_FILENO)
 #define STDIN_FILENO 0
@@ -94,12 +97,12 @@ static void Help(void) {
 
 //------------------------------------------------------------------------------
 
-int main(int argc, const char *argv[]) {
+int MAIN(int argc, const GCHAR* argv[]) {
   int verbose = 0;
   int gif_error = GIF_ERROR;
   WebPMuxError err = WEBP_MUX_OK;
   int ok = 0;
-  const char *in_file = NULL, *out_file = NULL;
+  const GCHAR *in_file = NULL, *out_file = NULL;
   GifFileType* gif = NULL;
   int frame_duration = 0;
   int frame_timestamp = 0;
@@ -151,55 +154,55 @@ int main(int argc, const char *argv[]) {
 
   for (c = 1; c < argc; ++c) {
     int parse_error = 0;
-    if (!strcmp(argv[c], "-h") || !strcmp(argv[c], "-help")) {
+    if (!STRCMP(argv[c], "-h") || !STRCMP(argv[c], "-help")) {
       Help();
       return 0;
-    } else if (!strcmp(argv[c], "-o") && c < argc - 1) {
+    } else if (!STRCMP(argv[c], "-o") && c < argc - 1) {
       out_file = argv[++c];
-    } else if (!strcmp(argv[c], "-lossy")) {
+    } else if (!STRCMP(argv[c], "-lossy")) {
       config.lossless = 0;
-    } else if (!strcmp(argv[c], "-mixed")) {
+    } else if (!STRCMP(argv[c], "-mixed")) {
       enc_options.allow_mixed = 1;
       config.lossless = 0;
-    } else if (!strcmp(argv[c], "-loop_compatibility")) {
+    } else if (!STRCMP(argv[c], "-loop_compatibility")) {
       loop_compatibility = 1;
-    } else if (!strcmp(argv[c], "-q") && c < argc - 1) {
-      config.quality = ExUtilGetFloat(argv[++c], &parse_error);
-    } else if (!strcmp(argv[c], "-m") && c < argc - 1) {
-      config.method = ExUtilGetInt(argv[++c], 0, &parse_error);
-    } else if (!strcmp(argv[c], "-min_size")) {
+    } else if (!STRCMP(argv[c], "-q") && c < argc - 1) {
+      config.quality = EXUTILGETFLOAT(argv[++c], &parse_error);
+    } else if (!STRCMP(argv[c], "-m") && c < argc - 1) {
+      config.method = EXUTILGETINT(argv[++c], 0, &parse_error);
+    } else if (!STRCMP(argv[c], "-min_size")) {
       enc_options.minimize_size = 1;
-    } else if (!strcmp(argv[c], "-kmax") && c < argc - 1) {
-      enc_options.kmax = ExUtilGetInt(argv[++c], 0, &parse_error);
+    } else if (!STRCMP(argv[c], "-kmax") && c < argc - 1) {
+      enc_options.kmax = EXUTILGETINT(argv[++c], 0, &parse_error);
       default_kmax = 0;
-    } else if (!strcmp(argv[c], "-kmin") && c < argc - 1) {
-      enc_options.kmin = ExUtilGetInt(argv[++c], 0, &parse_error);
+    } else if (!STRCMP(argv[c], "-kmin") && c < argc - 1) {
+      enc_options.kmin = EXUTILGETINT(argv[++c], 0, &parse_error);
       default_kmin = 0;
-    } else if (!strcmp(argv[c], "-f") && c < argc - 1) {
-      config.filter_strength = ExUtilGetInt(argv[++c], 0, &parse_error);
-    } else if (!strcmp(argv[c], "-metadata") && c < argc - 1) {
+    } else if (!STRCMP(argv[c], "-f") && c < argc - 1) {
+      config.filter_strength = EXUTILGETINT(argv[++c], 0, &parse_error);
+    } else if (!STRCMP(argv[c], "-metadata") && c < argc - 1) {
       static const struct {
-        const char* option;
+        const GCHAR* option;
         int flag;
       } kTokens[] = {
-        { "all",  METADATA_ALL },
-        { "none", 0 },
-        { "icc",  METADATA_ICC },
-        { "xmp",  METADATA_XMP },
+        { TO_GCHAR("all"),  METADATA_ALL },
+        { TO_GCHAR("none"), 0 },
+        { TO_GCHAR("icc"),  METADATA_ICC },
+        { TO_GCHAR("xmp"),  METADATA_XMP },
       };
       const size_t kNumTokens = sizeof(kTokens) / sizeof(*kTokens);
-      const char* start = argv[++c];
-      const char* const end = start + strlen(start);
+      const GCHAR* start = argv[++c];
+      const GCHAR* const end = start + STRLEN(start);
 
       keep_metadata = 0;
       while (start < end) {
         size_t i;
-        const char* token = strchr(start, ',');
+        const GCHAR* token = STRCHR(start, TO_GCHAR(','));
         if (token == NULL) token = end;
 
         for (i = 0; i < kNumTokens; ++i) {
-          if ((size_t)(token - start) == strlen(kTokens[i].option) &&
-              !strncmp(start, kTokens[i].option, strlen(kTokens[i].option))) {
+          if ((size_t)(token - start) == STRLEN(kTokens[i].option) &&
+              !STRNCMP(start, kTokens[i].option, STRLEN(kTokens[i].option))) {
             if (kTokens[i].flag != 0) {
               keep_metadata |= kTokens[i].flag;
             } else {
@@ -209,16 +212,16 @@ int main(int argc, const char *argv[]) {
           }
         }
         if (i == kNumTokens) {
-          fprintf(stderr, "Error! Unknown metadata type '%.*s'\n",
-                  (int)(token - start), start);
+          FPRINTF(stderr, "Error! Unknown metadata type '%.*s'\n",
+                   (int)(token - start), start);
           Help();
           return -1;
         }
         start = token + 1;
       }
-    } else if (!strcmp(argv[c], "-mt")) {
+    } else if (!STRCMP(argv[c], "-mt")) {
       ++config.thread_level;
-    } else if (!strcmp(argv[c], "-version")) {
+    } else if (!STRCMP(argv[c], "-version")) {
       const int enc_version = WebPGetEncoderVersion();
       const int mux_version = WebPGetMuxVersion();
       printf("WebP Encoder version: %d.%d.%d\nWebP Mux version: %d.%d.%d\n",
@@ -226,17 +229,17 @@ int main(int argc, const char *argv[]) {
              enc_version & 0xff, (mux_version >> 16) & 0xff,
              (mux_version >> 8) & 0xff, mux_version & 0xff);
       return 0;
-    } else if (!strcmp(argv[c], "-quiet")) {
+    } else if (!STRCMP(argv[c], "-quiet")) {
       quiet = 1;
       enc_options.verbose = 0;
-    } else if (!strcmp(argv[c], "-v")) {
+    } else if (!STRCMP(argv[c], "-v")) {
       verbose = 1;
       enc_options.verbose = 1;
-    } else if (!strcmp(argv[c], "--")) {
+    } else if (!STRCMP(argv[c], "--")) {
       if (c < argc - 1) in_file = argv[++c];
       break;
-    } else if (argv[c][0] == '-') {
-      fprintf(stderr, "Error! Unknown option '%s'\n", argv[c]);
+    } else if (argv[c][0] == TO_GCHAR('-')) {
+      FPRINTF(stderr, "Error! Unknown option '%s'\n", argv[c]);
       Help();
       return -1;
     } else {
@@ -268,15 +271,23 @@ int main(int argc, const char *argv[]) {
     goto End;
   }
 
-  // Start the decoder object
+  {
+    int in_file_handle;
+    if (!STRCMP(in_file, "-")) {
+      in_file_handle = STDIN_FILENO;
+    } else {
+      in_file_handle = OPEN_RDONLY(in_file);
+      if (in_file_handle == -1) goto End;
+    }
+
+    // Start the decoder object
 #if LOCAL_GIF_PREREQ(5,0)
-  gif = !strcmp(in_file, "-") ? DGifOpenFileHandle(STDIN_FILENO, &gif_error)
-                              : DGifOpenFileName(in_file, &gif_error);
+    gif = DGifOpenFileHandle(in_file_handle, &gif_error);
 #else
-  gif = !strcmp(in_file, "-") ? DGifOpenFileHandle(STDIN_FILENO)
-                              : DGifOpenFileName(in_file);
+    gif = DGifOpenFileHandle(in_file_handle);
 #endif
-  if (gif == NULL) goto End;
+    if (gif == NULL) goto End;
+  }
 
   // Loop over GIF images
   done = 0;
@@ -544,17 +555,17 @@ int main(int argc, const char *argv[]) {
   }
 
   if (out_file != NULL) {
-    if (!ImgIoUtilWriteFile(out_file, webp_data.bytes, webp_data.size)) {
-      fprintf(stderr, "Error writing output file: %s\n", out_file);
+    if (!ImgIoUtilWriteFile((const char*)out_file, webp_data.bytes, webp_data.size)) {
+      FPRINTF(stderr, "Error writing output file: %s\n", out_file);
       goto End;
     }
     if (!quiet) {
-      if (!strcmp(out_file, "-")) {
+      if (!STRCMP(out_file, "-")) {
         fprintf(stderr, "Saved %d bytes to STDIO\n",
                 (int)webp_data.size);
       } else {
-        fprintf(stderr, "Saved output file (%d bytes): %s\n",
-                (int)webp_data.size, out_file);
+        FPRINTF(stderr, "Saved output file (%d bytes): %s\n",
+                 (int)webp_data.size, out_file);
       }
     }
   } else {
@@ -594,8 +605,12 @@ int main(int argc, const char *argv[]) {
 
 #else  // !WEBP_HAVE_GIF
 
-int main(int argc, const char *argv[]) {
-  fprintf(stderr, "GIF support not enabled in %s.\n", argv[0]);
+#if defined(_WIN32)  // Handle Unicode command line parameters in Windows.
+int wmain(int argc, const wchar_t* argv[]) {
+#else
+int main(int argc, const char* argv[]) {
+#endif
+  FPRINTF(stderr, "GIF support not enabled in %s.\n", argv[0]);
   (void)argc;
   return 0;
 }
