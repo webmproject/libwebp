@@ -12,9 +12,11 @@ option(WEBP_BUILD_IMG2WEBP "Build the img2webp animation tool." ON)
 option(WEBP_BUILD_VWEBP "Build the vwebp viewer tool." ON)
 option(WEBP_BUILD_WEBPINFO "Build the webpinfo command line tool." ON)
 option(WEBP_BUILD_WEBPMUX "Build the webpmux command line tool." ON)
+option(WEBP_BUILD_EXTRAS "Build extras." ON)
 option(WEBP_BUILD_WEBP_JS "Emscripten build of webp.js." OFF)
 option(WEBP_NEAR_LOSSLESS "Enable near-lossless encoding" ON)
-option(WEBP_ENABLE_SWAP_16BIT_CSP "Enable byte swap for 16 bit colorspaces." OFF)
+option(WEBP_ENABLE_SWAP_16BIT_CSP "Enable byte swap for 16 bit colorspaces." OFF
+)
 
 if(WEBP_BUILD_WEBP_JS)
   set(WEBP_ENABLE_SIMD OFF)
@@ -384,6 +386,40 @@ if(WEBP_BUILD_WEBPMUX)
   target_link_libraries(webpmux exampleutil imageioutil libwebpmux webp)
   target_include_directories(webpmux PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src)
   install(TARGETS webpmux RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
+
+if(WEBP_BUILD_EXTRAS)
+  set(EXTRAS_MAKEFILE "${CMAKE_CURRENT_SOURCE_DIR}/extras")
+  parse_Makefile_am(${EXTRAS_MAKEFILE} "WEBP_EXTRAS_SRCS" "libwebpextras_la")
+  parse_Makefile_am(${EXTRAS_MAKEFILE} "GET_DISTO_SRCS" "get_disto")
+  parse_Makefile_am(${EXTRAS_MAKEFILE} "WEBP_QUALITY_SRCS" "webp_quality")
+  parse_Makefile_am(${EXTRAS_MAKEFILE} "VWEBP_SDL_SRCS" "vwebp_sdl")
+
+  # get_disto
+  add_executable(get_disto ${GET_DISTO_SRCS})
+  target_link_libraries(get_disto imagedec)
+  target_include_directories(get_disto PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_BINARY_DIR}/src)
+  install(TARGETS get_disto RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+  # webp_quality
+  add_executable(webp_quality ${WEBP_QUALITY_SRCS} ${WEBP_EXTRAS_SRCS})
+  target_link_libraries(webp_quality exampleutil imagedec)
+  target_include_directories(webp_quality PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+  install(TARGETS webp_quality RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+  # vwebp_sdl
+  find_package(SDL)
+  if(SDL_FOUND)
+    add_executable(vwebp_sdl ${VWEBP_SDL_SRCS})
+    target_link_libraries(vwebp_sdl ${SDL_LIBRARY} imageioutil webp)
+    target_include_directories(vwebp_sdl PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+      ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_BINARY_DIR}
+      ${CMAKE_CURRENT_BINARY_DIR}/src ${SDL_INCLUDE_DIR})
+    set(WEBP_HAVE_SDL 1)
+    target_compile_definitions(vwebp_sdl PUBLIC WEBP_HAVE_SDL)
+    install(TARGETS vwebp_sdl RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+  endif()
 endif()
 
 if(WEBP_BUILD_WEBP_JS)
