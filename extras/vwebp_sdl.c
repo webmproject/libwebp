@@ -32,6 +32,12 @@
 #include <SDL/SDL.h>
 #endif
 
+#include "../examples/unicode.h"
+
+#ifdef main  // SDL might define it and it might be a problem on Windows.
+#undef main
+#endif
+
 static void ProcessEvents(void) {
   int done = 0;
   SDL_Event event;
@@ -48,22 +54,22 @@ static void ProcessEvents(void) {
   }
 }
 
-int main(int argc, char* argv[]) {
+int MAIN(int argc, const GCHAR* argv[]) {
   int c;
   int ok = 0;
   for (c = 1; c < argc; ++c) {
-    const char* file = NULL;
+    const GCHAR* file = NULL;
     const uint8_t* webp = NULL;
     size_t webp_size = 0;
-    if (!strcmp(argv[c], "-h")) {
-      printf("Usage: %s [-h] image.webp [more_files.webp...]\n", argv[0]);
+    if (!STRCMP(argv[c], "-h")) {
+      PRINTF("Usage: %s [-h] image.webp [more_files.webp...]\n", argv[0]);
       return 0;
     } else {
       file = argv[c];
     }
     if (file == NULL) continue;
-    if (!ImgIoUtilReadFile(file, &webp, &webp_size)) {
-      fprintf(stderr, "Error opening file: %s\n", file);
+    if (!ImgIoUtilReadFile((const char*)file, &webp, &webp_size)) {
+      FPRINTF(stderr, "Error opening file: %s\n", file);
       goto Error;
     }
     if (webp_size != (size_t)(int)webp_size) {
@@ -73,7 +79,7 @@ int main(int argc, char* argv[]) {
     ok = WebpToSDL((const char*)webp, (int)webp_size);
     free((void*)webp);
     if (!ok) {
-      fprintf(stderr, "Error decoding file %s\n", file);
+      FPRINTF(stderr, "Error decoding file %s\n", file);
       goto Error;
     }
     ProcessEvents();

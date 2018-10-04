@@ -35,6 +35,8 @@
 
 #include "./imageio_util.h"
 
+#include "../examples/unicode.h"
+
 //------------------------------------------------------------------------------
 // PNG
 
@@ -54,23 +56,23 @@
 #define MAKE_REFGUID(x) &(x)
 #endif
 
-static HRESULT CreateOutputStream(const char* out_file_name,
+static HRESULT CreateOutputStream(const wchar_t* out_file_name,
                                   int write_to_mem, IStream** stream) {
   HRESULT hr = S_OK;
   if (write_to_mem) {
     // Output to a memory buffer. This is freed when 'stream' is released.
     IFS(CreateStreamOnHGlobal(NULL, TRUE, stream));
   } else {
-    IFS(SHCreateStreamOnFileA(out_file_name, STGM_WRITE | STGM_CREATE, stream));
+    IFS(SHCreateStreamOnFileW(out_file_name, STGM_WRITE | STGM_CREATE, stream));
   }
   if (FAILED(hr)) {
-    fprintf(stderr, "Error opening output file %s (%08lx)\n",
-            out_file_name, hr);
+    fwprintf(stderr, L"Error opening output file %s (%08lx)\n",
+             out_file_name, hr);
   }
   return hr;
 }
 
-static HRESULT WriteUsingWIC(const char* out_file_name, int use_stdout,
+static HRESULT WriteUsingWIC(const wchar_t* out_file_name, int use_stdout,
                              REFGUID container_guid,
                              uint8_t* rgb, int stride,
                              uint32_t width, uint32_t height, int has_alpha) {
@@ -146,7 +148,7 @@ int WebPWritePNG(const char* out_file_name, int use_stdout,
   const int stride = buffer->u.RGBA.stride;
   const int has_alpha = WebPIsAlphaMode(buffer->colorspace);
 
-  return SUCCEEDED(WriteUsingWIC(out_file_name, use_stdout,
+  return SUCCEEDED(WriteUsingWIC((const wchar_t*)out_file_name, use_stdout,
                                  MAKE_REFGUID(GUID_ContainerFormatPng),
                                  rgb, stride, width, height, has_alpha));
 }
@@ -546,10 +548,11 @@ int WebPWriteYUV(FILE* fout, const WebPDecBuffer* const buffer) {
 
 int WebPSaveImage(const WebPDecBuffer* const buffer,
                   WebPOutputFileFormat format,
-                  const char* const out_file_name) {
+                  const char* const file_name) {
+  const GCHAR* const out_file_name = (const GCHAR* const)file_name;
   FILE* fout = NULL;
   int needs_open_file = 1;
-  const int use_stdout = (out_file_name != NULL) && !strcmp(out_file_name, "-");
+  const int use_stdout = (out_file_name != NULL) && !STRCMP(out_file_name, "-");
   int ok = 1;
 
   if (buffer == NULL || out_file_name == NULL) return 0;
@@ -560,9 +563,9 @@ int WebPSaveImage(const WebPDecBuffer* const buffer,
 
   if (needs_open_file) {
     fout = use_stdout ? ImgIoUtilSetBinaryMode(stdout)
-                      : fopen(out_file_name, "wb");
+                      : FOPEN(out_file_name, "wb");
     if (fout == NULL) {
-      fprintf(stderr, "Error opening output file %s\n", out_file_name);
+      FPRINTF(stderr, "Error opening output file %s\n", out_file_name);
       return 0;
     }
   }
@@ -571,7 +574,7 @@ int WebPSaveImage(const WebPDecBuffer* const buffer,
       format == RGBA || format == BGRA || format == ARGB ||
       format == rgbA || format == bgrA || format == Argb) {
 #ifdef HAVE_WINCODEC_H
-    ok &= WebPWritePNG(out_file_name, use_stdout, buffer);
+    ok &= WebPWritePNG(file_name, use_stdout, buffer);
 #else
     ok &= WebPWritePNG(fout, buffer);
 #endif
