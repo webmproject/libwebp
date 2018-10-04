@@ -47,10 +47,10 @@ typedef enum {
 // General all-purpose call.
 // Most formats expect a 'buffer' containing RGBA-like samples, except
 // RAW_YUV, YUV and YUVA formats.
-// If 'out_file_name' is "-", data is saved to stdout.
+// If 'file_name' is "-", data is saved to stdout.
 // Returns false if an error occurred, true otherwise.
 int WebPSaveImage(const WebPDecBuffer* const buffer,
-                  WebPOutputFileFormat format, const char* const out_file_name);
+                  WebPOutputFileFormat format, const char* const file_name);
 
 // Save to PNG.
 #ifdef HAVE_WINCODEC_H

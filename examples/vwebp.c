@@ -43,6 +43,8 @@
 #include "../examples/example_util.h"
 #include "../imageio/imageio_util.h"
 
+#include "./unicode.h"
+
 #if defined(_MSC_VER) && _MSC_VER < 1900
 #define snprintf _snprintf
 #endif
@@ -62,7 +64,7 @@ static struct {
   int loop_count;
   uint32_t bg_color;
 
-  const char* file_name;
+  const GCHAR* file_name;
   WebPData data;
   WebPDecoderConfig config;
   const WebPDecBuffer* pic;
@@ -283,7 +285,7 @@ static void HandleReshape(int width, int height) {
   if (!kParams.has_animation) ClearPreviousFrame();
 }
 
-static void PrintString(const char* const text) {
+static void PrintString(const GCHAR* const text) {
   void* const font = GLUT_BITMAP_9_BY_15;
   int i;
   for (i = 0; text[i]; ++i) {
@@ -391,18 +393,18 @@ static void HandleDisplay(void) {
                GL_RGBA, GL_UNSIGNED_BYTE,
                (GLvoid*)pic->u.RGBA.rgba);
   if (kParams.print_info) {
-    char tmp[32];
+    GCHAR tmp[32];
 
     glColor4f(0.90f, 0.0f, 0.90f, 1.0f);
     glRasterPos2f(-0.95f, 0.90f);
     PrintString(kParams.file_name);
 
-    snprintf(tmp, sizeof(tmp), "Dimension:%d x %d", pic->width, pic->height);
+    SNPRINTF(tmp, sizeof(tmp), "Dimension:%d x %d", pic->width, pic->height);
     glColor4f(0.90f, 0.0f, 0.90f, 1.0f);
     glRasterPos2f(-0.95f, 0.80f);
     PrintString(tmp);
     if (curr->x_offset != 0 || curr->y_offset != 0) {
-      snprintf(tmp, sizeof(tmp), " (offset:%d,%d)",
+      SNPRINTF(tmp, sizeof(tmp), " (offset:%d,%d)",
                curr->x_offset, curr->y_offset);
       glRasterPos2f(-0.95f, 0.70f);
       PrintString(tmp);
@@ -465,7 +467,7 @@ static void Help(void) {
       "  'q' / 'Q' / ESC .... quit\n");
 }
 
-int main(int argc, char *argv[]) {
+int MAIN(int argc, const GCHAR* argv[]) {
   int c;
   WebPDecoderConfig* const config = &kParams.config;
   WebPIterator* const curr = &kParams.curr_frame;
@@ -482,25 +484,25 @@ int main(int argc, char *argv[]) {
 
   for (c = 1; c < argc; ++c) {
     int parse_error = 0;
-    if (!strcmp(argv[c], "-h") || !strcmp(argv[c], "-help")) {
+    if (!STRCMP(argv[c], "-h") || !STRCMP(argv[c], "-help")) {
       Help();
       return 0;
-    } else if (!strcmp(argv[c], "-noicc")) {
+    } else if (!STRCMP(argv[c], "-noicc")) {
       kParams.use_color_profile = 0;
-    } else if (!strcmp(argv[c], "-nofancy")) {
+    } else if (!STRCMP(argv[c], "-nofancy")) {
       config->options.no_fancy_upsampling = 1;
-    } else if (!strcmp(argv[c], "-nofilter")) {
+    } else if (!STRCMP(argv[c], "-nofilter")) {
       config->options.bypass_filtering = 1;
-    } else if (!strcmp(argv[c], "-noalphadither")) {
+    } else if (!STRCMP(argv[c], "-noalphadither")) {
       config->options.alpha_dithering_strength = 0;
-    } else if (!strcmp(argv[c], "-usebgcolor")) {
+    } else if (!STRCMP(argv[c], "-usebgcolor")) {
       kParams.draw_anim_background_color = 1;
-    } else if (!strcmp(argv[c], "-dither") && c + 1 < argc) {
+    } else if (!STRCMP(argv[c], "-dither") && c + 1 < argc) {
       config->options.dithering_strength =
-          ExUtilGetInt(argv[++c], 0, &parse_error);
-    } else if (!strcmp(argv[c], "-info")) {
+          EXUTILGETINT(argv[++c], 0, &parse_error);
+    } else if (!STRCMP(argv[c], "-info")) {
       kParams.print_info = 1;
-    } else if (!strcmp(argv[c], "-version")) {
+    } else if (!STRCMP(argv[c], "-version")) {
       const int dec_version = WebPGetDecoderVersion();
       const int dmux_version = WebPGetDemuxVersion();
       printf("WebP Decoder version: %d.%d.%d\nWebP Demux version: %d.%d.%d\n",
@@ -508,13 +510,13 @@ int main(int argc, char *argv[]) {
              dec_version & 0xff, (dmux_version >> 16) & 0xff,
              (dmux_version >> 8) & 0xff, dmux_version & 0xff);
       return 0;
-    } else if (!strcmp(argv[c], "-mt")) {
+    } else if (!STRCMP(argv[c], "-mt")) {
       config->options.use_threads = 1;
-    } else if (!strcmp(argv[c], "--")) {
+    } else if (!STRCMP(argv[c], "--")) {
       if (c < argc - 1) kParams.file_name = argv[++c];
       break;
-    } else if (argv[c][0] == '-') {
-      printf("Unknown option '%s'\n", argv[c]);
+    } else if (argv[c][0] == TO_GCHAR('-')) {
+      PRINTF("Unknown option '%s'\n", argv[c]);
       Help();
       return -1;
     } else {
@@ -533,7 +535,7 @@ int main(int argc, char *argv[]) {
     return 0;
   }
 
-  if (!ImgIoUtilReadFile(kParams.file_name,
+  if (!ImgIoUtilReadFile((const char*)kParams.file_name,
                          &kParams.data.bytes, &kParams.data.size)) {
     goto Error;
   }
@@ -594,7 +596,12 @@ int main(int argc, char *argv[]) {
 #endif
 
   // Start display (and timer)
-  glutInit(&argc, argv);
+  {
+    // glutInit wants a char** and no unicode input. No OpenGL flag is used.
+    int glut_argc = 1;
+    char* glut_argv[] = {"vwebp"};
+    glutInit(&glut_argc, glut_argv);
+  }
 #ifdef FREEGLUT
   glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION);
 #endif
@@ -614,8 +621,8 @@ int main(int argc, char *argv[]) {
 
 #else   // !WEBP_HAVE_GL
 
-int main(int argc, const char *argv[]) {
-  fprintf(stderr, "OpenGL support not enabled in %s.\n", argv[0]);
+int MAIN(int argc, const GCHAR* argv[]) {
+  FPRINTF(stderr, "OpenGL support not enabled in %s.\n", argv[0]);
   (void)argc;
   return 0;
 }

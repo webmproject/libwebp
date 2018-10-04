@@ -18,6 +18,8 @@
 #include "webp/decode.h"
 #include "../imageio/image_enc.h"
 
+#include "./unicode.h"
+
 #if defined(_MSC_VER) && _MSC_VER < 1900
 #define snprintf _snprintf
 #endif
@@ -34,11 +36,11 @@ static void Help(void) {
   printf("  -version ............ print version number and exit\n");
 }
 
-int main(int argc, const char* argv[]) {
+int MAIN(int argc, const GCHAR* argv[]) {
   int error = 0;
-  const char* dump_folder = ".";
-  const char* prefix = "dump_";
-  const char* suffix = "png";
+  const GCHAR* dump_folder = TO_GCHAR(".");
+  const GCHAR* prefix = TO_GCHAR("dump_");
+  const GCHAR* suffix = TO_GCHAR("png");
   WebPOutputFileFormat format = PNG;
   int c;
 
@@ -48,30 +50,30 @@ int main(int argc, const char* argv[]) {
   }
 
   for (c = 1; !error && c < argc; ++c) {
-    if (!strcmp(argv[c], "-folder")) {
+    if (!STRCMP(argv[c], "-folder")) {
       if (c + 1 == argc) {
-        fprintf(stderr, "missing argument after option '%s'\n", argv[c]);
+        FPRINTF(stderr, "missing argument after option '%s'\n", argv[c]);
         error = 1;
         break;
       }
       dump_folder = argv[++c];
-    } else if (!strcmp(argv[c], "-prefix")) {
+    } else if (!STRCMP(argv[c], "-prefix")) {
       if (c + 1 == argc) {
-        fprintf(stderr, "missing argument after option '%s'\n", argv[c]);
+        FPRINTF(stderr, "missing argument after option '%s'\n", argv[c]);
         error = 1;
         break;
       }
       prefix = argv[++c];
-    } else if (!strcmp(argv[c], "-tiff")) {
+    } else if (!STRCMP(argv[c], "-tiff")) {
       format = TIFF;
-      suffix = "tiff";
-    } else if (!strcmp(argv[c], "-pam")) {
+      suffix = TO_GCHAR("tiff");
+    } else if (!STRCMP(argv[c], "-pam")) {
       format = PAM;
-      suffix = "pam";
-    } else if (!strcmp(argv[c], "-h") || !strcmp(argv[c], "-help")) {
+      suffix = TO_GCHAR("pam");
+    } else if (!STRCMP(argv[c], "-h") || !STRCMP(argv[c], "-help")) {
       Help();
       return 0;
-    } else if (!strcmp(argv[c], "-version")) {
+    } else if (!STRCMP(argv[c], "-version")) {
       int dec_version, demux_version;
       GetAnimatedImageVersions(&dec_version, &demux_version);
       printf("WebP Decoder version: %d.%d.%d\nWebP Demux version: %d.%d.%d\n",
@@ -83,17 +85,17 @@ int main(int argc, const char* argv[]) {
     } else {
       uint32_t i;
       AnimatedImage image;
-      const char* const file = argv[c];
+      const GCHAR* const file = argv[c];
       memset(&image, 0, sizeof(image));
-      printf("Decoding file: %s as %s/%sxxxx.%s\n",
+      PRINTF("Decoding file: %s as %s/%sxxxx.%s\n",
              file, dump_folder, prefix, suffix);
-      if (!ReadAnimatedImage(file, &image, 0, NULL)) {
-        fprintf(stderr, "Error decoding file: %s\n Aborting.\n", file);
+      if (!ReadAnimatedImage((const char*)file, &image, 0, NULL)) {
+        FPRINTF(stderr, "Error decoding file: %s\n Aborting.\n", file);
         error = 1;
         break;
       }
       for (i = 0; !error && i < image.num_frames; ++i) {
-        char out_file[1024];
+        GCHAR out_file[1024];
         WebPDecBuffer buffer;
         WebPInitDecBuffer(&buffer);
         buffer.colorspace = MODE_RGBA;
@@ -103,10 +105,10 @@ int main(int argc, const char* argv[]) {
         buffer.u.RGBA.rgba = image.frames[i].rgba;
         buffer.u.RGBA.stride = buffer.width * sizeof(uint32_t);
         buffer.u.RGBA.size = buffer.u.RGBA.stride * buffer.height;
-        snprintf(out_file, sizeof(out_file), "%s/%s%.4d.%s",
+        SNPRINTF(out_file, sizeof(out_file), "%s/%s%.4d.%s",
                  dump_folder, prefix, i, suffix);
-        if (!WebPSaveImage(&buffer, format, out_file)) {
-          fprintf(stderr, "Error while saving image '%s'\n", out_file);
+        if (!WebPSaveImage(&buffer, format, (char*)out_file)) {
+          FPRINTF(stderr, "Error while saving image '%s'\n", out_file);
           error = 1;
         }
         WebPFreeDecBuffer(&buffer);
