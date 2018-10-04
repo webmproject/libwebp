@@ -19,6 +19,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "../examples/unicode.h"
+
 // -----------------------------------------------------------------------------
 // File I/O
 
@@ -67,13 +69,14 @@ int ImgIoUtilReadFromStdin(const uint8_t** data, size_t* data_size) {
   return 0;
 }
 
-int ImgIoUtilReadFile(const char* const file_name,
+int ImgIoUtilReadFile(const char* const file_name_in,
                       const uint8_t** data, size_t* data_size) {
+  const GCHAR* const file_name = (const GCHAR*)file_name_in;
   int ok;
   uint8_t* file_data;
   size_t file_size;
   FILE* in;
-  const int from_stdin = (file_name == NULL) || !strcmp(file_name, "-");
+  const int from_stdin = (file_name == NULL) || !STRCMP(file_name, "-");
 
   if (from_stdin) return ImgIoUtilReadFromStdin(data, data_size);
 
@@ -81,9 +84,9 @@ int ImgIoUtilReadFile(const char* const file_name,
   *data = NULL;
   *data_size = 0;
 
-  in = fopen(file_name, "rb");
+  in = FOPEN(file_name, "rb");
   if (in == NULL) {
-    fprintf(stderr, "cannot open input file '%s'\n", file_name);
+    FPRINTF(stderr, "cannot open input file '%s'\n", file_name);
     return 0;
   }
   fseek(in, 0, SEEK_END);
@@ -93,7 +96,7 @@ int ImgIoUtilReadFile(const char* const file_name,
   file_data = (uint8_t*)malloc(file_size + 1);
   if (file_data == NULL) {
     fclose(in);
-    fprintf(stderr, "memory allocation failure when reading file %s\n",
+    FPRINTF(stderr, "memory allocation failure when reading file %s\n",
             file_name);
     return 0;
   }
@@ -101,7 +104,7 @@ int ImgIoUtilReadFile(const char* const file_name,
   fclose(in);
 
   if (!ok) {
-    fprintf(stderr, "Could not read %d bytes of data from file %s\n",
+    FPRINTF(stderr, "Could not read %d bytes of data from file %s\n",
             (int)file_size, file_name);
     free(file_data);
     return 0;
@@ -114,18 +117,19 @@ int ImgIoUtilReadFile(const char* const file_name,
 
 // -----------------------------------------------------------------------------
 
-int ImgIoUtilWriteFile(const char* const file_name,
+int ImgIoUtilWriteFile(const char* const file_name_out,
                        const uint8_t* data, size_t data_size) {
+  const GCHAR* const file_name = (const GCHAR* const)file_name_out;
   int ok;
   FILE* out;
-  const int to_stdout = (file_name == NULL) || !strcmp(file_name, "-");
+  const int to_stdout = (file_name == NULL) || !STRCMP(file_name, "-");
 
   if (data == NULL) {
     return 0;
   }
-  out = to_stdout ? ImgIoUtilSetBinaryMode(stdout) : fopen(file_name, "wb");
+  out = to_stdout ? ImgIoUtilSetBinaryMode(stdout) : FOPEN(file_name, "wb");
   if (out == NULL) {
-    fprintf(stderr, "Error! Cannot open output file '%s'\n", file_name);
+    FPRINTF(stderr, "Error! Cannot open output file '%s'\n", file_name);
     return 0;
   }
   ok = (fwrite(data, data_size, 1, out) == 1);

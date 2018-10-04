@@ -25,6 +25,8 @@
 #include "../imageio/webpdec.h"
 #include "./stopwatch.h"
 
+#include "./unicode.h"
+
 static int verbose = 0;
 static int quiet = 0;
 #ifndef WEBP_DLL
@@ -39,24 +41,24 @@ extern void* VP8GetCPUInfo;   // opaque forward declaration.
 #endif
 #endif  // WEBP_DLL
 
-
 static int SaveOutput(const WebPDecBuffer* const buffer,
-                      WebPOutputFileFormat format, const char* const out_file) {
-  const int use_stdout = (out_file != NULL) && !strcmp(out_file, "-");
+                      WebPOutputFileFormat format,
+                      const GCHAR* const out_file) {
+  const int use_stdout = (out_file != NULL) && !STRCMP(out_file, "-");
   int ok = 1;
   Stopwatch stop_watch;
 
   if (verbose) {
     StopwatchReset(&stop_watch);
   }
-  ok = WebPSaveImage(buffer, format, out_file);
+  ok = WebPSaveImage(buffer, format, (const char*)out_file);
 
   if (ok) {
     if (!quiet) {
       if (use_stdout) {
         fprintf(stderr, "Saved to stdout\n");
       } else {
-        fprintf(stderr, "Saved file %s\n", out_file);
+        FPRINTF(stderr, "Saved file %s\n", out_file);
       }
     }
     if (verbose) {
@@ -67,7 +69,7 @@ static int SaveOutput(const WebPDecBuffer* const buffer,
     if (use_stdout) {
       fprintf(stderr, "Error writing to stdout !!\n");
     } else {
-      fprintf(stderr, "Error writing file %s !!\n", out_file);
+      FPRINTF(stderr, "Error writing file %s !!\n", out_file);
     }
   }
   return ok;
@@ -175,10 +177,9 @@ static uint8_t* AllocateExternalBuffer(WebPDecoderConfig* config,
   return external_buffer;
 }
 
-int main(int argc, const char *argv[]) {
+int MAIN(int argc, const GCHAR* argv[]) {
   int ok = 0;
-  const char *in_file = NULL;
-  const char *out_file = NULL;
+  const GCHAR *in_file = NULL, *out_file = NULL;
 
   WebPDecoderConfig config;
   WebPDecBuffer* const output_buffer = &config.output;
@@ -198,96 +199,96 @@ int main(int argc, const char *argv[]) {
 
   for (c = 1; c < argc; ++c) {
     int parse_error = 0;
-    if (!strcmp(argv[c], "-h") || !strcmp(argv[c], "-help")) {
+    if (!STRCMP(argv[c], "-h") || !STRCMP(argv[c], "-help")) {
       Help();
       return 0;
-    } else if (!strcmp(argv[c], "-o") && c < argc - 1) {
+    } else if (!STRCMP(argv[c], "-o") && c < argc - 1) {
       out_file = argv[++c];
-    } else if (!strcmp(argv[c], "-alpha")) {
+    } else if (!STRCMP(argv[c], "-alpha")) {
       format = ALPHA_PLANE_ONLY;
-    } else if (!strcmp(argv[c], "-nofancy")) {
+    } else if (!STRCMP(argv[c], "-nofancy")) {
       config.options.no_fancy_upsampling = 1;
-    } else if (!strcmp(argv[c], "-nofilter")) {
+    } else if (!STRCMP(argv[c], "-nofilter")) {
       config.options.bypass_filtering = 1;
-    } else if (!strcmp(argv[c], "-pam")) {
+    } else if (!STRCMP(argv[c], "-pam")) {
       format = PAM;
-    } else if (!strcmp(argv[c], "-ppm")) {
+    } else if (!STRCMP(argv[c], "-ppm")) {
       format = PPM;
-    } else if (!strcmp(argv[c], "-bmp")) {
+    } else if (!STRCMP(argv[c], "-bmp")) {
       format = BMP;
-    } else if (!strcmp(argv[c], "-tiff")) {
+    } else if (!STRCMP(argv[c], "-tiff")) {
       format = TIFF;
-    } else if (!strcmp(argv[c], "-quiet")) {
+    } else if (!STRCMP(argv[c], "-quiet")) {
       quiet = 1;
-    } else if (!strcmp(argv[c], "-version")) {
+    } else if (!STRCMP(argv[c], "-version")) {
       const int version = WebPGetDecoderVersion();
       printf("%d.%d.%d\n",
              (version >> 16) & 0xff, (version >> 8) & 0xff, version & 0xff);
       return 0;
-    } else if (!strcmp(argv[c], "-pgm")) {
+    } else if (!STRCMP(argv[c], "-pgm")) {
       format = PGM;
-    } else if (!strcmp(argv[c], "-yuv")) {
+    } else if (!STRCMP(argv[c], "-yuv")) {
       format = RAW_YUV;
-    } else if (!strcmp(argv[c], "-pixel_format") && c < argc - 1) {
-      const char* const fmt = argv[++c];
-      if      (!strcmp(fmt, "RGB"))  format = RGB;
-      else if (!strcmp(fmt, "RGBA")) format = RGBA;
-      else if (!strcmp(fmt, "BGR"))  format = BGR;
-      else if (!strcmp(fmt, "BGRA")) format = BGRA;
-      else if (!strcmp(fmt, "ARGB")) format = ARGB;
-      else if (!strcmp(fmt, "RGBA_4444")) format = RGBA_4444;
-      else if (!strcmp(fmt, "RGB_565")) format = RGB_565;
-      else if (!strcmp(fmt, "rgbA")) format = rgbA;
-      else if (!strcmp(fmt, "bgrA")) format = bgrA;
-      else if (!strcmp(fmt, "Argb")) format = Argb;
-      else if (!strcmp(fmt, "rgbA_4444")) format = rgbA_4444;
-      else if (!strcmp(fmt, "YUV"))  format = YUV;
-      else if (!strcmp(fmt, "YUVA")) format = YUVA;
+    } else if (!STRCMP(argv[c], "-pixel_format") && c < argc - 1) {
+      const GCHAR* const fmt = argv[++c];
+      if      (!STRCMP(fmt, "RGB"))  format = RGB;
+      else if (!STRCMP(fmt, "RGBA")) format = RGBA;
+      else if (!STRCMP(fmt, "BGR"))  format = BGR;
+      else if (!STRCMP(fmt, "BGRA")) format = BGRA;
+      else if (!STRCMP(fmt, "ARGB")) format = ARGB;
+      else if (!STRCMP(fmt, "RGBA_4444")) format = RGBA_4444;
+      else if (!STRCMP(fmt, "RGB_565")) format = RGB_565;
+      else if (!STRCMP(fmt, "rgbA")) format = rgbA;
+      else if (!STRCMP(fmt, "bgrA")) format = bgrA;
+      else if (!STRCMP(fmt, "Argb")) format = Argb;
+      else if (!STRCMP(fmt, "rgbA_4444")) format = rgbA_4444;
+      else if (!STRCMP(fmt, "YUV"))  format = YUV;
+      else if (!STRCMP(fmt, "YUVA")) format = YUVA;
       else {
-        fprintf(stderr, "Can't parse pixel_format %s\n", fmt);
+        FPRINTF(stderr, "Can't parse pixel_format %s\n", fmt);
         parse_error = 1;
       }
-    } else if (!strcmp(argv[c], "-external_memory") && c < argc - 1) {
-      use_external_memory = ExUtilGetInt(argv[++c], 0, &parse_error);
+    } else if (!STRCMP(argv[c], "-external_memory") && c < argc - 1) {
+      use_external_memory = EXUTILGETINT(argv[++c], 0, &parse_error);
       parse_error |= (use_external_memory > 2 || use_external_memory < 0);
       if (parse_error) {
-        fprintf(stderr, "Can't parse 'external_memory' value %s\n", argv[c]);
+        FPRINTF(stderr, "Can't parse 'external_memory' value %s\n", argv[c]);
       }
-    } else if (!strcmp(argv[c], "-mt")) {
+    } else if (!STRCMP(argv[c], "-mt")) {
       config.options.use_threads = 1;
-    } else if (!strcmp(argv[c], "-alpha_dither")) {
+    } else if (!STRCMP(argv[c], "-alpha_dither")) {
       config.options.alpha_dithering_strength = 100;
-    } else if (!strcmp(argv[c], "-nodither")) {
+    } else if (!STRCMP(argv[c], "-nodither")) {
       config.options.dithering_strength = 0;
-    } else if (!strcmp(argv[c], "-dither") && c < argc - 1) {
+    } else if (!STRCMP(argv[c], "-dither") && c < argc - 1) {
       config.options.dithering_strength =
-          ExUtilGetInt(argv[++c], 0, &parse_error);
-    } else if (!strcmp(argv[c], "-crop") && c < argc - 4) {
+          EXUTILGETINT(argv[++c], 0, &parse_error);
+    } else if (!STRCMP(argv[c], "-crop") && c < argc - 4) {
       config.options.use_cropping = 1;
-      config.options.crop_left   = ExUtilGetInt(argv[++c], 0, &parse_error);
-      config.options.crop_top    = ExUtilGetInt(argv[++c], 0, &parse_error);
-      config.options.crop_width  = ExUtilGetInt(argv[++c], 0, &parse_error);
-      config.options.crop_height = ExUtilGetInt(argv[++c], 0, &parse_error);
-    } else if ((!strcmp(argv[c], "-scale") || !strcmp(argv[c], "-resize")) &&
+      config.options.crop_left   = EXUTILGETINT(argv[++c], 0, &parse_error);
+      config.options.crop_top    = EXUTILGETINT(argv[++c], 0, &parse_error);
+      config.options.crop_width  = EXUTILGETINT(argv[++c], 0, &parse_error);
+      config.options.crop_height = EXUTILGETINT(argv[++c], 0, &parse_error);
+    } else if ((!STRCMP(argv[c], "-scale") || !STRCMP(argv[c], "-resize")) &&
                c < argc - 2) {  // '-scale' is left for compatibility
       config.options.use_scaling = 1;
-      config.options.scaled_width  = ExUtilGetInt(argv[++c], 0, &parse_error);
-      config.options.scaled_height = ExUtilGetInt(argv[++c], 0, &parse_error);
-    } else if (!strcmp(argv[c], "-flip")) {
+      config.options.scaled_width  = EXUTILGETINT(argv[++c], 0, &parse_error);
+      config.options.scaled_height = EXUTILGETINT(argv[++c], 0, &parse_error);
+    } else if (!STRCMP(argv[c], "-flip")) {
       config.options.flip = 1;
-    } else if (!strcmp(argv[c], "-v")) {
+    } else if (!STRCMP(argv[c], "-v")) {
       verbose = 1;
 #ifndef WEBP_DLL
-    } else if (!strcmp(argv[c], "-noasm")) {
+    } else if (!STRCMP(argv[c], "-noasm")) {
       VP8GetCPUInfo = NULL;
 #endif
-    } else if (!strcmp(argv[c], "-incremental")) {
+    } else if (!STRCMP(argv[c], "-incremental")) {
       incremental = 1;
-    } else if (!strcmp(argv[c], "--")) {
+    } else if (!STRCMP(argv[c], "--")) {
       if (c < argc - 1) in_file = argv[++c];
       break;
-    } else if (argv[c][0] == '-') {
-      fprintf(stderr, "Unknown option '%s'\n", argv[c]);
+    } else if (argv[c][0] == TO_GCHAR('-')) {
+      FPRINTF(stderr, "Unknown option '%s'\n", argv[c]);
       Help();
       return -1;
     } else {
@@ -311,7 +312,7 @@ int main(int argc, const char *argv[]) {
   {
     VP8StatusCode status = VP8_STATUS_OK;
     size_t data_size = 0;
-    if (!LoadWebP(in_file, &data, &data_size, bitstream)) {
+    if (!LoadWebP((const char*)in_file, &data, &data_size, bitstream)) {
       return -1;
     }
 
@@ -382,25 +383,25 @@ int main(int argc, const char *argv[]) {
 
     ok = (status == VP8_STATUS_OK);
     if (!ok) {
-      PrintWebPError(in_file, status);
+      PrintWebPError((const char*)in_file, status);
       goto Exit;
     }
   }
 
   if (out_file != NULL) {
     if (!quiet) {
-      fprintf(stderr, "Decoded %s. Dimensions: %d x %d %s. Format: %s. "
-                      "Now saving...\n",
-              in_file, output_buffer->width, output_buffer->height,
+      FPRINTF(stderr, "Decoded %s. ", in_file);
+      fprintf(stderr, "Dimensions: %d x %d %s. Format: %s. Now saving...\n",
+              output_buffer->width, output_buffer->height,
               bitstream->has_alpha ? " (with alpha)" : "",
               kFormatType[bitstream->format]);
     }
     ok = SaveOutput(output_buffer, format, out_file);
   } else {
     if (!quiet) {
-      fprintf(stderr, "File %s can be decoded "
-                      "(dimensions: %d x %d %s. Format: %s).\n",
-              in_file, output_buffer->width, output_buffer->height,
+      FPRINTF(stderr, "File %s can be decoded ", in_file);
+      fprintf(stderr, "(dimensions: %d x %d %s. Format: %s).\n",
+              output_buffer->width, output_buffer->height,
               bitstream->has_alpha ? " (with alpha)" : "",
               kFormatType[bitstream->format]);
       fprintf(stderr, "Nothing written; "

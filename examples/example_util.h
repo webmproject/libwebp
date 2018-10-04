@@ -23,18 +23,18 @@ extern "C" {
 //------------------------------------------------------------------------------
 // String parsing
 
-// Parses 'v' using strto(ul|l|d)(). If error is non-NULL, '*error' is set to
+// Parses 'str' using strto(ul|l|d)(). If error is non-NULL, '*error' is set to
 // true on failure while on success it is left unmodified to allow chaining of
 // calls. An error is only printed on the first occurrence.
-uint32_t ExUtilGetUInt(const char* const v, int base, int* const error);
-int ExUtilGetInt(const char* const v, int base, int* const error);
-float ExUtilGetFloat(const char* const v, int* const error);
+uint32_t ExUtilGetUInt(const char* const str, int base, int* const error);
+int ExUtilGetInt(const char* const str, int base, int* const error);
+float ExUtilGetFloat(const char* const str, int* const error);
 
 // This variant of ExUtilGetInt() will parse multiple integers from a
 // comma-separated list. Up to 'max_output' integers are parsed.
 // The result is placed in the output[] array, and the number of integers
 // actually parsed is returned, or -1 if an error occurred.
-int ExUtilGetInts(const char* v, int base, int max_output, int output[]);
+int ExUtilGetInts(const char* str, int base, int max_output, int output[]);
 
 // Reads a file named 'filename' into a WebPData structure. The content of
 // webp_data is overwritten. Returns false in case of error.
