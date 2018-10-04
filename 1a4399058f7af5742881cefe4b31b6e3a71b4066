@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "625296db_1e1ac350",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 2
+      },
+      "lineNbr": 397,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2018-10-04T16:53:35Z",
+      "side": 1,
+      "message": "No need for include_directories if you use target_include_directories",
+      "revId": "1a4399058f7af5742881cefe4b31b6e3a71b4066",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
