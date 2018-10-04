@@ -1,0 +1,188 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ec5a2e80_7682611e",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 3
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2018-10-04T20:18:24Z",
+      "side": 1,
+      "message": "we usually don\u0027t use \u0027_\u0027 in flags. What about \"-DUNICODE\" ? or \"-DUSE_UNICODE\" ?",
+      "range": {
+        "startLine": 47,
+        "startChar": 19,
+        "endLine": 47,
+        "endChar": 28
+      },
+      "revId": "4cecfddde70a2a8125ff92c361eab66819c846b2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7b171def_a188980d",
+        "filename": "examples/anim_util.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 738,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2018-10-04T20:18:24Z",
+      "side": 1,
+      "message": "these could be \"const GCHAR* const ...\"",
+      "range": {
+        "startLine": 738,
+        "startChar": 15,
+        "endLine": 738,
+        "endChar": 23
+      },
+      "revId": "4cecfddde70a2a8125ff92c361eab66819c846b2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b6fa96d6_e9fa2aed",
+        "filename": "examples/anim_util.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 758,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2018-10-04T20:18:24Z",
+      "side": 1,
+      "message": "alignment is off",
+      "range": {
+        "startLine": 758,
+        "startChar": 0,
+        "endLine": 758,
+        "endChar": 13
+      },
+      "revId": "4cecfddde70a2a8125ff92c361eab66819c846b2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c9e3fe80_a9db5dcd",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 303,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2018-10-04T20:18:24Z",
+      "side": 1,
+      "message": "could be \"const GCHAR* const PGM_name\"",
+      "range": {
+        "startLine": 303,
+        "startChar": 36,
+        "endLine": 303,
+        "endChar": 44
+      },
+      "revId": "4cecfddde70a2a8125ff92c361eab66819c846b2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d4e310f5_63ae199c",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 855,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2018-10-04T20:18:24Z",
+      "side": 1,
+      "message": "do we really have to use unicode for these??",
+      "range": {
+        "startLine": 855,
+        "startChar": 10,
+        "endLine": 855,
+        "endChar": 18
+      },
+      "revId": "4cecfddde70a2a8125ff92c361eab66819c846b2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d842f6d5_4bc37c93",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 883,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2018-10-04T20:18:24Z",
+      "side": 1,
+      "message": "alignment is off",
+      "range": {
+        "startLine": 883,
+        "startChar": 20,
+        "endLine": 883,
+        "endChar": 23
+      },
+      "revId": "4cecfddde70a2a8125ff92c361eab66819c846b2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "63df0e4a_7d7c9d38",
+        "filename": "examples/unicode.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2018-10-04T20:18:24Z",
+      "side": 1,
+      "message": "suggest using \\n around the \"else\", to make the separation clear",
+      "range": {
+        "startLine": 40,
+        "startChar": 1,
+        "endLine": 40,
+        "endChar": 5
+      },
+      "revId": "4cecfddde70a2a8125ff92c361eab66819c846b2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "46d1aca2_831ccc7c",
+        "filename": "examples/unicode.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2018-10-04T20:18:24Z",
+      "side": 1,
+      "message": "not used?",
+      "range": {
+        "startLine": 91,
+        "startChar": 13,
+        "endLine": 91,
+        "endChar": 39
+      },
+      "revId": "4cecfddde70a2a8125ff92c361eab66819c846b2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
