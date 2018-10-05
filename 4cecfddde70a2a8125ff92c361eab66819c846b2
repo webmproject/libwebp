@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "a0d67597_8c0fc50e",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 3
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1289110
+      },
+      "writtenOn": "2018-10-05T20:21:15Z",
+      "side": 1,
+      "message": "MSDN recommends setting both.\nhttps://msdn.microsoft.com/en-us/library/dybsewaf.aspx\nhttps://docs.microsoft.com/en-us/windows/desktop/learnwin32/working-with-strings",
+      "parentUuid": "ec5a2e80_7682611e",
+      "range": {
+        "startLine": 47,
+        "startChar": 19,
+        "endLine": 47,
+        "endChar": 28
+      },
+      "revId": "4cecfddde70a2a8125ff92c361eab66819c846b2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7b171def_a188980d",
         "filename": "examples/anim_util.c",
         "patchSetId": 3
@@ -45,6 +69,30 @@
       "revId": "4cecfddde70a2a8125ff92c361eab66819c846b2",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "091f4720_cca0f218",
+        "filename": "examples/anim_util.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 738,
+      "author": {
+        "id": 1289110
+      },
+      "writtenOn": "2018-10-05T20:21:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7b171def_a188980d",
+      "range": {
+        "startLine": 738,
+        "startChar": 15,
+        "endLine": 738,
+        "endChar": 23
+      },
+      "revId": "4cecfddde70a2a8125ff92c361eab66819c846b2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "3344b133_4c4a8cce",
+        "filename": "examples/anim_util.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 758,
+      "author": {
+        "id": 1289110
+      },
+      "writtenOn": "2018-10-05T20:21:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b6fa96d6_e9fa2aed",
+      "range": {
+        "startLine": 758,
+        "startChar": 0,
+        "endLine": 758,
+        "endChar": 13
+      },
+      "revId": "4cecfddde70a2a8125ff92c361eab66819c846b2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c9e3fe80_a9db5dcd",
         "filename": "examples/cwebp.c",
         "patchSetId": 3
@@ -91,6 +163,30 @@
       "revId": "4cecfddde70a2a8125ff92c361eab66819c846b2",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e6f9e781_33785a13",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 303,
+      "author": {
+        "id": 1289110
+      },
+      "writtenOn": "2018-10-05T20:21:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c9e3fe80_a9db5dcd",
+      "range": {
+        "startLine": 303,
+        "startChar": 36,
+        "endLine": 303,
+        "endChar": 44
+      },
+      "revId": "4cecfddde70a2a8125ff92c361eab66819c846b2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "12576586_d548eb78",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 855,
+      "author": {
+        "id": 1289110
+      },
+      "writtenOn": "2018-10-05T20:21:15Z",
+      "side": 1,
+      "message": "Yes, it\u0027s compared to \"start\" below, which is a pointer to argv[].",
+      "parentUuid": "d4e310f5_63ae199c",
+      "range": {
+        "startLine": 855,
+        "startChar": 10,
+        "endLine": 855,
+        "endChar": 18
+      },
+      "revId": "4cecfddde70a2a8125ff92c361eab66819c846b2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d842f6d5_4bc37c93",
         "filename": "examples/cwebp.c",
         "patchSetId": 3
@@ -137,6 +257,30 @@
       "revId": "4cecfddde70a2a8125ff92c361eab66819c846b2",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "836de7b7_58537cf7",
+        "filename": "examples/cwebp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 883,
+      "author": {
+        "id": 1289110
+      },
+      "writtenOn": "2018-10-05T20:21:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d842f6d5_4bc37c93",
+      "range": {
+        "startLine": 883,
+        "startChar": 20,
+        "endLine": 883,
+        "endChar": 23
+      },
+      "revId": "4cecfddde70a2a8125ff92c361eab66819c846b2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     },
     {
       "key": {
@@ -163,6 +307,30 @@
     },
     {
       "key": {
+        "uuid": "1369274c_22d4ebe4",
+        "filename": "examples/unicode.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1289110
+      },
+      "writtenOn": "2018-10-05T20:21:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "63df0e4a_7d7c9d38",
+      "range": {
+        "startLine": 40,
+        "startChar": 1,
+        "endLine": 40,
+        "endChar": 5
+      },
+      "revId": "4cecfddde70a2a8125ff92c361eab66819c846b2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "46d1aca2_831ccc7c",
         "filename": "examples/unicode.h",
         "patchSetId": 3
@@ -186,6 +354,30 @@
     },
     {
       "key": {
+        "uuid": "0b436086_a2272870",
+        "filename": "examples/unicode.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1289110
+      },
+      "writtenOn": "2018-10-05T20:21:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "46d1aca2_831ccc7c",
+      "range": {
+        "startLine": 91,
+        "startChar": 13,
+        "endLine": 91,
+        "endChar": 39
+      },
+      "revId": "4cecfddde70a2a8125ff92c361eab66819c846b2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d6e87290_99af108a",
         "filename": "imageio/wicdec.c",
         "patchSetId": 3
@@ -206,6 +398,30 @@
       "revId": "4cecfddde70a2a8125ff92c361eab66819c846b2",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4e85a900_e48cd6b3",
+        "filename": "imageio/wicdec.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1289110
+      },
+      "writtenOn": "2018-10-05T20:21:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d6e87290_99af108a",
+      "range": {
+        "startLine": 112,
+        "startChar": 8,
+        "endLine": 112,
+        "endChar": 28
+      },
+      "revId": "4cecfddde70a2a8125ff92c361eab66819c846b2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
