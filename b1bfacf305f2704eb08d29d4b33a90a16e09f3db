@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5ea21703_53dfaf3d",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 8
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-10-05T23:40:46Z",
+      "side": 1,
+      "message": "doesn\u0027t",
+      "range": {
+        "startLine": 71,
+        "startChar": 11,
+        "endLine": 71,
+        "endChar": 17
+      },
+      "revId": "b1bfacf305f2704eb08d29d4b33a90a16e09f3db",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
