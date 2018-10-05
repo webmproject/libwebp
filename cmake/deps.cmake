@@ -1,33 +1,27 @@
 # Generate the config.h to compile with specific intrinsics / libs.
 
-## Check for compiler options.
+# Check for compiler options.
 include(CheckCSourceCompiles)
 check_c_source_compiles("
     int main(void) {
       (void)__builtin_bswap16(0);
       return 0;
     }
-  "
-  HAVE_BUILTIN_BSWAP16
-)
+  " HAVE_BUILTIN_BSWAP16)
 check_c_source_compiles("
     int main(void) {
       (void)__builtin_bswap32(0);
       return 0;
     }
-  "
-  HAVE_BUILTIN_BSWAP32
-)
+  " HAVE_BUILTIN_BSWAP32)
 check_c_source_compiles("
     int main(void) {
       (void)__builtin_bswap64(0);
       return 0;
     }
-  "
-  HAVE_BUILTIN_BSWAP64
-)
+  " HAVE_BUILTIN_BSWAP64)
 
-## Check for libraries.
+# Check for libraries.
 find_package(Threads)
 if(Threads_FOUND)
   if(CMAKE_USE_PTHREADS_INIT)
@@ -40,8 +34,7 @@ if(Threads_FOUND)
           int attr = ${PTHREAD_TEST};
           return attr;
         }
-      " ${PTHREAD_TEST}
-    )
+      " ${PTHREAD_TEST})
   endforeach()
   list(APPEND WEBP_DEP_LIBRARIES ${CMAKE_THREAD_LIBS_INIT})
 endif()
@@ -54,17 +47,14 @@ set(LT_OBJDIR ".libs/")
 find_package(OpenGL)
 set(WEBP_HAVE_GL ${OPENGL_FOUND})
 
-# Check if we need to link to the C math library.
-# We do not look for it as it is not found when
-# cross-compiling, while it is here.
+# Check if we need to link to the C math library. We do not look for it as it is
+# not found when cross-compiling, while it is here.
 check_c_source_compiles("
     #include <math.h>
     int main(int argc, char** argv) {
       return (int)pow(argc, 2.5);
     }
-  "
-  HAVE_MATH_LIBRARY
-)
+  " HAVE_MATH_LIBRARY)
 if(NOT HAVE_MATH_LIBRARY)
   message(STATUS "Adding -lm flag.")
   list(APPEND WEBP_DEP_LIBRARIES m)
@@ -78,8 +68,8 @@ foreach(I_LIB PNG JPEG TIFF)
   set(WEBP_HAVE_${I_LIB} ${${I_LIB}_FOUND})
   if(${I_LIB}_FOUND)
     list(APPEND WEBP_DEP_IMG_LIBRARIES ${${I_LIB}_LIBRARIES})
-    list(APPEND WEBP_DEP_IMG_INCLUDE_DIRS
-         ${${I_LIB}_INCLUDE_DIR} ${${I_LIB}_INCLUDE_DIRS})
+    list(APPEND WEBP_DEP_IMG_INCLUDE_DIRS ${${I_LIB}_INCLUDE_DIR}
+                ${${I_LIB}_INCLUDE_DIRS})
   endif()
 endforeach()
 if(WEBP_DEP_IMG_INCLUDE_DIRS)
@@ -95,8 +85,8 @@ set(WEBP_HAVE_GIF ${GIF_FOUND})
 if(GIF_FOUND)
   # GIF find_package only locates the header and library, it doesn't fail
   # compile tests when detecting the version, but falls back to 3 (as of at
-  # least cmake 3.7.2). Make sure the library links to avoid incorrect
-  # detection when cross compiling.
+  # least cmake 3.7.2). Make sure the library links to avoid incorrect detection
+  # when cross compiling.
   cmake_push_check_state()
   set(CMAKE_REQUIRED_LIBRARIES ${GIF_LIBRARIES})
   set(CMAKE_REQUIRED_INCLUDES ${GIF_INCLUDE_DIR})
@@ -106,8 +96,7 @@ if(GIF_FOUND)
         (void)DGifOpenFileHandle;
         return 0;
       }
-      " GIF_COMPILES
-  )
+      " GIF_COMPILES)
   cmake_pop_check_state()
   if(GIF_COMPILES)
     list(APPEND WEBP_DEP_GIF_LIBRARIES ${GIF_LIBRARIES})
@@ -117,7 +106,7 @@ if(GIF_FOUND)
   endif()
 endif()
 
-## Check for specific headers.
+# Check for specific headers.
 include(CheckIncludeFiles)
 check_include_files("stdlib.h;stdarg.h;string.h;float.h" STDC_HEADERS)
 check_include_files(dlfcn.h HAVE_DLFCN_H)
@@ -139,25 +128,32 @@ check_include_files(windows.h HAVE_WINDOWS_H)
 
 # Windows specifics
 if(HAVE_WINCODEC_H)
-  list(APPEND WEBP_DEP_LIBRARIES shlwapi ole32 windowscodecs)
+  list(APPEND WEBP_DEP_LIBRARIES
+              shlwapi
+              ole32
+              windowscodecs)
 endif()
 
-## Check for SIMD extensions.
+# Check for SIMD extensions.
 include(${CMAKE_CURRENT_LIST_DIR}/cpu.cmake)
 
-## Define extra info.
+# Define extra info.
 set(PACKAGE ${PROJECT_NAME})
 set(PACKAGE_NAME ${PROJECT_NAME})
 
 # Read from configure.ac.
 file(READ ${CMAKE_CURRENT_SOURCE_DIR}/configure.ac CONFIGURE_AC)
-string(REGEX MATCHALL "\\[([0-9a-z\\.:/]*)\\]"
-  CONFIGURE_AC_PACKAGE_INFO ${CONFIGURE_AC}
-)
+string(REGEX MATCHALL
+             "\\[([0-9a-z\\.:/]*)\\]"
+             CONFIGURE_AC_PACKAGE_INFO
+             ${CONFIGURE_AC})
 function(strip_bracket VAR)
   string(LENGTH ${${VAR}} TMP_LEN)
   math(EXPR TMP_LEN ${TMP_LEN}-2)
-  string(SUBSTRING ${${VAR}} 1 ${TMP_LEN} TMP_SUB)
+  string(SUBSTRING ${${VAR}}
+                   1
+                   ${TMP_LEN}
+                   TMP_SUB)
   set(${VAR} ${TMP_SUB} PARENT_SCOPE)
 endfunction()
 

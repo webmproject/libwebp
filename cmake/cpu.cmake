@@ -1,4 +1,4 @@
-## Check for SIMD extensions.
+# Check for SIMD extensions.
 include(CMakePushCheckState)
 
 function(webp_check_compiler_flag WEBP_SIMD_FLAG ENABLE_SIMD)
@@ -18,8 +18,7 @@ function(webp_check_compiler_flag WEBP_SIMD_FLAG ENABLE_SIMD)
         #endif
         return 0;
       }
-    " WEBP_HAVE_FLAG_${WEBP_SIMD_FLAG}
-  )
+    " WEBP_HAVE_FLAG_${WEBP_SIMD_FLAG})
   cmake_pop_check_state()
   if(WEBP_HAVE_FLAG_${WEBP_SIMD_FLAG})
     set(WEBP_HAVE_${WEBP_SIMD_FLAG} 1 PARENT_SCOPE)
@@ -30,15 +29,17 @@ endfunction()
 
 # those are included in the names of WEBP_USE_* in c++ code.
 set(WEBP_SIMD_FLAGS "SSE2;SSE41;AVX2;MIPS32;MIPS_DSP_R2;NEON;MSA")
-set(WEBP_SIMD_FILE_EXTENSIONS "_sse2.c;_sse41.c;_avx2.c;_mips32.c;_mips_dsp_r2.c;_neon.c;_msa.c")
+set(WEBP_SIMD_FILE_EXTENSIONS
+    "_sse2.c;_sse41.c;_avx2.c;_mips32.c;_mips_dsp_r2.c;_neon.c;_msa.c")
 if(MSVC)
-  # MSVC does not have a SSE4 flag but AVX2 support implies
-  # SSE4 support.
+  # MSVC does not have a SSE4 flag but AVX2 support implies SSE4 support.
   set(SIMD_ENABLE_FLAGS "/arch:SSE2;/arch:AVX2;/arch:AVX2;;;;")
   set(SIMD_DISABLE_FLAGS)
 else()
-  set(SIMD_ENABLE_FLAGS "-msse2;-msse4.1;-mavx2;-mips32;-mdspr2;-mfpu=neon;-mmsa")
-  set(SIMD_DISABLE_FLAGS "-mno-sse2;-mno-sse4.1;-mno-avx2;;-mno-dspr2;;-mno-msa")
+  set(SIMD_ENABLE_FLAGS
+      "-msse2;-msse4.1;-mavx2;-mips32;-mdspr2;-mfpu=neon;-mmsa")
+  set(SIMD_DISABLE_FLAGS
+      "-mno-sse2;-mno-sse4.1;-mno-avx2;;-mno-dspr2;;-mno-msa")
 endif()
 
 set(WEBP_SIMD_FILES_TO_NOT_INCLUDE)
@@ -47,10 +48,9 @@ set(WEBP_SIMD_FLAGS_TO_INCLUDE)
 
 if(${ANDROID})
   if(${ANDROID_ABI} STREQUAL "armeabi-v7a")
-    # This is because Android studio uses the configuration
-    # "-march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16"
-    # that does not trigger neon optimizations but should
-    # (as this configuration does not exist anymore).
+    # This is because Android studio uses the configuration "-march=armv7-a
+    # -mfloat-abi=softfp -mfpu=vfpv3-d16" that does not trigger neon
+    # optimizations but should (as this configuration does not exist anymore).
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mfpu=neon ")
   endif()
 endif()
@@ -77,8 +77,7 @@ foreach(I_SIMD RANGE ${WEBP_SIMD_FLAGS_RANGE})
   # Check which files we should include or not.
   list(GET WEBP_SIMD_FILE_EXTENSIONS ${I_SIMD} WEBP_SIMD_FILE_EXTENSION)
   file(GLOB SIMD_FILES "${CMAKE_CURRENT_LIST_DIR}/../"
-    "src/dsp/*${WEBP_SIMD_FILE_EXTENSION}"
-  )
+            "src/dsp/*${WEBP_SIMD_FILE_EXTENSION}")
   if(WEBP_HAVE_${WEBP_SIMD_FLAG})
     # Memorize the file and flags.
     foreach(FILE ${SIMD_FILES})
@@ -107,10 +106,10 @@ foreach(I_SIMD RANGE ${WEBP_SIMD_FLAGS_RANGE})
           endif()
           set(CMAKE_REQUIRED_DEFINITIONS ${SIMD_COMPILE_FLAG})
           check_c_source_compiles("int main(void) {return 0;}"
-            FLAG_${SIMD_COMPILE_FLAG}
-            FAIL_REGEX "warning: argument unused during compilation:"
-            ${COMMON_PATTERNS}
-          )
+                                  FLAG_${SIMD_COMPILE_FLAG}
+                                  FAIL_REGEX
+                                  "warning: argument unused during compilation:"
+                                  ${COMMON_PATTERNS})
           if(NOT FLAG_${SIMD_COMPILE_FLAG})
             unset(HAS_COMPILE_FLAG CACHE)
           endif()
