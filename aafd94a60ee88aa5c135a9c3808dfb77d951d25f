@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "91cb40bf_bab89c9a",
+        "filename": "cmake/cpu.cmake",
+        "patchSetId": 2
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-10-05T07:09:48Z",
+      "side": 1,
+      "message": "this could be refined to prevent the /arch:SSE2 warning to have a separate path for x86 and x64, where the latter guarantees sse2 support",
+      "revId": "aafd94a60ee88aa5c135a9c3808dfb77d951d25f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
