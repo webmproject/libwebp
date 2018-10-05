@@ -41,6 +41,14 @@ if(WEBP_ENABLE_SWAP_16BIT_CSP)
   add_definitions(-DWEBP_SWAP_16BIT_CSP=1)
 endif()
 
+find_package(Threads)
+
+set(prefix ${CMAKE_INSTALL_PREFIX})
+set(exec_prefix "\$\{prefix\}")
+set(libdir "\$\{prefix\}/lib")
+set(includedir "\$\{prefix\}/include")
+set(PTHREAD_LIBS ${CMAKE_THREAD_LIBS_INIT})
+
 ################################################################################
 # Android only.
 if(ANDROID)
@@ -58,6 +66,23 @@ if(ANDROID)
 else()
   set(HAVE_CPU_FEATURES_H 0)
 endif()
+
+function(configure_pkg_config FILE)
+  configure_file("${CMAKE_CURRENT_SOURCE_DIR}/${FILE}.in"
+                 "${CMAKE_CURRENT_BINARY_DIR}/${FILE}")
+
+  if(MSVC)
+    # MSVC doesn' have libm
+    file(READ ${CMAKE_CURRENT_BINARY_DIR}/${FILE} data)
+    string(REPLACE "-lm" "" data ${data})
+    file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/${FILE} ${data})
+  endif(MSVC)
+
+  install(
+    FILES "${CMAKE_CURRENT_BINARY_DIR}/${FILE}"
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
+  )
+endfunction()
 
 ################################################################################
 # WebP source files.
@@ -148,6 +173,8 @@ set_target_properties(webpdecoder PROPERTIES PUBLIC_HEADER
 ${CMAKE_CURRENT_SOURCE_DIR}/src/webp/types.h"
 )
 
+configure_pkg_config("src/libwebpdecoder.pc")
+
 # Build the webp library.
 add_library(webpencode OBJECT ${WEBP_ENC_SRCS})
 target_include_directories(webpencode PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
@@ -177,6 +204,8 @@ ${CMAKE_CURRENT_SOURCE_DIR}/src/webp/encode.h;\
 ${CMAKE_CURRENT_SOURCE_DIR}/src/webp/types.h"
 )
 
+configure_pkg_config("src/libwebp.pc")
+
 # Make sure the OBJECT libraries are built with position independent code
 # (it is not ON by default).
 set_target_properties(webpdecode webpdspdecode webputilsdecode
@@ -196,6 +225,8 @@ ${CMAKE_CURRENT_SOURCE_DIR}/src/webp/demux.h;\
 ${CMAKE_CURRENT_SOURCE_DIR}/src/webp/mux_types.h;\
 ${CMAKE_CURRENT_SOURCE_DIR}/src/webp/types.h"
 )
+
+configure_pkg_config("src/demux/libwebpdemux.pc")
 
 # Set the version numbers.
 function(parse_version FILE NAME VAR)
@@ -319,6 +350,7 @@ ${CMAKE_CURRENT_SOURCE_DIR}/src/webp/types.h;"
   )
   set_target_properties(libwebpmux PROPERTIES OUTPUT_NAME webpmux)
   list(APPEND INSTALLED_LIBRARIES libwebpmux)
+  configure_pkg_config("src/mux/libwebpmux.pc")
 endif()
 
 if(WEBP_BUILD_GIF2WEBP)
