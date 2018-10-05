@@ -183,6 +183,29 @@
       "revId": "4cecfddde70a2a8125ff92c361eab66819c846b2",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d6e87290_99af108a",
+        "filename": "imageio/wicdec.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-10-05T05:57:37Z",
+      "side": 1,
+      "message": "the windows way is usually to prefer TCHAR to avoid ifdef\u0027s and allow the unicodness of the build select the correct signature.",
+      "range": {
+        "startLine": 112,
+        "startChar": 8,
+        "endLine": 112,
+        "endChar": 28
+      },
+      "revId": "4cecfddde70a2a8125ff92c361eab66819c846b2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
