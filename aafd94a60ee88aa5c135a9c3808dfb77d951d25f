@@ -16,6 +16,24 @@
       "revId": "aafd94a60ee88aa5c135a9c3808dfb77d951d25f",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5f362b50_d1c82c22",
+        "filename": "cmake/cpu.cmake",
+        "patchSetId": 2
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2018-10-08T12:56:10Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "91cb40bf_bab89c9a",
+      "revId": "aafd94a60ee88aa5c135a9c3808dfb77d951d25f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
