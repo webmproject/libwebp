@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6625eeee_3ad992e1",
+        "filename": "cmake/cpu.cmake",
+        "patchSetId": 7
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-10-08T23:44:43Z",
+      "side": 1,
+      "message": "We haven\u0027t hit any issues with this, but I still feel this could lead to avx2 instructions being emitted in the sse4 modules. In practice I don\u0027t think an arch switch is needed for win32/x64, clang-cl would want -msse4.1",
+      "revId": "1f3d07ae55d5a3b0fca70926a35a046d42e9d9b0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
