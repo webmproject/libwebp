@@ -16,6 +16,24 @@
       "revId": "1f3d07ae55d5a3b0fca70926a35a046d42e9d9b0",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5cd74401_a7f10a52",
+        "filename": "cmake/cpu.cmake",
+        "patchSetId": 7
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2018-10-09T08:50:33Z",
+      "side": 1,
+      "message": "MSVC does not support a SSE4 specific flag: https://msdn.microsoft.com/en-us/en-en/library/7t5yh4fd.aspx\nI could go with AVX though, that would be safer as we don\u0027t have any of those optimizations. Fixing it.\n\nclang-cl does not seem to support clang\u0027s usual arguments (it\u0027s more like MSVC, cf https://clang.llvm.org/docs/UsersManual.html#id8). Also, in CMake, it is recognized as MSVC",
+      "parentUuid": "6625eeee_3ad992e1",
+      "revId": "1f3d07ae55d5a3b0fca70926a35a046d42e9d9b0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
