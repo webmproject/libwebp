@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d98db9e0_d0a3bb11",
+        "filename": "examples/anim_util.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2018-10-09T12:21:11Z",
+      "side": 1,
+      "message": "That is not standard right ? Why does it compile everywhere ?\nI\u0027d move that logic and the definition of OPEN_RDONLY to unicode.h no?",
+      "revId": "503d9d734ac8fc03ac51e89d95d620ff2b60a908",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9a558c8a_65d9a755",
+        "filename": "examples/example_util.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2018-10-09T12:21:11Z",
+      "side": 1,
+      "message": "return (token_length \u003e 0);",
+      "revId": "503d9d734ac8fc03ac51e89d95d620ff2b60a908",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "078a093b_b56c69ee",
+        "filename": "examples/vwebp.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 604,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2018-10-09T12:21:11Z",
+      "side": 1,
+      "message": "Is that a fix ? Maybe it should be done in a different path.",
+      "range": {
+        "startLine": 603,
+        "startChar": 3,
+        "endLine": 604,
+        "endChar": 0
+      },
+      "revId": "503d9d734ac8fc03ac51e89d95d620ff2b60a908",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
