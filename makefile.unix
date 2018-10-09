@@ -392,7 +392,7 @@ src/demux/libwebpdemux.a: $(LIBWEBPDEMUX_OBJS)
 	$(AR) $(ARFLAGS) $@ $^
 
 examples/anim_diff: examples/anim_diff.o $(ANIM_UTIL_OBJS) $(GIFDEC_OBJS)
-examples/anim_dump: examples/anim_dump.o $(ANIM_UTIL_OBJS)
+examples/anim_dump: examples/anim_dump.o $(ANIM_UTIL_OBJS) $(GIFDEC_OBJS)
 examples/cwebp: examples/cwebp.o
 examples/dwebp: examples/dwebp.o
 examples/gif2webp: examples/gif2webp.o $(GIFDEC_OBJS)
@@ -406,7 +406,7 @@ examples/anim_diff: src/demux/libwebpdemux.a examples/libexample_util.a
 examples/anim_diff: imageio/libimageio_util.a src/libwebp.a
 examples/anim_diff: EXTRA_LIBS += $(GIF_LIBS)
 examples/anim_diff: EXTRA_FLAGS += -DWEBP_HAVE_GIF
-examples/anim_dump: examples/libanim_util.a
+examples/anim_dump: examples/libanim_util.a examples/libgifdec.a
 examples/anim_dump: src/demux/libwebpdemux.a
 examples/anim_dump: examples/libexample_util.a
 examples/anim_dump: imageio/libimageio_util.a
