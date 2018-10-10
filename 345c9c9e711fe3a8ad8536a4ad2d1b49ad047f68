@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "4418fec8_0fc0f404",
+        "filename": "examples/unicode.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-10-10T19:25:54Z",
+      "side": 1,
+      "message": "\u003e I believe it would be done in another cl? Where are the requirements set?\n\nWe don\u0027t have any formally documented, for this one it just happens to be what we can support and test locally. I have 2010-2017 running nightly on Makefile.vc, but not cmake currently. Really it\u0027s less of a concern since most products have modernized.",
+      "parentUuid": "a9c81e7f_33012d74",
+      "range": {
+        "startLine": 25,
+        "startChar": 49,
+        "endLine": 25,
+        "endChar": 60
+      },
+      "revId": "345c9c9e711fe3a8ad8536a4ad2d1b49ad047f68",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "13de88ab_1a4bf342",
         "filename": "examples/unicode.h",
         "patchSetId": 5
@@ -84,6 +108,30 @@
       "side": 1,
       "message": "It was only to remove a unused-function warning in files including unicode.h but not using DGifOpenFileUnicode(). Moving this function to another unicode_gif.h.",
       "parentUuid": "13de88ab_1a4bf342",
+      "range": {
+        "startLine": 87,
+        "startChar": 7,
+        "endLine": 87,
+        "endChar": 14
+      },
+      "revId": "345c9c9e711fe3a8ad8536a4ad2d1b49ad047f68",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "34024fb1_b51f9e17",
+        "filename": "examples/unicode.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-10-10T19:25:54Z",
+      "side": 1,
+      "message": "\u003e It was only to remove a unused-function warning in files including unicode.h but not using DGifOpenFileUnicode(). Moving this function to another unicode_gif.h.\n\nMy mistake, I realized it was in a header after I was offline. This should be WEBP_INLINE then",
+      "parentUuid": "8a19144c_8021fcf4",
       "range": {
         "startLine": 87,
         "startChar": 7,
