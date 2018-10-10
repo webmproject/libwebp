@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "a9c81e7f_33012d74",
+        "filename": "examples/unicode.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1289110
+      },
+      "writtenOn": "2018-10-10T11:11:50Z",
+      "side": 1,
+      "message": "I believe it would be done in another cl? Where are the requirements set?",
+      "parentUuid": "fc162218_4e8f6750",
+      "range": {
+        "startLine": 25,
+        "startChar": 49,
+        "endLine": 25,
+        "endChar": 60
+      },
+      "revId": "345c9c9e711fe3a8ad8536a4ad2d1b49ad047f68",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "13de88ab_1a4bf342",
         "filename": "examples/unicode.h",
         "patchSetId": 5
@@ -45,6 +69,30 @@
       "revId": "345c9c9e711fe3a8ad8536a4ad2d1b49ad047f68",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8a19144c_8021fcf4",
+        "filename": "examples/unicode.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1289110
+      },
+      "writtenOn": "2018-10-10T11:11:50Z",
+      "side": 1,
+      "message": "It was only to remove a unused-function warning in files including unicode.h but not using DGifOpenFileUnicode(). Moving this function to another unicode_gif.h.",
+      "parentUuid": "13de88ab_1a4bf342",
+      "range": {
+        "startLine": 87,
+        "startChar": 7,
+        "endLine": 87,
+        "endChar": 14
+      },
+      "revId": "345c9c9e711fe3a8ad8536a4ad2d1b49ad047f68",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
