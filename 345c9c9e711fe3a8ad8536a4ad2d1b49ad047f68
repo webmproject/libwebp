@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fc162218_4e8f6750",
+        "filename": "examples/unicode.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-10-10T06:04:40Z",
+      "side": 1,
+      "message": "I believe these will work as intended back through visual studio 2010 which we had been setting as our base. It could be time to move the requirement to 2013/2015",
+      "range": {
+        "startLine": 25,
+        "startChar": 49,
+        "endLine": 25,
+        "endChar": 60
+      },
+      "revId": "345c9c9e711fe3a8ad8536a4ad2d1b49ad047f68",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "13de88ab_1a4bf342",
+        "filename": "examples/unicode.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-10-10T06:04:40Z",
+      "side": 1,
+      "message": "this isn\u0027t performance critical so there\u0027s no reason to deal with inline compatibility across versions of msvc",
+      "range": {
+        "startLine": 87,
+        "startChar": 7,
+        "endLine": 87,
+        "endChar": 14
+      },
+      "revId": "345c9c9e711fe3a8ad8536a4ad2d1b49ad047f68",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
