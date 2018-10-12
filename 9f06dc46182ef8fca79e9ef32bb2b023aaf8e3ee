@@ -1,0 +1,84 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "324bfc15_949cf8ff",
+        "filename": "examples/anim_util.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-10-12T06:38:39Z",
+      "side": 1,
+      "message": "I think the change is an implementation detail so any changes should be done in the function as this naming is inconsistent across functions and at the moment out of sync with the comment.",
+      "range": {
+        "startLine": 55,
+        "startChar": 33,
+        "endLine": 55,
+        "endChar": 44
+      },
+      "revId": "9f06dc46182ef8fca79e9ef32bb2b023aaf8e3ee",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fa4b01ba_8b6b7c6a",
+        "filename": "examples/unicode.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-10-12T06:38:39Z",
+      "side": 1,
+      "message": "we end up with a mix of PRINTF and printf (along with other functions), perhaps we should prefix these with G to call out that they\u0027re operating on GCHARs, similar to the T prefix for windows types.",
+      "revId": "9f06dc46182ef8fca79e9ef32bb2b023aaf8e3ee",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fb8b0fde_5e8dcfe2",
+        "filename": "examples/unicode.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-10-12T06:38:39Z",
+      "side": 1,
+      "message": "// _WIN32",
+      "revId": "9f06dc46182ef8fca79e9ef32bb2b023aaf8e3ee",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2e6db4ac_283646a6",
+        "filename": "examples/unicode_gif.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-10-12T06:38:39Z",
+      "side": 1,
+      "message": "this can come from webp/config.h you should check for HAVE_CONFIG_H and include that here",
+      "range": {
+        "startLine": 18,
+        "startChar": 12,
+        "endLine": 18,
+        "endChar": 25
+      },
+      "revId": "9f06dc46182ef8fca79e9ef32bb2b023aaf8e3ee",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}

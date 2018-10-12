@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2c462884_5f49aaa1",
+        "filename": "examples/example_util.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-10-12T06:38:39Z",
+      "side": 0,
+      "message": "this renaming could be a separate cosmetic change",
+      "revId": "ef1094b0fef9fd8492e19e00979e560105f7d20e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
