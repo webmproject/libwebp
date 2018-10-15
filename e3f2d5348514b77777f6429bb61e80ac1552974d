@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "68415fe4_884b946b",
+        "filename": "src/enc/histogram_enc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2018-10-15T14:26:12Z",
+      "side": 1,
+      "message": "not needed: already included at line 19",
+      "range": {
+        "startLine": 23,
+        "startChar": 10,
+        "endLine": 23,
+        "endChar": 23
+      },
+      "revId": "e3f2d5348514b77777f6429bb61e80ac1552974d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
