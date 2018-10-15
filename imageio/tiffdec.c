@@ -121,7 +121,6 @@ static tsize_t MyRead(thandle_t opaque, void* dst, tsize_t size) {
 // (we don't want to force a dependency to a libdspdec library).
 #define MFIX 24    // 24bit fixed-point arithmetic
 #define HALF ((1u << MFIX) >> 1)
-#define KINV_255 ((1u << MFIX) / 255u)
 
 static uint32_t Unmult(uint8_t x, uint32_t mult) {
   const uint32_t v = (x * mult + HALF) >> MFIX;
