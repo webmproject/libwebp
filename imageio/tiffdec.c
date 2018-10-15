@@ -131,6 +131,9 @@ static WEBP_INLINE uint32_t GetScale(uint32_t a) {
   return (255u << MFIX) / a;
 }
 
+#undef MFIX
+#undef HALF
+
 static void MultARGBRow(uint8_t* ptr, int width) {
   int x;
   for (x = 0; x < width; ++x, ptr += 4) {
