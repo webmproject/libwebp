@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c065303f_be03dfed",
+        "filename": "src/dsp/dsp.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 218,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2018-10-16T11:45:49Z",
+      "side": 0,
+      "message": "we should keep this enum (and the detection code) around in order to not break the ABI",
+      "range": {
+        "startLine": 218,
+        "startChar": 8,
+        "endLine": 218,
+        "endChar": 0
+      },
+      "revId": "5030e902783c053517fbf835bff8d8f08aa1c189",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
