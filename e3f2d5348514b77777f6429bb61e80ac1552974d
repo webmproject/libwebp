@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "1e40f5cf_1861646d",
+        "filename": "src/dsp/lossless_enc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 662,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-10-16T02:51:29Z",
+      "side": 1,
+      "message": "bitwise OR can be faster in situations like this, I forgot to quote numbers, but that was the intent here:\n\nhttps://chromium-review.googlesource.com/c/webm/libvpx/+/329186",
+      "range": {
+        "startLine": 662,
+        "startChar": 24,
+        "endLine": 662,
+        "endChar": 26
+      },
+      "revId": "e3f2d5348514b77777f6429bb61e80ac1552974d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "68415fe4_884b946b",
         "filename": "src/enc/histogram_enc.c",
         "patchSetId": 2
