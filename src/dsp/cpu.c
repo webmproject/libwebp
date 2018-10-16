@@ -159,12 +159,6 @@ static int x86CPUInfo(CPUFeature feature) {
       return (xgetbv() & 0x6) == 0x6;
     }
   }
-  if (feature == kAVX2) {
-    if (x86CPUInfo(kAVX) && max_cpuid_value >= 7) {
-      GetCPUInfo(cpu_info, 7);
-      return !!(cpu_info[1] & (1 << 5));
-    }
-  }
   return 0;
 }
 VP8CPUInfo VP8GetCPUInfo = x86CPUInfo;

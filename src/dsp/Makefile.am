@@ -1,7 +1,6 @@
 AM_CPPFLAGS += -I$(top_builddir) -I$(top_srcdir)
 noinst_LTLIBRARIES =
 noinst_LTLIBRARIES += libwebpdsp.la
-noinst_LTLIBRARIES += libwebpdsp_avx2.la
 noinst_LTLIBRARIES += libwebpdsp_sse2.la
 noinst_LTLIBRARIES += libwebpdspdecode_sse2.la
 noinst_LTLIBRARIES += libwebpdsp_sse41.la
@@ -42,11 +41,6 @@ ENC_SOURCES += cost.c
 ENC_SOURCES += enc.c
 ENC_SOURCES += lossless_enc.c
 ENC_SOURCES += ssim.c
-
-libwebpdsp_avx2_la_SOURCES =
-libwebpdsp_avx2_la_SOURCES += enc_avx2.c
-libwebpdsp_avx2_la_CPPFLAGS = $(libwebpdsp_la_CPPFLAGS)
-libwebpdsp_avx2_la_CFLAGS = $(AM_CFLAGS) $(AVX2_FLAGS)
 
 libwebpdspdecode_sse41_la_SOURCES =
 libwebpdspdecode_sse41_la_SOURCES += alpha_processing_sse41.c
@@ -167,7 +161,6 @@ libwebpdsp_la_CPPFLAGS += $(AM_CPPFLAGS)
 libwebpdsp_la_CPPFLAGS += $(USE_SWAP_16BIT_CSP)
 libwebpdsp_la_LDFLAGS = -lm
 libwebpdsp_la_LIBADD =
-libwebpdsp_la_LIBADD += libwebpdsp_avx2.la
 libwebpdsp_la_LIBADD += libwebpdsp_sse2.la
 libwebpdsp_la_LIBADD += libwebpdsp_sse41.la
 libwebpdsp_la_LIBADD += libwebpdsp_neon.la
