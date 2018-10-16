@@ -28,18 +28,18 @@ function(webp_check_compiler_flag WEBP_SIMD_FLAG ENABLE_SIMD)
 endfunction()
 
 # those are included in the names of WEBP_USE_* in c++ code.
-set(WEBP_SIMD_FLAGS "SSE2;SSE41;AVX2;MIPS32;MIPS_DSP_R2;NEON;MSA")
+set(WEBP_SIMD_FLAGS "SSE2;SSE41;MIPS32;MIPS_DSP_R2;NEON;MSA")
 set(WEBP_SIMD_FILE_EXTENSIONS
-    "_sse2.c;_sse41.c;_avx2.c;_mips32.c;_mips_dsp_r2.c;_neon.c;_msa.c")
+    "_sse2.c;_sse41.c;_mips32.c;_mips_dsp_r2.c;_neon.c;_msa.c")
 if(MSVC)
   # MSVC does not have a SSE4 flag but AVX2 support implies SSE4 support.
-  set(SIMD_ENABLE_FLAGS "/arch:SSE2;/arch:AVX2;/arch:AVX2;;;;")
+  set(SIMD_ENABLE_FLAGS "/arch:SSE2;/arch:AVX2;;;;")
   set(SIMD_DISABLE_FLAGS)
 else()
   set(SIMD_ENABLE_FLAGS
-      "-msse2;-msse4.1;-mavx2;-mips32;-mdspr2;-mfpu=neon;-mmsa")
+      "-msse2;-msse4.1;-mips32;-mdspr2;-mfpu=neon;-mmsa")
   set(SIMD_DISABLE_FLAGS
-      "-mno-sse2;-mno-sse4.1;-mno-avx2;;-mno-dspr2;;-mno-msa")
+      "-mno-sse2;-mno-sse4.1;;-mno-dspr2;;-mno-msa")
 endif()
 
 set(WEBP_SIMD_FILES_TO_NOT_INCLUDE)
