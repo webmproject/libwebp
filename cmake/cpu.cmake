@@ -28,18 +28,18 @@ function(webp_check_compiler_flag WEBP_SIMD_FLAG ENABLE_SIMD)
 endfunction()
 
 # those are included in the names of WEBP_USE_* in c++ code.
-set(WEBP_SIMD_FLAGS "SSE2;SSE41;MIPS32;MIPS_DSP_R2;NEON;MSA")
+set(WEBP_SIMD_FLAGS "SSE41;SSE2;MIPS32;MIPS_DSP_R2;NEON;MSA")
 set(WEBP_SIMD_FILE_EXTENSIONS
-    "_sse2.c;_sse41.c;_mips32.c;_mips_dsp_r2.c;_neon.c;_msa.c")
+    "_sse41.c;_sse2.c;_mips32.c;_mips_dsp_r2.c;_neon.c;_msa.c")
 if(MSVC)
-  # MSVC does not have a SSE4 flag but AVX2 support implies SSE4 support.
-  set(SIMD_ENABLE_FLAGS "/arch:SSE2;/arch:AVX2;;;;")
+  # MSVC does not have a SSE4 flag but AVX support implies SSE4 support.
+  set(SIMD_ENABLE_FLAGS "/arch:AVX;/arch:SSE2;;;;")
   set(SIMD_DISABLE_FLAGS)
 else()
   set(SIMD_ENABLE_FLAGS
-      "-msse2;-msse4.1;-mips32;-mdspr2;-mfpu=neon;-mmsa")
+      "-msse4.1;-msse2;-mips32;-mdspr2;-mfpu=neon;-mmsa")
   set(SIMD_DISABLE_FLAGS
-      "-mno-sse2;-mno-sse4.1;;-mno-dspr2;;-mno-msa")
+      "-mno-sse4.1;-mno-sse2;;-mno-dspr2;;-mno-msa")
 endif()
 
 set(WEBP_SIMD_FILES_TO_NOT_INCLUDE)
@@ -57,6 +57,7 @@ endif()
 
 list(LENGTH WEBP_SIMD_FLAGS WEBP_SIMD_FLAGS_LENGTH)
 math(EXPR WEBP_SIMD_FLAGS_RANGE "${WEBP_SIMD_FLAGS_LENGTH} - 1")
+unset(HIGHEST_SSE_FLAG)
 
 foreach(I_SIMD RANGE ${WEBP_SIMD_FLAGS_RANGE})
   list(GET WEBP_SIMD_FLAGS ${I_SIMD} WEBP_SIMD_FLAG)
@@ -72,17 +73,28 @@ foreach(I_SIMD RANGE ${WEBP_SIMD_FLAGS_RANGE})
     set(CMAKE_REQUIRED_FLAGS ${SIMD_COMPILE_FLAG})
     webp_check_compiler_flag(${WEBP_SIMD_FLAG} ${WEBP_ENABLE_SIMD})
   else()
-    set(SIMD_COMPILE_FLAG " ")
+    if(MSVC)
+      list(GET SIMD_ENABLE_FLAGS ${I_SIMD} SIMD_COMPILE_FLAG)
+    else()
+      set(SIMD_COMPILE_FLAG " ")
+    endif()
   endif()
   # Check which files we should include or not.
   list(GET WEBP_SIMD_FILE_EXTENSIONS ${I_SIMD} WEBP_SIMD_FILE_EXTENSION)
   file(GLOB SIMD_FILES "${CMAKE_CURRENT_LIST_DIR}/../"
             "src/dsp/*${WEBP_SIMD_FILE_EXTENSION}")
   if(WEBP_HAVE_${WEBP_SIMD_FLAG})
+    if(${I_SIMD} LESS 2 AND NOT HIGHEST_SSE_FLAG)
+      set(HIGHEST_SSE_FLAG ${SIMD_COMPILE_FLAG})
+    endif()
     # Memorize the file and flags.
     foreach(FILE ${SIMD_FILES})
       list(APPEND WEBP_SIMD_FILES_TO_INCLUDE ${FILE})
-      list(APPEND WEBP_SIMD_FLAGS_TO_INCLUDE ${SIMD_COMPILE_FLAG})
+      if(${I_SIMD} LESS 2)
+        list(APPEND WEBP_SIMD_FLAGS_TO_INCLUDE ${HIGHEST_SSE_FLAG})
+      else()
+        list(APPEND WEBP_SIMD_FLAGS_TO_INCLUDE ${SIMD_COMPILE_FLAG})
+      endif()
     endforeach()
   else()
     # Remove the file from the list.
