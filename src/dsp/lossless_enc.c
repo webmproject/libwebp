@@ -632,36 +632,34 @@ static double ExtraCostCombined_C(const uint32_t* X, const uint32_t* Y,
 
 //------------------------------------------------------------------------------
 
-static void HistogramAdd_C(const VP8LHistogram* const a,
-                           const VP8LHistogram* const b,
-                           VP8LHistogram* const out) {
+static void AddVector_C(const uint32_t* a, const uint32_t* b, uint32_t* out,
+                        int size) {
   int i;
+  for (i = 0; i < size; ++i) out[i] = a[i] + b[i];
+}
+
+static void AddVectorEq_C(const uint32_t* a, uint32_t* out, int size) {
+  int i;
+  for (i = 0; i < size; ++i) out[i] += a[i];
+}
+
+void VP8LHistogramAdd(const VP8LHistogram* const a,
+                      const VP8LHistogram* const b, VP8LHistogram* const out) {
   const int literal_size = VP8LHistogramNumCodes(a->palette_code_bits_);
   assert(a->palette_code_bits_ == b->palette_code_bits_);
   if (b != out) {
-    for (i = 0; i < literal_size; ++i) {
-      out->literal_[i] = a->literal_[i] + b->literal_[i];
-    }
-    for (i = 0; i < NUM_DISTANCE_CODES; ++i) {
-      out->distance_[i] = a->distance_[i] + b->distance_[i];
-    }
-    for (i = 0; i < NUM_LITERAL_CODES; ++i) {
-      out->red_[i] = a->red_[i] + b->red_[i];
-      out->blue_[i] = a->blue_[i] + b->blue_[i];
-      out->alpha_[i] = a->alpha_[i] + b->alpha_[i];
-    }
+    VP8LAddVector(a->literal_, b->literal_, out->literal_, literal_size);
+    VP8LAddVector(a->distance_, b->distance_, out->distance_,
+                  NUM_DISTANCE_CODES);
+    VP8LAddVector(a->red_, b->red_, out->red_, NUM_LITERAL_CODES);
+    VP8LAddVector(a->blue_, b->blue_, out->blue_, NUM_LITERAL_CODES);
+    VP8LAddVector(a->alpha_, b->alpha_, out->alpha_, NUM_LITERAL_CODES);
   } else {
-    for (i = 0; i < literal_size; ++i) {
-      out->literal_[i] += a->literal_[i];
-    }
-    for (i = 0; i < NUM_DISTANCE_CODES; ++i) {
-      out->distance_[i] += a->distance_[i];
-    }
-    for (i = 0; i < NUM_LITERAL_CODES; ++i) {
-      out->red_[i] += a->red_[i];
-      out->blue_[i] += a->blue_[i];
-      out->alpha_[i] += a->alpha_[i];
-    }
+    VP8LAddVectorEq(a->literal_, out->literal_, literal_size);
+    VP8LAddVectorEq(a->distance_, out->distance_, NUM_DISTANCE_CODES);
+    VP8LAddVectorEq(a->red_, out->red_, NUM_LITERAL_CODES);
+    VP8LAddVectorEq(a->blue_, out->blue_, NUM_LITERAL_CODES);
+    VP8LAddVectorEq(a->alpha_, out->alpha_, NUM_LITERAL_CODES);
   }
 }
 
@@ -848,7 +846,8 @@ VP8LCombinedShannonEntropyFunc VP8LCombinedShannonEntropy;
 VP8LGetEntropyUnrefinedFunc VP8LGetEntropyUnrefined;
 VP8LGetCombinedEntropyUnrefinedFunc VP8LGetCombinedEntropyUnrefined;
 
-VP8LHistogramAddFunc VP8LHistogramAdd;
+VP8LAddVectorFunc VP8LAddVector;
+VP8LAddVectorEqFunc VP8LAddVectorEq;
 
 VP8LVectorMismatchFunc VP8LVectorMismatch;
 VP8LBundleColorMapFunc VP8LBundleColorMap;
@@ -885,7 +884,8 @@ WEBP_DSP_INIT_FUNC(VP8LEncDspInit) {
   VP8LGetEntropyUnrefined = GetEntropyUnrefined_C;
   VP8LGetCombinedEntropyUnrefined = GetCombinedEntropyUnrefined_C;
 
-  VP8LHistogramAdd = HistogramAdd_C;
+  VP8LAddVector = AddVector_C;
+  VP8LAddVectorEq = AddVectorEq_C;
 
   VP8LVectorMismatch = VectorMismatch_C;
   VP8LBundleColorMap = VP8LBundleColorMap_C;
@@ -971,7 +971,8 @@ WEBP_DSP_INIT_FUNC(VP8LEncDspInit) {
   assert(VP8LCombinedShannonEntropy != NULL);
   assert(VP8LGetEntropyUnrefined != NULL);
   assert(VP8LGetCombinedEntropyUnrefined != NULL);
-  assert(VP8LHistogramAdd != NULL);
+  assert(VP8LAddVector != NULL);
+  assert(VP8LAddVectorEq != NULL);
   assert(VP8LVectorMismatch != NULL);
   assert(VP8LBundleColorMap != NULL);
   assert(VP8LPredictorsSub[0] != NULL);
