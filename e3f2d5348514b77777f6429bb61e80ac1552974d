@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "a5e96283_fa7987a2",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-10-19T06:20:40Z",
+      "side": 1,
+      "message": "it would be good to make this more specific for archaeology purposes",
+      "revId": "e3f2d5348514b77777f6429bb61e80ac1552974d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "1e40f5cf_1861646d",
         "filename": "src/dsp/lossless_enc.c",
         "patchSetId": 2
