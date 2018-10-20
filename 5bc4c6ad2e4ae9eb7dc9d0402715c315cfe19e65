@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "de9ac4c7_0632a089",
+        "filename": "src/dsp/lossless_enc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 646,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-10-20T06:03:07Z",
+      "side": 1,
+      "message": "I\u0027m not sure if the name is all that revealing for what this does. Maybe a clearer name or a comment for each macro.",
+      "range": {
+        "startLine": 646,
+        "startChar": 8,
+        "endLine": 646,
+        "endChar": 16
+      },
+      "revId": "5bc4c6ad2e4ae9eb7dc9d0402715c315cfe19e65",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8f2a575b_c5cd2d1f",
+        "filename": "src/dsp/lossless_enc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 649,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-10-20T06:03:07Z",
+      "side": 1,
+      "message": "(LEN) would be safest",
+      "range": {
+        "startLine": 649,
+        "startChar": 30,
+        "endLine": 649,
+        "endChar": 33
+      },
+      "revId": "5bc4c6ad2e4ae9eb7dc9d0402715c315cfe19e65",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1a9efa15_143f7e5e",
+        "filename": "src/dsp/lossless_enc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 658,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-10-20T06:03:07Z",
+      "side": 1,
+      "message": "you can drop this ; here and use it at the call site to make it look more function like.",
+      "range": {
+        "startLine": 658,
+        "startChar": 11,
+        "endLine": 658,
+        "endChar": 12
+      },
+      "revId": "5bc4c6ad2e4ae9eb7dc9d0402715c315cfe19e65",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6d17255a_0b294d3e",
+        "filename": "src/enc/histogram_enc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 293,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-10-20T06:03:07Z",
+      "side": 1,
+      "message": "dead code",
+      "revId": "5bc4c6ad2e4ae9eb7dc9d0402715c315cfe19e65",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
