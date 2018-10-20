@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "73695f9c_b80eb1e6",
+        "filename": "src/enc/histogram_enc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 533,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-10-20T19:28:25Z",
+      "side": 1,
+      "message": "these could be bitwise OR\u0027d if it\u0027s frequent",
+      "revId": "decf6f6b873206797d3a39b85d9e03a5dbfc82e7",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
