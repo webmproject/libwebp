@@ -16,6 +16,24 @@
       "revId": "decf6f6b873206797d3a39b85d9e03a5dbfc82e7",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "532bc0a8_fbc3752d",
+        "filename": "src/enc/histogram_enc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 533,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2018-10-22T04:40:32Z",
+      "side": 1,
+      "message": "It\u0027s usually 10\u0027s of histograms, or 100\u0027s at the very very worst.\nIt made sense for the other one as it was executed this same number of times squared. Not speed critical here.",
+      "parentUuid": "73695f9c_b80eb1e6",
+      "revId": "decf6f6b873206797d3a39b85d9e03a5dbfc82e7",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
