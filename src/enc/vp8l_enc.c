@@ -809,6 +809,7 @@ static WebPEncodingError EncodeImageNoHuffman(VP8LBitWriter* const bw,
     err = VP8_ENC_ERROR_OUT_OF_MEMORY;
     goto Error;
   }
+  VP8LHistogramSetClear(histogram_image);
 
   // Build histogram image and symbols from backward references.
   VP8LHistogramStoreRefs(refs, histogram_image->histograms[0]);
