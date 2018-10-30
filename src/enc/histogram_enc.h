@@ -68,7 +68,9 @@ void VP8LHistogramCreate(VP8LHistogram* const p,
 int VP8LGetHistogramSize(int palette_code_bits);
 
 // Set the palette_code_bits and reset the stats.
-void VP8LHistogramInit(VP8LHistogram* const p, int palette_code_bits);
+// If init_arrays is true, the arrays are also filled with 0's.
+void VP8LHistogramInit(VP8LHistogram* const p, int palette_code_bits,
+                       int init_arrays);
 
 // Collect all the references into a histogram (without reset)
 void VP8LHistogramStoreRefs(const VP8LBackwardRefs* const refs,
@@ -83,6 +85,9 @@ void VP8LFreeHistogramSet(VP8LHistogramSet* const histo);
 // Allocate an array of pointer to histograms, allocated and initialized
 // using 'cache_bits'. Return NULL in case of memory error.
 VP8LHistogramSet* VP8LAllocateHistogramSet(int size, int cache_bits);
+
+// Set the histograms in set to 0.
+void VP8LHistogramSetClear(VP8LHistogramSet* const set);
 
 // Allocate and initialize histogram object with specified 'cache_bits'.
 // Returns NULL in case of memory error.

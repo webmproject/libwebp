@@ -93,9 +93,19 @@ void VP8LHistogramCreate(VP8LHistogram* const p,
   VP8LHistogramStoreRefs(refs, p);
 }
 
-void VP8LHistogramInit(VP8LHistogram* const p, int palette_code_bits) {
+void VP8LHistogramInit(VP8LHistogram* const p, int palette_code_bits,
+                       int init_arrays) {
   p->palette_code_bits_ = palette_code_bits;
-  HistogramClear(p);
+  if (init_arrays) {
+    HistogramClear(p);
+  } else {
+    p->trivial_symbol_ = 0;
+    p->bit_cost_ = 0.;
+    p->literal_cost_ = 0.;
+    p->red_cost_ = 0.;
+    p->blue_cost_ = 0.;
+    memset(p->is_used_, 0, sizeof(p->is_used_));
+  }
 }
 
 VP8LHistogram* VP8LAllocateHistogram(int cache_bits) {
@@ -106,35 +116,68 @@ VP8LHistogram* VP8LAllocateHistogram(int cache_bits) {
   histo = (VP8LHistogram*)memory;
   // literal_ won't necessary be aligned.
   histo->literal_ = (uint32_t*)(memory + sizeof(VP8LHistogram));
-  VP8LHistogramInit(histo, cache_bits);
+  VP8LHistogramInit(histo, cache_bits, /*init_arrays=*/ 0);
   return histo;
+}
+
+// Resets the pointers of the histograms to point to the bit buffer in the set.
+static void HistogramSetResetPointers(VP8LHistogramSet* const set,
+                                      int cache_bits) {
+  int i;
+  const int histo_size = VP8LGetHistogramSize(cache_bits);
+  uint8_t* memory = (uint8_t*) (set->histograms);
+  memory += set->max_size * sizeof(*set->histograms);
+  for (i = 0; i < set->max_size; ++i) {
+    memory = (uint8_t*) WEBP_ALIGN(memory);
+    set->histograms[i] = (VP8LHistogram*) memory;
+    // literal_ won't necessary be aligned.
+    set->histograms[i]->literal_ = (uint32_t*)(memory + sizeof(VP8LHistogram));
+    memory += histo_size;
+  }
+}
+
+// Returns the total size of the VP8LHistogramSet.
+static size_t HistogramSetTotalSize(int size, int cache_bits) {
+  const int histo_size = VP8LGetHistogramSize(cache_bits);
+  return (sizeof(VP8LHistogramSet) + size * (sizeof(VP8LHistogram*) +
+          histo_size + WEBP_ALIGN_CST));
 }
 
 VP8LHistogramSet* VP8LAllocateHistogramSet(int size, int cache_bits) {
   int i;
   VP8LHistogramSet* set;
-  const int histo_size = VP8LGetHistogramSize(cache_bits);
-  const size_t total_size =
-      sizeof(*set) + size * (sizeof(*set->histograms) +
-      histo_size + WEBP_ALIGN_CST);
+  const size_t total_size = HistogramSetTotalSize(size, cache_bits);
   uint8_t* memory = (uint8_t*)WebPSafeMalloc(total_size, sizeof(*memory));
   if (memory == NULL) return NULL;
 
   set = (VP8LHistogramSet*)memory;
   memory += sizeof(*set);
   set->histograms = (VP8LHistogram**)memory;
-  memory += size * sizeof(*set->histograms);
   set->max_size = size;
   set->size = size;
+  HistogramSetResetPointers(set, cache_bits);
   for (i = 0; i < size; ++i) {
-    memory = (uint8_t*)WEBP_ALIGN(memory);
-    set->histograms[i] = (VP8LHistogram*)memory;
-    // literal_ won't necessary be aligned.
-    set->histograms[i]->literal_ = (uint32_t*)(memory + sizeof(VP8LHistogram));
-    VP8LHistogramInit(set->histograms[i], cache_bits);
-    memory += histo_size;
+    VP8LHistogramInit(set->histograms[i], cache_bits, /*init_arrays=*/ 0);
   }
   return set;
+}
+
+void VP8LHistogramSetClear(VP8LHistogramSet* const set) {
+  int i;
+  const int cache_bits = set->histograms[0]->palette_code_bits_;
+  const int size = set->size;
+  const size_t total_size = HistogramSetTotalSize(size, cache_bits);
+  uint8_t* memory = (uint8_t*)set;
+
+  memset(memory, 0, total_size);
+  memory += sizeof(*set);
+  set->histograms = (VP8LHistogram**)memory;
+  set->max_size = size;
+  set->size = size;
+  HistogramSetResetPointers(set, cache_bits);
+  for (i = 0; i < size; ++i) {
+    set->histograms[i]->palette_code_bits_ = cache_bits;
+  }
 }
 
 // -----------------------------------------------------------------------------
@@ -503,6 +546,7 @@ static void HistogramBuild(
   VP8LHistogram** const histograms = image_histo->histograms;
   VP8LRefsCursor c = VP8LRefsCursorInit(backward_refs);
   assert(histo_bits > 0);
+  VP8LHistogramSetClear(image_histo);
   while (VP8LRefsCursorOk(&c)) {
     const PixOrCopy* const v = c.cur_pos;
     const int ix = (y >> histo_bits) * histo_xsize + (x >> histo_bits);
