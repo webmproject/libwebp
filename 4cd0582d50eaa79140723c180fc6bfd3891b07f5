@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8ac636e9_ff08c99a",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-11-06T23:12:38Z",
+      "side": 1,
+      "message": "this was at least working in some form before this change:\n\nhttps://build.webmproject.org/jenkins/job/libwebp__compile_webp_js/456/default/console\n\nwhat was the failure you were seeing? is it worth cherry-picking to 1.0.1?",
+      "revId": "4cd0582d50eaa79140723c180fc6bfd3891b07f5",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
