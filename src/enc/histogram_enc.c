@@ -756,6 +756,18 @@ static void HistoQueueUpdateHead(HistoQueue* const histo_queue,
   }
 }
 
+// Update the cost diff and combo of a pair of histograms. This needs to be
+// called when the the histograms have been merged with a third one.
+static void HistoQueueUpdatePair(const VP8LHistogram* const h1,
+                                 const VP8LHistogram* const h2,
+                                 double threshold,
+                                 HistogramPair* const pair) {
+  const double sum_cost = h1->bit_cost_ + h2->bit_cost_;
+  pair->cost_combo = 0.;
+  GetCombinedHistogramEntropy(h1, h2, sum_cost + threshold, &pair->cost_combo);
+  pair->cost_diff = pair->cost_combo - sum_cost;
+}
+
 // Create a pair from indices "idx1" and "idx2" provided its cost
 // is inferior to "threshold", a negative entropy.
 // It returns the cost of the pair, or 0. if it superior to threshold.
@@ -765,7 +777,6 @@ static double HistoQueuePush(HistoQueue* const histo_queue,
   const VP8LHistogram* h1;
   const VP8LHistogram* h2;
   HistogramPair pair;
-  double sum_cost;
 
   assert(threshold <= 0.);
   if (idx1 > idx2) {
@@ -777,10 +788,8 @@ static double HistoQueuePush(HistoQueue* const histo_queue,
   pair.idx2 = idx2;
   h1 = histograms[idx1];
   h2 = histograms[idx2];
-  sum_cost = h1->bit_cost_ + h2->bit_cost_;
-  pair.cost_combo = 0.;
-  GetCombinedHistogramEntropy(h1, h2, sum_cost + threshold, &pair.cost_combo);
-  pair.cost_diff = pair.cost_combo - sum_cost;
+
+  HistoQueueUpdatePair(h1, h2, threshold, &pair);
 
   // Do not even consider the pair if it does not improve the entropy.
   if (pair.cost_diff >= threshold) return 0.;
@@ -973,8 +982,7 @@ static int HistogramCombineStochastic(VP8LHistogramSet* const image_histo,
       }
       if (do_eval) {
         // Re-evaluate the cost of an updated pair.
-        GetCombinedHistogramEntropy(histograms[p->idx1], histograms[p->idx2], 0,
-                                    &p->cost_diff);
+        HistoQueueUpdatePair(histograms[p->idx1], histograms[p->idx2], 0., p);
         if (p->cost_diff >= 0.) {
           HistoQueuePopPair(&histo_queue, p);
           continue;
