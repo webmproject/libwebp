@@ -16,6 +16,24 @@
       "revId": "4cd0582d50eaa79140723c180fc6bfd3891b07f5",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "52c4b220_a79308b2",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1002029
+      },
+      "writtenOn": "2018-11-06T23:15:45Z",
+      "side": 1,
+      "message": "it works if you do \u0027cmake webp_js\u0027 (which i think is what jenkins is doing).\n\nBut if you just type \u0027cmake\u0027 under the webp_js, it will try to compile a lot of useless libraries, eventually failing to find some system-wide ones like libpng\n\nThis fix is only to make the life of the user easier, by making \u0027make\u0027 command work out of the box.\nWorth cherrypicking for an RC2 i\u0027d say.",
+      "parentUuid": "8ac636e9_ff08c99a",
+      "revId": "4cd0582d50eaa79140723c180fc6bfd3891b07f5",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
