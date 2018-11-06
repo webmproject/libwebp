@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ab599003_6a9e605f",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 340,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2018-11-06T14:57:49Z",
+      "side": 1,
+      "message": "this change is useless as you have the one at the beginning that forces what you can build.",
+      "range": {
+        "startLine": 340,
+        "startChar": 11,
+        "endLine": 340,
+        "endChar": 29
+      },
+      "revId": "1952ce568f2756909483143d8cecadbbb4ffde44",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
