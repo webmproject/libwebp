@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4140b7f9_1cea70eb",
+        "filename": "src/enc/histogram_enc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1121,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2018-11-08T05:06:30Z",
+      "side": 1,
+      "message": "causes a warning",
+      "range": {
+        "startLine": 1121,
+        "startChar": 4,
+        "endLine": 1121,
+        "endChar": 9
+      },
+      "revId": "122f398a5b41d7b7efe5ebadc12846439154db30",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
