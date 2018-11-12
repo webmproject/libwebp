@@ -238,6 +238,7 @@ DSP_ENC_OBJS = \
     $(DIROBJ)\dsp\cost.obj \
     $(DIROBJ)\dsp\cost_mips32.obj \
     $(DIROBJ)\dsp\cost_mips_dsp_r2.obj \
+    $(DIROBJ)\dsp\cost_neon.obj \
     $(DIROBJ)\dsp\cost_sse2.obj \
     $(DIROBJ)\dsp\enc.obj \
     $(DIROBJ)\dsp\enc_mips32.obj \
