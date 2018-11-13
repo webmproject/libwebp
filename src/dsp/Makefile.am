@@ -40,6 +40,7 @@ ENC_SOURCES =
 ENC_SOURCES += cost.c
 ENC_SOURCES += enc.c
 ENC_SOURCES += lossless_enc.c
+ENC_SOURCES += quant.h
 ENC_SOURCES += ssim.c
 
 libwebpdspdecode_sse41_la_SOURCES =
