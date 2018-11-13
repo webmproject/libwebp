@@ -327,6 +327,16 @@ extern VP8GetResidualCostFunc VP8GetResidualCost;
 void VP8EncDspCostInit(void);
 
 //------------------------------------------------------------------------------
+// IsFlat from quant_enc (encoding)
+
+typedef score_t (*VP8IsFlatFunc)(const int16_t* levels, int num_blocks,
+                                 score_t thresh);
+extern VP8IsFlatFunc VP8IsFlat;
+
+// must be called before anything using the above
+void VP8EncDspQuantInit(void);
+
+//------------------------------------------------------------------------------
 // SSIM / PSNR utils
 
 // struct for accumulating statistical moments
