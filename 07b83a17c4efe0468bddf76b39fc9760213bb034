@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "08cfbafa_0b1d0465",
+        "filename": ".clang-format",
+        "patchSetId": 3
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2018-11-13T18:30:16Z",
+      "side": 1,
+      "message": "not sure i like this one. We like to leave function arguments grouped by semantics\n\ne.g.:\n  const Config config,\n  int width, int height,\n  char* out\n\ninstead of:\n  const Config config, int width,\n  int height, char* out",
+      "range": {
+        "startLine": 22,
+        "startChar": 0,
+        "endLine": 22,
+        "endChar": 16
+      },
+      "revId": "07b83a17c4efe0468bddf76b39fc9760213bb034",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
