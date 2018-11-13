@@ -113,6 +113,8 @@ dsp_enc_srcs := \
     src/dsp/lossless_enc_neon.$(NEON) \
     src/dsp/lossless_enc_sse2.c \
     src/dsp/lossless_enc_sse41.c \
+    src/dsp/quant_enc.c \
+    src/dsp/quant_enc_neon.c \
     src/dsp/ssim.c \
     src/dsp/ssim_sse2.c \
 

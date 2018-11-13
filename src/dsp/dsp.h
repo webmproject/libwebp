@@ -25,6 +25,10 @@ extern "C" {
 #endif
 
 #define BPS 32   // this is the common stride for enc/dec
+  // vp8i_enc.h needs BPS but it contains the typedef for score_t which is
+  // needed for IsFlat. This also makes a mess of struct VP8Residual.
+//#include "src/enc/vp8i_enc.h"
+typedef int64_t score_t;
 
 //------------------------------------------------------------------------------
 // CPU detection
@@ -325,6 +329,16 @@ extern VP8GetResidualCostFunc VP8GetResidualCost;
 
 // must be called before anything using the above
 void VP8EncDspCostInit(void);
+
+//------------------------------------------------------------------------------
+// IsFlat from quant_enc (encoding)
+
+typedef score_t (*VP8IsFlatFunc)(const int16_t* levels, int num_blocks,
+                                 score_t thresh);
+extern VP8IsFlatFunc VP8IsFlat;
+
+// must be called before anything using the above
+void VP8EncDspQuantInit(void);
 
 //------------------------------------------------------------------------------
 // SSIM / PSNR utils
