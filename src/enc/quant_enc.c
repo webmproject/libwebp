@@ -977,19 +977,6 @@ static void SwapOut(VP8EncIterator* const it) {
   SwapPtr(&it->yuv_out_, &it->yuv_out2_);
 }
 
-static score_t IsFlat(const int16_t* levels, int num_blocks, score_t thresh) {
-  score_t score = 0;
-  while (num_blocks-- > 0) {      // TODO(skal): refine positional scoring?
-    int i;
-    for (i = 1; i < 16; ++i) {    // omit DC, we're only interested in AC
-      score += (levels[i] != 0);
-      if (score > thresh) return 0;
-    }
-    levels += 16;
-  }
-  return 1;
-}
-
 static void PickBestIntra16(VP8EncIterator* const it, VP8ModeScore* rd) {
   const int kNumBlocks = 16;
   VP8SegmentInfo* const dqm = &it->enc_->dqm_[it->mb_->segment_];
@@ -1016,7 +1003,7 @@ static void PickBestIntra16(VP8EncIterator* const it, VP8ModeScore* rd) {
     rd_cur->H = VP8FixedCostsI16[mode];
     rd_cur->R = VP8GetCostLuma16(it, rd_cur);
     if (mode > 0 &&
-        IsFlat(rd_cur->y_ac_levels[0], kNumBlocks, FLATNESS_LIMIT_I16)) {
+        VP8IsFlat(rd_cur->y_ac_levels[0], kNumBlocks, FLATNESS_LIMIT_I16)) {
       // penalty to avoid flat area to be mispredicted by complex mode
       rd_cur->R += FLATNESS_PENALTY * kNumBlocks;
     }
@@ -1100,7 +1087,7 @@ static int PickBestIntra4(VP8EncIterator* const it, VP8ModeScore* const rd) {
       rd_tmp.H = mode_costs[mode];
 
       // Add flatness penalty
-      if (mode > 0 && IsFlat(tmp_levels, kNumBlocks, FLATNESS_LIMIT_I4)) {
+      if (mode > 0 && VP8IsFlat(tmp_levels, kNumBlocks, FLATNESS_LIMIT_I4)) {
         rd_tmp.R = FLATNESS_PENALTY * kNumBlocks;
       } else {
         rd_tmp.R = 0;
@@ -1173,7 +1160,7 @@ static void PickBestUV(VP8EncIterator* const it, VP8ModeScore* const rd) {
     rd_uv.SD = 0;    // not calling TDisto here: it tends to flatten areas.
     rd_uv.H  = VP8FixedCostsUV[mode];
     rd_uv.R  = VP8GetCostUV(it, &rd_uv);
-    if (mode > 0 && IsFlat(rd_uv.uv_levels[0], kNumBlocks, FLATNESS_LIMIT_UV)) {
+    if (mode > 0 && VP8IsFlat(rd_uv.uv_levels[0], kNumBlocks, FLATNESS_LIMIT_UV)) {
       rd_uv.R += FLATNESS_PENALTY * kNumBlocks;
     }
 

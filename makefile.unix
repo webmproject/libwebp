@@ -201,6 +201,8 @@ DSP_ENC_OBJS = \
     src/dsp/lossless_enc_neon.o \
     src/dsp/lossless_enc_sse2.o \
     src/dsp/lossless_enc_sse41.o \
+    src/dsp/quant_enc.c \
+    src/dsp/quant_enc_neon.c \
     src/dsp/ssim.o \
     src/dsp/ssim_sse2.o \
 

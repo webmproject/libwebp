@@ -189,6 +189,8 @@ model {
             include "lossless_enc_neon.$NEON"
             include "lossless_enc_sse2.c"
             include "lossless_enc_sse41.c"
+            include "quant_enc.c"
+            include "quant_enc_neon.$NEON"
             include "ssim.c"
             include "ssim_sse2.c"
             srcDir "src/enc"
