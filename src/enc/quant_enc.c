@@ -977,6 +977,7 @@ static void SwapOut(VP8EncIterator* const it) {
   SwapPtr(&it->yuv_out_, &it->yuv_out2_);
 }
 
+#if 0
 static score_t IsFlat(const int16_t* levels, int num_blocks, score_t thresh) {
   score_t score = 0;
   while (num_blocks-- > 0) {      // TODO(skal): refine positional scoring?
@@ -989,6 +990,36 @@ static score_t IsFlat(const int16_t* levels, int num_blocks, score_t thresh) {
   }
   return 1;
 }
+#else
+#include <arm_neon.h>
+
+static uint32x2_t horizontal_add_uint32x4(const uint32x4_t a) {
+  const uint64x2_t b = vpaddlq_u32(a);
+  return vadd_u32(vreinterpret_u32_u64(vget_low_u64(b)),
+                  vreinterpret_u32_u64(vget_high_u64(b)));
+}
+
+static score_t IsFlat(const int16_t* levels, int num_blocks, score_t thresh) {
+  const int16x8_t tst_ones = vdupq_n_s16(-1);
+  int16x8_t a = vld1q_s16(levels);
+  uint16x8_t b;
+  uint32x4_t sum;
+  a = vsetq_lane_s16(0, a, 0); // Set DC to zero.
+  b = vshrq_n_u16(vtstq_s16(a, tst_ones), 15);
+
+  sum = vpaddlq_u16(b);
+
+  levels += 8;
+
+  for (int i = 1; i < num_blocks * 2; ++i) {
+    a = vld1q_s16(levels);
+    b = vshrq_n_u16(vtstq_s16(a, tst_ones), 15);
+    sum = vpadalq_u16(sum, b);
+    levels += 8;
+  }
+  return thresh >= vget_lane_u32(horizontal_add_uint32x4(sum), 0);
+}
+#endif
 
 static void PickBestIntra16(VP8EncIterator* const it, VP8ModeScore* rd) {
   const int kNumBlocks = 16;
