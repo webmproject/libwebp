@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e4d29a2f_bf5e8668",
+        "filename": "src/dsp/cost_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1117029
+      },
+      "writtenOn": "2018-11-13T21:45:49Z",
+      "side": 1,
+      "message": "This one is a super basic copy of the SSE2. I didn\u0027t even re-name the vars after removing some lines from the sse2 version. The names are pretty arbitrary and this way they match up with the sse2.",
+      "range": {
+        "startLine": 73,
+        "startChar": 0,
+        "endLine": 73,
+        "endChar": 63
+      },
+      "revId": "2e416cca88ab68c9742d77e3270db16b13314b36",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
