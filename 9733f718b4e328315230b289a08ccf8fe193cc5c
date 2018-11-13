@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "69447dcc_6ab70eed",
+        "filename": "src/dsp/cost_neon.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2018-11-13T16:31:11Z",
+      "side": 1,
+      "message": "\"* ptr\" instead of \" *ptr\" (and below too)",
+      "range": {
+        "startLine": 22,
+        "startChar": 50,
+        "endLine": 22,
+        "endChar": 55
+      },
+      "revId": "9733f718b4e328315230b289a08ccf8fe193cc5c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "00609dd5_a60cc9d3",
+        "filename": "src/dsp/cost_neon.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2018-11-13T16:31:11Z",
+      "side": 1,
+      "message": "--res-\u003elast;",
+      "range": {
+        "startLine": 45,
+        "startChar": 2,
+        "endLine": 45,
+        "endChar": 5
+      },
+      "revId": "9733f718b4e328315230b289a08ccf8fe193cc5c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
