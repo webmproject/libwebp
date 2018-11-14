@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "d44d361e_6e19dfb5",
+        "filename": "src/dsp/cost_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1117029
+      },
+      "writtenOn": "2018-11-14T15:37:50Z",
+      "side": 1,
+      "message": "fixed in previous patch",
+      "parentUuid": "e7b69092_f2cba449",
+      "range": {
+        "startLine": 46,
+        "startChar": 11,
+        "endLine": 46,
+        "endChar": 21
+      },
+      "revId": "2e416cca88ab68c9742d77e3270db16b13314b36",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e4d29a2f_bf5e8668",
         "filename": "src/dsp/cost_neon.c",
         "patchSetId": 1
