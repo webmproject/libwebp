@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6c504558_40c44f5a",
+        "filename": "src/dsp/cost_neon.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1117029
+      },
+      "writtenOn": "2018-11-14T22:10:20Z",
+      "side": 1,
+      "message": "Just noticed this because I\u0027m trying to set up another function. Is this line necessary? The function is defined below. For non-neon devices, this extern line does not show up at all.",
+      "range": {
+        "startLine": 54,
+        "startChar": 0,
+        "endLine": 54,
+        "endChar": 40
+      },
+      "revId": "0fd7514b552e8ff04e257cb43c975f71847b3d81",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
