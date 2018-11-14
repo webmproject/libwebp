@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "e7b69092_f2cba449",
+        "filename": "src/dsp/cost_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2018-11-14T14:02:01Z",
+      "side": 1,
+      "message": "__aarch64__ here too",
+      "range": {
+        "startLine": 46,
+        "startChar": 11,
+        "endLine": 46,
+        "endChar": 21
+      },
+      "revId": "2e416cca88ab68c9742d77e3270db16b13314b36",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e4d29a2f_bf5e8668",
         "filename": "src/dsp/cost_neon.c",
         "patchSetId": 1
@@ -22,6 +45,30 @@
       "revId": "2e416cca88ab68c9742d77e3270db16b13314b36",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "678b7bdf_7438d39f",
+        "filename": "src/dsp/cost_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2018-11-14T14:02:01Z",
+      "side": 1,
+      "message": "sgtm!",
+      "parentUuid": "e4d29a2f_bf5e8668",
+      "range": {
+        "startLine": 73,
+        "startChar": 0,
+        "endLine": 73,
+        "endChar": 63
+      },
+      "revId": "2e416cca88ab68c9742d77e3270db16b13314b36",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
