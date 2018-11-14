@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f7413e36_eda8759b",
+        "filename": "src/enc/quant_enc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 985,
+      "author": {
+        "id": 1117029
+      },
+      "writtenOn": "2018-11-14T22:27:41Z",
+      "side": 1,
+      "message": "In my first (incorrect) reading of this, only levels[0] was DC and had to be skipped. Now I realize that levels[] contains multiple 16 element sets and levels[i%16] is always DC",
+      "range": {
+        "startLine": 985,
+        "startChar": 37,
+        "endLine": 985,
+        "endChar": 44
+      },
+      "revId": "660d3ef135f516d601c95157531ad30333fbab2f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}

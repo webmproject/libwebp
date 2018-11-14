@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7f188a01_4dd43e9d",
+        "filename": "build.gradle",
+        "patchSetId": 3
+      },
+      "lineNbr": 192,
+      "author": {
+        "id": 1117029
+      },
+      "writtenOn": "2018-11-14T22:27:41Z",
+      "side": 1,
+      "message": "File is named based off the source file. Not sure \u0027quant\u0027 is the best name for it though or if it should be added to an existing file.",
+      "range": {
+        "startLine": 192,
+        "startChar": 21,
+        "endLine": 192,
+        "endChar": 30
+      },
+      "revId": "3d531661c6910e36a595a007d4109017072b9a41",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c21d2902_a4318c46",
+        "filename": "src/dsp/dsp.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1117029
+      },
+      "writtenOn": "2018-11-14T22:27:41Z",
+      "side": 1,
+      "message": "Should this typedef be moved to this file? Trying to include vp8i_enc.h causes some ugly cyclical issues.",
+      "range": {
+        "startLine": 31,
+        "startChar": 0,
+        "endLine": 31,
+        "endChar": 24
+      },
+      "revId": "3d531661c6910e36a595a007d4109017072b9a41",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2dd85787_8986c905",
+        "filename": "src/dsp/quant_enc_neon.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1117029
+      },
+      "writtenOn": "2018-11-14T22:27:41Z",
+      "side": 1,
+      "message": "Is there an auto-formatter I can use? Don\u0027t really want to be doing this by hand.",
+      "range": {
+        "startLine": 25,
+        "startChar": 0,
+        "endLine": 25,
+        "endChar": 83
+      },
+      "revId": "3d531661c6910e36a595a007d4109017072b9a41",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
