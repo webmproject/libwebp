@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "32c9d12d_d19bcf11",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-11-14T00:51:15Z",
+      "side": 1,
+      "message": "BUG\u003db/118740850 otherwise it maps to chrome",
+      "range": {
+        "startLine": 15,
+        "startChar": 0,
+        "endLine": 15,
+        "endChar": 13
+      },
+      "revId": "c884130278c271de631b92171c3352f0d5560165",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "3d2b2163_a292d4a2",
         "filename": "src/dsp/cost_neon.c",
         "patchSetId": 4
@@ -18,6 +41,52 @@
         "startChar": 48,
         "endLine": 22,
         "endChar": 49
+      },
+      "revId": "c884130278c271de631b92171c3352f0d5560165",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7c29c63a_c02c0619",
+        "filename": "src/dsp/cost_neon.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-11-14T00:51:15Z",
+      "side": 1,
+      "message": "\u0026res-\u003elast will work",
+      "range": {
+        "startLine": 44,
+        "startChar": 16,
+        "endLine": 44,
+        "endChar": 28
+      },
+      "revId": "c884130278c271de631b92171c3352f0d5560165",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cc0b7a80_f489f03a",
+        "filename": "src/dsp/cost_neon.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-11-14T00:51:15Z",
+      "side": 1,
+      "message": "__aarch64__",
+      "range": {
+        "startLine": 46,
+        "startChar": 11,
+        "endLine": 46,
+        "endChar": 21
       },
       "revId": "c884130278c271de631b92171c3352f0d5560165",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
