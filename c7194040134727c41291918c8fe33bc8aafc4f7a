@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "60ec0f73_f8693c10",
+        "filename": "src/dsp/dsp.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1117029
+      },
+      "writtenOn": "2018-11-15T23:12:55Z",
+      "side": 1,
+      "message": "With a terminal at 80 chars this really confused me. I thought I was removing an empty line and replacing it with an empty line. The \u0027-\u0027 was just wrapped from the previous line.\n\ndiff --git a/src/dsp/dsp.h b/src/dsp/dsp.h\nindex fafc2d05..0b5ffa89 100644\n--- a/src/dsp/dsp.h\n+++ b/src/dsp/dsp.h\n@@ -27,6 +27,7 @@ extern \"C\" {\n #define BPS 32   // this is the common stride for enc/dec\n \n //-----------------------------------------------------------------------------\n-\n+\n // CPU detection",
+      "range": {
+        "startLine": 30,
+        "startChar": 0,
+        "endLine": 31,
+        "endChar": 0
+      },
+      "revId": "c7194040134727c41291918c8fe33bc8aafc4f7a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "692ae8bc_88cf099c",
+        "filename": "src/webp/types.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1117029
+      },
+      "writtenOn": "2018-11-15T23:12:55Z",
+      "side": 1,
+      "message": "This doesn\u0027t really seem like the proper location for this but I\u0027m not sure where else to put it.",
+      "revId": "c7194040134727c41291918c8fe33bc8aafc4f7a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
