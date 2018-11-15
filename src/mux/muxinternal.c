@@ -528,15 +528,15 @@ WebPMuxError MuxValidate(const WebPMux* const mux) {
   // ALPHA_FLAG & alpha chunk(s) are consistent.
   // Note: ALPHA_FLAG can be set when there is actually no Alpha data present.
   if (MuxHasAlpha(mux->images_)) {
-    if (num_vp8x > 0) {
-      // VP8X chunk is present, so it should contain ALPHA_FLAG.
-      if (!(flags & ALPHA_FLAG)) return WEBP_MUX_INVALID_ARGUMENT;
-    } else {
+    if (num_vp8x == 0) {
       // VP8X chunk is not present, so ALPH chunks should NOT be present either.
       err = WebPMuxNumChunks(mux, WEBP_CHUNK_ALPHA, &num_alpha);
       if (err != WEBP_MUX_OK) return err;
       if (num_alpha > 0) return WEBP_MUX_INVALID_ARGUMENT;
     }
+    // As doc notes: "Background color MAY contain a transparency value
+    // (alpha), even if the Alpha flag in VP8X chunk is unset."
+    // So we don't check if the VP8X chunk has the ALPHA_FLAG.
   }
 
   return WEBP_MUX_OK;
