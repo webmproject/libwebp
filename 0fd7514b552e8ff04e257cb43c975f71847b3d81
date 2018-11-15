@@ -46,6 +46,30 @@
       "revId": "0fd7514b552e8ff04e257cb43c975f71847b3d81",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b52d1db1_bde3d0c3",
+        "filename": "src/dsp/cost_neon.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2018-11-15T06:23:08Z",
+      "side": 1,
+      "message": "Ah! No. These \u0027extern\u0027 pre-declarations are required because of -Wmissing-prototype. Otherwise, you\u0027ll get:\n\n\"warning: no previous prototype for function \u0027XXXInitSSE2\u0027 [-Wmissing-prototypes]\"",
+      "parentUuid": "6eb10523_490cae50",
+      "range": {
+        "startLine": 54,
+        "startChar": 0,
+        "endLine": 54,
+        "endChar": 40
+      },
+      "revId": "0fd7514b552e8ff04e257cb43c975f71847b3d81",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
