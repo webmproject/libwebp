@@ -22,6 +22,30 @@
       "revId": "0fd7514b552e8ff04e257cb43c975f71847b3d81",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6eb10523_490cae50",
+        "filename": "src/dsp/cost_neon.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2018-11-15T06:19:02Z",
+      "side": 1,
+      "message": "i think you\u0027re right, we don\u0027t need to declare it extern here, since we\u0027re implementing it right away below. The \u0027extern\u0027 declaration is only needed at call point (cost.c). Will attempt a clean-up cl.",
+      "parentUuid": "6c504558_40c44f5a",
+      "range": {
+        "startLine": 54,
+        "startChar": 0,
+        "endLine": 54,
+        "endChar": 40
+      },
+      "revId": "0fd7514b552e8ff04e257cb43c975f71847b3d81",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
