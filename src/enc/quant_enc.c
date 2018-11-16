@@ -977,7 +977,7 @@ static void SwapOut(VP8EncIterator* const it) {
   SwapPtr(&it->yuv_out_, &it->yuv_out2_);
 }
 
-static score_t IsFlat(const int16_t* levels, int num_blocks, score_t thresh) {
+static int IsFlat(const int16_t* levels, int num_blocks, score_t thresh) {
   score_t score = 0;
   while (num_blocks-- > 0) {      // TODO(skal): refine positional scoring?
     int i;
