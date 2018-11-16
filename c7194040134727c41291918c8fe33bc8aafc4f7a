@@ -39,6 +39,24 @@
       "revId": "c7194040134727c41291918c8fe33bc8aafc4f7a",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7facb06e_9c727c03",
+        "filename": "src/webp/types.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1002029
+      },
+      "writtenOn": "2018-11-16T05:10:31Z",
+      "side": 1,
+      "message": "i think you can make IsFlat return a uint32_t instead of introducing \u0027score_t\u0027.",
+      "parentUuid": "692ae8bc_88cf099c",
+      "revId": "c7194040134727c41291918c8fe33bc8aafc4f7a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
