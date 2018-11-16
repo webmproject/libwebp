@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9b5228c8_c1ceb5cb",
+        "filename": "src/utils/utils.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1002029
+      },
+      "writtenOn": "2018-11-16T09:50:32Z",
+      "side": 1,
+      "message": "i thought we were calling WebPLog2FloorC() directly (not through BitsLog2Floor) in some cases...\n\nMust be old story.",
+      "range": {
+        "startLine": 132,
+        "startChar": 23,
+        "endLine": 132,
+        "endChar": 37
+      },
+      "revId": "41521aed4753ba5f6c73ff939569000978136272",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
