@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3a5e2a2f_78288c4e",
+        "filename": "configure.ac",
+        "patchSetId": 1
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-11-17T09:08:00Z",
+      "side": 1,
+      "message": "this one comes with -Wall",
+      "revId": "f8190b0587db4b112ae04db21b13b056b699df48",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
