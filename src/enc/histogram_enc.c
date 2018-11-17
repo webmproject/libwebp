@@ -165,6 +165,7 @@ VP8LHistogramSet* VP8LAllocateHistogramSet(int size, int cache_bits) {
 void VP8LHistogramSetClear(VP8LHistogramSet* const set) {
   int i;
   const int cache_bits = set->histograms[0]->palette_code_bits_;
+<<<<<<< HEAD   (41521a utils.h: only define WEBP_NEED_LOG_TABLE_8BIT when needed)
   const int size = set->max_size;
   const size_t total_size = HistogramSetTotalSize(size, cache_bits);
   uint8_t* memory = (uint8_t*)set;
@@ -191,6 +192,20 @@ static void HistogramSetRemoveHistogram(VP8LHistogramSet* const set, int i,
     while (set->size >= 1 && set->histograms[set->size - 1] == NULL) {
       --set->size;
     }
+=======
+  const int size = set->size;
+  const size_t total_size = HistogramSetTotalSize(size, cache_bits);
+  uint8_t* memory = (uint8_t*)set;
+
+  memset(memory, 0, total_size);
+  memory += sizeof(*set);
+  set->histograms = (VP8LHistogram**)memory;
+  set->max_size = size;
+  set->size = size;
+  HistogramSetResetPointers(set, cache_bits);
+  for (i = 0; i < size; ++i) {
+    set->histograms[i]->palette_code_bits_ = cache_bits;
+>>>>>>> BRANCH (e85d33 update ChangeLog)
   }
 }
 
@@ -586,8 +601,13 @@ static void HistogramCopyAndAnalyze(VP8LHistogramSet* const orig_histo,
   int num_used_orig = *num_used;
   VP8LHistogram** const orig_histograms = orig_histo->histograms;
   VP8LHistogram** const histograms = image_histo->histograms;
+<<<<<<< HEAD   (41521a utils.h: only define WEBP_NEED_LOG_TABLE_8BIT when needed)
   assert(image_histo->max_size == orig_histo->max_size);
   for (cluster_id = 0, i = 0; i < orig_histo->max_size; ++i) {
+=======
+  image_histo->size = 0;
+  for (i = 0; i < histo_size; ++i) {
+>>>>>>> BRANCH (e85d33 update ChangeLog)
     VP8LHistogram* const histo = orig_histograms[i];
     UpdateHistogramCost(histo);
 
@@ -595,6 +615,7 @@ static void HistogramCopyAndAnalyze(VP8LHistogramSet* const orig_histo,
     // with no information (when they are skipped because of LZ77).
     if (!histo->is_used_[0] && !histo->is_used_[1] && !histo->is_used_[2]
         && !histo->is_used_[3] && !histo->is_used_[4]) {
+<<<<<<< HEAD   (41521a utils.h: only define WEBP_NEED_LOG_TABLE_8BIT when needed)
       // The first histogram is always used. If an histogram is empty, we set
       // its id to be the same as the previous one: this will improve
       // compressibility for later LZ77.
@@ -608,6 +629,12 @@ static void HistogramCopyAndAnalyze(VP8LHistogramSet* const orig_histo,
       histogram_symbols[i] = cluster_id++;
       assert(cluster_id <= image_histo->max_size);
     }
+=======
+      continue;
+    }
+    // Copy histograms from orig_histo[] to image_histo[].
+    HistogramCopy(histo, histograms[image_histo->size++]);
+>>>>>>> BRANCH (e85d33 update ChangeLog)
   }
 }
 
@@ -1186,15 +1213,21 @@ int VP8LGetHistoImageSymbols(int xsize, int ysize,
   // maximum quality q==100 (to preserve the compression gains at that level).
   const int entropy_combine_num_bins = low_effort ? NUM_PARTITIONS : BIN_SIZE;
   int entropy_combine;
+<<<<<<< HEAD   (41521a utils.h: only define WEBP_NEED_LOG_TABLE_8BIT when needed)
   uint16_t* const map_tmp =
       WebPSafeMalloc(2 * image_histo_raw_size, sizeof(map_tmp));
   uint16_t* const cluster_mappings = map_tmp + image_histo_raw_size;
   int num_used = image_histo_raw_size;
   if (orig_histo == NULL || map_tmp == NULL) goto Error;
+=======
+
+  if (orig_histo == NULL) goto Error;
+>>>>>>> BRANCH (e85d33 update ChangeLog)
 
   // Construct the histograms from backward references.
   HistogramBuild(xsize, histo_bits, refs, orig_histo);
   // Copies the histograms and computes its bit_cost.
+<<<<<<< HEAD   (41521a utils.h: only define WEBP_NEED_LOG_TABLE_8BIT when needed)
   // histogram_symbols is optimized
   HistogramCopyAndAnalyze(orig_histo, image_histo, &num_used,
                           histogram_symbols);
@@ -1202,8 +1235,19 @@ int VP8LGetHistoImageSymbols(int xsize, int ysize,
   entropy_combine =
       (num_used > entropy_combine_num_bins * 2) && (quality < 100);
 
+=======
+  HistogramCopyAndAnalyze(orig_histo, image_histo);
+  entropy_combine =
+      (image_histo->size > entropy_combine_num_bins * 2) && (quality < 100);
+>>>>>>> BRANCH (e85d33 update ChangeLog)
   if (entropy_combine) {
+<<<<<<< HEAD   (41521a utils.h: only define WEBP_NEED_LOG_TABLE_8BIT when needed)
     uint16_t* const bin_map = map_tmp;
+=======
+    const int bin_map_size = image_histo->size;
+    // Reuse histogram_symbols storage. By definition, it's guaranteed to be ok.
+    uint16_t* const bin_map = histogram_symbols;
+>>>>>>> BRANCH (e85d33 update ChangeLog)
     const double combine_cost_factor =
         GetCombineCostFactor(image_histo_raw_size, quality);
     const uint32_t num_clusters = num_used;
