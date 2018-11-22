@@ -13,6 +13,8 @@
 //          Vikas (vikasa@google.com)
 
 #include <assert.h>
+#include <stdio.h>
+
 #include "src/mux/muxi.h"
 #include "src/utils/utils.h"
 
@@ -528,15 +530,21 @@ WebPMuxError MuxValidate(const WebPMux* const mux) {
   // ALPHA_FLAG & alpha chunk(s) are consistent.
   // Note: ALPHA_FLAG can be set when there is actually no Alpha data present.
   if (MuxHasAlpha(mux->images_)) {
-    if (num_vp8x == 0) {
+    if (num_vp8x > 0) {
+        // As doc notes: "Background color MAY contain a transparency value
+        // (alpha), even if the Alpha flag in VP8X chunk is unset."
+        // It is known that such images with broken header exist,
+        // whereas they can still be opened properly. Just output a
+        // warning.
+        if (!(flags & ALPHA_FLAG))
+          fprintf(stderr,
+                  "WARNING: alpha flag in VP8X chunk unset on an image with alpha.\n");
+    } else {
       // VP8X chunk is not present, so ALPH chunks should NOT be present either.
       err = WebPMuxNumChunks(mux, WEBP_CHUNK_ALPHA, &num_alpha);
       if (err != WEBP_MUX_OK) return err;
       if (num_alpha > 0) return WEBP_MUX_INVALID_ARGUMENT;
     }
-    // As doc notes: "Background color MAY contain a transparency value
-    // (alpha), even if the Alpha flag in VP8X chunk is unset."
-    // So we don't check if the VP8X chunk has the ALPHA_FLAG.
   }
 
   return WEBP_MUX_OK;
