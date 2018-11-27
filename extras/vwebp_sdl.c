@@ -71,6 +71,7 @@ int main(int argc, char* argv[]) {
       goto Error;
     }
     if (webp_size != (size_t)(int)webp_size) {
+      free((void*)webp);
       fprintf(stderr, "File too large.\n");
       goto Error;
     }
