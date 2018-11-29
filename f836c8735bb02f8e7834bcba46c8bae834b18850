@@ -45,6 +45,30 @@
       "revId": "f836c8735bb02f8e7834bcba46c8bae834b18850",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "86bac5d0_977bc4fb",
+        "filename": "src/dsp/quant.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1117029
+      },
+      "writtenOn": "2018-11-29T22:56:46Z",
+      "side": 1,
+      "message": "Woops not working as I thought:\nhttps://build.webmproject.org/jenkins/job/libwebp__compile/4432/config\u003dshared,host\u003darm-linux-gnueabi/\n\n00:00:56.919 libtool: compile:  arm-linux-gnueabi-gcc -DHAVE_CONFIG_H -I. -I../../../libwebp/src/enc -I../../src/webp -I../.. -I../../../libwebp -fvisibility\u003dhidden -Wall -Wdeclaration-after-statement -Wextra -Wfloat-conversion -Wformat -Wformat-nonliteral -Wformat -Wformat-security -Wmissing-declarations -Wmissing-prototypes -Wold-style-definition -Wshadow -Wundef -Wunreachable-code -Wunused-but-set-variable -Wunused -Wvla -O3 -march\u003darmv7-a -mfloat-abi\u003dsoftfp -ftree-vectorize -pthread -MT libwebpencode_la-quant_enc.lo -MD -MP -MF .deps/libwebpencode_la-quant_enc.Tpo -c ../../../libwebp/src/enc/quant_enc.c  -fPIC -DPIC -o .libs/libwebpencode_la-quant_enc.o\n00:00:57.111 In file included from ../../../libwebp/src/dsp/quant.h:18:0,\n00:00:57.111                  from ../../../libwebp/src/enc/quant_enc.c:18:\n00:00:57.111 ../../../libwebp/src/dsp/quant.h: In function ‘horizontal_add_uint32x4’:\n00:00:57.111 /usr/lib/gcc-cross/arm-linux-gnueabi/6/include/arm_neon.h:553:1: error: inlining failed in call to always_inline ‘vadd_u32’: target specific option mismatch\n00:00:57.111  vadd_u32 (uint32x2_t __a, uint32x2_t __b)\n00:00:57.111  ^~~~~~~~\n\n\u003c...\u003e",
+      "parentUuid": "d4aa719d_1db9d85e",
+      "range": {
+        "startLine": 17,
+        "startChar": 4,
+        "endLine": 17,
+        "endChar": 57
+      },
+      "revId": "f836c8735bb02f8e7834bcba46c8bae834b18850",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
