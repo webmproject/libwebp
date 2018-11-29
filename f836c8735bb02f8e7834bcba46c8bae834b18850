@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7bc5e580_84db25e8",
+        "filename": "src/dsp/Makefile.am",
+        "patchSetId": 7
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1117029
+      },
+      "writtenOn": "2018-11-29T22:45:05Z",
+      "side": 1,
+      "message": "None of the other build systems seem to require listing header files.",
+      "range": {
+        "startLine": 43,
+        "startChar": 15,
+        "endLine": 43,
+        "endChar": 20
+      },
+      "revId": "f836c8735bb02f8e7834bcba46c8bae834b18850",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d4aa719d_1db9d85e",
+        "filename": "src/dsp/quant.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1117029
+      },
+      "writtenOn": "2018-11-29T22:45:05Z",
+      "side": 1,
+      "message": "These flags seems a little different that I\u0027m used to with libvpx. These are being resolved per-file so WEBP_USE_NEON is only set when *this file* is being flagged with -mfpu\u003dneon. This should prevent this function from being called when RTCD is desired because in those cases src/enc/quant_enc.c would not be compiled with -mfpu\u003dneon.",
+      "range": {
+        "startLine": 17,
+        "startChar": 4,
+        "endLine": 17,
+        "endChar": 57
+      },
+      "revId": "f836c8735bb02f8e7834bcba46c8bae834b18850",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}

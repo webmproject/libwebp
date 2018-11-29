@@ -57,6 +57,24 @@
       "revId": "c7194040134727c41291918c8fe33bc8aafc4f7a",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b4a493f6_714b2f10",
+        "filename": "src/webp/types.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1117029
+      },
+      "writtenOn": "2018-11-29T22:45:05Z",
+      "side": 1,
+      "message": "I totally skipped the part where thresh and score are score_t as well:\nhttps://chromium-review.googlesource.com/c/webm/libwebp/+/1356099",
+      "parentUuid": "7facb06e_9c727c03",
+      "revId": "c7194040134727c41291918c8fe33bc8aafc4f7a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
