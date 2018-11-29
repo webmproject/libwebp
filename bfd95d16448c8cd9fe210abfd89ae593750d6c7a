@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "98cca442_4c47aec9",
+        "filename": "src/dsp/quant.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1117029
+      },
+      "writtenOn": "2018-11-29T23:15:46Z",
+      "side": 1,
+      "message": "I don\u0027t think WEBP_ANDROID_NEON comes into play at all. It\u0027s only used in conjunction with RTCD to distinguish between different types of WEBP_USE_NEON.",
+      "range": {
+        "startLine": 16,
+        "startChar": 39,
+        "endLine": 16,
+        "endChar": 58
+      },
+      "revId": "bfd95d16448c8cd9fe210abfd89ae593750d6c7a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "96eea6c8_13a9f2fb",
+        "filename": "src/dsp/quant.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1117029
+      },
+      "writtenOn": "2018-11-29T23:15:46Z",
+      "side": 1,
+      "message": "Could vreinterpret in some places instead. Just to avoid an unsigned/signed warning since thresh is no longer int64_t.",
+      "range": {
+        "startLine": 47,
+        "startChar": 20,
+        "endLine": 47,
+        "endChar": 27
+      },
+      "revId": "bfd95d16448c8cd9fe210abfd89ae593750d6c7a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
