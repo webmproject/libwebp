@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dc68f2ae_65bb94a7",
+        "filename": "src/dsp/quant.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-12-01T01:05:57Z",
+      "side": 1,
+      "message": "this works or a #define IsFlat_NEON IsFlat afterward to make the implementation in the block a little clearer",
+      "revId": "332f293800306a7f894a7b156d71cbdb2fe0165b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
