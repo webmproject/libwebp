@@ -16,6 +16,29 @@
       "revId": "332f293800306a7f894a7b156d71cbdb2fe0165b",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3058a331_6800af33",
+        "filename": "src/dsp/quant.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2018-12-02T07:17:58Z",
+      "side": 1,
+      "message": "usually, we like to abuse the: \"const type var \u003d ...\" constructs.\nHere:\n\nconst int16x8_t a_2 \u003d vsetq_lane_s16(0, a_0, 0); // Set DC to zero.\nconst uint16x8_t b_0 \u003d vshrq_n_u16(vtstq_s16(a_2, tst_ones), 15);\nconst uint16x8_t b_1 \u003d vshrq_n_u16(vtstq_s16(a_1, tst_ones), 15);\nsum \u003d ...\n\nfor instance",
+      "range": {
+        "startLine": 38,
+        "startChar": 4,
+        "endLine": 38,
+        "endChar": 7
+      },
+      "revId": "332f293800306a7f894a7b156d71cbdb2fe0165b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
