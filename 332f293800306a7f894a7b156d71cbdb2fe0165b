@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "40263862_9c134afd",
+        "filename": "src/dsp/quant.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2018-12-03T22:46:14Z",
+      "side": 1,
+      "message": "\u003e But wouldn\u0027t that make the object code use plain IsFlat? I thought the goal was to make it easy to see from the disassembly which got used?\n\nSorry for the confusion, I just meant:\nstatic WEBP_INLINE int IsFlat_NEON(...) {\n...}\n\n#define IsFlat IsFlat_NEON\n\neither one works",
+      "parentUuid": "6686ce11_3f74baea",
+      "revId": "332f293800306a7f894a7b156d71cbdb2fe0165b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3058a331_6800af33",
         "filename": "src/dsp/quant.h",
         "patchSetId": 12
