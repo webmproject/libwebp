@@ -22,6 +22,30 @@
       "revId": "5173d4ee6f51cf01058f141c291fba39a5520aed",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f3499b61_b2df653f",
+        "filename": "src/dsp/quant.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1117029
+      },
+      "writtenOn": "2018-12-03T23:06:10Z",
+      "side": 1,
+      "message": "cmake/config.h.in:#cmakedefine WEBP_HAVE_NEON_RTCD\nconfigure.ac:          [AC_DEFINE(WEBP_HAVE_NEON_RTCD, [1],\nsrc/dsp/cpu.c:#if defined(WEBP_HAVE_NEON_RTCD)\nsrc/dsp/cpu.c:#if defined(__linux__) \u0026\u0026 defined(WEBP_HAVE_NEON_RTCD)\n\ncpu.c was the only previous usage. It\u0027s tied to --disable-neon-rtcd\n\n  --disable-neon-rtcd     Disable runtime detection of NEON support via\n                          /proc/cpuinfo on Linux hosts [default\u003dauto]\n\nIt means that the user guarantees that neon is available.",
+      "parentUuid": "a30f42b1_d601b7e0",
+      "range": {
+        "startLine": 17,
+        "startChar": 13,
+        "endLine": 17,
+        "endChar": 32
+      },
+      "revId": "5173d4ee6f51cf01058f141c291fba39a5520aed",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
