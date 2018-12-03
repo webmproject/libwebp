@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a30f42b1_d601b7e0",
+        "filename": "src/dsp/quant.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1002029
+      },
+      "writtenOn": "2018-12-03T23:02:15Z",
+      "side": 1,
+      "message": "where is WEBP_HAVE_NEON_RTCD supposed to be potentially defined? Makefile.am?\nWe don\u0027t usually use \u0027RTCD\u0027 terminology in libwebp",
+      "range": {
+        "startLine": 17,
+        "startChar": 13,
+        "endLine": 17,
+        "endChar": 32
+      },
+      "revId": "5173d4ee6f51cf01058f141c291fba39a5520aed",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
