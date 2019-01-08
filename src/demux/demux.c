@@ -252,8 +252,8 @@ static ParseStatus StoreFrame(int frame_num, uint32_t min_size,
           // is incomplete.
           WebPBitstreamFeatures features;
           const VP8StatusCode vp8_status =
-              WebPGetFeatures(mem->buf_ + chunk_start_offset, chunk_size,
-                              &features);
+              WebPGetFeaturesRIFFNotChecked(mem->buf_ + chunk_start_offset,
+                                            chunk_size, &features);
           if (status == PARSE_NEED_MORE_DATA &&
               vp8_status == VP8_STATUS_NOT_ENOUGH_DATA) {
             return PARSE_NEED_MORE_DATA;
@@ -663,7 +663,7 @@ static ParseStatus CreateRawImageDemuxer(MemBuffer* const mem,
                                          WebPDemuxer** demuxer) {
   WebPBitstreamFeatures features;
   const VP8StatusCode status =
-      WebPGetFeatures(mem->buf_, mem->buf_size_, &features);
+      WebPGetFeaturesRIFFNotChecked(mem->buf_, mem->buf_size_, &features);
   *demuxer = NULL;
   if (status != VP8_STATUS_OK) {
     return (status == VP8_STATUS_NOT_ENOUGH_DATA) ? PARSE_NEED_MORE_DATA

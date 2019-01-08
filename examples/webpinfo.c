@@ -792,7 +792,7 @@ static WebPInfoStatus ProcessImageChunk(const ChunkData* const chunk_data,
   const uint8_t* data = chunk_data->payload_ - CHUNK_HEADER_SIZE;
   WebPBitstreamFeatures features;
   const VP8StatusCode vp8_status =
-      WebPGetFeatures(data, chunk_data->size_, &features);
+      WebPGetFeaturesRIFFNotChecked(data, chunk_data->size_, &features);
   if (vp8_status != VP8_STATUS_OK) {
     LOG_ERROR("VP8/VP8L bitstream error.");
     return WEBP_INFO_BITSTREAM_ERROR;

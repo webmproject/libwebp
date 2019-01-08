@@ -425,12 +425,19 @@ WEBP_EXTERN VP8StatusCode WebPGetFeaturesInternal(
 // Returns VP8_STATUS_OK when the features are successfully retrieved. Returns
 // VP8_STATUS_NOT_ENOUGH_DATA when more data is needed to retrieve the
 // features from headers. Returns error in other cases.
+// This function only works for a proper stream starting with a RIFF header.
 static WEBP_INLINE VP8StatusCode WebPGetFeatures(
     const uint8_t* data, size_t data_size,
     WebPBitstreamFeatures* features) {
   return WebPGetFeaturesInternal(data, data_size, features,
                                  WEBP_DECODER_ABI_VERSION);
 }
+
+// Same as WebPGetFeatures but works for a stream with or without the RIFF
+// header.
+WEBP_EXTERN VP8StatusCode
+WebPGetFeaturesRIFFNotChecked(const uint8_t* const data, size_t data_size,
+                              WebPBitstreamFeatures* const features);
 
 // Decoding options
 struct WebPDecoderOptions {

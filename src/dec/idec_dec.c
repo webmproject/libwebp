@@ -645,7 +645,8 @@ WebPIDecoder* WebPIDecode(const uint8_t* data, size_t data_size,
 
   // Parse the bitstream's features, if requested:
   if (data != NULL && data_size > 0) {
-    if (WebPGetFeatures(data, data_size, features) != VP8_STATUS_OK) {
+    if (WebPGetFeaturesRIFFNotChecked(data, data_size, features)
+        != VP8_STATUS_OK) {
       return NULL;
     }
   }

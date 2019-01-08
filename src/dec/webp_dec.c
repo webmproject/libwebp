@@ -276,6 +276,7 @@ static VP8StatusCode ParseVP8Header(const uint8_t** const data_ptr,
 // VP8(L)     <-- Not a valid WebP format: only allowed for internal purpose.
 static VP8StatusCode ParseHeadersInternal(const uint8_t* data,
                                           size_t data_size,
+                                          int has_riff,
                                           int* const width,
                                           int* const height,
                                           int* const has_alpha,
@@ -307,6 +308,7 @@ static VP8StatusCode ParseHeadersInternal(const uint8_t* data,
     return status;   // Wrong RIFF header / insufficient data.
   }
   found_riff = (hdrs.riff_size > 0);
+  if (!found_riff && has_riff) return VP8_STATUS_BITSTREAM_ERROR;
 
   // Skip over VP8X.
   {
@@ -418,8 +420,8 @@ VP8StatusCode WebPParseHeaders(WebPHeaderStructure* const headers) {
   assert(headers != NULL);
   // fill out headers, ignore width/height/has_alpha.
   status = ParseHeadersInternal(headers->data, headers->data_size,
-                                NULL, NULL, NULL, &has_animation,
-                                NULL, headers);
+                                /*has_riff=*/0, NULL, NULL, NULL,
+                                &has_animation, NULL, headers);
   if (status == VP8_STATUS_OK || status == VP8_STATUS_NOT_ENOUGH_DATA) {
     // The WebPDemux API + libwebp can be used to decode individual
     // uncomposited frames or the WebPAnimDecoder can be used to fully
@@ -679,6 +681,7 @@ static void DefaultFeatures(WebPBitstreamFeatures* const features) {
 }
 
 static VP8StatusCode GetFeatures(const uint8_t* const data, size_t data_size,
+                                 int has_riff,
                                  WebPBitstreamFeatures* const features) {
   if (features == NULL || data == NULL) {
     return VP8_STATUS_INVALID_PARAM;
@@ -686,10 +689,16 @@ static VP8StatusCode GetFeatures(const uint8_t* const data, size_t data_size,
   DefaultFeatures(features);
 
   // Only parse enough of the data to retrieve the features.
-  return ParseHeadersInternal(data, data_size,
+  return ParseHeadersInternal(data, data_size, has_riff,
                               &features->width, &features->height,
                               &features->has_alpha, &features->has_animation,
                               &features->format, NULL);
+}
+
+VP8StatusCode WebPGetFeaturesRIFFNotChecked(
+    const uint8_t* const data, size_t data_size,
+    WebPBitstreamFeatures* const features) {
+  return GetFeatures(data, data_size, /*has_riff=*/0, features);
 }
 
 //------------------------------------------------------------------------------
@@ -699,7 +708,8 @@ int WebPGetInfo(const uint8_t* data, size_t data_size,
                 int* width, int* height) {
   WebPBitstreamFeatures features;
 
-  if (GetFeatures(data, data_size, &features) != VP8_STATUS_OK) {
+  if (GetFeatures(data, data_size, /*has_riff=*/0, &features) !=
+      VP8_STATUS_OK) {
     return 0;
   }
 
@@ -739,7 +749,7 @@ VP8StatusCode WebPGetFeaturesInternal(const uint8_t* data, size_t data_size,
   if (features == NULL) {
     return VP8_STATUS_INVALID_PARAM;
   }
-  return GetFeatures(data, data_size, features);
+  return GetFeatures(data, data_size, /*has_riff=*/1, features);
 }
 
 VP8StatusCode WebPDecode(const uint8_t* data, size_t data_size,
@@ -751,7 +761,7 @@ VP8StatusCode WebPDecode(const uint8_t* data, size_t data_size,
     return VP8_STATUS_INVALID_PARAM;
   }
 
-  status = GetFeatures(data, data_size, &config->input);
+  status = GetFeatures(data, data_size, /*has_riff=*/0, &config->input);
   if (status != VP8_STATUS_OK) {
     if (status == VP8_STATUS_NOT_ENOUGH_DATA) {
       return VP8_STATUS_BITSTREAM_ERROR;  // Not-enough-data treated as error.
