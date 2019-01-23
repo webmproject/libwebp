@@ -16,6 +16,24 @@
       "revId": "7d05d6ca91f6453835e8dad3141517198d5acad7",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d15ae4f9_3f6f827b",
+        "filename": "src/enc/backward_references_enc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 199,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2019-01-23T19:48:39Z",
+      "side": 1,
+      "message": "\u003e this may need some annotation with -fsanitize\u003dinteger as that will detect uint rollover.\n\nhttps://chromium.googlesource.com/webm/libwebp/+/master/src/dsp/lossless_common.h#151",
+      "parentUuid": "6d103676_d64e63c0",
+      "revId": "7d05d6ca91f6453835e8dad3141517198d5acad7",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
