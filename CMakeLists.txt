@@ -556,7 +556,7 @@ if(WEBP_BUILD_WEBP_JS)
   target_include_directories(webp_wasm PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
   set_target_properties(
     webp_wasm
-    PROPERTIES LINK_FLAGS "-s WASM=1 -s 'BINARYEN_METHOD=\"native-wasm\"' \
+    PROPERTIES LINK_FLAGS "-s WASM=1 \
        -s EXPORTED_FUNCTIONS='[\"_WebpToSDL\"]' -s INVOKE_RUN=0 \
        -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"cwrap\"]'")
   target_compile_definitions(webp_wasm PUBLIC EMSCRIPTEN WEBP_HAVE_SDL)
