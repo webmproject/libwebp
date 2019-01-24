@@ -17,6 +17,7 @@
 
 #include <assert.h>
 
+#include "src/dsp/dsp.h"
 #include "src/webp/types.h"
 
 #ifdef __cplusplus
@@ -32,7 +33,8 @@ typedef struct {
 
 static const uint32_t kHashMul = 0x1e35a7bdu;
 
-static WEBP_INLINE int VP8LHashPix(uint32_t argb, int shift) {
+static WEBP_UBSAN_IGNORE_UNSIGNED_OVERFLOW WEBP_INLINE
+int VP8LHashPix(uint32_t argb, int shift) {
   return (int)((argb * kHashMul) >> shift);
 }
 
