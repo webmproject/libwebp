@@ -16,6 +16,24 @@
       "revId": "0c418329bce39626b35f57b7c768d7c41dfbaff4",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6da3634d_4d989669",
+        "filename": "src/utils/color_cache_utils.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2019-01-25T00:45:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2261dfc2_073e18c3",
+      "revId": "0c418329bce39626b35f57b7c768d7c41dfbaff4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
