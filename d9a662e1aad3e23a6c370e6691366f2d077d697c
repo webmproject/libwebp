@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7ca51a4a_6b4da0f3",
+        "filename": "src/utils/rescaler_utils.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2019-02-20T02:28:01Z",
+      "side": 1,
+      "message": "some but not all call sites control for this so it\u0027s good to add it here.",
+      "range": {
+        "startLine": 87,
+        "startChar": 22,
+        "endLine": 87,
+        "endChar": 32
+      },
+      "revId": "d9a662e1aad3e23a6c370e6691366f2d077d697c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
