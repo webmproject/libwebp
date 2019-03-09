@@ -34,6 +34,24 @@
       "revId": "b62a7fa4739355449616b5047c53cbe71ecbcb46",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2f94bee2_9fb8013d",
+        "filename": "imageio/jpegdec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 209,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2019-03-09T02:13:47Z",
+      "side": 1,
+      "message": "\u003e Done.\n\u003e The code I added is exactly what was doing output_message() (in the current libjpeg sources at least), minus the error window opening on Windows. I thought handling the line break explicitly was safer (especially if it opened a window instead of fprintf).\n\nRight I saw that. Like I said it should be fine, just functions with this structure make me nervous.",
+      "parentUuid": "8a2e5318_603afb3b",
+      "revId": "b62a7fa4739355449616b5047c53cbe71ecbcb46",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
