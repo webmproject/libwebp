@@ -21,6 +21,18 @@
 #endif
 #include "src/webp/types.h"
 
+#define BITTRACE 0    // 0 = off, 1 = print bits, 2 = print bytes
+
+#define BT_LABEL , const char label[]
+#if (BITTRACE > 0)
+struct VP8BitReader;
+extern void BitTrace(const struct VP8BitReader* const br BT_LABEL);
+#define BT_TRACK(br) BitTrace(br, label)
+#else
+#define BT_TRACK(br) (void)label
+#endif
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -92,13 +104,13 @@ void VP8BitReaderSetBuffer(VP8BitReader* const br,
 void VP8RemapBitReader(VP8BitReader* const br, ptrdiff_t offset);
 
 // return the next value made of 'num_bits' bits
-uint32_t VP8GetValue(VP8BitReader* const br, int num_bits);
-static WEBP_INLINE uint32_t VP8Get(VP8BitReader* const br) {
-  return VP8GetValue(br, 1);
+uint32_t VP8GetValue(VP8BitReader* const br, int num_bits BT_LABEL);
+static WEBP_INLINE uint32_t VP8Get(VP8BitReader* const br BT_LABEL) {
+  return VP8GetValue(br, 1, label);
 }
 
 // return the next value with sign-extension.
-int32_t VP8GetSignedValue(VP8BitReader* const br, int num_bits);
+int32_t VP8GetSignedValue(VP8BitReader* const br, int num_bits BT_LABEL);
 
 // bit_reader_inl.h will implement the following methods:
 //   static WEBP_INLINE int VP8GetBit(VP8BitReader* const br, int prob)
