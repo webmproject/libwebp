@@ -118,6 +118,10 @@ GROFF = /usr/bin/groff
 COL = /usr/bin/col
 LDFLAGS = $(EXTRA_LIBS) $(EXTRA_FLAGS) -lm
 
+ifdef BITTRACE
+CFLAGS += -DBITTRACE=$(BITTRACE)
+endif
+
 ANIM_UTIL_OBJS = \
     examples/anim_util.o \
 
