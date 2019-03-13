@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "947b1c55_2db4bb4a",
+        "filename": "src/dec/quant_dec.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2019-03-13T17:54:10Z",
+      "side": 1,
+      "message": "the other option I see would be for a new macro for each function:\n#if !BITTRACE\n#define VP8GetValue(BR, N, STR) VP8GetValue(BR, N)\n...",
+      "range": {
+        "startLine": 64,
+        "startChar": 22,
+        "endLine": 64,
+        "endChar": 59
+      },
+      "revId": "de0298b3f595130f9877b5465e80a9c392549446",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
