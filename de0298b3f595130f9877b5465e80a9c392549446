@@ -22,6 +22,30 @@
       "revId": "de0298b3f595130f9877b5465e80a9c392549446",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0da59281_a2fac5a9",
+        "filename": "src/dec/quant_dec.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2019-03-13T20:22:48Z",
+      "side": 1,
+      "message": "hmm... that\u0027s probably worth trying. Except we have quite some signature to \u0027overload\u0027 like this. Maybe we can go with only redefining a few bottom ones, but not all of them.",
+      "parentUuid": "947b1c55_2db4bb4a",
+      "range": {
+        "startLine": 64,
+        "startChar": 22,
+        "endLine": 64,
+        "endChar": 59
+      },
+      "revId": "de0298b3f595130f9877b5465e80a9c392549446",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
