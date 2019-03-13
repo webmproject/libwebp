@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a6219cd5_f036d606",
+        "filename": "src/utils/bit_reader_utils.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2019-03-13T02:14:00Z",
+      "side": 1,
+      "message": "unintended edit",
+      "revId": "c303c262b7f1eb5fde280c1fdecfd2d917c98a01",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "71059278_d059f781",
+        "filename": "src/utils/bit_reader_utils.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 250,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2019-03-13T02:14:00Z",
+      "side": 1,
+      "message": "could use string.h for this one, it also returns a size_t, may want a cast (add a skip \u003e 0 assert).",
+      "revId": "c303c262b7f1eb5fde280c1fdecfd2d917c98a01",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6765c40d_d39c0a5b",
+        "filename": "src/utils/bit_reader_utils.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 288,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2019-03-13T02:14:00Z",
+      "side": 1,
+      "message": "could add // BITTRACE \u003e 0",
+      "revId": "c303c262b7f1eb5fde280c1fdecfd2d917c98a01",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6d6a906f_995ff65f",
+        "filename": "src/utils/bit_reader_utils.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 290,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2019-03-13T02:14:00Z",
+      "side": 1,
+      "message": "this line can go",
+      "revId": "c303c262b7f1eb5fde280c1fdecfd2d917c98a01",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "381fd22e_aca99f7e",
+        "filename": "src/utils/bit_reader_utils.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2019-03-13T02:14:00Z",
+      "side": 1,
+      "message": "could drop this line",
+      "revId": "c303c262b7f1eb5fde280c1fdecfd2d917c98a01",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
