@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6e71832e_73dffb2d",
+        "filename": "makefile.unix",
+        "patchSetId": 10
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2019-03-14T17:57:54Z",
+      "side": 1,
+      "message": "since the define is checked in the code and defaulted to 0 you could just do this in the ifndef itself here",
+      "revId": "d749009e25415fa7e6941a284f58b50d7fabfc99",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
