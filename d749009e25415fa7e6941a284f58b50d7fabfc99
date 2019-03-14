@@ -16,6 +16,24 @@
       "revId": "d749009e25415fa7e6941a284f58b50d7fabfc99",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7b4eb648_a6028e6c",
+        "filename": "makefile.unix",
+        "patchSetId": 10
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2019-03-14T20:56:20Z",
+      "side": 1,
+      "message": "hmm... it didn\u0027t seem to be defined nor defaulted to zero in the previous error:\n\nhttps://build.webmproject.org/jenkins/job/libwebp__compile/4470/config\u003dstatic,host\u003dnative/console\n\nThat\u0027s why i resorted to always using -DBITTRACE...",
+      "parentUuid": "6e71832e_73dffb2d",
+      "revId": "d749009e25415fa7e6941a284f58b50d7fabfc99",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
