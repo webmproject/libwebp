@@ -52,6 +52,24 @@
       "revId": "d749009e25415fa7e6941a284f58b50d7fabfc99",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "36b1b6b2_59ed266b",
+        "filename": "makefile.unix",
+        "patchSetId": 10
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2019-03-14T23:06:01Z",
+      "side": 1,
+      "message": "\u003e \u003e hmm... it didn\u0027t seem to be defined nor defaulted to zero in the previous error:\n\u003e \u003e \n\u003e \u003e https://build.webmproject.org/jenkins/job/libwebp__compile/4470/config\u003dstatic,host\u003dnative/console\n\u003e \u003e \n\u003e \u003e That\u0027s why i resorted to always using -DBITTRACE...\n\u003e \n\u003e I was going by this line:\n\u003e https://chromium-review.googlesource.com/c/webm/libwebp/+/1517453/10/src/utils/bit_reader_utils.h#25\n\u003e but didn\u0027t check it out\n\nthat worked, but looking more closely at the error maybe we\u0027re talking about 2 different things. For the makefile I was thinking:\nifdef BITTRACE\nCFLAGS +\u003d -DBITTRACE\u003d$(BITTRACE)\nendif",
+      "parentUuid": "0a91d8fa_8087194a",
+      "revId": "d749009e25415fa7e6941a284f58b50d7fabfc99",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
