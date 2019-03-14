@@ -34,6 +34,24 @@
       "revId": "d749009e25415fa7e6941a284f58b50d7fabfc99",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0a91d8fa_8087194a",
+        "filename": "makefile.unix",
+        "patchSetId": 10
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2019-03-14T23:03:36Z",
+      "side": 1,
+      "message": "\u003e hmm... it didn\u0027t seem to be defined nor defaulted to zero in the previous error:\n\u003e \n\u003e https://build.webmproject.org/jenkins/job/libwebp__compile/4470/config\u003dstatic,host\u003dnative/console\n\u003e \n\u003e That\u0027s why i resorted to always using -DBITTRACE...\n\nI was going by this line:\nhttps://chromium-review.googlesource.com/c/webm/libwebp/+/1517453/10/src/utils/bit_reader_utils.h#25\nbut didn\u0027t check it out",
+      "parentUuid": "7b4eb648_a6028e6c",
+      "revId": "d749009e25415fa7e6941a284f58b50d7fabfc99",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
