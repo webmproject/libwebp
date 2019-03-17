@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "abc208b7_b8beac01",
+        "filename": "src/webp/encode.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2019-03-17T07:04:16Z",
+      "side": 1,
+      "message": "reads better with a comma: \"...this use..\" -\u003e \"...this, use...\"",
+      "range": {
+        "startLine": 67,
+        "startChar": 75,
+        "endLine": 67,
+        "endChar": 76
+      },
+      "revId": "64357bb206a052ee54b5ec80a76c8fe5a5a141d4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
