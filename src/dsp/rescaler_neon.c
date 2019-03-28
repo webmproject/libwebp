@@ -135,12 +135,12 @@ static void RescalerExportRowShrink_NEON(WebPRescaler* const wrk) {
     for (x_out = 0; x_out < max_span; x_out += 8) {
       LOAD_32x8(frow + x_out, in0, in1);
       LOAD_32x8(irow + x_out, in2, in3);
-      const uint32x4_t A0 = MULT_FIX(in0, yscale_half);
-      const uint32x4_t A1 = MULT_FIX(in1, yscale_half);
+      const uint32x4_t A0 = MULT_FIX_FLOOR(in0, yscale_half);
+      const uint32x4_t A1 = MULT_FIX_FLOOR(in1, yscale_half);
       const uint32x4_t B0 = vqsubq_u32(in2, A0);
       const uint32x4_t B1 = vqsubq_u32(in3, A1);
-      const uint32x4_t C0 = MULT_FIX_FLOOR(B0, fxy_scale_half);
-      const uint32x4_t C1 = MULT_FIX_FLOOR(B1, fxy_scale_half);
+      const uint32x4_t C0 = MULT_FIX(B0, fxy_scale_half);
+      const uint32x4_t C1 = MULT_FIX(B1, fxy_scale_half);
       const uint16x4_t D0 = vmovn_u32(C0);
       const uint16x4_t D1 = vmovn_u32(C1);
       const uint8x8_t E = vmovn_u16(vcombine_u16(D0, D1));
@@ -148,8 +148,8 @@ static void RescalerExportRowShrink_NEON(WebPRescaler* const wrk) {
       STORE_32x8(A0, A1, irow + x_out);
     }
     for (; x_out < x_out_max; ++x_out) {
-      const uint32_t frac = (uint32_t)MULT_FIX_C(frow[x_out], yscale);
-      const int v = (int)MULT_FIX_FLOOR_C(irow[x_out] - frac, fxy_scale);
+      const uint32_t frac = (uint32_t)MULT_FIX_FLOOR_C(frow[x_out], yscale);
+      const int v = (int)MULT_FIX_C(irow[x_out] - frac, fxy_scale);
       assert(v >= 0 && v <= 255);
       dst[x_out] = v;
       irow[x_out] = frac;   // new fractional start

@@ -138,8 +138,8 @@ void WebPRescalerExportRowShrink_C(WebPRescaler* const wrk) {
   assert(!wrk->y_expand);
   if (yscale) {
     for (x_out = 0; x_out < x_out_max; ++x_out) {
-      const uint32_t frac = (uint32_t)MULT_FIX(frow[x_out], yscale);
-      const int v = (int)MULT_FIX_FLOOR(irow[x_out] - frac, wrk->fxy_scale);
+      const uint32_t frac = (uint32_t)MULT_FIX_FLOOR(frow[x_out], yscale);
+      const int v = (int)MULT_FIX(irow[x_out] - frac, wrk->fxy_scale);
       assert(v >= 0 && v <= 255);
       dst[x_out] = v;
       irow[x_out] = frac;   // new fractional start
@@ -148,6 +148,7 @@ void WebPRescalerExportRowShrink_C(WebPRescaler* const wrk) {
     for (x_out = 0; x_out < x_out_max; ++x_out) {
       const int v = (int)MULT_FIX(irow[x_out], wrk->fxy_scale);
       assert(v >= 0 && v <= 255);
+      if (v < 0 || v > 255) printf("!! Error\n");
       dst[x_out] = v;
       irow[x_out] = 0;
     }
