@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1075ce3c_8117063f",
+        "filename": "src/enc/predictor_enc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2019-04-03T05:51:00Z",
+      "side": 1,
+      "message": "surprised that these might have been emitted but not 203 or 207",
+      "revId": "23be8bbab2ce1b3863ffad8b9b50aa64c558323a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cb1be592_32ab5968",
+        "filename": "src/enc/predictor_enc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 220,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2019-04-03T05:51:00Z",
+      "side": 1,
+      "message": "these 2 make sense",
+      "revId": "23be8bbab2ce1b3863ffad8b9b50aa64c558323a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
