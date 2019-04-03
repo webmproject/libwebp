@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "0a133b30_e3fab74d",
+        "filename": "src/enc/predictor_enc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2019-04-03T06:04:05Z",
+      "side": 1,
+      "message": "\u003e yes, one gets this kind of warning:\n\u003e \n\u003e implicit conversion from type \u0027uint32_t\u0027 (aka \u0027unsigned int\u0027) of value 16773401 (32-bit, unsigned) to type \u0027uint8_t\u0027 (aka \u0027unsigned char\u0027) changed the value to 25 (8-bit, unsigned)\n\u003e \n\u003e \n\u003e which doesn\u0027t make much sense: 16773401 is the value pre-shift by 24. Could be a clang bug?\n\nsounds possible, I wonder if this will flip flop in clang-8",
+      "parentUuid": "77e405f4_41b873c1",
+      "revId": "23be8bbab2ce1b3863ffad8b9b50aa64c558323a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "cb1be592_32ab5968",
         "filename": "src/enc/predictor_enc.c",
         "patchSetId": 1
