@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2b9c479e_6320f190",
+        "filename": "src/utils/utils.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2019-04-04T05:48:21Z",
+      "side": 1,
+      "message": "we actually already have this in imageio/image_enc.c (nee dwebp.c)",
+      "revId": "24686538bed67cbd1498fdcb9cd1918ab7c49d1d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
