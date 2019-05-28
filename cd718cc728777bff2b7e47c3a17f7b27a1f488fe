@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "05a3c0a8_28ea1b11",
+        "filename": "examples/vwebp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 424,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2019-05-28T23:59:39Z",
+      "side": 1,
+      "message": "maybe screen_width/height",
+      "revId": "cd718cc728777bff2b7e47c3a17f7b27a1f488fe",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
