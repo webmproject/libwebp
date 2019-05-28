@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH VWEBP 1 "July 20, 2018"
+.TH VWEBP 1 "May 28, 2019"
 .SH NAME
 vwebp \- decompress a WebP file and display it in a window
 .SH SYNOPSIS
@@ -41,6 +41,10 @@ to smooth the gradients. This flag will prevent this dithering.
 .B \-usebgcolor
 Fill transparent areas with the bitstream's own background color instead of
 checkerboard only. Default is white for non-animated images.
+.TP
+.B \-fit
+If an image is larger than the display dimension, rescale it to preserve
+the aspect ratio.
 .TP
 .B \-mt
 Use multi-threading for decoding, if possible.
