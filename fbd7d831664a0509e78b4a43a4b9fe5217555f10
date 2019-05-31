@@ -34,6 +34,24 @@
       "revId": "fbd7d831664a0509e78b4a43a4b9fe5217555f10",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4687bfdb_36dac624",
+        "filename": "README.webp_js",
+        "patchSetId": 1
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2019-05-31T08:06:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "45885637_a240c9c2",
+      "revId": "fbd7d831664a0509e78b4a43a4b9fe5217555f10",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
