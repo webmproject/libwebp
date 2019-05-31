@@ -666,8 +666,8 @@ static void GetBestGreenRedToBlue(
       break;  // out of iter-loop.
     }
   }
-  best_tx->green_to_blue_ = green_to_blue_best;
-  best_tx->red_to_blue_ = red_to_blue_best;
+  best_tx->green_to_blue_ = green_to_blue_best & 0xff;
+  best_tx->red_to_blue_ = red_to_blue_best & 0xff;
 }
 #undef kGreenRedToBlueMaxIters
 #undef kGreenRedToBlueNumAxis
