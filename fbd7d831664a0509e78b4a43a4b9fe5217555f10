@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "68f6dc03_91065827",
+        "filename": "README.webp_js",
+        "patchSetId": 1
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2019-05-31T07:49:22Z",
+      "side": 1,
+      "message": "that\u0027s a bit vague I could give an example if it\u0027s necessary",
+      "revId": "fbd7d831664a0509e78b4a43a4b9fe5217555f10",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
