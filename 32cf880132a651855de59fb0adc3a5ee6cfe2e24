@@ -16,6 +16,24 @@
       "revId": "32cf880132a651855de59fb0adc3a5ee6cfe2e24",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2088d3f3_1d651f45",
+        "filename": "src/enc/predictor_enc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 669,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2019-05-31T08:04:24Z",
+      "side": 1,
+      "message": "let\u0027s stick to \u00260xff then",
+      "parentUuid": "ca66a753_5d6600a5",
+      "revId": "32cf880132a651855de59fb0adc3a5ee6cfe2e24",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
