@@ -72,7 +72,6 @@ static struct {
   WebPIterator prev_frame;
   WebPChunkIterator iccp;
   int viewport_width, viewport_height;
-  int fit;  // if true, rescale large images to preserve aspect ratio.
 } kParams;
 
 static void ClearPreviousPic(void) {
@@ -431,7 +430,7 @@ static void StartDisplay(void) {
 #endif
   screen_width = glutGet(GLUT_SCREEN_WIDTH);
   screen_height = glutGet(GLUT_SCREEN_HEIGHT);
-  if ((width > screen_width || height > screen_height) && kParams.fit) {
+  if (width > screen_width || height > screen_height) {
     if (width > screen_width) {
       height = (height * screen_width + width - 1) / width;
       width = screen_width;
@@ -468,7 +467,6 @@ static void Help(void) {
       "  -dither <int>  dithering strength (0..100), default=50\n"
       "  -noalphadither disable alpha plane dithering\n"
       "  -usebgcolor .. display background color\n"
-      "  -fit ......... downscale large images to preserve aspect ratio\n"
       "  -mt .......... use multi-threading\n"
       "  -info ........ print info\n"
       "  -h ........... this help message\n"
@@ -497,8 +495,6 @@ int main(int argc, char *argv[]) {
   kParams.use_color_profile = 1;
   // Background color hidden by default to see transparent areas.
   kParams.draw_anim_background_color = 0;
-  // By default don't rescale too-large input images to preserve aspect ratio.
-  kParams.fit = 0;
 
   for (c = 1; c < argc; ++c) {
     int parse_error = 0;
@@ -515,8 +511,6 @@ int main(int argc, char *argv[]) {
       config->options.alpha_dithering_strength = 0;
     } else if (!strcmp(argv[c], "-usebgcolor")) {
       kParams.draw_anim_background_color = 1;
-    } else if (!strcmp(argv[c], "-fit")) {
-      kParams.fit = 1;
     } else if (!strcmp(argv[c], "-dither") && c + 1 < argc) {
       config->options.dithering_strength =
           ExUtilGetInt(argv[++c], 0, &parse_error);

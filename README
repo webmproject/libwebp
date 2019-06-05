@@ -405,7 +405,6 @@ Options are:
   -dither <int>  dithering strength (0..100), default=50
   -noalphadither disable alpha plane dithering
   -usebgcolor .. display background color
-  -fit ......... downscale large images to preserve aspect ratio
   -mt .......... use multi-threading
   -info ........ print info
   -h ........... this help message
