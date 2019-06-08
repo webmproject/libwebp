@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c7832801_cbeba78c",
+        "filename": "iosbuild.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2019-06-08T03:22:25Z",
+      "side": 1,
+      "message": "we try to keep maximum line length at 80 characters, can you break all the new long lines that have been added?\n\nhttps://google.github.io/styleguide/shell.xml#Formatting",
+      "revId": "deccc3c44a16e162ccc7d40d4527f0b20d26815d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ca5b0ef6_6176e36e",
+        "filename": "iosbuild.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2019-06-08T03:22:25Z",
+      "side": 1,
+      "message": "the muxer shouldn\u0027t require either decode.h or encode.h, do you need access to all the header from this framework?",
+      "range": {
+        "startLine": 141,
+        "startChar": 26,
+        "endLine": 141,
+        "endChar": 39
+      },
+      "revId": "deccc3c44a16e162ccc7d40d4527f0b20d26815d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3dbe05d6_fad455cb",
+        "filename": "iosbuild.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2019-06-08T03:22:25Z",
+      "side": 1,
+      "message": "the demuxer should only require decode.h, do you need access to all the headers from this framework?",
+      "range": {
+        "startLine": 145,
+        "startChar": 26,
+        "endLine": 145,
+        "endChar": 39
+      },
+      "revId": "deccc3c44a16e162ccc7d40d4527f0b20d26815d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
