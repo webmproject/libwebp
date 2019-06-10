@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "08c2a72c_49515b8d",
+        "filename": "src/dsp/alpha_processing_sse2.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2019-06-10T20:22:41Z",
+      "side": 1,
+      "message": "yeah, we should keep the bit-wise value we intend (0xff here) and cast it to the native type that Intel\u0027s API expect, regardless of what type we use internally in libwebp.\n\nHere: _mm_set1_epi8((char)0xff)",
+      "parentUuid": "c4d17c81_b70b9a13",
+      "revId": "c0ecadc534d08eef7cf70fc4027e9b684257c07f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f8f34c1a_de3d0cb6",
         "filename": "src/dsp/enc_sse2.c",
         "patchSetId": 1
