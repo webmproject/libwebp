@@ -217,8 +217,8 @@ static THREADFN ThreadLoop(void* ptr) {
       done = 1;
     }
     // signal to the main thread that we're done (for Sync())
-    pthread_cond_signal(&impl->condition_);
     pthread_mutex_unlock(&impl->mutex_);
+    pthread_cond_signal(&impl->condition_);
   }
   return THREAD_RETURN(NULL);    // Thread is finished
 }
@@ -240,7 +240,9 @@ static void ChangeState(WebPWorker* const worker, WebPWorkerStatus new_status) {
     // assign new status and release the working thread if needed
     if (new_status != OK) {
       worker->status_ = new_status;
+      pthread_mutex_unlock(&impl->mutex_);
       pthread_cond_signal(&impl->condition_);
+      return;
     }
   }
   pthread_mutex_unlock(&impl->mutex_);
