@@ -546,7 +546,7 @@ static WEBP_INLINE uint8_t TransformColorBlue(uint8_t green_to_blue,
                                               uint32_t argb) {
   const uint32_t green = argb >> 8;
   const uint32_t red = argb >> 16;
-  uint8_t new_blue = argb;
+  uint8_t new_blue = argb & 0xff;
   new_blue -= ColorTransformDelta(green_to_blue, green);
   new_blue -= ColorTransformDelta(red_to_blue, red);
   return (new_blue & 0xff);
