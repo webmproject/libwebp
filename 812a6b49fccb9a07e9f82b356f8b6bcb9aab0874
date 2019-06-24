@@ -16,6 +16,24 @@
       "revId": "812a6b49fccb9a07e9f82b356f8b6bcb9aab0874",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cb9a50cc_e2491e48",
+        "filename": "src/dsp/lossless_enc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 523,
+      "author": {
+        "id": 1002029
+      },
+      "writtenOn": "2019-06-24T20:05:30Z",
+      "side": 1,
+      "message": "yeah, i was thinking about going with a generic U32_TO_I8() macro next, and hide the cruft",
+      "parentUuid": "aba17a9b_e782ec03",
+      "revId": "812a6b49fccb9a07e9f82b356f8b6bcb9aab0874",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
