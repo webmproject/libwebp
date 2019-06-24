@@ -515,13 +515,17 @@ static WEBP_INLINE int ColorTransformDelta(int8_t color_pred, int8_t color) {
   return ((int)color_pred * color) >> 5;
 }
 
+static WEBP_INLINE int8_t U32ToS8(uint32_t v) {
+  return (int8_t)(v & 0xff);
+}
+
 void VP8LTransformColor_C(const VP8LMultipliers* const m, uint32_t* data,
                           int num_pixels) {
   int i;
   for (i = 0; i < num_pixels; ++i) {
     const uint32_t argb = data[i];
-    const int8_t green = (argb >>  8) & 0xff;
-    const int8_t red   = (argb >> 16) & 0xff;
+    const int8_t green = U32ToS8(argb >>  8);
+    const int8_t red   = U32ToS8(argb >> 16);
     int new_red = red & 0xff;
     int new_blue = argb & 0xff;
     new_red -= ColorTransformDelta(m->green_to_red_, green);
@@ -535,7 +539,7 @@ void VP8LTransformColor_C(const VP8LMultipliers* const m, uint32_t* data,
 
 static WEBP_INLINE uint8_t TransformColorRed(uint8_t green_to_red,
                                              uint32_t argb) {
-  const int8_t green = (argb >> 8) & 0xff;
+  const int8_t green = U32ToS8(argb >> 8);
   int new_red = argb >> 16;
   new_red -= ColorTransformDelta(green_to_red, green);
   return (new_red & 0xff);
@@ -544,8 +548,8 @@ static WEBP_INLINE uint8_t TransformColorRed(uint8_t green_to_red,
 static WEBP_INLINE uint8_t TransformColorBlue(uint8_t green_to_blue,
                                               uint8_t red_to_blue,
                                               uint32_t argb) {
-  const int8_t green = (argb >>  8) & 0xff;
-  const int8_t red   = (argb >> 16) & 0xff;
+  const int8_t green = U32ToS8(argb >>  8);
+  const int8_t red   = U32ToS8(argb >> 16);
   uint8_t new_blue = argb & 0xff;
   new_blue -= ColorTransformDelta(green_to_blue, green);
   new_blue -= ColorTransformDelta(red_to_blue, red);
