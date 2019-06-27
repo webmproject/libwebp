@@ -71,6 +71,7 @@ set(exec_prefix "\$\{prefix\}")
 set(libdir "\$\{prefix\}/lib")
 set(includedir "\$\{prefix\}/include")
 set(PTHREAD_LIBS ${CMAKE_THREAD_LIBS_INIT})
+set(INSTALLED_LIBRARIES)
 
 # ##############################################################################
 # Android only.
@@ -78,6 +79,7 @@ if(ANDROID)
   include_directories(${ANDROID_NDK}/sources/android/cpufeatures)
   add_library(cpufeatures STATIC
               ${ANDROID_NDK}/sources/android/cpufeatures/cpu-features.c)
+  list(APPEND INSTALLED_LIBRARIES cpufeatures)
   target_link_libraries(cpufeatures dl)
   set(WEBP_DEP_LIBRARIES ${WEBP_DEP_LIBRARIES} cpufeatures)
   set(WEBP_DEP_INCLUDE_DIRS ${WEBP_DEP_INCLUDE_DIRS}
@@ -312,7 +314,7 @@ string(REGEX MATCH
              ${TMP})
 
 # Define the libraries to install.
-set(INSTALLED_LIBRARIES webpdecoder webp webpdemux)
+list(APPEND INSTALLED_LIBRARIES webpdecoder webp webpdemux)
 
 # Deal with SIMD. Change the compile flags for SIMD files we use.
 list(LENGTH WEBP_SIMD_FILES_TO_INCLUDE WEBP_SIMD_FILES_TO_INCLUDE_LENGTH)
