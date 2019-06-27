@@ -17,6 +17,8 @@ option(WEBP_BUILD_WEBP_JS "Emscripten build of webp.js." OFF)
 option(WEBP_NEAR_LOSSLESS "Enable near-lossless encoding" ON)
 option(WEBP_ENABLE_SWAP_16BIT_CSP "Enable byte swap for 16 bit colorspaces."
        OFF)
+set(WEBP_BITTRACE "0" CACHE STRING "Bit trace mode (0=none, 1=bit, 2=bytes)")
+set_property(CACHE WEBP_BITTRACE PROPERTY STRINGS 0 1 2)
 
 # Option needed for handling Unicode file names on Windows.
 if(WIN32)
@@ -53,6 +55,10 @@ include(GNUInstallDirs)
 # Options.
 if(WEBP_ENABLE_SWAP_16BIT_CSP)
   add_definitions(-DWEBP_SWAP_16BIT_CSP=1)
+endif()
+
+if(NOT WEBP_BITTRACE STREQUAL "0")
+  add_definitions(-DBITTRACE=${WEBP_BITTRACE})
 endif()
 
 if(WEBP_UNICODE)
