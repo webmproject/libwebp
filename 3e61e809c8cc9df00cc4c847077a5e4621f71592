@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "075fa694_60306449",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1289110
+      },
+      "writtenOn": "2019-06-27T12:25:43Z",
+      "side": 1,
+      "message": "The code is shorter that way and it\u0027s unlikely anybody uses it but\ndisplayed strings could have been directly \"NONE\", \"BIT1\", \"BYTES\"\nin the ccmake interface",
+      "range": {
+        "startLine": 21,
+        "startChar": 50,
+        "endLine": 21,
+        "endChar": 55
+      },
+      "revId": "3e61e809c8cc9df00cc4c847077a5e4621f71592",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
