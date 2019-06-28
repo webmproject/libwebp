@@ -22,6 +22,30 @@
       "revId": "3e61e809c8cc9df00cc4c847077a5e4621f71592",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6cfa8992_8e1105e3",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2019-06-28T06:22:47Z",
+      "side": 1,
+      "message": "\u003e The code is shorter that way and it\u0027s unlikely anybody uses it but\n\u003e displayed strings could have been directly \"NONE\", \"BIT1\", \"BYTES\"\n\u003e in the ccmake interface\n\neither way should work, -LH gives the description for those interested, but your choice",
+      "parentUuid": "075fa694_60306449",
+      "range": {
+        "startLine": 21,
+        "startChar": 50,
+        "endLine": 21,
+        "endChar": 55
+      },
+      "revId": "3e61e809c8cc9df00cc4c847077a5e4621f71592",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
