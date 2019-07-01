@@ -163,8 +163,8 @@ static void GradientPredictDirect_SSE2(const uint8_t* const row,
     _mm_storel_epi64((__m128i*)(out + i), H);
   }
   for (; i < length; ++i) {
-    out[i] = (uint8_t)(row[i] -
-                       GradientPredictor_SSE2(row[i - 1], top[i], top[i - 1]));
+    const int delta = GradientPredictor_SSE2(row[i - 1], top[i], top[i - 1]);
+    out[i] = (uint8_t)(row[i] - delta);
   }
 }
 
@@ -297,9 +297,8 @@ static void GradientPredictInverse_SSE2(const uint8_t* const in,
       _mm_storel_epi64((__m128i*)&row[i], out);
     }
     for (; i < length; ++i) {
-      row[i] =
-          (uint8_t)(in[i] +
-                    GradientPredictor_SSE2(row[i - 1], top[i], top[i - 1]));
+      const int delta = GradientPredictor_SSE2(row[i - 1], top[i], top[i - 1]);
+      row[i] = (uint8_t)(in[i] + delta);
     }
   }
 }
