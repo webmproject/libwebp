@@ -33,10 +33,11 @@
 
 // number of non-zero coeffs below which we consider the block very flat
 // (and apply a penalty to complex predictions)
-#define FLATNESS_LIMIT_I16 10      // I16 mode
+#define FLATNESS_LIMIT_I16 0       // I16 mode (special case)
 #define FLATNESS_LIMIT_I4  3       // I4 mode
 #define FLATNESS_LIMIT_UV  2       // UV mode
 #define FLATNESS_PENALTY   140     // roughly ~1bit per block
+#define FLATNESS_PENALTY16 50      // for intra-16 flat only
 
 #define MULT_8B(a, b) (((a) * (b) + 128) >> 8)
 
@@ -988,6 +989,7 @@ static void PickBestIntra16(VP8EncIterator* const it, VP8ModeScore* rd) {
   VP8ModeScore* rd_cur = &rd_tmp;
   VP8ModeScore* rd_best = rd;
   int mode;
+  int is_flat = IsFlatSource16(it->yuv_in_ + Y_OFF_ENC);
 
   rd->mode_i16 = -1;
   for (mode = 0; mode < NUM_PRED_MODES; ++mode) {
@@ -1003,10 +1005,13 @@ static void PickBestIntra16(VP8EncIterator* const it, VP8ModeScore* rd) {
         tlambda ? MULT_8B(tlambda, VP8TDisto16x16(src, tmp_dst, kWeightY)) : 0;
     rd_cur->H = VP8FixedCostsI16[mode];
     rd_cur->R = VP8GetCostLuma16(it, rd_cur);
-    if (mode > 0 &&
-        IsFlat(rd_cur->y_ac_levels[0], kNumBlocks, FLATNESS_LIMIT_I16)) {
-      // penalty to avoid flat area to be mispredicted by complex mode
-      rd_cur->R += FLATNESS_PENALTY * kNumBlocks;
+    if (is_flat) {
+      // refine the first impression (which was in pixel space)
+      is_flat = IsFlat(rd_cur->y_ac_levels[0], kNumBlocks, FLATNESS_LIMIT_I16);
+      if (is_flat) {
+        // block is very flat
+        rd_cur->R += FLATNESS_PENALTY16 * kNumBlocks;
+      }
     }
 
     // Since we always examine Intra16 first, we can overwrite *rd directly.
@@ -1087,7 +1092,8 @@ static int PickBestIntra4(VP8EncIterator* const it, VP8ModeScore* const rd) {
                   : 0;
       rd_tmp.H = mode_costs[mode];
 
-      // Add flatness penalty
+      // Add flatness penalty, to avoid flat area to be mispredicted
+      // by a complex mode.
       if (mode > 0 && IsFlat(tmp_levels, kNumBlocks, FLATNESS_LIMIT_I4)) {
         rd_tmp.R = FLATNESS_PENALTY * kNumBlocks;
       } else {
@@ -1242,9 +1248,17 @@ static void RefineUsingDistortion(VP8EncIterator* const it,
       if (mode > 0 && VP8FixedCostsI16[mode] > bit_limit) {
         continue;
       }
+
       if (score < best_score) {
         best_mode = mode;
         best_score = score;
+      }
+    }
+    if (best_mode <= 1 && (it->x_ == 0 || it->y_ == 0)) {
+      // avoid starting a check-board resonance from the border. See bug #432.
+      if (IsFlatSource16(src)) {
+        best_mode = (it->x_ == 0) ? 3 : 2;
+        try_both_modes = 0;
       }
     }
     VP8SetIntra16Mode(it, best_mode);
