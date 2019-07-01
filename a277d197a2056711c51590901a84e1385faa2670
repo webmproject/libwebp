@@ -22,6 +22,30 @@
       "revId": "a277d197a2056711c51590901a84e1385faa2670",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bab30365_37f46355",
+        "filename": "src/dsp/filters_sse2.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 302,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2019-07-01T19:18:49Z",
+      "side": 1,
+      "message": "https://chromium-review.googlesource.com/c/webm/libwebp/+/1684128",
+      "parentUuid": "483ba82a_7f4084f7",
+      "range": {
+        "startLine": 302,
+        "startChar": 20,
+        "endLine": 302,
+        "endChar": 42
+      },
+      "revId": "a277d197a2056711c51590901a84e1385faa2670",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
     }
   ]
 }
