@@ -297,7 +297,9 @@ static void GradientPredictInverse_SSE2(const uint8_t* const in,
       _mm_storel_epi64((__m128i*)&row[i], out);
     }
     for (; i < length; ++i) {
-      row[i] = in[i] + GradientPredictor_SSE2(row[i - 1], top[i], top[i - 1]);
+      row[i] =
+          (uint8_t)(in[i] +
+                    GradientPredictor_SSE2(row[i - 1], top[i], top[i - 1]));
     }
   }
 }
