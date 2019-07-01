@@ -33,7 +33,6 @@
 
 // number of non-zero coeffs below which we consider the block very flat
 // (and apply a penalty to complex predictions)
-#define FLATNESS_LIMIT_I16 10      // I16 mode
 #define FLATNESS_LIMIT_I4  3       // I4 mode
 #define FLATNESS_LIMIT_UV  2       // UV mode
 #define FLATNESS_PENALTY   140     // roughly ~1bit per block
@@ -1003,10 +1002,14 @@ static void PickBestIntra16(VP8EncIterator* const it, VP8ModeScore* rd) {
         tlambda ? MULT_8B(tlambda, VP8TDisto16x16(src, tmp_dst, kWeightY)) : 0;
     rd_cur->H = VP8FixedCostsI16[mode];
     rd_cur->R = VP8GetCostLuma16(it, rd_cur);
-    if (mode > 0 &&
-        IsFlat(rd_cur->y_ac_levels[0], kNumBlocks, FLATNESS_LIMIT_I16)) {
-      // penalty to avoid flat area to be mispredicted by complex mode
-      rd_cur->R += FLATNESS_PENALTY * kNumBlocks;
+    if (mode == 1 && rd->is_flat16) {
+      // refine the first impression (which was in pixel space)
+      rd->is_flat16 = IsFlat(rd_cur->y_ac_levels[0], kNumBlocks, 1);
+      if (rd->is_flat16) {
+        // If the block is very flat, we force use of mode #1 (TM16)
+        rd_cur->R = rd_cur->H = 0;
+        rd_cur->D = rd_cur->SD = 0;
+      }
     }
 
     // Since we always examine Intra16 first, we can overwrite *rd directly.
@@ -1015,6 +1018,7 @@ static void PickBestIntra16(VP8EncIterator* const it, VP8ModeScore* rd) {
       SwapModeScore(&rd_cur, &rd_best);
       SwapOut(it);
     }
+    if (mode == 1 && rd->is_flat16) break;
   }
   if (rd_best != rd) {
     memcpy(rd, rd_best, sizeof(*rd));
@@ -1087,7 +1091,8 @@ static int PickBestIntra4(VP8EncIterator* const it, VP8ModeScore* const rd) {
                   : 0;
       rd_tmp.H = mode_costs[mode];
 
-      // Add flatness penalty
+      // Add flatness penalty, to avoid flat area to be mispredicted
+      // by a complex mode.
       if (mode > 0 && IsFlat(tmp_levels, kNumBlocks, FLATNESS_LIMIT_I4)) {
         rd_tmp.R = FLATNESS_PENALTY * kNumBlocks;
       } else {
@@ -1232,7 +1237,11 @@ static void RefineUsingDistortion(VP8EncIterator* const it,
   const score_t bit_limit = try_both_modes ? it->enc_->mb_header_limit_
                                            : MAX_COST;  // no early-out allowed
 
-  if (is_i16) {   // First, evaluate Intra16 distortion
+  if (rd->is_flat16) {
+    best_score = 0;
+    VP8SetIntra16Mode(it, 1);  // force TM16 mode
+    try_both_modes = 0;
+  } else if (is_i16) {   // First, evaluate Intra16 distortion
     int best_mode = -1;
     const uint8_t* const src = it->yuv_in_ + Y_OFF_ENC;
     for (mode = 0; mode < NUM_PRED_MODES; ++mode) {
@@ -1328,6 +1337,9 @@ int VP8Decimate(VP8EncIterator* const it, VP8ModeScore* const rd,
   const int method = it->enc_->method_;
 
   InitScore(rd);
+
+  // Look at the flatness in luma pixel space.
+  rd->is_flat16 = IsFlatSource16(it->yuv_in_ + Y_OFF_ENC);
 
   // We can perform predictions for Luma16x16 and Chroma8x8 already.
   // Luma4x4 predictions needs to be done as-we-go.
