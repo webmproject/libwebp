@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "483ba82a_7f4084f7",
+        "filename": "src/dsp/filters_sse2.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 302,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2019-07-01T19:12:33Z",
+      "side": 1,
+      "message": "would probably read better with:\n\nconst int delta \u003d GradientPredictor_SSE2(row[i - 1], top[i], top[i - 1]));\nrow[i] \u003d (uint8_t)(in[i] + delta);",
+      "range": {
+        "startLine": 302,
+        "startChar": 20,
+        "endLine": 302,
+        "endChar": 42
+      },
+      "revId": "a277d197a2056711c51590901a84e1385faa2670",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
