@@ -91,9 +91,6 @@ WEBP_EXTERN uint8_t* WebPDecodeYUV(const uint8_t* data, size_t data_size,
                                    uint8_t** u, uint8_t** v,
                                    int* stride, int* uv_stride);
 
-// Releases memory returned by the WebPDecode*() functions above.
-WEBP_EXTERN void WebPFree(void* ptr);
-
 // These five functions are variants of the above ones, that decode the image
 // directly into a pre-allocated buffer 'output_buffer'. The maximum storage
 // available in this buffer is indicated by 'output_buffer_size'. If this
