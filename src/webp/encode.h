@@ -306,7 +306,7 @@ struct WebPPicture {
   // YUV input (mostly used for input to lossy compression)
   WebPEncCSP colorspace;     // colorspace: should be YUV420 for now (=Y'CbCr).
   int width, height;         // dimensions (less or equal to WEBP_MAX_DIMENSION)
-  uint8_t *y, *u, *v;        // pointers to luma/chroma planes.
+  uint8_t* y, *u, *v;        // pointers to luma/chroma planes.
   int y_stride, uv_stride;   // luma/chroma strides.
   uint8_t* a;                // pointer to the alpha plane
   int a_stride;              // stride of the alpha plane
@@ -350,7 +350,7 @@ struct WebPPicture {
   uint32_t pad3[3];       // padding for later use
 
   // Unused for now
-  uint8_t *pad4, *pad5;
+  uint8_t* pad4, *pad5;
   uint32_t pad6[8];       // padding for later use
 
   // PRIVATE FIELDS

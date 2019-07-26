@@ -1050,7 +1050,7 @@ int WebPPictureYUVAToARGB(WebPPicture* picture) {
     const int height = picture->height;
     const int argb_stride = 4 * picture->argb_stride;
     uint8_t* dst = (uint8_t*)picture->argb;
-    const uint8_t *cur_u = picture->u, *cur_v = picture->v, *cur_y = picture->y;
+    const uint8_t* cur_u = picture->u, *cur_v = picture->v, *cur_y = picture->y;
     WebPUpsampleLinePairFunc upsample =
         WebPGetLinePairConverter(ALPHA_OFFSET > 0);
 
