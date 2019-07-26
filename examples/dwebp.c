@@ -176,10 +176,10 @@ static uint8_t* AllocateExternalBuffer(WebPDecoderConfig* config,
   return external_buffer;
 }
 
-int main(int argc, const char *argv[]) {
+int main(int argc, const char* argv[]) {
   int ok = 0;
-  const char *in_file = NULL;
-  const char *out_file = NULL;
+  const char* in_file = NULL;
+  const char* out_file = NULL;
 
   WebPDecoderConfig config;
   WebPDecBuffer* const output_buffer = &config.output;

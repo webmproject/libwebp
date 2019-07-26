@@ -249,7 +249,7 @@ typedef struct {
   int           percent0_;         // saved initial progress percent
 
   DError        left_derr_;        // left error diffusion (u/v)
-  DError       *top_derr_;         // top diffusion error - NULL if disabled
+  DError*       top_derr_;         // top diffusion error - NULL if disabled
 
   uint8_t* y_left_;    // left luma samples (addressable from index -1 to 15).
   uint8_t* u_left_;    // left u samples (addressable from index -1 to 7)
