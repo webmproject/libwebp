@@ -485,7 +485,7 @@ AS_IF([test "x$enable_png" != "xno"], [
                  libpng12-config])
   if test -n "$LIBPNG_CONFIG"; then
     PNG_INCLUDES=`$LIBPNG_CONFIG --cflags`
-    PNG_LIBS="`$LIBPNG_CONFIG --ldflags`"
+    PNG_LIBS="`$LIBPNG_CONFIG --static --ldflags`"
   fi
 
   WITHLIB_OPTION([png], [PNG])
