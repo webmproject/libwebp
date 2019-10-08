@@ -466,7 +466,7 @@ if(WEBP_BUILD_VWEBP)
     target_link_libraries(vwebp
                           ${OPENGL_LIBRARIES}
                           exampleutil
-                          GLUT::GLUT
+                          ${GLUT_LIBRARIES}
                           imageioutil
                           webp
                           webpdemux)
