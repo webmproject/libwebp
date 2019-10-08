@@ -467,12 +467,12 @@ if(WEBP_BUILD_VWEBP)
     target_link_libraries(vwebp
                           ${OPENGL_LIBRARIES}
                           exampleutil
-                          GLUT::GLUT
+                          ${GLUT_glut_LIBRARY}
                           imageioutil
                           webp
                           webpdemux)
     target_include_directories(vwebp
-                               PRIVATE GLUT::GLUT
+                               PRIVATE ${GLUT_INCLUDE_DIR}
                                        ${CMAKE_CURRENT_BINARY_DIR}/src
                                        ${OPENGL_INCLUDE_DIR})
     install(TARGETS vwebp RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
