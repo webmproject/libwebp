@@ -111,7 +111,8 @@ static size_t ReadPAMFields(PNMInfo* const info, size_t off) {
       int i;
       if (out_size > 20) sprintf(out + 20 - strlen(kEllipsis), kEllipsis);
       for (i = 0; i < (int)strlen(out); ++i) {
-        if (!isprint(out[i])) out[i] = ' ';
+        // isprint() might trigger a "char-subscripts" warning if given a char.
+        if (!isprint((int)out[i])) out[i] = ' ';
       }
       fprintf(stderr, "PAM header error: unrecognized entry [%s]\n", out);
       return 0;
