@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b7f6fd9a_ebef9058",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 2
+      },
+      "lineNbr": 352,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2019-10-22T21:30:50Z",
+      "side": 1,
+      "message": "another fix would be to update target_link_libraries() for this and possibly other targets since it\u0027s missing a dependency on imageio_utils.",
+      "revId": "3d2e77e4f2636945d1d026e6f85083e9be0510f1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
