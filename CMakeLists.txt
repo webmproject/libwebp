@@ -349,20 +349,20 @@ if(WEBP_BUILD_ANIM_UTILS
   parse_makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/examples "EXAMPLEUTIL_SRCS"
                     "example_util_[^ ]*")
   list(APPEND EXAMPLEUTIL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/examples/stopwatch.h)
-  add_library(exampleutil ${EXAMPLEUTIL_SRCS})
+  add_library(exampleutil STATIC ${EXAMPLEUTIL_SRCS})
   target_include_directories(
     exampleutil
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>)
 
   parse_makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/imageio "IMAGEIOUTILS_SRCS"
                     "imageio_util_[^ ]*")
-  add_library(imageioutil ${IMAGEIOUTILS_SRCS})
+  add_library(imageioutil STATIC ${IMAGEIOUTILS_SRCS})
   target_link_libraries(imageioutil webp)
 
   # Image-decoding utility library.
   parse_makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/imageio "IMAGEDEC_SRCS"
                     "imagedec_[^ ]*")
-  add_library(imagedec ${IMAGEDEC_SRCS})
+  add_library(imagedec STATIC ${IMAGEDEC_SRCS})
   target_link_libraries(imagedec
                         imageioutil
                         webpdemux
@@ -372,7 +372,7 @@ if(WEBP_BUILD_ANIM_UTILS
   # Image-encoding utility library.
   parse_makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/imageio "IMAGEENC_SRCS"
                     "imageenc_[^ ]*")
-  add_library(imageenc ${IMAGEENC_SRCS})
+  add_library(imageenc STATIC ${IMAGEENC_SRCS})
   target_link_libraries(imageenc webp)
 
   set_property(TARGET exampleutil
@@ -387,7 +387,7 @@ if(WEBP_BUILD_DWEBP)
   # dwebp
   parse_makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/examples "DWEBP_SRCS" "dwebp")
   add_executable(dwebp ${DWEBP_SRCS})
-  target_link_libraries(dwebp exampleutil imagedec imageenc)
+  target_link_libraries(dwebp exampleutil imagedec imageenc imageioutil webp)
   target_include_directories(dwebp PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src)
   install(TARGETS dwebp RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
@@ -396,7 +396,7 @@ if(WEBP_BUILD_CWEBP)
   # cwebp
   parse_makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/examples "CWEBP_SRCS" "cwebp")
   add_executable(cwebp ${CWEBP_SRCS})
-  target_link_libraries(cwebp exampleutil imagedec webp)
+  target_link_libraries(cwebp exampleutil imagedec imageioutil webp)
   target_include_directories(cwebp PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src)
   install(TARGETS cwebp RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
@@ -514,7 +514,7 @@ if(WEBP_BUILD_EXTRAS)
 
   # get_disto
   add_executable(get_disto ${GET_DISTO_SRCS})
-  target_link_libraries(get_disto imagedec)
+  target_link_libraries(get_disto imagedec imageioutil)
   target_include_directories(get_disto
                              PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
                                      ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -523,7 +523,7 @@ if(WEBP_BUILD_EXTRAS)
 
   # webp_quality
   add_executable(webp_quality ${WEBP_QUALITY_SRCS} ${WEBP_EXTRAS_SRCS})
-  target_link_libraries(webp_quality exampleutil imagedec)
+  target_link_libraries(webp_quality exampleutil imagedec imageioutil)
   target_include_directories(webp_quality PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
   install(TARGETS webp_quality RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
