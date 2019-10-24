@@ -12,6 +12,7 @@
 
 #include "extras/extras.h"
 #include "webp/format_constants.h"
+#include "src/dsp/dsp.h"
 
 #include <assert.h>
 #include <string.h>
@@ -138,6 +139,21 @@ int WebPImportColorMappedARGB(const uint8_t* indexed, int indexed_stride,
       dst[x] = palette[indexed[x]];
     }
     indexed += indexed_stride;
+    dst += pic->argb_stride;
+  }
+  return 1;
+}
+
+//------------------------------------------------------------------------------
+
+int WebPUnmultiplyARGB(WebPPicture* pic) {
+  int y;
+  uint32_t* dst;
+  if (pic == NULL || pic->use_argb != 1 || pic->argb == NULL) return 0;
+  WebPInitAlphaProcessing();
+  dst = pic->argb;
+  for (y = 0; y < pic->height; ++y) {
+    WebPMultARGBRow(dst, pic->width, /*inverse=*/1);
     dst += pic->argb_stride;
   }
   return 1;
