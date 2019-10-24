@@ -525,7 +525,9 @@ if(WEBP_BUILD_EXTRAS)
   # webp_quality
   add_executable(webp_quality ${WEBP_QUALITY_SRCS} ${WEBP_EXTRAS_SRCS})
   target_link_libraries(webp_quality exampleutil imagedec)
-  target_include_directories(webp_quality PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+  target_include_directories(webp_quality
+                             PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+                                     ${CMAKE_CURRENT_BINARY_DIR})
   install(TARGETS webp_quality RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
   # vwebp_sdl
