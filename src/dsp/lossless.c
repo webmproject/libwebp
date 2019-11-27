@@ -81,7 +81,7 @@ static WEBP_INLINE uint32_t ClampedAddSubtractHalf(uint32_t c0, uint32_t c1,
 
 // gcc <= 4.9 on ARM generates incorrect code in Select() when Sub3() is
 // inlined.
-#if defined(__arm__) && LOCAL_GCC_VERSION <= 0x409
+#if defined(__arm__) && defined(__GNUC__) && LOCAL_GCC_VERSION <= 0x409
 # define LOCAL_INLINE __attribute__ ((noinline))
 #else
 # define LOCAL_INLINE WEBP_INLINE
