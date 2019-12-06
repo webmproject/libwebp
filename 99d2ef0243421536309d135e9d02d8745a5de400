@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "37f7f4c2_050d3d8f",
+        "filename": "src/dsp/dec_neon.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1430,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2019-12-06T06:38:49Z",
+      "side": 1,
+      "message": "doing something similar for dc16 looks like a wash as the results are moved back into neon registers then added resulting in an equivalent instruction count.",
+      "revId": "99d2ef0243421536309d135e9d02d8745a5de400",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
