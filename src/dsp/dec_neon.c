@@ -1511,11 +1511,16 @@ static WEBP_INLINE void DC16_NEON(uint8_t* dst, int do_top, int do_left) {
 
   if (do_top) {
     const uint8x16_t A = vld1q_u8(dst - BPS);  // top row
+#if defined(__aarch64__)
+    const uint16_t p3 = vaddlvq_u8(A);
+    sum_top = vdupq_n_u16(p3);
+#else
     const uint16x8_t p0 = vpaddlq_u8(A);  // cascading summation of the top
     const uint16x4_t p1 = vadd_u16(vget_low_u16(p0), vget_high_u16(p0));
     const uint16x4_t p2 = vpadd_u16(p1, p1);
     const uint16x4_t p3 = vpadd_u16(p2, p2);
     sum_top = vcombine_u16(p3, p3);
+#endif
   }
 
   if (do_left) {
