@@ -166,9 +166,11 @@ static int AppendToMemBuffer(WebPIDecoder* const idec,
   VP8Decoder* const dec = (VP8Decoder*)idec->dec_;
   MemBuffer* const mem = &idec->mem_;
   const int need_compressed_alpha = NeedCompressedAlpha(idec);
-  const uint8_t* const old_start = mem->buf_ + mem->start_;
+  const uint8_t* const old_start =
+      (mem->buf_ == NULL) ? NULL : mem->buf_ + mem->start_;
   const uint8_t* const old_base =
       need_compressed_alpha ? dec->alpha_data_ : old_start;
+  assert(mem->buf_ != NULL || mem->start_ == 0);
   assert(mem->mode_ == MEM_MODE_APPEND);
   if (data_size > MAX_CHUNK_PAYLOAD) {
     // security safeguard: trying to allocate more than what the format
@@ -204,7 +206,9 @@ static int RemapMemBuffer(WebPIDecoder* const idec,
                           const uint8_t* const data, size_t data_size) {
   MemBuffer* const mem = &idec->mem_;
   const uint8_t* const old_buf = mem->buf_;
-  const uint8_t* const old_start = old_buf + mem->start_;
+  const uint8_t* const old_start =
+      (old_buf == NULL) ? NULL : old_buf + mem->start_;
+  assert(old_buf != NULL || mem->start_ == 0);
   assert(mem->mode_ == MEM_MODE_MAP);
 
   if (data_size < mem->buf_size_) return 0;  // can't remap to a shorter buffer!
