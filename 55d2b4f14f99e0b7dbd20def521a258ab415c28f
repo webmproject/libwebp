@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "661ad831_d7dd3d25",
+        "filename": "src/dsp/dec_sse41.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2019-12-16T11:23:17Z",
+      "side": 1,
+      "message": "note that this is actually a SSSE3 instruction, but that was just for a quick test",
+      "range": {
+        "startLine": 26,
+        "startChar": 48,
+        "endLine": 26,
+        "endChar": 57
+      },
+      "revId": "55d2b4f14f99e0b7dbd20def521a258ab415c28f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
