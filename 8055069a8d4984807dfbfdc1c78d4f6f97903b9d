@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4b7857c8_e01d2b04",
+        "filename": "extras/extras.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2019-12-18T02:54:17Z",
+      "side": 1,
+      "message": "since this is standalone example code it could be defined(...) \u0026\u0026 ... \u003d\u003d 1",
+      "revId": "8055069a8d4984807dfbfdc1c78d4f6f97903b9d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
