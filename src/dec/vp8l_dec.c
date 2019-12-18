@@ -120,6 +120,9 @@ static int ReadImageInfo(VP8LBitReader* const br,
   if (VP8LReadBits(br, 8) != VP8L_MAGIC_BYTE) return 0;
   *width = VP8LReadBits(br, VP8L_IMAGE_SIZE_BITS) + 1;
   *height = VP8LReadBits(br, VP8L_IMAGE_SIZE_BITS) + 1;
+  // 16383 is WEBP_MAX_DIMENSION defined in encode.h, which we don't want
+  // to include here (this would tie the decoder to the encoder code).
+  if (*width > 16383 || *height > 16383) return false;
   *has_alpha = VP8LReadBits(br, 1);
   if (VP8LReadBits(br, VP8L_VERSION_BITS) != 0) return 0;
   return !br->eos_;
