@@ -120,6 +120,7 @@ static int ReadImageInfo(VP8LBitReader* const br,
   if (VP8LReadBits(br, 8) != VP8L_MAGIC_BYTE) return 0;
   *width = VP8LReadBits(br, VP8L_IMAGE_SIZE_BITS) + 1;
   *height = VP8LReadBits(br, VP8L_IMAGE_SIZE_BITS) + 1;
+  if (*width > WEBP_MAX_DIMENSION || *height > WEBP_MAX_DIMENSION) return false;
   *has_alpha = VP8LReadBits(br, 1);
   if (VP8LReadBits(br, VP8L_VERSION_BITS) != 0) return 0;
   return !br->eos_;
