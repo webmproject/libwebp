@@ -33,8 +33,8 @@ typedef struct {
   const uint8_t* data;
   size_t data_size;
   int width, height;
-  int bytes_per_px;   // 1, 3, 4
-  int depth;
+  int bytes_per_px;
+  int depth;          // 1, 3, 4
   int max_value;
   int type;           // 5, 6 or 7
   int seen_flags;
@@ -179,8 +179,8 @@ int ReadPNM(const uint8_t* const data, size_t data_size,
             struct Metadata* const metadata) {
   int ok = 0;
   int i, j;
-  uint64_t stride, pixel_bytes;
-  uint8_t* rgb = NULL, *tmp_rgb;
+  uint64_t stride, pixel_bytes, sample_size;
+  uint8_t* rgb = NULL, *tmp_rgb, *tmp_in = NULL;
   size_t offset;
   PNMInfo info;
 
@@ -210,8 +210,8 @@ int ReadPNM(const uint8_t* const data, size_t data_size,
     fprintf(stderr, "Truncated PNM file (P%d).\n", info.type);
     goto End;
   }
-  stride =
-      (uint64_t)(info.bytes_per_px < 3 ? 3 : info.bytes_per_px) * info.width;
+  sample_size = (info.max_value > 255 ? 2 : 1);
+  stride = (info.depth < 3 ? 3 : info.depth) * info.width;
   if (stride != (size_t)stride ||
       !ImgIoUtilCheckSizeArgumentsOverflow(stride, info.height)) {
     goto End;
@@ -220,22 +220,40 @@ int ReadPNM(const uint8_t* const data, size_t data_size,
   rgb = (uint8_t*)malloc((size_t)stride * info.height);
   if (rgb == NULL) goto End;
 
+  if (sample_size == 2) {
+    tmp_in = (uint8_t*)malloc((size_t)sample_size * info.width * info.depth);
+    if (tmp_in == NULL) goto End;
+  }
+
   // Convert input
   tmp_rgb = rgb;
   for (j = 0; j < info.height; ++j) {
-    assert(offset + info.bytes_per_px * info.width <= data_size);
+    const uint8_t* in = data + offset;
+    offset += info.bytes_per_px * info.width;
+    assert(offset <= data_size);
+    if (sample_size == 2) {
+      const uint32_t round = info.max_value / 2;
+      for (i = 0; i < info.width * info.depth; ++i) {
+        const uint32_t v = ((uint32_t)in[2 * i + 0] << 8) | in[2 * i + 1];
+        tmp_in[i] = (v * 255u + round) / info.max_value;
+      }
+      in = tmp_in;
+    }
     if (info.depth == 1) {
       // convert grayscale -> RGB
       for (i = 0; i < info.width; ++i) {
-        const uint8_t v = data[offset + i];
+        const uint8_t v = in[i];
         tmp_rgb[3 * i + 0] = tmp_rgb[3 * i + 1] = tmp_rgb[3 * i + 2] = v;
       }
-    } else if (info.depth == 3) {   // RGB
-      memcpy(tmp_rgb, data + offset, 3 * info.width * sizeof(*data));
-    } else if (info.depth == 4) {   // RGBA
-      memcpy(tmp_rgb, data + offset, 4 * info.width * sizeof(*data));
+    } else {  // RGB or RGBA
+      memcpy(tmp_rgb, in, info.depth * info.width * sizeof(*in));
     }
-    offset += info.bytes_per_px * info.width;
+    if (info.max_value < 255) {
+      const uint32_t round = info.max_value / 2;
+      for (i = 0; i < (int)stride; ++i) {
+        tmp_rgb[i] = (tmp_rgb[i] * 255u + round) / info.max_value;
+      }
+    }
     tmp_rgb += stride;
   }
 
@@ -249,6 +267,7 @@ int ReadPNM(const uint8_t* const data, size_t data_size,
   ok = 1;
  End:
   free((void*)rgb);
+  free((void*)tmp_in);
 
   (void)metadata;
   (void)keep_alpha;
