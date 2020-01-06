@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8e0730b6_9d5ed9e7",
+        "filename": "imageio/pnmdec.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2020-01-06T20:08:51Z",
+      "side": 1,
+      "message": "now that this is part of a separate assignment we could go with the more common \u0027(info.max_value \u003e 255) ? 2 : 1;\u0027",
+      "range": {
+        "startLine": 216,
+        "startChar": 16,
+        "endLine": 216,
+        "endChar": 37
+      },
+      "revId": "2dd32e807a08d0369319f3e99eca14d6e22be8e0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6ff6b0a3_9dc8a985",
+        "filename": "imageio/pnmdec.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 247,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2020-01-06T20:08:51Z",
+      "side": 1,
+      "message": "might add a comment for what this block is doing",
+      "revId": "2dd32e807a08d0369319f3e99eca14d6e22be8e0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
