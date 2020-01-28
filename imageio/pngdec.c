@@ -292,9 +292,7 @@ int ReadPNG(const uint8_t* const data, size_t data_size,
   // Apply gamma correction if needed.
   {
     double image_gamma = 1 / 2.2, screen_gamma = 2.2;
-    int srgb_intent;
-    if (png_get_sRGB(png, info, &srgb_intent) ||
-        png_get_gAMA(png, info, &image_gamma)) {
+    if (png_get_gAMA(png, info, &image_gamma)) {
       png_set_gamma(png, screen_gamma, image_gamma);
     }
   }
