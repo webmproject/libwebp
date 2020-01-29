@@ -254,6 +254,8 @@ Options:
   -partition_limit <int> . limit quality to fit the 512k limit on
                            the first partition (0=no degradation ... 100=full)
   -pass <int> ............ analysis pass number (1..10)
+  -qrange <min> <max> .... specifies the permissible quality range
+                           (default: 0 100)
   -crop <x> <y> <w> <h> .. crop picture with the given rectangle
   -resize <w> <h> ........ resize picture (after any cropping)
   -mt .................... use multi-threading if available
@@ -293,6 +295,7 @@ Experimental Options:
   -jpeg_like ............. roughly match expected JPEG size
   -af .................... auto-adjust filter strength
   -pre <int> ............. pre-processing filter
+
 
 The main options you might want to try in order to further tune the
 visual quality are:

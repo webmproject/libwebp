@@ -565,6 +565,8 @@ static void HelpLong(void) {
   printf("                           "
          "the first partition (0=no degradation ... 100=full)\n");
   printf("  -pass <int> ............ analysis pass number (1..10)\n");
+  printf("  -qrange <min> <max> .... specifies the permissible quality range\n"
+         "                           (default: 0 100)\n");
   printf("  -crop <x> <y> <w> <h> .. crop picture with the given rectangle\n");
   printf("  -resize <w> <h> ........ resize picture (after any cropping)\n");
   printf("  -mt .................... use multi-threading if available\n");
@@ -691,9 +693,9 @@ int main(int argc, const char* argv[]) {
     } else if (!strcmp(argv[c], "-H") || !strcmp(argv[c], "-longhelp")) {
       HelpLong();
       FREE_WARGV_AND_RETURN(0);
-    } else if (!strcmp(argv[c], "-o") && c < argc - 1) {
+    } else if (!strcmp(argv[c], "-o") && c + 1 < argc) {
       out_file = (const char*)GET_WARGV(argv, ++c);
-    } else if (!strcmp(argv[c], "-d") && c < argc - 1) {
+    } else if (!strcmp(argv[c], "-d") && c + 1 < argc) {
       dump_file = (const char*)GET_WARGV(argv, ++c);
       config.show_compressed = 1;
     } else if (!strcmp(argv[c], "-print_psnr")) {
@@ -707,7 +709,7 @@ int main(int argc, const char* argv[]) {
       print_distortion = 2;
     } else if (!strcmp(argv[c], "-short")) {
       ++short_output;
-    } else if (!strcmp(argv[c], "-s") && c < argc - 2) {
+    } else if (!strcmp(argv[c], "-s") && c + 2 < argc) {
       picture.width = ExUtilGetInt(argv[++c], 0, &parse_error);
       picture.height = ExUtilGetInt(argv[++c], 0, &parse_error);
       if (picture.width > WEBP_MAX_DIMENSION || picture.width < 0 ||
@@ -717,30 +719,30 @@ int main(int argc, const char* argv[]) {
                 picture.width, picture.height);
         goto Error;
       }
-    } else if (!strcmp(argv[c], "-m") && c < argc - 1) {
+    } else if (!strcmp(argv[c], "-m") && c + 1 < argc) {
       config.method = ExUtilGetInt(argv[++c], 0, &parse_error);
       use_lossless_preset = 0;   // disable -z option
-    } else if (!strcmp(argv[c], "-q") && c < argc - 1) {
+    } else if (!strcmp(argv[c], "-q") && c + 1 < argc) {
       config.quality = ExUtilGetFloat(argv[++c], &parse_error);
       use_lossless_preset = 0;   // disable -z option
-    } else if (!strcmp(argv[c], "-z") && c < argc - 1) {
+    } else if (!strcmp(argv[c], "-z") && c + 1 < argc) {
       lossless_preset = ExUtilGetInt(argv[++c], 0, &parse_error);
       if (use_lossless_preset != 0) use_lossless_preset = 1;
-    } else if (!strcmp(argv[c], "-alpha_q") && c < argc - 1) {
+    } else if (!strcmp(argv[c], "-alpha_q") && c + 1 < argc) {
       config.alpha_quality = ExUtilGetInt(argv[++c], 0, &parse_error);
-    } else if (!strcmp(argv[c], "-alpha_method") && c < argc - 1) {
+    } else if (!strcmp(argv[c], "-alpha_method") && c + 1 < argc) {
       config.alpha_compression = ExUtilGetInt(argv[++c], 0, &parse_error);
     } else if (!strcmp(argv[c], "-alpha_cleanup")) {
       // This flag is obsolete, does opposite of -exact.
       config.exact = 0;
     } else if (!strcmp(argv[c], "-exact")) {
       config.exact = 1;
-    } else if (!strcmp(argv[c], "-blend_alpha") && c < argc - 1) {
+    } else if (!strcmp(argv[c], "-blend_alpha") && c + 1 < argc) {
       blend_alpha = 1;
       // background color is given in hex with an optional '0x' prefix
       background_color = ExUtilGetInt(argv[++c], 16, &parse_error);
       background_color = background_color & 0x00ffffffu;
-    } else if (!strcmp(argv[c], "-alpha_filter") && c < argc - 1) {
+    } else if (!strcmp(argv[c], "-alpha_filter") && c + 1 < argc) {
       ++c;
       if (!strcmp(argv[c], "none")) {
         config.alpha_filtering = 0;
@@ -756,10 +758,10 @@ int main(int argc, const char* argv[]) {
       keep_alpha = 0;
     } else if (!strcmp(argv[c], "-lossless")) {
       config.lossless = 1;
-    } else if (!strcmp(argv[c], "-near_lossless") && c < argc - 1) {
+    } else if (!strcmp(argv[c], "-near_lossless") && c + 1 < argc) {
       config.near_lossless = ExUtilGetInt(argv[++c], 0, &parse_error);
       config.lossless = 1;  // use near-lossless only with lossless
-    } else if (!strcmp(argv[c], "-hint") && c < argc - 1) {
+    } else if (!strcmp(argv[c], "-hint") && c + 1 < argc) {
       ++c;
       if (!strcmp(argv[c], "photo")) {
         config.image_hint = WEBP_HINT_PHOTO;
@@ -771,13 +773,13 @@ int main(int argc, const char* argv[]) {
         fprintf(stderr, "Error! Unrecognized image hint: %s\n", argv[c]);
         goto Error;
       }
-    } else if (!strcmp(argv[c], "-size") && c < argc - 1) {
+    } else if (!strcmp(argv[c], "-size") && c + 1 < argc) {
       config.target_size = ExUtilGetInt(argv[++c], 0, &parse_error);
-    } else if (!strcmp(argv[c], "-psnr") && c < argc - 1) {
+    } else if (!strcmp(argv[c], "-psnr") && c + 1 < argc) {
       config.target_PSNR = ExUtilGetFloat(argv[++c], &parse_error);
-    } else if (!strcmp(argv[c], "-sns") && c < argc - 1) {
+    } else if (!strcmp(argv[c], "-sns") && c + 1 < argc) {
       config.sns_strength = ExUtilGetInt(argv[++c], 0, &parse_error);
-    } else if (!strcmp(argv[c], "-f") && c < argc - 1) {
+    } else if (!strcmp(argv[c], "-f") && c + 1 < argc) {
       config.filter_strength = ExUtilGetInt(argv[++c], 0, &parse_error);
     } else if (!strcmp(argv[c], "-af")) {
       config.autofilter = 1;
@@ -791,27 +793,32 @@ int main(int argc, const char* argv[]) {
       config.filter_type = 1;
     } else if (!strcmp(argv[c], "-nostrong")) {
       config.filter_type = 0;
-    } else if (!strcmp(argv[c], "-sharpness") && c < argc - 1) {
+    } else if (!strcmp(argv[c], "-sharpness") && c + 1 < argc) {
       config.filter_sharpness = ExUtilGetInt(argv[++c], 0, &parse_error);
     } else if (!strcmp(argv[c], "-sharp_yuv")) {
       config.use_sharp_yuv = 1;
-    } else if (!strcmp(argv[c], "-pass") && c < argc - 1) {
+    } else if (!strcmp(argv[c], "-pass") && c + 1 < argc) {
       config.pass = ExUtilGetInt(argv[++c], 0, &parse_error);
-    } else if (!strcmp(argv[c], "-pre") && c < argc - 1) {
+    } else if (!strcmp(argv[c], "-qrange") && c + 2 < argc) {
+      config.qmin = ExUtilGetInt(argv[++c], 0, &parse_error);
+      config.qmax = ExUtilGetInt(argv[++c], 0, &parse_error);
+      if (config.qmin < 0) config.qmin = 0;
+      if (config.qmax > 100) config.qmax = 100;
+    } else if (!strcmp(argv[c], "-pre") && c + 1 < argc) {
       config.preprocessing = ExUtilGetInt(argv[++c], 0, &parse_error);
-    } else if (!strcmp(argv[c], "-segments") && c < argc - 1) {
+    } else if (!strcmp(argv[c], "-segments") && c + 1 < argc) {
       config.segments = ExUtilGetInt(argv[++c], 0, &parse_error);
-    } else if (!strcmp(argv[c], "-partition_limit") && c < argc - 1) {
+    } else if (!strcmp(argv[c], "-partition_limit") && c + 1 < argc) {
       config.partition_limit = ExUtilGetInt(argv[++c], 0, &parse_error);
-    } else if (!strcmp(argv[c], "-map") && c < argc - 1) {
+    } else if (!strcmp(argv[c], "-map") && c + 1 < argc) {
       picture.extra_info_type = ExUtilGetInt(argv[++c], 0, &parse_error);
-    } else if (!strcmp(argv[c], "-crop") && c < argc - 4) {
+    } else if (!strcmp(argv[c], "-crop") && c + 4 < argc) {
       crop = 1;
       crop_x = ExUtilGetInt(argv[++c], 0, &parse_error);
       crop_y = ExUtilGetInt(argv[++c], 0, &parse_error);
       crop_w = ExUtilGetInt(argv[++c], 0, &parse_error);
       crop_h = ExUtilGetInt(argv[++c], 0, &parse_error);
-    } else if (!strcmp(argv[c], "-resize") && c < argc - 2) {
+    } else if (!strcmp(argv[c], "-resize") && c + 2 < argc) {
       resize_w = ExUtilGetInt(argv[++c], 0, &parse_error);
       resize_h = ExUtilGetInt(argv[++c], 0, &parse_error);
 #ifndef WEBP_DLL
@@ -827,7 +834,7 @@ int main(int argc, const char* argv[]) {
       show_progress = 1;
     } else if (!strcmp(argv[c], "-quiet")) {
       quiet = 1;
-    } else if (!strcmp(argv[c], "-preset") && c < argc - 1) {
+    } else if (!strcmp(argv[c], "-preset") && c + 1 < argc) {
       WebPPreset preset;
       ++c;
       if (!strcmp(argv[c], "default")) {
@@ -850,7 +857,7 @@ int main(int argc, const char* argv[]) {
         fprintf(stderr, "Error! Could initialize configuration with preset.\n");
         goto Error;
       }
-    } else if (!strcmp(argv[c], "-metadata") && c < argc - 1) {
+    } else if (!strcmp(argv[c], "-metadata") && c + 1 < argc) {
       static const struct {
         const char* option;
         int flag;
@@ -898,7 +905,7 @@ int main(int argc, const char* argv[]) {
     } else if (!strcmp(argv[c], "-v")) {
       verbose = 1;
     } else if (!strcmp(argv[c], "--")) {
-      if (c < argc - 1) in_file = (const char*)GET_WARGV(argv, ++c);
+      if (c + 1 < argc) in_file = (const char*)GET_WARGV(argv, ++c);
       break;
     } else if (argv[c][0] == '-') {
       fprintf(stderr, "Error! Unknown option '%s'\n", argv[c]);
