@@ -52,8 +52,8 @@ static int InitPassStats(const VP8Encoder* const enc, PassStats* const s) {
 
   s->is_first = 1;
   s->dq = 10.f;
-  s->qmin = enc->config_->qmin;
-  s->qmax = enc->config_->qmax;
+  s->qmin = 1.f * enc->config_->qmin;
+  s->qmax = 1.f * enc->config_->qmax;
   s->q = s->last_q = Clamp(enc->config_->quality, s->qmin, s->qmax);
   s->target = do_size_search ? (double)target_size
             : (target_PSNR > 0.) ? target_PSNR
