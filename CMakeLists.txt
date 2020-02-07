@@ -43,7 +43,7 @@ set(WEBP_DEP_INCLUDE_DIRS)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release"
-      CACHE "Build type: Release, Debug, MinSizeRel or RelWithDebInfo" STRING
+      CACHE STRING "Build type: Release, Debug, MinSizeRel or RelWithDebInfo"
       FORCE)
 endif()
 
