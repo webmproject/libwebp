@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "508b33e0_6356dc01",
+        "filename": "src/enc/picture_csp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 174,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2020-02-08T06:48:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "50d9730c_f93dabc9",
+      "revId": "90b90a8540e878633e9adaccc11df0c8745f4ff2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "50d9730c_d949c75c",
         "filename": "src/enc/picture_csp.c",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2016-09-20T06:10:32Z",
       "side": 1,
       "message": "any comment for the magic number?",
+      "revId": "90b90a8540e878633e9adaccc11df0c8745f4ff2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "508b33e0_835be024",
+        "filename": "src/enc/picture_csp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2020-02-08T06:48:58Z",
+      "side": 1,
+      "message": "it\u0027s 0.018 * 4.5, matching the inverse function at line 197.\nUpdated",
+      "parentUuid": "50d9730c_d949c75c",
       "revId": "90b90a8540e878633e9adaccc11df0c8745f4ff2",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": false
