@@ -351,7 +351,9 @@ int WebPAnimDecoderGetNext(WebPAnimDecoder* dec,
     WebPDecoderConfig* const config = &dec->config_;
     WebPRGBABuffer* const buf = &config->output.u.RGBA;
     buf->stride = NUM_CHANNELS * width;
-    buf->size = buf->stride * iter.height;
+    const uint64_t size = (uint64_t)buf->stride * iter.height;
+    if ((size_t)size != size) goto Error;
+    buf->size = (size_t)size;
     buf->rgba = dec->curr_frame_ + out_offset;
 
     if (WebPDecode(in, in_size, config) != VP8_STATUS_OK) {
