@@ -193,6 +193,12 @@ extern "C" {
 #endif
 #endif
 
+// If 'ptr' is NULL, returns NULL. Otherwise returns 'ptr + off'.
+// Prevents undefined behavior sanitizer nullptr-with-nonzero-offset warning.
+#if !defined(WEBP_OFFSET_PTR)
+#define WEBP_OFFSET_PTR(ptr, off) (((ptr) == NULL) ? NULL : ((ptr) + (off)))
+#endif
+
 // Regularize the definition of WEBP_SWAP_16BIT_CSP (backward compatibility)
 #if !defined(WEBP_SWAP_16BIT_CSP)
 #define WEBP_SWAP_16BIT_CSP 0
