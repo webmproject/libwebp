@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "859b5beb_1193d205",
+        "filename": "README.webp_js",
+        "patchSetId": 1
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2020-04-16T04:48:34Z",
+      "side": 1,
+      "message": "should we mention somewhere that version 1.39.0 is the minimum requirement?",
+      "range": {
+        "startLine": 23,
+        "startChar": 35,
+        "endLine": 23,
+        "endChar": 43
+      },
+      "revId": "4407026621f51f50946ddc95cdbe99cbad84285b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
