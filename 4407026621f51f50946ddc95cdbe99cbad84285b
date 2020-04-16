@@ -22,6 +22,30 @@
       "revId": "4407026621f51f50946ddc95cdbe99cbad84285b",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0b8db554_6ba0c249",
+        "filename": "README.webp_js",
+        "patchSetId": 1
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2020-04-16T18:52:53Z",
+      "side": 1,
+      "message": "\u003e should we mention somewhere that version 1.39.0 is the minimum requirement?\n\nI was wondering something similar for removing or updating this block:\n  You will need a fairly recent version of Emscripten (at least 1.37.8) and of\n  your WASM-enabled browser to run this version. Consider it very experimental!\n\nthings have progressed a bit since that was written.",
+      "parentUuid": "859b5beb_1193d205",
+      "range": {
+        "startLine": 23,
+        "startChar": 35,
+        "endLine": 23,
+        "endChar": 43
+      },
+      "revId": "4407026621f51f50946ddc95cdbe99cbad84285b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
