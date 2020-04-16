@@ -26,14 +26,13 @@ using Emscripten and CMake.
 
  cd webp_js && \
  cmake -DWEBP_BUILD_WEBP_JS=ON \
-       -DEMSCRIPTEN_GENERATE_BITCODE_STATIC_LIBRARIES=1 \
        -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake \
        ../
 
  - compile webp.js using 'make'.
 
  - that's it! Upon completion, you should have the webp.js and
-   webp.js.mem files generated.
+   webp.wasm files generated.
 
 The callable JavaScript function is WebPToSDL(), which decodes a raw WebP
 bitstream into a canvas. See webp_js/index.html for a simple usage sample
