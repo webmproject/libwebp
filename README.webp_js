@@ -19,8 +19,8 @@ using Emscripten and CMake.
    accessible. This is the toolchain file used by CMake to invoke Emscripten.
    If $EMSCRIPTEN is unset search for Emscripten.cmake under $EMSDK and set
    $EMSCRIPTEN accordingly, for example:
-   unix-like environments: export EMSCRIPTEN=$EMSDK/fastcomp/emscripten
-   windows: set EMSCRIPTEN=%EMSDK%\fastcomp\emscripten
+   unix-like environments: export EMSCRIPTEN=$EMSDK/upstream/emscripten
+   windows: set EMSCRIPTEN=%EMSDK%\upstream\emscripten
 
  - configure the project 'WEBP_JS' with CMake using:
 
