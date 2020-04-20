@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5634ddf4_697d4b4d",
+        "filename": "src/webp/encode.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2020-04-20T22:57:46Z",
+      "side": 1,
+      "message": "so this should stay 0x0210, no?",
+      "range": {
+        "startLine": 23,
+        "startChar": 33,
+        "endLine": 23,
+        "endChar": 39
+      },
+      "revId": "e7026676b3c569559731ee76bb2443d36a36fb46",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
