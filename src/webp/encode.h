@@ -121,8 +121,6 @@ struct WebPConfig {
   int alpha_quality;      // Between 0 (smallest size) and 100 (lossless).
                           // Default is 100.
   int pass;               // number of entropy-analysis passes (in [1..10]).
-  int qmin;               // minimum permissible quality factor
-  int qmax;               // maximum permissible quality factor
 
   int show_compressed;    // if true, export the compressed picture back.
                           // In-loop filtering is not applied.
@@ -150,7 +148,8 @@ struct WebPConfig {
   int use_delta_palette;  // reserved for future lossless feature
   int use_sharp_yuv;      // if needed, use sharp (and slow) RGB->YUV conversion
 
-  uint32_t pad[2];        // padding for later use
+  int qmin;               // minimum permissible quality factor
+  int qmax;               // maximum permissible quality factor
 };
 
 // Enumerate some predefined settings for WebPConfig, depending on the type
