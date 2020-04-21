@@ -46,6 +46,30 @@
       "revId": "e7026676b3c569559731ee76bb2443d36a36fb46",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b0cd6221_dc07cb45",
+        "filename": "src/webp/encode.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2020-04-21T18:50:20Z",
+      "side": 1,
+      "message": "\u003e that was my initial idea, but: do we still want to keep track of the inbetween revisions (since the unfortunate patch 6a0ff358)?\n\nif we only support released versions then it should be ok, we\u0027ve had similar missed bumps in the past and we do only bump shared object versions right before release for this reason. otherwise we\u0027re forced to make an incompatible release and qmin/max could go away.",
+      "parentUuid": "3b860f6d_efb53771",
+      "range": {
+        "startLine": 23,
+        "startChar": 33,
+        "endLine": 23,
+        "endChar": 39
+      },
+      "revId": "e7026676b3c569559731ee76bb2443d36a36fb46",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
     }
   ]
 }
