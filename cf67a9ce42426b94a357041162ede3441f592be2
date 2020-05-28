@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d477a310_ad900966",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 3
+      },
+      "lineNbr": 558,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2020-05-28T23:51:30Z",
+      "side": 1,
+      "message": "this likely has to be set at compile and link time. seems like we should merge these targets and add another option. otherwise we\u0027d need to force the flag and split all the dependencies.",
+      "range": {
+        "startLine": 558,
+        "startChar": 38,
+        "endLine": 558,
+        "endChar": 54
+      },
+      "revId": "cf67a9ce42426b94a357041162ede3441f592be2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
