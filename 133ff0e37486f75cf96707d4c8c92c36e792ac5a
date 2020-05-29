@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1b4777e6_f828d5a8",
+        "filename": "cmake/deps.cmake",
+        "patchSetId": 4
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2020-05-29T17:30:35Z",
+      "side": 1,
+      "message": "doesn\u0027t this now disable pthreads in the wasm build? that part was working I think, though maybe it isn\u0027t all that critical",
+      "revId": "133ff0e37486f75cf96707d4c8c92c36e792ac5a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": true
+    }
+  ]
+}
