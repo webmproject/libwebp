@@ -555,8 +555,8 @@ if(WEBP_BUILD_WEBP_JS)
   set(WEBP_HAVE_SDL 1)
   set_target_properties(
     webp_js
-    PROPERTIES LINK_FLAGS
-               "-s EXPORTED_FUNCTIONS='[\"_WebpToSDL\"]' -s INVOKE_RUN=0 \
+    PROPERTIES LINK_FLAGS "-s WASM=0 \
+       -s EXPORTED_FUNCTIONS='[\"_WebpToSDL\"]' -s INVOKE_RUN=0 \
        -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"cwrap\"]'")
   set_target_properties(webp_js PROPERTIES OUTPUT_NAME webp)
   target_compile_definitions(webp_js PUBLIC EMSCRIPTEN WEBP_HAVE_SDL)

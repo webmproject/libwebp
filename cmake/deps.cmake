@@ -22,7 +22,10 @@ check_c_source_compiles("
   " HAVE_BUILTIN_BSWAP64)
 
 # Check for libraries.
-find_package(Threads)
+if(NOT WEBP_BUILD_WEBP_JS)
+  # Disable pThreads for WASM.
+  find_package(Threads)
+endif()
 if(Threads_FOUND)
   if(CMAKE_USE_PTHREADS_INIT)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
