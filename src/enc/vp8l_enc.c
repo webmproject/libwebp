@@ -144,7 +144,8 @@ typedef enum {
   kSubGreen = 2,
   kSpatialSubGreen = 3,
   kPalette = 4,
-  kNumEntropyIx = 5
+  kPaletteAndSpatial = 5,
+  kNumEntropyIx = 6
 } EntropyIx;
 
 typedef enum {
@@ -405,7 +406,10 @@ static int EncoderAnalyze(VP8LEncoder* const enc,
       // Go brute force on all transforms.
       *crunch_configs_size = 0;
       for (i = 0; i < kNumEntropyIx; ++i) {
-        if (i != kPalette || use_palette) {
+        // We can only apply a spatial transform on top of palettization if the
+        // palette is full.
+        if ((i != kPalette && i != kPaletteAndSpatial) ||
+            (use_palette && (i == kPalette || enc->palette_size_ == 256))) {
           assert(*crunch_configs_size < CRUNCH_CONFIGS_MAX);
           crunch_configs[(*crunch_configs_size)++].entropy_idx_ = i;
         }
@@ -1553,11 +1557,13 @@ static int EncodeStreamHook(void* input, void* data2) {
 
   for (idx = 0; idx < num_crunch_configs; ++idx) {
     const int entropy_idx = crunch_configs[idx].entropy_idx_;
-    enc->use_palette_ = (entropy_idx == kPalette);
+    enc->use_palette_ =
+        (entropy_idx == kPalette) || (entropy_idx == kPaletteAndSpatial);
     enc->use_subtract_green_ =
         (entropy_idx == kSubGreen) || (entropy_idx == kSpatialSubGreen);
-    enc->use_predict_ =
-        (entropy_idx == kSpatial) || (entropy_idx == kSpatialSubGreen);
+    enc->use_predict_ = (entropy_idx == kSpatial) ||
+                        (entropy_idx == kSpatialSubGreen) ||
+                        (entropy_idx == kPaletteAndSpatial);
     if (low_effort) {
       enc->use_cross_color_ = 0;
     } else {
