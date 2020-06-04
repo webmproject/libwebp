@@ -406,10 +406,9 @@ static int EncoderAnalyze(VP8LEncoder* const enc,
       // Go brute force on all transforms.
       *crunch_configs_size = 0;
       for (i = 0; i < kNumEntropyIx; ++i) {
-        // We can only apply a spatial transform on top of palettization if the
-        // palette is full.
-        if ((i != kPalette && i != kPaletteAndSpatial) ||
-            (use_palette && (i == kPalette || enc->palette_size_ == 256))) {
+        // We can only apply kPalette or kPaletteAndSpatial if we can indeed use
+        // a palette.
+        if ((i != kPalette && i != kPaletteAndSpatial) || use_palette) {
           assert(*crunch_configs_size < CRUNCH_CONFIGS_MAX);
           crunch_configs[(*crunch_configs_size)++].entropy_idx_ = i;
         }
