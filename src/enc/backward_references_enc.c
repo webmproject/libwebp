@@ -753,12 +753,18 @@ static int CalculateBestCacheSize(const uint32_t* argb, int quality,
         }
       }
     } else {
+      int code, extra_bits, extra_bits_value;
       // We should compute the contribution of the (distance,length)
       // histograms but those are the same independently from the cache size.
       // As those constant contributions are in the end added to the other
-      // histogram contributions, we can safely ignore them.
+      // histogram contributions, we can ignore them, except for the length
+      // prefix that is part of the literal_ histogram.
       int len = PixOrCopyLength(v);
       uint32_t argb_prev = *argb ^ 0xffffffffu;
+      VP8LPrefixEncode(len, &code, &extra_bits, &extra_bits_value);
+      for (i = 0; i <= cache_bits_max; ++i) {
+        ++histos[i]->literal_[NUM_LITERAL_CODES + code];
+      }
       // Update the color caches.
       do {
         if (*argb != argb_prev) {
