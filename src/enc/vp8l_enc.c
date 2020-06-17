@@ -425,6 +425,15 @@ static int EncoderAnalyze(VP8LEncoder* const enc,
       // Only choose the guessed best transform.
       *crunch_configs_size = 1;
       crunch_configs[0].entropy_idx_ = min_entropy_ix;
+      if (config->quality >= 75 && method == 5) {
+        // Test with and without color cache.
+        do_no_cache = 1;
+        // If we have a palette, also check in combination with spatial.
+        if (min_entropy_ix == kPalette) {
+          *crunch_configs_size = 2;
+          crunch_configs[1].entropy_idx_ = kPaletteAndSpatial;
+        }
+      }
     }
   }
   // Fill in the different LZ77s.
