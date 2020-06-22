@@ -44,18 +44,14 @@ static WEBP_INLINE uint32_t PaletteComponentDistance(uint32_t v) {
 
 // Computes a value that is related to the entropy created by the
 // palette entry diff.
-//
-// Note that the last & 0xff is a no-operation in the next statement, but
-// removed by most compilers and is here only for regularity of the code.
 static WEBP_INLINE uint32_t PaletteColorDistance(uint32_t col1, uint32_t col2) {
   const uint32_t diff = VP8LSubPixels(col1, col2);
-  const int kMoreWeightForRGBThanForAlpha = 9;
-  uint32_t score;
-  score =  PaletteComponentDistance((diff >>  0) & 0xff);
-  score += PaletteComponentDistance((diff >>  8) & 0xff);
-  score += PaletteComponentDistance((diff >> 16) & 0xff);
-  score *= kMoreWeightForRGBThanForAlpha;
-  score += PaletteComponentDistance((diff >> 24) & 0xff);
+  const uint32_t kAMult = 500, kRGBMult = 1;
+  uint32_t score = 0;
+  score += kRGBMult * PaletteComponentDistance((diff >>  0) & 0xff);
+  score += kRGBMult * PaletteComponentDistance((diff >>  8) & 0xff);
+  score += kRGBMult * PaletteComponentDistance((diff >> 16) & 0xff);
+  score += kAMult   * PaletteComponentDistance((diff >> 24) & 0xff);
   return score;
 }
 
@@ -114,6 +110,95 @@ static int PaletteHasNonMonotonousDeltas(uint32_t palette[], int num_colors) {
   }
   return (sign_found & (sign_found << 1)) != 0;  // two consequent signs.
 }
+// -----------------------------------------------------------------------------
+
+static void MapLine(const uint32_t argb[], uint8_t dst[], int width,
+             uint32_t palette[], int num_colors) {
+  uint32_t prev_pix = argb[0] ^ ~0llu;
+  int prev_idx = 0;
+  int x;
+  for (x = 0; x < width; ++x) {
+    const uint32_t pix = argb[x];
+    if (pix != prev_pix) {
+      for (prev_idx = 0; prev_idx < num_colors; ++prev_idx) {
+        if (palette[prev_idx] == pix) break;
+      }
+      prev_pix = pix;
+    }
+    dst[x] = prev_idx;
+  }
+}
+
+static inline void IncrCount(uint16_t* cnt) { if (*cnt != 65535) ++*cnt; }
+
+static int OptimizePaletteDistance(const WebPPicture* const pic,
+                                   uint32_t palette[], int num_colors) {
+  int i, j;
+  uint8_t used[MAX_PALETTE_SIZE] = { 0 };
+  uint32_t new_palette[MAX_PALETTE_SIZE];
+  uint8_t* map = NULL;
+  uint16_t* counts = NULL;
+  const int kNumRows = 2;
+
+  // don't optimize large palettes or small images
+  const int w = pic->width, h = pic->height;
+  if (w * h < 256) return 1;
+  assert(pic != NULL && pic->argb != NULL);
+  map = (uint8_t*)WebPSafeMalloc(sizeof(*map), w * kNumRows);
+  counts = (uint16_t*)WebPSafeMalloc(sizeof(*counts), num_colors * num_colors);
+  if (map == NULL || counts == NULL) {
+    WebPSafeFree(map);
+    WebPSafeFree(counts);
+    return 0;
+  }
+  for (i = 0; i < num_colors * num_colors; ++i) counts[i] = 1;
+  for (j = 0; j < h; ++j) {
+    uint8_t* const row0 = &map[(j % kNumRows) * w];
+    MapLine(pic->argb + j * pic->argb_stride, row0, w, palette, num_colors);
+    if ((j % kNumRows) == kNumRows - 1) {
+      int x, y;
+      for (y = j - kNumRows + 1; y <= j; ++y) {
+        uint8_t* const row1 = &map[(y % kNumRows) * w];
+        for (i = kNumRows; i < w; ++i) {
+          for (x = i - kNumRows + 1; x < i; ++x) {
+            uint16_t* const count_base = &counts[row0[i] * num_colors];
+            IncrCount(count_base + row1[x]);
+            IncrCount(count_base + row1[x - 1]);
+            IncrCount(count_base + row0[x - 1]);
+          }
+        }
+      }
+    }
+  }
+  WebPSafeFree(map);
+
+  for (i = 0; i < num_colors; ++i) {
+    uint32_t best_cost = 0;
+    const uint32_t kNotFound = 0xffff;
+    uint32_t best = kNotFound;
+    for (j = 0; j < num_colors; ++j) {
+      uint32_t cnt, cost;
+      if (used[j]) continue;
+      cnt = counts[i * num_colors + j] + 0 * counts[j * num_colors + i];
+      cost = 256 * cnt / (w * h);
+      if (i > 0) {
+        // try to avoid big jumps in palette colors
+        cost += 5 * PaletteColorDistance(palette[j], new_palette[i - 1]);
+      }
+      if (best == kNotFound || cost < best_cost) {
+        best_cost = cost;
+        best = j;
+      }
+    }
+    assert(best != kNotFound);
+    new_palette[i] = palette[best];
+    used[best] = 1;
+  }
+  WebPSafeFree(counts);
+
+  memcpy(palette, new_palette, num_colors * sizeof(palette[0]));
+  return 1;
+}
 
 // -----------------------------------------------------------------------------
 // Palette
@@ -134,6 +219,7 @@ static int AnalyzeAndCreatePalette(const WebPPicture* const pic,
   if (!low_effort && PaletteHasNonMonotonousDeltas(palette, num_colors)) {
     GreedyMinimizeDeltas(palette, num_colors);
   }
+  if (!OptimizePaletteDistance(pic, palette, num_colors)) return 0;
   return 1;
 }
 
