@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "698143e0_ac13bfce",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2020-09-03T10:41:11Z",
+      "side": 1,
+      "message": "works \u0027relatively\u0027 well, but there\u0027s still some bad cases of images getting much larger...\nInvestigating.",
+      "revId": "a34d73e0ac0f7c406cb88a635b56a7c770e12beb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba",
+      "unresolved": false
+    }
+  ]
+}
