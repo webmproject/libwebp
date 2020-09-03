@@ -349,6 +349,9 @@ int WebPEncode(const WebPConfig* config, WebPPicture* pic) {
     VP8Encoder* enc = NULL;
 
     if (pic->use_argb || pic->y == NULL || pic->u == NULL || pic->v == NULL) {
+      if (!config->exact) {
+        WebPReplaceTransparentPixels(pic, 0xffffffu);
+      }
       // Make sure we have YUVA samples.
       if (config->use_sharp_yuv || (config->preprocessing & 4)) {
         if (!WebPPictureSharpARGBToYUVA(pic)) {
@@ -400,7 +403,7 @@ int WebPEncode(const WebPConfig* config, WebPPicture* pic) {
     }
 
     if (!config->exact) {
-      WebPCleanupTransparentAreaLossless(pic);
+      WebPReplaceTransparentPixels(pic, 0x000000);
     }
 
     ok = VP8LEncodeImage(config, pic);  // Sets pic->error in case of problem.
