@@ -90,8 +90,9 @@ int WebPPictureHasTransparency(const WebPPicture* picture) {
 static int kLinearToGammaTab[kGammaTabSize + 1];
 static uint16_t kGammaToLinearTab[256];
 static volatile int kGammaTablesOk = 0;
+static void InitGammaTables(void);
 
-static WEBP_TSAN_IGNORE_FUNCTION void InitGammaTables(void) {
+WEBP_DSP_INIT_FUNC(InitGammaTables) {
   if (!kGammaTablesOk) {
     int v;
     const double scale = (double)(1 << kGammaTabFix) / kGammaScale;
@@ -181,8 +182,9 @@ static uint32_t kLinearToGammaTabS[kGammaTabSize + 2];
 #define GAMMA_TO_LINEAR_BITS 14
 static uint32_t kGammaToLinearTabS[MAX_Y_T + 1];   // size scales with Y_FIX
 static volatile int kGammaTablesSOk = 0;
+static void InitGammaTablesS(void);
 
-static WEBP_TSAN_IGNORE_FUNCTION void InitGammaTablesS(void) {
+WEBP_DSP_INIT_FUNC(InitGammaTablesS) {
   assert(2 * GAMMA_TO_LINEAR_BITS < 32);  // we use uint32_t intermediate values
   if (!kGammaTablesSOk) {
     int v;
