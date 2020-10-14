@@ -1,0 +1,29 @@
+# This Makefile will compile all fuzzing targets. It doesn't check tool
+# requirements and paths may need to be updated depending on your environment.
+# Note a clang 6+ toolchain is assumed for use of -fsanitize=fuzzer.
+
+CC = clang
+CXX = clang++
+CFLAGS = -fsanitize=fuzzer -I../../src -I../..
+CXXFLAGS = $(CFLAGS)
+LDFLAGS = -fsanitize=fuzzer
+LDLIBS = ../../src/mux/libwebpmux.a ../../src/demux/libwebpdemux.a
+LDLIBS += ../../src/libwebp.a
+
+FUZZERS = advanced_api_fuzzer animation_api_fuzzer animencoder_fuzzer
+FUZZERS += demux_api_fuzzer enc_dec_fuzzer simple_api_fuzzer
+
+%.o: %.c %.cc fuzz_utils.h img_alpha.h img_grid.h img_peak.h
+all: $(FUZZERS)
+
+define FUZZER_template
+$(1): $$(addsuffix .o, $(1)) $(LDLIBS)
+OBJS += $$(addsuffix .o, $(1))
+endef
+
+$(foreach fuzzer, $(FUZZERS), $(eval $(call FUZZER_template, $(fuzzer))))
+
+clean:
+	$(RM) $(FUZZERS) $(OBJS)
+
+.PHONY: all clean
