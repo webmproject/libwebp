@@ -11,7 +11,8 @@ LDLIBS = ../../src/mux/libwebpmux.a ../../src/demux/libwebpdemux.a
 LDLIBS += ../../src/libwebp.a ../../imageio/libimageio_util.a
 
 FUZZERS = advanced_api_fuzzer animation_api_fuzzer animencoder_fuzzer
-FUZZERS += animdecoder_fuzzer demux_api_fuzzer enc_dec_fuzzer simple_api_fuzzer
+FUZZERS += animdecoder_fuzzer mux_demux_api_fuzzer enc_dec_fuzzer
+FUZZERS += simple_api_fuzzer
 
 %.o: %.c %.cc fuzz_utils.h img_alpha.h img_grid.h img_peak.h
 all: $(FUZZERS)
