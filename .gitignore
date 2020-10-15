@@ -44,6 +44,7 @@ extras/vwebp_sdl
 extras/webp_quality
 tests/fuzzer/advanced_api_fuzzer
 tests/fuzzer/animation_api_fuzzer
+tests/fuzzer/animdecoder_fuzzer
 tests/fuzzer/animencoder_fuzzer
 tests/fuzzer/demux_api_fuzzer
 tests/fuzzer/enc_dec_fuzzer
