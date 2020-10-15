@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "184b58f5_4a9f56ee",
+        "filename": "tests/fuzzer/animdecoder_fuzzer.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2020-10-15T02:43:29Z",
+      "side": 1,
+      "message": "my hope with some of these and the include paths was that they could be reused against a system library, but we can leave that as an exercise for the reader. these 2 could become ../../... to match some of the examples, but the makefile is handling the include paths right now.",
+      "revId": "076652be039d0d8dbda653bac413951aba86964f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
