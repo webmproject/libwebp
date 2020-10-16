@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "8a69fc70_8151e903",
+        "filename": ".gitignore",
+        "patchSetId": 1
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2020-10-16T00:18:31Z",
+      "side": 1,
+      "message": "keeping this for legacy purposes, though the window is pretty small...",
+      "revId": "8cb7e536d2497bc9432b66147e9c1c9171156f38",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
