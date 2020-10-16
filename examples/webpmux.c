@@ -1011,7 +1011,7 @@ static int Process(const Config* config) {
           ok = ExUtilReadFileToWebPData(config->args_[0].filename_, &chunk);
           if (!ok) goto Err2;
           err = WebPMuxSetChunk(mux, kFourccList[config->type_], &chunk, 1);
-          free((void*)chunk.bytes);
+          WebPDataClear(&chunk);
           if (err != WEBP_MUX_OK) {
             ERROR_GOTO3("ERROR (%s): Could not set the %s.\n",
                         ErrorString(err), kDescriptions[config->type_], Err2);

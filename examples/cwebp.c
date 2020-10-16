@@ -94,7 +94,7 @@ static int ReadPicture(const char* const filename, WebPPicture* const pic,
     WFPRINTF(stderr, "Error! Could not process file %s\n",
              (const W_CHAR*)filename);
   }
-  free((void*)data);
+  WebPFree((void*)data);
   return ok;
 }
 
@@ -121,7 +121,7 @@ static int ReadPicture(const char* const filename, WebPPicture* const pic,
     WFPRINTF(stderr, "Error! Could not process file %s\n",
              (const W_CHAR*)filename);
   }
-  free((void*)data);
+  WebPFree((void*)data);
   return ok;
 }
 
