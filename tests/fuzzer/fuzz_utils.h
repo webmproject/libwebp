@@ -169,7 +169,7 @@ static WEBP_INLINE int ExtractSourcePicture(WebPPicture* const pic,
 
 //------------------------------------------------------------------------------
 
-static WEBP_INLINE int max(int a, int b) { return ((a < b) ? b : a); }
+static WEBP_INLINE int Max(int a, int b) { return ((a < b) ? b : a); }
 
 static WEBP_INLINE int ExtractAndCropOrScale(WebPPicture* const pic,
                                              const uint8_t data[], size_t size,
@@ -184,8 +184,8 @@ static WEBP_INLINE int ExtractAndCropOrScale(WebPPicture* const pic,
     if (crop_or_scale) {
       const uint32_t left_ratio = 1 + Extract(7, data, size, bit_pos);
       const uint32_t top_ratio = 1 + Extract(7, data, size, bit_pos);
-      const int cropped_width = max(1, pic->width / width_ratio);
-      const int cropped_height = max(1, pic->height / height_ratio);
+      const int cropped_width = Max(1, pic->width / width_ratio);
+      const int cropped_height = Max(1, pic->height / height_ratio);
       const int cropped_left = (pic->width - cropped_width) / left_ratio;
       const int cropped_top = (pic->height - cropped_height) / top_ratio;
       return WebPPictureCrop(pic, cropped_left, cropped_top, cropped_width,
