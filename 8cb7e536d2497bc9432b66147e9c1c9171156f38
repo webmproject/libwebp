@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "e2d2cf08_f3df6d57",
+        "filename": "tests/fuzzer/makefile.unix",
+        "patchSetId": 1
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2020-10-17T17:59:00Z",
+      "side": 0,
+      "message": "I forgot this would wipe out the implicit rule and the compile commands",
+      "range": {
+        "startLine": 17,
+        "startChar": 5,
+        "endLine": 17,
+        "endChar": 13
+      },
+      "revId": "8cb7e536d2497bc9432b66147e9c1c9171156f38",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}

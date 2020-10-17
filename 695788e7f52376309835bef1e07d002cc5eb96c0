@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "c272cd8d_71dd3e4e",
+        "filename": "tests/fuzzer/fuzz_utils.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2020-10-17T17:59:00Z",
+      "side": 1,
+      "message": "https://source.chromium.org/chromium/chromium/src/+/master:third_party/libwebp/BUILD.gn;l\u003d567",
+      "revId": "695788e7f52376309835bef1e07d002cc5eb96c0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
