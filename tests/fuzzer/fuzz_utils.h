@@ -35,7 +35,7 @@ static const size_t kFuzzPxLimit = 1024 * 1024;
 static const int kFuzzFrameLimit = 3;
 
 // Reads and sums (up to) 128 spread-out bytes.
-static uint8_t FuzzHash(const uint8_t* const data, size_t size) {
+static WEBP_INLINE uint8_t FuzzHash(const uint8_t* const data, size_t size) {
   uint8_t value = 0;
   size_t incr = size / 128;
   if (!incr) incr = 1;
@@ -46,8 +46,9 @@ static uint8_t FuzzHash(const uint8_t* const data, size_t size) {
 //------------------------------------------------------------------------------
 // Extract an integer in [0, max_value].
 
-static uint32_t Extract(uint32_t max_value, const uint8_t data[], size_t size,
-                        uint32_t* const bit_pos) {
+static WEBP_INLINE uint32_t Extract(uint32_t max_value,
+                                    const uint8_t data[], size_t size,
+                                    uint32_t* const bit_pos) {
   uint32_t v = 0;
   uint32_t range = 1;
   while (*bit_pos < 8 * size && range <= max_value) {
@@ -64,28 +65,31 @@ static uint32_t Extract(uint32_t max_value, const uint8_t data[], size_t size,
 
 static VP8CPUInfo GetCPUInfo;
 
-static int GetCPUInfoNoSSE41(CPUFeature feature) {
+static WEBP_INLINE int GetCPUInfoNoSSE41(CPUFeature feature) {
   if (feature == kSSE4_1 || feature == kAVX) return 0;
   return GetCPUInfo(feature);
 }
 
-static int GetCPUInfoNoAVX(CPUFeature feature) {
+static WEBP_INLINE int GetCPUInfoNoAVX(CPUFeature feature) {
   if (feature == kAVX) return 0;
   return GetCPUInfo(feature);
 }
 
-static int GetCPUInfoForceSlowSSSE3(CPUFeature feature) {
+static WEBP_INLINE int GetCPUInfoForceSlowSSSE3(CPUFeature feature) {
   if (feature == kSlowSSSE3 && GetCPUInfo(kSSE3)) {
     return 1;  // we have SSE3 -> force SlowSSSE3
   }
   return GetCPUInfo(feature);
 }
 
-static int GetCPUInfoOnlyC(CPUFeature feature) { return 0; }
+static WEBP_INLINE int GetCPUInfoOnlyC(CPUFeature feature) {
+  (void)feature;
+  return 0;
+}
 
-static void ExtractAndDisableOptimizations(VP8CPUInfo default_VP8GetCPUInfo,
-                                           const uint8_t data[], size_t size,
-                                           uint32_t* const bit_pos) {
+static WEBP_INLINE void ExtractAndDisableOptimizations(
+    VP8CPUInfo default_VP8GetCPUInfo, const uint8_t data[], size_t size,
+    uint32_t* const bit_pos) {
   GetCPUInfo = default_VP8GetCPUInfo;
   const VP8CPUInfo kVP8CPUInfos[5] = {GetCPUInfoOnlyC, GetCPUInfoForceSlowSSSE3,
                                       GetCPUInfoNoSSE41, GetCPUInfoNoAVX,
@@ -96,8 +100,9 @@ static void ExtractAndDisableOptimizations(VP8CPUInfo default_VP8GetCPUInfo,
 
 //------------------------------------------------------------------------------
 
-static int ExtractWebPConfig(WebPConfig* const config, const uint8_t data[],
-                             size_t size, uint32_t* const bit_pos) {
+static WEBP_INLINE int ExtractWebPConfig(WebPConfig* const config,
+                                         const uint8_t data[], size_t size,
+                                         uint32_t* const bit_pos) {
   if (config == NULL || !WebPConfigInit(config)) return 0;
   config->lossless = Extract(1, data, size, bit_pos);
   config->quality = Extract(100, data, size, bit_pos);
@@ -130,9 +135,9 @@ static int ExtractWebPConfig(WebPConfig* const config, const uint8_t data[],
 
 //------------------------------------------------------------------------------
 
-static int ExtractSourcePicture(WebPPicture* const pic,
-                                const uint8_t data[], size_t size,
-                                uint32_t* const bit_pos) {
+static WEBP_INLINE int ExtractSourcePicture(WebPPicture* const pic,
+                                            const uint8_t data[], size_t size,
+                                            uint32_t* const bit_pos) {
   if (pic == NULL) return 0;
 
   // Pick a source picture.
@@ -164,10 +169,11 @@ static int ExtractSourcePicture(WebPPicture* const pic,
 
 //------------------------------------------------------------------------------
 
-static int max(int a, int b) { return ((a < b) ? b : a); }
+static WEBP_INLINE int max(int a, int b) { return ((a < b) ? b : a); }
 
-static int ExtractAndCropOrScale(WebPPicture* const pic, const uint8_t data[],
-                                 size_t size, uint32_t* const bit_pos) {
+static WEBP_INLINE int ExtractAndCropOrScale(WebPPicture* const pic,
+                                             const uint8_t data[], size_t size,
+                                             uint32_t* const bit_pos) {
   if (pic == NULL) return 0;
 #if !defined(WEBP_REDUCE_SIZE)
   const int alter_input = Extract(1, data, size, bit_pos);
