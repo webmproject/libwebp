@@ -4,7 +4,7 @@
 
 CC = clang
 CXX = clang++
-CFLAGS = -fsanitize=fuzzer -I../../src -I../..
+CFLAGS = -fsanitize=fuzzer -I../../src -I../.. -Wall -Wextra
 CXXFLAGS = $(CFLAGS)
 LDFLAGS = -fsanitize=fuzzer
 LDLIBS = ../../src/mux/libwebpmux.a ../../src/demux/libwebpdemux.a
@@ -14,7 +14,7 @@ FUZZERS = advanced_api_fuzzer animation_api_fuzzer animencoder_fuzzer
 FUZZERS += animdecoder_fuzzer mux_demux_api_fuzzer enc_dec_fuzzer
 FUZZERS += simple_api_fuzzer
 
-%.o: %.c %.cc fuzz_utils.h img_alpha.h img_grid.h img_peak.h
+%.o: fuzz_utils.h img_alpha.h img_grid.h img_peak.h
 all: $(FUZZERS)
 
 define FUZZER_template
