@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "178104a3_6fe4f0d4",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1289110
+      },
+      "writtenOn": "2020-10-21T07:36:04Z",
+      "side": 1,
+      "message": "Should it be checked that it is indeed a memory issue before returning 0 instead of aborting (with WebPPicture::error_code maybe)? I thought possible false positives were less important than missing true positives but it might no longer be the case as fuzzers have been running for quite some time now.",
+      "revId": "2ed243c17dd797326a7aac3a9b5fb1d6be4f3339",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "ef75c60e_82a6c0d4",
+        "filename": "tests/fuzzer/enc_dec_fuzzer.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1289110
+      },
+      "writtenOn": "2020-10-21T07:36:04Z",
+      "side": 1,
+      "message": "I do not think this one has any error related to memory allocation failure.",
+      "range": {
+        "startLine": 57,
+        "startChar": 7,
+        "endLine": 57,
+        "endChar": 24
+      },
+      "revId": "2ed243c17dd797326a7aac3a9b5fb1d6be4f3339",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
