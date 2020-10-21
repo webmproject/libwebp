@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "20cd8e15_914d60f9",
+        "filename": "tests/fuzzer/animencoder_fuzzer.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1289110
+      },
+      "writtenOn": "2020-10-21T18:40:49Z",
+      "side": 1,
+      "message": "WebPPictureFree() does not reset \u0027pic.error_code\u0027 so there is no need for a temporary variable. It might look cleaner though, if it was the intent.",
+      "range": {
+        "startLine": 49,
+        "startChar": 28,
+        "endLine": 49,
+        "endChar": 38
+      },
+      "revId": "83604bf3ac2212a353c53d8c9df35d94fa9ab000",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
