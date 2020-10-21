@@ -42,23 +42,20 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* const data, size_t size) {
 
   // Read the source picture.
   if (!ExtractSourcePicture(&pic, data, size, &bit_pos)) {
-    fprintf(stderr, "Can't read input image.\n");
     WebPPictureFree(&pic);
-    abort();
+    return 0;
   }
 
   // Crop and scale.
   if (!ExtractAndCropOrScale(&pic, data, size, &bit_pos)) {
-    fprintf(stderr, "ExtractAndCropOrScale failed.");
     WebPPictureFree(&pic);
-    abort();
+    return 0;
   }
 
   // Extract a configuration from the packed bits.
   WebPConfig config;
   if (!ExtractWebPConfig(&config, data, size, &bit_pos)) {
-    fprintf(stderr, "ExtractWebPConfig failed.\n");
-    abort();
+    return 0;
   }
   // Skip slow settings on big images, it's likely to timeout.
   if (pic.width * pic.height > 32 * 32) {
@@ -83,10 +80,9 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* const data, size_t size) {
   pic.writer = WebPMemoryWrite;
   pic.custom_ptr = &memory_writer;
   if (!WebPEncode(&config, &pic)) {
-    fprintf(stderr, "WebPEncode failed. Error code: %d\n", pic.error_code);
     WebPMemoryWriterClear(&memory_writer);
     WebPPictureFree(&pic);
-    abort();
+    return 0;
   }
 
   // Try decoding the result.

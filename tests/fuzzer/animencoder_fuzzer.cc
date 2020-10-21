@@ -46,25 +46,21 @@ int AddFrame(WebPAnimEncoder** const enc,
 
   // Read the source picture.
   if (!ExtractSourcePicture(&pic, data, size, bit_pos)) {
-    fprintf(stderr, "Can't read input image.\n");
     WebPPictureFree(&pic);
-    abort();
+    return 0;
   }
 
   // Crop and scale.
   if (*enc == nullptr) {  // First frame will set canvas width and height.
     if (!ExtractAndCropOrScale(&pic, data, size, bit_pos)) {
-      fprintf(stderr, "ExtractAndCropOrScale failed.");
       WebPPictureFree(&pic);
-      abort();
+      return 0;
     }
   } else {  // Other frames will be resized to the first frame's dimensions.
     if (!WebPPictureRescale(&pic, *width, *height)) {
-      fprintf(stderr, "WebPPictureRescale failed. Size: %d,%d\n", *width,
-              *height);
       WebPAnimEncoderDelete(*enc);
       WebPPictureFree(&pic);
-      abort();
+      return 0;
     }
   }
 
@@ -74,19 +70,17 @@ int AddFrame(WebPAnimEncoder** const enc,
     *height = pic.height;
     *enc = WebPAnimEncoderNew(*width, *height, &anim_config);
     if (*enc == nullptr) {
-      fprintf(stderr, "WebPAnimEncoderNew failed.\n");
       WebPPictureFree(&pic);
-      abort();
+      return 0;
     }
   }
 
   // Create frame encoding config.
   WebPConfig config;
   if (!ExtractWebPConfig(&config, data, size, bit_pos)) {
-    fprintf(stderr, "ExtractWebPConfig failed.\n");
     WebPAnimEncoderDelete(*enc);
     WebPPictureFree(&pic);
-    abort();
+    return 0;
   }
   // Skip slow settings on big images, it's likely to timeout.
   if (pic.width * pic.height > 32 * 32) {
@@ -98,10 +92,9 @@ int AddFrame(WebPAnimEncoder** const enc,
 
   // Encode.
   if (!WebPAnimEncoderAdd(*enc, &pic, timestamp_ms, &config)) {
-    fprintf(stderr, "WebPEncode failed. Error code: %d\n", pic.error_code);
     WebPAnimEncoderDelete(*enc);
     WebPPictureFree(&pic);
-    abort();
+    return 0;
   }
 
   WebPPictureFree(&pic);
@@ -154,10 +147,9 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* const data, size_t size) {
   WebPData webp_data;
   WebPDataInit(&webp_data);
   if (!WebPAnimEncoderAssemble(enc, &webp_data)) {
-    fprintf(stderr, "WebPAnimEncoderAssemble failed.");
     WebPAnimEncoderDelete(enc);
     WebPDataClear(&webp_data);
-    abort();
+    return 0;
   }
 
   WebPAnimEncoderDelete(enc);
