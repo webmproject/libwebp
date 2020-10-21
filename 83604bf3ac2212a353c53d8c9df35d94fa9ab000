@@ -20,6 +20,24 @@
     {
       "unresolved": false,
       "key": {
+        "uuid": "906e6b90_615d5a38",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2020-10-21T19:14:23Z",
+      "side": 1,
+      "message": "\u003e (LGTM but I do not have the rights to +2)\n\nThanks, Yannis. I realized after seeing the +1 you never got added to this group. I added you and Maryla, you should have +2 now.",
+      "parentUuid": "a086752a_eb6069be",
+      "revId": "83604bf3ac2212a353c53d8c9df35d94fa9ab000",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
         "uuid": "20cd8e15_914d60f9",
         "filename": "tests/fuzzer/animencoder_fuzzer.cc",
         "patchSetId": 2
