@@ -3,7 +3,12 @@ cmake_minimum_required(VERSION 3.5)
 project(WebP C)
 
 # Options for coder / decoder executables.
-option(WEBP_ENABLE_SIMD "Enable any SIMD optimization." ON)
+if(NOT EMSCRIPTEN)
+  # Disable SIMD on Emscripten by default, as it's a new unstable Wasm feature.
+  # Users can still explicitly opt-in to make a SIMD-enabled build.
+  set(WEBP_ENABLE_SIMD_DEFAULT ON)
+endif()
+option(WEBP_ENABLE_SIMD "Enable any SIMD optimization." ${WEBP_ENABLE_SIMD_DEFAULT})
 option(WEBP_BUILD_ANIM_UTILS "Build animation utilities." ON)
 option(WEBP_BUILD_CWEBP "Build the cwebp command line tool." ON)
 option(WEBP_BUILD_DWEBP "Build the dwebp command line tool." ON)
@@ -26,7 +31,6 @@ if(WIN32)
 endif()
 
 if(WEBP_BUILD_WEBP_JS)
-  set(WEBP_ENABLE_SIMD OFF)
   set(WEBP_BUILD_ANIM_UTILS OFF)
   set(WEBP_BUILD_CWEBP OFF)
   set(WEBP_BUILD_DWEBP OFF)
