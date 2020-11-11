@@ -179,6 +179,30 @@ static int AndroidCPUInfo(CPUFeature feature) {
   return 0;
 }
 VP8CPUInfo VP8GetCPUInfo = AndroidCPUInfo;
+#elif defined(EMSCRIPTEN) // also needs to be before generic NEON test
+// Use compile flags as an indicator of SIMD support instead of a runtime check.
+static int wasmCPUInfo(CPUFeature feature) {
+  switch (feature) {
+#ifdef WEBP_USE_SSE2
+    case kSSE2:
+      return 1;
+#endif
+#ifdef WEBP_USE_SSE41
+    case kSSE3:
+    case kSlowSSSE3:
+    case kSSE4_1:
+      return 1;
+#endif
+#ifdef WEBP_USE_NEON
+    case kNEON:
+      return 1;
+#endif
+    default:
+      break;
+  }
+  return 0;
+}
+VP8CPUInfo VP8GetCPUInfo = wasmCPUInfo;
 #elif defined(WEBP_USE_NEON)
 // define a dummy function to enable turning off NEON at runtime by setting
 // VP8DecGetCPUInfo = NULL
