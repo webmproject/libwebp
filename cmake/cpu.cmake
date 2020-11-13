@@ -83,6 +83,8 @@ foreach(I_SIMD RANGE ${WEBP_SIMD_FLAGS_RANGE})
         set(SIMD_COMPILE_FLAG " ")
       endif()
     endif()
+  elseif(${I_SIMD} LESS 2)
+    set(WEBP_HAVE_${WEBP_SIMD_FLAG} 1)
   endif()
   # Check which files we should include or not.
   list(GET WEBP_SIMD_FILE_EXTENSIONS ${I_SIMD} WEBP_SIMD_FILE_EXTENSION)
