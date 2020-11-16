@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "91f54ac5_cf9d25b2",
+        "filename": "src/dsp/cpu.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1370170
+      },
+      "writtenOn": "2020-11-16T12:55:08Z",
+      "side": 1,
+      "message": "Btw, one thing that could be simplified here is that I could simply return `true` instead of doing the `switch` + `#ifdef` thing, but that would work only if it\u0027s guaranteed that this function is called from outer `#ifdef` branches.\n\nIt _seems_ to hold across the codebase, e.g. `WP2GetCPUInfo(kSSE)` is always guarded by\n```\n#if defined(WP2_USE_SSE)\n    if (WP2GetCPUInfo(kSSE))\n#endif\n```\n\nbut I guess it\u0027s not, strictly speaking, guaranteed, so opted for a safer approach.",
+      "revId": "ced02237512caf7e7bdf11b03c88eee183e635ce",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
