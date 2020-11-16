@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "15d256d4_807c345f",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2020-11-16T22:03:27Z",
+      "side": 1,
+      "message": "this patch seem to trigger the error:\n\n11:35:04 /var/jenkins/workspace/libwebp__compile/config/shared/host/cmake-clang/libwebp/src/dsp/lossless_enc.c:624:3: error: SSE2 register return with SSE2 disabled\n11:35:04   return cost;\n11:35:04   ^\n11:35:04 /var/jenkins/workspace/libwebp__compile/config/shared/host/cmake-clang/libwebp/src/dsp/lossless_enc.c:635:3: error: SSE2 register return with SSE2 disabled\n11:35:04   return cost;\n11:35:04   ^\n",
+      "revId": "199d5c283f93e41feb5eade56beafe126b3e9d63",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
