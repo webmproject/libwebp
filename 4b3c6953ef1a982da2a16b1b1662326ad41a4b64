@@ -51,6 +51,24 @@
       "parentUuid": "2ec1b3a0_1f783d82",
       "revId": "4b3c6953ef1a982da2a16b1b1662326ad41a4b64",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "b3311661_cd968cdb",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2020-11-17T21:55:29Z",
+      "side": 1,
+      "message": "\u003e \u003e not sure why the webp_js build is failing, but this seems unrelated to this patch...\n\u003e \n\u003e could be (another) incompatible change since we track the upstream branch.\n\nthe binary is now using python 3.6 features, we have 3.5 available on this instance.",
+      "parentUuid": "11287dde_1d77a7f0",
+      "revId": "4b3c6953ef1a982da2a16b1b1662326ad41a4b64",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
