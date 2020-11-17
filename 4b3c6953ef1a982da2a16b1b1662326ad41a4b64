@@ -16,6 +16,23 @@
       "message": "Sorry about using the C99 feature.",
       "revId": "4b3c6953ef1a982da2a16b1b1662326ad41a4b64",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "2ec1b3a0_1f783d82",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2020-11-17T07:37:35Z",
+      "side": 1,
+      "message": "not sure why the webp_js build is failing, but this seems unrelated to this patch...",
+      "revId": "4b3c6953ef1a982da2a16b1b1662326ad41a4b64",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
