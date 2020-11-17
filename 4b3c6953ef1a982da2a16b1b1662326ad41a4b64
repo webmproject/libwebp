@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "5b717c1c_dbec5e3b",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1001562
+      },
+      "writtenOn": "2020-11-17T07:02:57Z",
+      "side": 1,
+      "message": "Sorry about using the C99 feature.",
+      "revId": "4b3c6953ef1a982da2a16b1b1662326ad41a4b64",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
