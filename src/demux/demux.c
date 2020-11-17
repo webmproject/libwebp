@@ -332,7 +332,10 @@ static ParseStatus ParseAnimationFrame(
 
   // Store a frame only if the animation flag is set there is some data for
   // this frame is available.
+  const size_t start_offset = mem->start_;
   status = StoreFrame(dmux->num_frames_ + 1, anmf_payload_size, mem, frame);
+  if (status != PARSE_ERROR && mem->start_ - start_offset > anmf_payload_size)
+    status = PARSE_ERROR;
   if (status != PARSE_ERROR && is_animation && frame->frame_num_ > 0) {
     added_frame = AddFrame(dmux, frame);
     if (added_frame) {
