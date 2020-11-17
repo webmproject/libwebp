@@ -33,6 +33,24 @@
       "message": "not sure why the webp_js build is failing, but this seems unrelated to this patch...",
       "revId": "4b3c6953ef1a982da2a16b1b1662326ad41a4b64",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "11287dde_1d77a7f0",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2020-11-17T20:51:16Z",
+      "side": 1,
+      "message": "\u003e not sure why the webp_js build is failing, but this seems unrelated to this patch...\n\ncould be (another) incompatible change since we track the upstream branch.",
+      "parentUuid": "2ec1b3a0_1f783d82",
+      "revId": "4b3c6953ef1a982da2a16b1b1662326ad41a4b64",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
