@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "4fd96f63_d3a5535d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2020-11-18T21:30:34Z",
+      "side": 1,
+      "message": "let\u0027s reflow these lines in the commit message to bring the length down",
+      "range": {
+        "startLine": 9,
+        "startChar": 3,
+        "endLine": 9,
+        "endChar": 6
+      },
+      "revId": "6946e8f7fe514a60f5f3f6dcd49c5a663259f36a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "3251e9b0_b72a6261",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2020-11-18T21:30:34Z",
+      "side": 1,
+      "message": "NEON seems to have issues with 2.0.9 installed, but off by default things look ok",
+      "revId": "6946e8f7fe514a60f5f3f6dcd49c5a663259f36a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "64bc4e84_68ef34f4",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 2
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2020-11-18T21:30:34Z",
+      "side": 1,
+      "message": "this line could be broken into 2",
+      "revId": "6946e8f7fe514a60f5f3f6dcd49c5a663259f36a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
