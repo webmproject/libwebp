@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "fea48112_c8801e81",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2020-11-18T18:03:04Z",
+      "side": 1,
+      "message": "I agree, but we can play it safe here given the range of allowed scale values",
+      "range": {
+        "startLine": 12,
+        "startChar": 33,
+        "endLine": 12,
+        "endChar": 50
+      },
+      "revId": "8870ba7f06462360ce9a249a355d631d28cf9448",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
