@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "c1ce33a8_a614dfa2",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2020-11-20T08:13:39Z",
+      "side": 1,
+      "message": "double \u0027;\u0027?",
+      "range": {
+        "startLine": 178,
+        "startChar": 53,
+        "endLine": 178,
+        "endChar": 54
+      },
+      "revId": "8744625910ab0b63d7ae28f10416aa36fd4c551d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "60c63344_84e87359",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2020-11-20T08:13:39Z",
+      "side": 1,
+      "message": "can this fail? If the error automatically trapped by cmake?",
+      "range": {
+        "startLine": 180,
+        "startChar": 37,
+        "endLine": 180,
+        "endChar": 53
+      },
+      "revId": "8744625910ab0b63d7ae28f10416aa36fd4c551d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
