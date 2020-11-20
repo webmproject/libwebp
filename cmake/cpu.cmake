@@ -82,6 +82,9 @@ foreach(I_SIMD RANGE ${WEBP_SIMD_FLAGS_RANGE})
       set(SIMD_COMPILE_FLAG " ")
     endif()
   endif()
+  elseif(${I_SIMD} LESS 2)
+    set(WEBP_HAVE_${WEBP_SIMD_FLAG} 1)
+  endif()
   # Check which files we should include or not.
   list(GET WEBP_SIMD_FILE_EXTENSIONS ${I_SIMD} WEBP_SIMD_FILE_EXTENSION)
   file(GLOB SIMD_FILES "${CMAKE_CURRENT_LIST_DIR}/../"
@@ -99,6 +102,7 @@ foreach(I_SIMD RANGE ${WEBP_SIMD_FLAGS_RANGE})
         list(APPEND WEBP_SIMD_FLAGS_TO_INCLUDE ${SIMD_COMPILE_FLAG})
       endif()
     endforeach()
+    set(simd_found 1)
   else()
     # Remove the file from the list.
     foreach(FILE ${SIMD_FILES})
