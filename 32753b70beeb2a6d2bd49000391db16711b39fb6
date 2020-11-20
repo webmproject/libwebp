@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "be6f41b1_f7c27784",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 2
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2020-11-20T21:21:51Z",
+      "side": 1,
+      "message": "missed some whitespace here.",
+      "range": {
+        "startLine": 182,
+        "startChar": 53,
+        "endLine": 182,
+        "endChar": 54
+      },
+      "revId": "32753b70beeb2a6d2bd49000391db16711b39fb6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
