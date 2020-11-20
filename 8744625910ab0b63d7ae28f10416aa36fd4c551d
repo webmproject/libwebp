@@ -47,6 +47,54 @@
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "28e3806d_f1493b7f",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2020-11-20T19:45:51Z",
+      "side": 1,
+      "message": "\u003e double \u0027;\u0027?\n\noops missed that when fixing the output",
+      "parentUuid": "c1ce33a8_a614dfa2",
+      "range": {
+        "startLine": 178,
+        "startChar": 53,
+        "endLine": 178,
+        "endChar": 54
+      },
+      "revId": "8744625910ab0b63d7ae28f10416aa36fd4c551d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "f84621f7_524f8c6b",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2020-11-20T19:45:51Z",
+      "side": 1,
+      "message": "\u003e just defining a static does not work ?\n\nI was being pessimistic as I thought we might hit another warning about defining no public symbols in some configurations:\nObjects-normal/x86_64/libwebp_webpdecoder_stub.o has no symbols",
+      "parentUuid": "f34fd9a0_7390b346",
+      "range": {
+        "startLine": 178,
+        "startChar": 7,
+        "endLine": 178,
+        "endChar": 11
+      },
+      "revId": "8744625910ab0b63d7ae28f10416aa36fd4c551d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "60c63344_84e87359",
@@ -70,6 +118,30 @@
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "f3fe6c53_b58a2d3c",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2020-11-20T19:45:51Z",
+      "side": 1,
+      "message": "\u003e can this fail? If the error automatically trapped by cmake?\n\ncmake will catch this see cl/339385761. verified here too:\nCMake Error at CMakeLists.txt:185 (file):\n  file failed to open for writing (No such file or directory):\n\n    /nodir/libwebp_webpdecoder_stub.c",
+      "parentUuid": "60c63344_84e87359",
+      "range": {
+        "startLine": 180,
+        "startChar": 37,
+        "endLine": 180,
+        "endChar": 53
+      },
+      "revId": "8744625910ab0b63d7ae28f10416aa36fd4c551d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "421e3167_fb30f77f",
@@ -83,6 +155,30 @@
       "writtenOn": "2020-11-20T09:53:51Z",
       "side": 1,
       "message": "Maybe add this comment once and for all to libwebp_add_stub_file ?",
+      "range": {
+        "startLine": 214,
+        "startChar": 4,
+        "endLine": 214,
+        "endChar": 7
+      },
+      "revId": "8744625910ab0b63d7ae28f10416aa36fd4c551d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "8ef0dbeb_3ae1ab16",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2020-11-20T19:45:51Z",
+      "side": 1,
+      "message": "\u003e Maybe add this comment once and for all to libwebp_add_stub_file ?\n\nGood point, done.",
+      "parentUuid": "421e3167_fb30f77f",
       "range": {
         "startLine": 214,
         "startChar": 4,
