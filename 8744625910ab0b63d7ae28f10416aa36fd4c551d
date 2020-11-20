@@ -26,6 +26,29 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "f34fd9a0_7390b346",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2020-11-20T09:53:51Z",
+      "side": 1,
+      "message": "just defining a static does not work ?",
+      "range": {
+        "startLine": 178,
+        "startChar": 7,
+        "endLine": 178,
+        "endChar": 11
+      },
+      "revId": "8744625910ab0b63d7ae28f10416aa36fd4c551d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "60c63344_84e87359",
         "filename": "CMakeLists.txt",
         "patchSetId": 1
@@ -42,6 +65,29 @@
         "startChar": 37,
         "endLine": 180,
         "endChar": 53
+      },
+      "revId": "8744625910ab0b63d7ae28f10416aa36fd4c551d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "421e3167_fb30f77f",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2020-11-20T09:53:51Z",
+      "side": 1,
+      "message": "Maybe add this comment once and for all to libwebp_add_stub_file ?",
+      "range": {
+        "startLine": 214,
+        "startChar": 4,
+        "endLine": 214,
+        "endChar": 7
       },
       "revId": "8744625910ab0b63d7ae28f10416aa36fd4c551d",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
