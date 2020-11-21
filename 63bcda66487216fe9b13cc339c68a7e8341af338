@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "09ee972a_c8641485",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2020-11-21T07:07:00Z",
+      "side": 1,
+      "message": "Ingvar, Thomas, even before this change with -msimd128 I see link errors with 2.0.9 and\n-DWEBP_BUILD_WEBP_JS\u003dON -DWEBP_ENABLE_SIMD\u003dON -DCMAKE_TOOLCHAIN_FILE\u003d$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake\n...\n[133/168] Linking C executable webp.js\nFAILED: webp.js \n: \u0026\u0026 .../emsdk/upstream/emscripten/emcc -DNDEBUG -O2  -O2  -s WASM\u003d0        -s EXPORTED_FUNCTIONS\u003d\u0027[\"_WebpToSDL\"]\u0027 -s INVOKE_RUN\u003d0        -s EXTRA_EXPORTED_RUNTIME_METHODS\u003d\u0027[\"cwrap\"]\u0027 CMakeFiles/webp_js.dir/extras/webp_to_sdl.c.o  -o webp.js  libwebpdecoder.a  -lSDL \u0026\u0026 :\nunhandled unaligned load\nUNREACHABLE executed at /b/s/w/ir/cache/builder/emscripten-releases/binaryen/src/passes/AlignmentLowering.cpp:241!\nemcc: error: \u0027.../emsdk/upstream/bin/wasm2js --emscripten -O webp.wasm --mvp-features --enable-mutable-globals --enable-simd\u0027 failed (-6)\n\nI\u0027m not sure if you\u0027ve hit this or it\u0027s something to do with my local setup.",
+      "revId": "63bcda66487216fe9b13cc339c68a7e8341af338",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
