@@ -33,6 +33,24 @@
       "message": "While it\u0027s true at the moment, I\u0027ve allowed it because I think Emscripten can add the missing intrinsics over time, and for now this can be triggered only by user attempting to use NEON by explicitly setting the flags and won\u0027t happen automatically.",
       "revId": "96099a79a8ec250624071c75148c7855f87d073d",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "dfe54392_b5f25c91",
+        "filename": "cmake/cpu.cmake",
+        "patchSetId": 3
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2020-11-24T20:22:17Z",
+      "side": 1,
+      "message": "\u003e While it\u0027s true at the moment, I\u0027ve allowed it because I think Emscripten can add the missing intrinsics over time, and for now this can be triggered only by user attempting to use NEON by explicitly setting the flags and won\u0027t happen automatically.\n\nNEON actually isn\u0027t getting enabled with the current tip of tree due to line 86 \u0027elseif(${I_SIMD} LESS 2)\u0027. The build completes successfully. We can modify this as emscripten support progresses.\n\n$ cmake .. -DWEBP_BUILD_WEBP_JS\u003dON -DWEBP_ENABLE_SIMD\u003dON ...\n$ grep NEON src/webp/config.h \n/* Set to 1 if NEON is supported */\n/* #undef WEBP_HAVE_NEON */\n/* Set to 1 if runtime detection of NEON is enabled */\n/* #undef WEBP_HAVE_NEON_RTCD */",
+      "parentUuid": "c8fea81e_0875cdcb",
+      "revId": "96099a79a8ec250624071c75148c7855f87d073d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
