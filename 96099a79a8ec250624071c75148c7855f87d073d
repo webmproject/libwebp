@@ -16,6 +16,23 @@
       "message": "should we expect any speed regression overall (since some SSE instructions were used here and there outside of the assembly-optimized functions)?",
       "revId": "96099a79a8ec250624071c75148c7855f87d073d",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "c8fea81e_0875cdcb",
+        "filename": "cmake/cpu.cmake",
+        "patchSetId": 3
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1370170
+      },
+      "writtenOn": "2020-11-24T12:03:34Z",
+      "side": 1,
+      "message": "While it\u0027s true at the moment, I\u0027ve allowed it because I think Emscripten can add the missing intrinsics over time, and for now this can be triggered only by user attempting to use NEON by explicitly setting the flags and won\u0027t happen automatically.",
+      "revId": "96099a79a8ec250624071c75148c7855f87d073d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
