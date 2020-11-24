@@ -34,6 +34,24 @@
       "parentUuid": "09ee972a_c8641485",
       "revId": "63bcda66487216fe9b13cc339c68a7e8341af338",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "11e588d3_fa2e1368",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2020-11-24T01:23:08Z",
+      "side": 1,
+      "message": "\u003e wasm2js does not support SIMD, so the combination of `-msimd128` and `-s WASM\u003d0` is not expected to work. It would certainly be better if we printed a proper error for this rather than letting the tools crash, though.\n\nThanks for taking a look Thomas. It looks like we\u0027ll need to duplicate the webpdecoder target to avoid this flag. We can try to resolve this in a follow up.",
+      "parentUuid": "f49f5fd1_24291e09",
+      "revId": "63bcda66487216fe9b13cc339c68a7e8341af338",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
