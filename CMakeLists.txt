@@ -169,6 +169,29 @@ add_definitions(-DHAVE_CONFIG_H)
 
 # ##############################################################################
 # Build the webpdecoder library.
+
+# Creates a source file with an unused stub function in $CMAKE_BINARY_DIR and
+# adds it to the specified target. Currently used only with Xcode.
+#
+# See also:
+# https://cmake.org/cmake/help/v3.18/command/add_library.html#object-libraries
+# "Some native build systems (such as Xcode) may not like targets that have
+# only object files, so consider adding at least one real source file to any
+# target that references $<TARGET_OBJECTS:objlib>."
+function(libwebp_add_stub_file TARGET)
+  set(stub_source_dir "${CMAKE_BINARY_DIR}")
+  set(stub_source_file
+      "${stub_source_dir}/libwebp_${TARGET}_stub.c")
+  set(stub_source_code
+      "// Generated file. DO NOT EDIT!\n"
+      "// C source file created for target ${TARGET}.\n"
+      "void libwebp_${TARGET}_stub_function(void)\;\n"
+      "void libwebp_${TARGET}_stub_function(void) {}\n")
+  file(WRITE "${stub_source_file}" ${stub_source_code})
+
+  target_sources(${TARGET} PRIVATE ${stub_source_file})
+endfunction()
+
 if(MSVC)
   # avoid security warnings for e.g., fopen() used in the examples.
   add_definitions(-D_CRT_SECURE_NO_WARNINGS)
@@ -195,6 +218,9 @@ add_library(webpdecoder
             $<TARGET_OBJECTS:webpdecode>
             $<TARGET_OBJECTS:webpdspdecode>
             $<TARGET_OBJECTS:webputilsdecode>)
+if(XCODE)
+  libwebp_add_stub_file(webpdecoder)
+endif()
 target_link_libraries(webpdecoder ${WEBP_DEP_LIBRARIES})
 target_include_directories(
   webpdecoder
@@ -234,6 +260,9 @@ add_library(webp
             $<TARGET_OBJECTS:webpdsp>
             $<TARGET_OBJECTS:webpencode>
             $<TARGET_OBJECTS:webputils>)
+if(XCODE)
+  libwebp_add_stub_file(webp)
+endif()
 target_link_libraries(webp ${WEBP_DEP_LIBRARIES})
 target_include_directories(webp
                            PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
