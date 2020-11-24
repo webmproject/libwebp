@@ -18,6 +18,24 @@
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "95885e00_283c62cd",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2020-11-24T20:24:15Z",
+      "side": 1,
+      "message": "Where the flags were applied hasn\u0027t changed, just what -m flag is used to fix runtime cpu detection. They\u0027re only applied to the dsp files like in configure.",
+      "parentUuid": "14f3b2c9_cb440af1",
+      "revId": "96099a79a8ec250624071c75148c7855f87d073d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "c8fea81e_0875cdcb",
