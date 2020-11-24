@@ -52,6 +52,24 @@
       "parentUuid": "f49f5fd1_24291e09",
       "revId": "63bcda66487216fe9b13cc339c68a7e8341af338",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "9730e49b_a54e674a",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2020-11-24T02:55:30Z",
+      "side": 1,
+      "message": "\u003e \u003e wasm2js does not support SIMD, so the combination of `-msimd128` and `-s WASM\u003d0` is not expected to work. It would certainly be better if we printed a proper error for this rather than letting the tools crash, though.\n\u003e \n\u003e Thanks for taking a look Thomas. It looks like we\u0027ll need to duplicate the webpdecoder target to avoid this flag. We can try to resolve this in a follow up.\n\nhttps://chromium-review.googlesource.com/c/webm/libwebp/+/2557217 will be enough for now. It may be possible to split the target, set a different set of source flags with a generator and use a separate config file, but I think it may be simpler to build two separate configs.",
+      "parentUuid": "11e588d3_fa2e1368",
+      "revId": "63bcda66487216fe9b13cc339c68a7e8341af338",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
