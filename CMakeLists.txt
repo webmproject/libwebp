@@ -41,6 +41,10 @@ if(WEBP_BUILD_WEBP_JS)
   set(WEBP_BUILD_WEBPINFO OFF)
   set(WEBP_BUILD_WEBPMUX OFF)
   set(WEBP_BUILD_EXTRAS OFF)
+
+  if(WEBP_ENABLE_SIMD)
+    message("wasm2js does not support SIMD, disabling webp.js generation.")
+  endif()
 endif()
 
 set(WEBP_DEP_LIBRARIES)
@@ -582,18 +586,21 @@ if(WEBP_BUILD_EXTRAS)
 endif()
 
 if(WEBP_BUILD_WEBP_JS)
-  # JavaScript version
-  add_executable(webp_js ${CMAKE_CURRENT_SOURCE_DIR}/extras/webp_to_sdl.c)
-  target_link_libraries(webp_js webpdecoder SDL)
-  target_include_directories(webp_js PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
-  set(WEBP_HAVE_SDL 1)
-  set_target_properties(
-    webp_js
-    PROPERTIES LINK_FLAGS "-s WASM=0 \
-       -s EXPORTED_FUNCTIONS='[\"_WebpToSDL\"]' -s INVOKE_RUN=0 \
-       -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"cwrap\"]'")
-  set_target_properties(webp_js PROPERTIES OUTPUT_NAME webp)
-  target_compile_definitions(webp_js PUBLIC EMSCRIPTEN WEBP_HAVE_SDL)
+  # wasm2js does not support SIMD.
+  if(NOT WEBP_ENABLE_SIMD)
+    # JavaScript version
+    add_executable(webp_js ${CMAKE_CURRENT_SOURCE_DIR}/extras/webp_to_sdl.c)
+    target_link_libraries(webp_js webpdecoder SDL)
+    target_include_directories(webp_js PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+    set(WEBP_HAVE_SDL 1)
+    set_target_properties(
+      webp_js
+      PROPERTIES LINK_FLAGS "-s WASM=0 \
+         -s EXPORTED_FUNCTIONS='[\"_WebpToSDL\"]' -s INVOKE_RUN=0 \
+         -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"cwrap\"]'")
+    set_target_properties(webp_js PROPERTIES OUTPUT_NAME webp)
+    target_compile_definitions(webp_js PUBLIC EMSCRIPTEN WEBP_HAVE_SDL)
+  endif()
 
   # WASM version
   add_executable(webp_wasm ${CMAKE_CURRENT_SOURCE_DIR}/extras/webp_to_sdl.c)
