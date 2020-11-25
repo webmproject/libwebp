@@ -113,7 +113,7 @@ make install
 
 CMake:
 ------
-With CMake, you can compile libwebp, cwebp, dwebp, gif2web, img2webp, webpinfo
+With CMake, you can compile libwebp, cwebp, dwebp, gif2webp, img2webp, webpinfo
 and the JS bindings.
 
 Prerequisites:
@@ -429,7 +429,7 @@ Prerequisites:
 1) OpenGL & OpenGL Utility Toolkit (GLUT)
   Linux:
     $ sudo apt-get install freeglut3-dev mesa-common-dev
-  Mac + XCode:
+  Mac + Xcode:
     - These libraries should be available in the OpenGL / GLUT frameworks.
   Windows:
     http://freeglut.sourceforge.net/index.php#download
