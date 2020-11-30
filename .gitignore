@@ -1,6 +1,7 @@
 *.l[ao]
 *.[ao]
 *.pc
+.DS_Store
 .deps
 .libs
 /aclocal.m4
@@ -33,7 +34,8 @@ src/webp/stamp-h1
 *.idb
 *.pdb
 /iosbuild
-/WebP.framework
+/xcframeworkbuild
+/WebP*.*framework
 CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
