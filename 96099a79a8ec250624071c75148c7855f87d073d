@@ -36,6 +36,40 @@
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "0b992992_f551690b",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2020-11-30T14:48:40Z",
+      "side": 1,
+      "message": "Nice !",
+      "revId": "96099a79a8ec250624071c75148c7855f87d073d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "183d2688_53e60749",
+        "filename": "cmake/cpu.cmake",
+        "patchSetId": 3
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2020-11-30T14:48:40Z",
+      "side": 1,
+      "message": "We only support 1900 and above:\nhttps://chromium.googlesource.com/codecs/libwebp2/+/refs/heads/master/src/dsp/dsp.h#52\n\nSo you can remove those checks.",
+      "revId": "96099a79a8ec250624071c75148c7855f87d073d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "c8fea81e_0875cdcb",
