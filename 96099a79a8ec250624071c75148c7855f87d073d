@@ -70,6 +70,24 @@
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "7e57fe76_5d0b85d6",
+        "filename": "cmake/cpu.cmake",
+        "patchSetId": 3
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2020-11-30T19:23:33Z",
+      "side": 1,
+      "message": "\u003e We only support 1900 and above:\n\u003e https://chromium.googlesource.com/codecs/libwebp2/+/refs/heads/master/src/dsp/dsp.h#52\n\u003e \n\u003e So you can remove those checks.\n\nI\u0027ll do that when I port it over to libwebp2, but in libwebp we still have older version checks since we\u0027re just concerned with C (not C99 or C++11) support.\nhttps://chromium.googlesource.com/webm/libwebp/+/refs/heads/master/src/dsp/dsp.h#54",
+      "parentUuid": "183d2688_53e60749",
+      "revId": "96099a79a8ec250624071c75148c7855f87d073d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "c8fea81e_0875cdcb",
