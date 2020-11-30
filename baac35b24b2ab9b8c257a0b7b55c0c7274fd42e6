@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "cb6a4439_f3a8ef3d",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2020-11-30T23:37:11Z",
+      "side": 1,
+      "message": "Works for me in a dummy app, but it would be good to have someone else check the build if you have Xcode 11+ installed.",
+      "revId": "baac35b24b2ab9b8c257a0b7b55c0c7274fd42e6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
