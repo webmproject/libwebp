@@ -16,6 +16,23 @@
       "message": "Works for me in a dummy app, but it would be good to have someone else check the build if you have Xcode 11+ installed.",
       "revId": "baac35b24b2ab9b8c257a0b7b55c0c7274fd42e6",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "94ff3a90_88983f81",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2020-12-02T02:30:41Z",
+      "side": 1,
+      "message": "I was testing with Xcode 12.2, my 11.7 install doesn\u0027t seem to have arm64 in the libs though the release notes [1] suggest some support. I\u0027ll try a few more things, otherwise we can just say Xcode 12 for now.\n\n[1] https://developer.apple.com/documentation/xcode-release-notes/xcode-11-release-notes",
+      "revId": "baac35b24b2ab9b8c257a0b7b55c0c7274fd42e6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
