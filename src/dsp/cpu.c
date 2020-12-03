@@ -55,12 +55,18 @@ static WEBP_INLINE void GetCPUInfo(int cpu_info[4], int info_type) {
     : "=a"(cpu_info[0]), "=b"(cpu_info[1]), "=c"(cpu_info[2]), "=d"(cpu_info[3])
     : "a"(info_type), "c"(0));
 }
-#elif (defined(_M_X64) || defined(_M_IX86)) && \
-      defined(_MSC_FULL_VER) && _MSC_FULL_VER >= 150030729  // >= VS2008 SP1
+#elif defined(_MSC_VER) && (defined(_M_X64) || defined(_M_IX86))
+
+#if defined(_MSC_FULL_VER) && _MSC_FULL_VER >= 150030729  // >= VS2008 SP1
 #include <intrin.h>
 #define GetCPUInfo(info, type) __cpuidex(info, type, 0)  // set ecx=0
-#elif defined(WEBP_MSC_SSE2)
+#define WEBP_HAVE_MSC_CPUID
+#elif _MSC_VER > 1310
+#include <intrin.h>
 #define GetCPUInfo __cpuid
+#define WEBP_HAVE_MSC_CPUID
+#endif
+
 #endif
 
 // NaCl has no support for xgetbv or the raw opcode.
@@ -94,7 +100,7 @@ static WEBP_INLINE uint64_t xgetbv(void) {
 #define xgetbv() 0U  // no AVX for older x64 or unrecognized toolchains.
 #endif
 
-#if defined(__i386__) || defined(__x86_64__) || defined(WEBP_MSC_SSE2)
+#if defined(__i386__) || defined(__x86_64__) || defined(WEBP_HAVE_MSC_CPUID)
 
 // helper function for run-time detection of slow SSSE3 platforms
 static int CheckSlowModel(int info) {
