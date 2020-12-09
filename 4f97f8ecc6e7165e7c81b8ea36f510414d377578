@@ -58,6 +58,30 @@
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "31133f53_b84284a4",
+        "filename": "xcframeworkbuild.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2020-12-09T03:19:32Z",
+      "side": 1,
+      "message": "Done. I\u0027ll sync the formatting to iosbuild.sh too:\nhttps://chromium-review.googlesource.com/c/webm/libwebp/+/2580504",
+      "parentUuid": "6689e204_a32bf87b",
+      "range": {
+        "startLine": 77,
+        "startChar": 9,
+        "endLine": 77,
+        "endChar": 17
+      },
+      "revId": "4f97f8ecc6e7165e7c81b8ea36f510414d377578",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "133d8ee5_59e8041f",
@@ -71,6 +95,30 @@
       "writtenOn": "2020-12-08T06:36:57Z",
       "side": 1,
       "message": "space before \"EOT\"",
+      "range": {
+        "startLine": 82,
+        "startChar": 10,
+        "endLine": 82,
+        "endChar": 13
+      },
+      "revId": "4f97f8ecc6e7165e7c81b8ea36f510414d377578",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "7182b254_8ffa758a",
+        "filename": "xcframeworkbuild.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2020-12-09T03:19:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "133d8ee5_59e8041f",
       "range": {
         "startLine": 82,
         "startChar": 10,
