@@ -651,7 +651,6 @@ if(WEBP_BUILD_ANIM_UTILS)
 endif()
 
 # Install the different headers and libraries.
-include(GNUInstallDirs)
 install(TARGETS ${INSTALLED_LIBRARIES}
         EXPORT ${PROJECT_NAME}Targets
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/webp
