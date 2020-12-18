@@ -36,6 +36,10 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
 
   WebPAnimInfo info;
   if (!WebPAnimDecoderGetInfo(dec, &info)) return 0;
+  if (!ImgIoUtilCheckSizeArgumentsOverflow(info.canvas_width * 4,
+                                           info.canvas_height)) {
+    return 0;
+  }
 
   while (WebPAnimDecoderHasMoreFrames(dec)) {
     uint8_t* buf;
