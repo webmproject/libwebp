@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "778c1a7a_1b82a061",
+        "filename": "tests/fuzzer/animdecoder_fuzzer.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2020-12-18T20:11:26Z",
+      "side": 1,
+      "message": "we have a mix across files between this and kFuzzPxLimit, but this is at least internally consistent.",
+      "revId": "63258823272806c8a401e2e3d36f96096f306c68",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
