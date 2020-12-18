@@ -87,8 +87,16 @@ WebPAnimDecoder* WebPAnimDecoderNewInternal(
     int abi_version) {
   WebPAnimDecoderOptions options;
   WebPAnimDecoder* dec = NULL;
+  WebPBitstreamFeatures features;
   if (webp_data == NULL ||
       WEBP_ABI_IS_INCOMPATIBLE(abi_version, WEBP_DEMUX_ABI_VERSION)) {
+    return NULL;
+  }
+
+  // Validate the bitstream before doing expensive allocations. The demuxer may
+  // be more tolerant than the decoder.
+  if (WebPGetFeatures(webp_data->bytes, webp_data->size, &features) !=
+      VP8_STATUS_OK) {
     return NULL;
   }
 
