@@ -35,10 +35,10 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
   if (dec == NULL) return 0;
 
   WebPAnimInfo info;
-  if (!WebPAnimDecoderGetInfo(dec, &info)) return 0;
+  if (!WebPAnimDecoderGetInfo(dec, &info)) goto End;
   if (!ImgIoUtilCheckSizeArgumentsOverflow(info.canvas_width * 4,
                                            info.canvas_height)) {
-    return 0;
+    goto End;
   }
 
   while (WebPAnimDecoderHasMoreFrames(dec)) {
@@ -46,6 +46,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     int timestamp;
     if (!WebPAnimDecoderGetNext(dec, &buf, &timestamp)) break;
   }
+ End:
   WebPAnimDecoderDelete(dec);
   return 0;
 }
