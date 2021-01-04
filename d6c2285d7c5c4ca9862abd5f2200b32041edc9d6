@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "a406edab_06755a3f",
+        "filename": "gradlew.bat",
+        "patchSetId": 2
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2021-01-04T06:05:09Z",
+      "side": 1,
+      "message": "2015? why not 2021?",
+      "range": {
+        "startLine": 2,
+        "startChar": 19,
+        "endLine": 2,
+        "endChar": 20
+      },
+      "revId": "d6c2285d7c5c4ca9862abd5f2200b32041edc9d6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
