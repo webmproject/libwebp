@@ -22,6 +22,30 @@
       },
       "revId": "8696147da438babdc30ea6fd291d1e8abb407828",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "858fbe67_de8cad49",
+        "filename": "imageio/pngdec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 264,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2021-01-08T22:25:21Z",
+      "side": 1,
+      "message": "ack. I thought about re-using WEBP_MAX_ALLOCABLE_MEMORY, but didn\u0027t want to tie too deeply this code to the internals of the lib...\nHardcoded value is good here.",
+      "parentUuid": "30585ab6_74b4231c",
+      "range": {
+        "startLine": 264,
+        "startChar": 63,
+        "endLine": 264,
+        "endChar": 73
+      },
+      "revId": "8696147da438babdc30ea6fd291d1e8abb407828",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
