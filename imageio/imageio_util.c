@@ -152,7 +152,7 @@ int ImgIoUtilCheckSizeArgumentsOverflow(uint64_t nmemb, size_t size) {
   const uint64_t total_size = nmemb * size;
   int ok = (total_size == (size_t)total_size);
 #if defined(WEBP_MAX_IMAGE_SIZE)
-  ok = ok && (total_size <= (uint64_t)WEBP_MAX_IMAGE_SIZE);
+  ok = ok && (total_size <= (uint64_t)WEBP_MAX_IMAGE_SIZE * size);
 #endif
   return ok;
 }
