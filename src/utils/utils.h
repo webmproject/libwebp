@@ -107,6 +107,10 @@ static WEBP_INLINE void PutLE32(uint8_t* const data, uint32_t val) {
   PutLE16(data + 2, (int)(val >> 16));
 }
 
+static WEBP_INLINE uint32_t MinU32(uint32_t a, uint32_t b) {
+  return (a < b) ? a : b;
+}
+
 // Returns (int)floor(log2(n)). n must be > 0.
 // use GNU builtins where available.
 #if defined(__GNUC__) && \

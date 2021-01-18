@@ -146,6 +146,13 @@ If the minimum value must be less or equal to the maximum one.
 Turns auto\-filter on. This algorithm will spend additional time optimizing
 the filtering strength to reach a well\-balanced quality.
 .TP
+.B \-segment_map " string
+Specifies the file name to load as segment map. The dimension of the map
+must fit the number of 16x16 blocks in the input image (after resizing
+and cropping). The map must contains the characters '0', '1', '2' or '3'
+for each 16x16 block, describing the segment-id to be used, clamped by
+the max number of segments (specified by the '-segments' option, e.g.).
+.TP
 .B \-jpeg_like
 Change the internal parameter mapping to better match the expected size
 of JPEG compression. This flag will generally produce an output file of

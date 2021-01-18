@@ -619,6 +619,7 @@ static void HelpLong(void) {
   printf("  -jpeg_like ............. roughly match expected JPEG size\n");
   printf("  -af .................... auto-adjust filter strength\n");
   printf("  -pre <int> ............. pre-processing filter\n");
+  printf("  -segment_map <name> .... file name to use as segment-map\n");
   printf("\n");
 }
 
@@ -672,6 +673,8 @@ int main(int argc, const char* argv[]) {
   int use_memory_writer;
   Metadata metadata;
   Stopwatch stop_watch;
+  const char* segment_map = NULL;
+  size_t segment_map_size = 0;
 
   INIT_WARGV(argc, argv);
 
@@ -812,6 +815,8 @@ int main(int argc, const char* argv[]) {
       config.preprocessing = ExUtilGetInt(argv[++c], 0, &parse_error);
     } else if (!strcmp(argv[c], "-segments") && c + 1 < argc) {
       config.segments = ExUtilGetInt(argv[++c], 0, &parse_error);
+    } else if (!strcmp(argv[c], "-segment_map") && c + 1 < argc) {
+      segment_map = argv[++c];
     } else if (!strcmp(argv[c], "-partition_limit") && c + 1 < argc) {
       config.partition_limit = ExUtilGetInt(argv[++c], 0, &parse_error);
     } else if (!strcmp(argv[c], "-map") && c + 1 < argc) {
@@ -953,6 +958,12 @@ int main(int argc, const char* argv[]) {
   // omitted, force a reasonable value.
   if (config.target_size > 0 || config.target_PSNR > 0) {
     if (config.pass == 1) config.pass = 6;
+  }
+
+  if (segment_map != NULL &&
+      !ImgIoUtilReadFile(segment_map, (const uint8_t**)&config.segment_map,
+                         &segment_map_size)) {
+    goto Error;
   }
 
   if (!WebPValidateConfig(&config)) {
@@ -1106,6 +1117,18 @@ int main(int argc, const char* argv[]) {
     goto Error;
   }
 
+  // verify segment map
+  if (segment_map != NULL) {
+    const size_t min_segment_map_size =
+        ((picture.width + 15) / 16) * ((picture.height + 15) / 16);
+    if (segment_map_size < min_segment_map_size) {
+      fprintf(stderr, "The supplied segment map '%s' is too small. "
+                      "Expected at least %d bytes, got %d.\n",
+              segment_map, (int)min_segment_map_size, (int)segment_map_size);
+      goto Error;
+    }
+  }
+
   // Compress.
   if (verbose) {
     StopwatchReset(&stop_watch);
@@ -1224,6 +1247,7 @@ int main(int argc, const char* argv[]) {
   return_value = 0;
 
  Error:
+  WebPFree(config.segment_map);
   WebPMemoryWriterClear(&memory_writer);
   WebPFree(picture.extra_info);
   MetadataFree(&metadata);

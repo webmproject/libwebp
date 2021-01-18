@@ -20,7 +20,7 @@
 extern "C" {
 #endif
 
-#define WEBP_ENCODER_ABI_VERSION 0x0210    // MAJOR(8b) + MINOR(8b)
+#define WEBP_ENCODER_ABI_VERSION 0x0211    // MAJOR(8b) + MINOR(8b)
 
 // Note: forward declaring enumerations is not allowed in (strict) C and C++,
 // the types are left here for reference.
@@ -150,6 +150,12 @@ struct WebPConfig {
 
   int qmin;               // minimum permissible quality factor
   int qmax;               // maximum permissible quality factor
+
+  // if not NULL, the following should point to a scan-ordered map specifying
+  // the segment-id (as ASCII characters '0', '1', '2' or '3') to use for each
+  // 16x16 blocks. Values larger than the max number of segments are clamped.
+  // The map size must be at least ((width + 15) / 16) * ((height + 15) / 16).
+  uint8_t* segment_map;
 };
 
 // Enumerate some predefined settings for WebPConfig, depending on the type

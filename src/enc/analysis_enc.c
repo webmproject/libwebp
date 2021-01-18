@@ -129,16 +129,9 @@ static void InitHistogram(VP8Histogram* const histo) {
 //------------------------------------------------------------------------------
 // Simplified k-Means, to assign Nb segments based on alpha-histogram
 
-static void AssignSegments(VP8Encoder* const enc,
-                           const int alphas[MAX_ALPHA + 1]) {
-  // 'num_segments_' is previously validated and <= NUM_MB_SEGMENTS, but an
-  // explicit check is needed to avoid spurious warning about 'n + 1' exceeding
-  // array bounds of 'centers' with some compilers (noticed with gcc-4.9).
-  const int nb = (enc->segment_hdr_.num_segments_ < NUM_MB_SEGMENTS) ?
-                 enc->segment_hdr_.num_segments_ : NUM_MB_SEGMENTS;
-  int centers[NUM_MB_SEGMENTS];
-  int weighted_average = 0;
-  int map[MAX_ALPHA + 1];
+static void ComputeCenters(const int alphas[MAX_ALPHA + 1], int nb, int centers[],
+                           int* const weighted_average, int map[]) {
+  *weighted_average = 0;
   int a, n, k;
   int min_a = 0, max_a = MAX_ALPHA, range_a;
   // 'int' type is ok for histo, and won't overflow
@@ -175,7 +168,7 @@ static void AssignSegments(VP8Encoder* const enc,
         while (n + 1 < nb && abs(a - centers[n + 1]) < abs(a - centers[n])) {
           n++;
         }
-        map[a] = n;
+        if (map != NULL) map[a] = n;
         // accumulate contribution into best centroid
         dist_accum[n] += a * alphas[a];
         accum[n] += alphas[a];
@@ -184,20 +177,35 @@ static void AssignSegments(VP8Encoder* const enc,
     // All point are classified. Move the centroids to the
     // center of their respective cloud.
     displaced = 0;
-    weighted_average = 0;
+    *weighted_average = 0;
     total_weight = 0;
     for (n = 0; n < nb; ++n) {
       if (accum[n]) {
         const int new_center = (dist_accum[n] + accum[n] / 2) / accum[n];
         displaced += abs(centers[n] - new_center);
         centers[n] = new_center;
-        weighted_average += new_center * accum[n];
+        *weighted_average += new_center * accum[n];
         total_weight += accum[n];
       }
     }
-    weighted_average = (weighted_average + total_weight / 2) / total_weight;
+    *weighted_average = (*weighted_average + total_weight / 2) / total_weight;
     if (displaced < 5) break;   // no need to keep on looping...
   }
+}
+
+static void AssignSegments(VP8Encoder* const enc,
+                           const int alphas[MAX_ALPHA + 1]) {
+  // 'num_segments_' is previously validated and <= NUM_MB_SEGMENTS, but an
+  // explicit check is needed to avoid spurious warning about 'n + 1' exceeding
+  // array bounds of 'centers' with some compilers (noticed with gcc-4.9).
+  const int nb = (enc->segment_hdr_.num_segments_ < NUM_MB_SEGMENTS) ?
+                 enc->segment_hdr_.num_segments_ : NUM_MB_SEGMENTS;
+  int centers[NUM_MB_SEGMENTS];
+  int weighted_average = 0;
+  int map[MAX_ALPHA + 1];
+  int n;
+
+  ComputeCenters(alphas, nb, centers, &weighted_average, map);
 
   // Map each original value to the closest centroid
   for (n = 0; n < enc->mb_w_ * enc->mb_h_; ++n) {
@@ -207,12 +215,66 @@ static void AssignSegments(VP8Encoder* const enc,
     mb->alpha_ = centers[map[alpha]];  // for the record.
   }
 
-  if (nb > 1) {
+  if (enc->segment_hdr_.num_segments_ > 1) {
     const int smooth = (enc->config_->preprocessing & 1);
     if (smooth) SmoothSegmentMap(enc);
   }
 
   SetSegmentAlphas(enc, centers, weighted_average);  // pick some alphas.
+}
+
+static void AssignSegmentMap(VP8Encoder* const enc) {
+  int alpha_sum[NUM_MB_SEGMENTS];
+  int alpha_num[NUM_MB_SEGMENTS];
+  int mid_alpha;
+  const uint8_t* const map = enc->config_->segment_map;
+  int nb_segments = enc->segment_hdr_.num_segments_;
+  const int nb_mbs = enc->mb_w_ * enc->mb_h_;
+  int i, n;
+  uint8_t used_ids = 0u;
+  uint8_t remap[NUM_MB_SEGMENTS] = {0, 1, 2, 3};
+
+  assert(map != NULL);
+
+  for (n = 0; n < nb_mbs; ++n) {
+    const uint32_t id = MinU32(map[n] - '0', nb_segments - 1);
+    used_ids |= (1u << id);
+    if (used_ids > (1u << nb_segments) - 1) break;  // seen all ids, break
+  }
+  assert(used_ids > 0);
+  for (i = 0, nb_segments = 0; i < NUM_MB_SEGMENTS; ++i) {
+    remap[i] = nb_segments;
+    alpha_sum[i] = 0;
+    alpha_num[i] = 0;
+    if (used_ids & (1u << i)) ++nb_segments;
+  }
+  enc->segment_hdr_.num_segments_ = nb_segments;
+  for (n = 0; n < nb_mbs; ++n) {
+    VP8MBInfo* const mb = &enc->mb_info_[n];
+    const uint32_t id = remap[MinU32(map[n] - '0', nb_segments - 1)];
+    alpha_sum[id] += mb->alpha_;
+    alpha_num[id] += 1;
+    mb->segment_ = id;
+  }
+  mid_alpha = 0;
+  for (i = 0; i < nb_segments; ++i) {
+    assert(alpha_num[i] > 0);
+    alpha_sum[i] = (alpha_sum[i] + alpha_num[i] / 2) / alpha_num[i];
+    mid_alpha += alpha_sum[i];
+  }
+  mid_alpha = (mid_alpha + nb_segments / 2) / nb_segments;
+
+  for (n = 0; n < nb_mbs; ++n) {
+    VP8MBInfo* const mb = &enc->mb_info_[n];
+    mb->alpha_ = alpha_sum[mb->segment_];  // for the record.
+  }
+
+  if (nb_segments > 1) {
+    const int smooth = (enc->config_->preprocessing & 1);
+    if (smooth) SmoothSegmentMap(enc);
+  }
+
+  SetSegmentAlphas(enc, alpha_sum, mid_alpha);  // pick some alphas.
 }
 
 //------------------------------------------------------------------------------
@@ -422,7 +484,7 @@ int VP8EncAnalyze(VP8Encoder* const enc) {
   const int do_segments =
       enc->config_->emulate_jpeg_size ||   // We need the complexity evaluation.
       (enc->segment_hdr_.num_segments_ > 1) ||
-      (enc->method_ <= 1);  // for method 0 - 1, we need preds_[] to be filled.
+      (enc->method_ <= 1);  // for method 0 - 1, we need preds_[] to be filled
   if (do_segments) {
     const int last_row = enc->mb_h_;
     // We give a little more than a half work to the main thread.
@@ -465,7 +527,11 @@ int VP8EncAnalyze(VP8Encoder* const enc) {
     if (ok) {
       enc->alpha_ = main_job.alpha / total_mb;
       enc->uv_alpha_ = main_job.uv_alpha / total_mb;
-      AssignSegments(enc, main_job.alphas);
+      if (enc->config_->segment_map == NULL) {
+        AssignSegments(enc, main_job.alphas);
+      } else {
+        AssignSegmentMap(enc);
+      }
     }
   } else {   // Use only one default segment.
     ResetAllMBInfo(enc);
