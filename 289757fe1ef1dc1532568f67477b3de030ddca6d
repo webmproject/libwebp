@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "3f62ea52_7c53357a",
+        "filename": "cmake/config.h.in",
+        "patchSetId": 5
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2021-01-19T23:07:44Z",
+      "side": 0,
+      "message": "did you mean to remove this one? won\u0027t it throw off the diff to configure which writes /* #undef ...*/?",
+      "revId": "289757fe1ef1dc1532568f67477b3de030ddca6d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
