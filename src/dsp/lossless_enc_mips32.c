@@ -104,7 +104,7 @@ static float FastLog2Slow_MIPS32(uint32_t v) {
 //     pop += 2;
 //   }
 //   return (double)cost;
-static double ExtraCost_MIPS32(const uint32_t* const population, int length) {
+static float ExtraCost_MIPS32(const uint32_t* const population, int length) {
   int i, temp0, temp1;
   const uint32_t* pop = &population[4];
   const uint32_t* const LoopEnd = &population[length];
@@ -130,7 +130,7 @@ static double ExtraCost_MIPS32(const uint32_t* const population, int length) {
     : "memory", "hi", "lo"
   );
 
-  return (double)((int64_t)temp0 << 32 | temp1);
+  return (float)((int64_t)temp0 << 32 | temp1);
 }
 
 // C version of this function:
@@ -149,8 +149,8 @@ static double ExtraCost_MIPS32(const uint32_t* const population, int length) {
 //     pY += 2;
 //   }
 //   return (double)cost;
-static double ExtraCostCombined_MIPS32(const uint32_t* const X,
-                                       const uint32_t* const Y, int length) {
+static float ExtraCostCombined_MIPS32(const uint32_t* const X,
+                                      const uint32_t* const Y, int length) {
   int i, temp0, temp1, temp2, temp3;
   const uint32_t* pX = &X[4];
   const uint32_t* pY = &Y[4];
@@ -183,7 +183,7 @@ static double ExtraCostCombined_MIPS32(const uint32_t* const X,
     : "memory", "hi", "lo"
   );
 
-  return (double)((int64_t)temp0 << 32 | temp1);
+  return (float)((int64_t)temp0 << 32 | temp1);
 }
 
 #define HUFFMAN_COST_PASS                                 \
