@@ -728,7 +728,7 @@ static int CalculateBestCacheSize(const uint32_t* argb, int quality,
                                   int* const best_cache_bits) {
   int i;
   const int cache_bits_max = (quality <= 25) ? 0 : *best_cache_bits;
-  double entropy_min = MAX_ENTROPY;
+  float entropy_min = MAX_ENTROPY;
   int cc_init[MAX_COLOR_CACHE_BITS + 1] = { 0 };
   VP8LColorCache hashers[MAX_COLOR_CACHE_BITS + 1];
   VP8LRefsCursor c = VP8LRefsCursorInit(refs);
@@ -813,7 +813,7 @@ static int CalculateBestCacheSize(const uint32_t* argb, int quality,
   }
 
   for (i = 0; i <= cache_bits_max; ++i) {
-    const double entropy = VP8LHistogramEstimateBits(histos[i]);
+    const float entropy = VP8LHistogramEstimateBits(histos[i]);
     if (i == 0 || entropy < entropy_min) {
       entropy_min = entropy;
       *best_cache_bits = i;
@@ -890,7 +890,7 @@ static int GetBackwardReferences(int width, int height,
   int i, lz77_type;
   // Index 0 is for a color cache, index 1 for no cache (if needed).
   int lz77_types_best[2] = {0, 0};
-  double bit_costs_best[2] = {DBL_MAX, DBL_MAX};
+  float bit_costs_best[2] = {FLT_MAX, FLT_MAX};
   VP8LHashChain hash_chain_box;
   VP8LBackwardRefs* const refs_tmp = &refs[do_no_cache ? 2 : 1];
   int status = 0;
@@ -902,7 +902,7 @@ static int GetBackwardReferences(int width, int height,
   for (lz77_type = 1; lz77_types_to_try;
        lz77_types_to_try &= ~lz77_type, lz77_type <<= 1) {
     int res = 0;
-    double bit_cost = 0.;
+    float bit_cost = 0.f;
     if ((lz77_types_to_try & lz77_type) == 0) continue;
     switch (lz77_type) {
       case kLZ77RLE:
@@ -979,7 +979,7 @@ static int GetBackwardReferences(int width, int height,
       if (VP8LBackwardReferencesTraceBackwards(width, height, argb, cache_bits,
                                                hash_chain_tmp, &refs[i],
                                                refs_tmp)) {
-        double bit_cost_trace;
+        float bit_cost_trace;
         VP8LHistogramCreate(histo, refs_tmp, cache_bits);
         bit_cost_trace = VP8LHistogramEstimateBits(histo);
         if (bit_cost_trace < bit_costs_best[i]) {
