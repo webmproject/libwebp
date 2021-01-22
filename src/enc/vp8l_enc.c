@@ -242,8 +242,8 @@ static int AnalyzeEntropy(const uint32_t* argb,
       curr_row += argb_stride;
     }
     {
-      double entropy_comp[kHistoTotal];
-      double entropy[kNumEntropyIx];
+      float entropy_comp[kHistoTotal];
+      float entropy[kNumEntropyIx];
       int k;
       int last_mode_to_analyze = use_palette ? kPalette : kSpatialSubGreen;
       int j;
@@ -258,7 +258,7 @@ static int AnalyzeEntropy(const uint32_t* argb,
       ++histo[kHistoAlphaPred * 256];
 
       for (j = 0; j < kHistoTotal; ++j) {
-        entropy_comp[j] = VP8LBitsEntropy(&histo[j * 256], 256);
+        entropy_comp[j] = (float)VP8LBitsEntropy(&histo[j * 256], 256);
       }
       entropy[kDirect] = entropy_comp[kHistoAlpha] +
           entropy_comp[kHistoRed] +
