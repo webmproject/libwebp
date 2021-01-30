@@ -23,8 +23,8 @@
 #include "./img_alpha.h"
 #include "./img_grid.h"
 #include "./img_peak.h"
-#include "dsp/dsp.h"
-#include "webp/encode.h"
+#include "src/dsp/dsp.h"
+#include "src/webp/encode.h"
 
 //------------------------------------------------------------------------------
 // Arbitrary limits to prevent OOM, timeout, or slow execution.

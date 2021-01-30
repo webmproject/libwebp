@@ -18,8 +18,8 @@
 #include <stdlib.h>
 
 #include "./fuzz_utils.h"
-#include "webp/decode.h"
-#include "webp/encode.h"
+#include "src/webp/decode.h"
+#include "src/webp/encode.h"
 
 namespace {
 
