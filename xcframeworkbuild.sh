@@ -12,6 +12,11 @@
 
 set -e
 
+# Set these variables based on the desired minimum deployment target.
+readonly IOS_MIN_VERSION=6.0
+readonly MACOSX_MIN_VERSION=10.15
+readonly MACOSX_CATALYST_MIN_VERSION=13.0
+
 # Extract Xcode version.
 readonly XCODE=$(xcodebuild -version | grep Xcode | cut -d " " -f2)
 if [[ -z "${XCODE}" ]] || [[ "${XCODE%%.*}" -lt 11 ]]; then
@@ -135,10 +140,14 @@ for (( i = 0; i < $NUM_PLATFORMS; ++i )); do
     CFLAGS="-pipe -isysroot ${SDKROOT} -O3 -DNDEBUG"
     case "${PLATFORM}" in
       iPhone*)
-        CFLAGS+=" -miphoneos-version-min=6.0 -fembed-bitcode"
+        CFLAGS+=" -miphoneos-version-min=${IOS_MIN_VERSION} -fembed-bitcode"
         ;;
       MacOSX-Catalyst*)
-        CFLAGS+=" -target ${ARCH}-apple-ios13.0-macabi"
+        CFLAGS+=" -target"
+        CFLAGS+=" ${ARCH}-apple-ios${MACOSX_CATALYST_MIN_VERSION}-macabi"
+        ;;
+      MacOSX*)
+        CFLAGS+=" -mmacosx-version-min=${MACOSX_MIN_VERSION}"
         ;;
     esac
 
