@@ -33,6 +33,47 @@
       "message": "So what do we want to do with this one?",
       "revId": "f2df854cd0b788e01f40fa64dab8d91ed0771524",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "c81ba579_9dda8884",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2021-02-05T07:01:17Z",
+      "side": 1,
+      "message": "seems this check is pretty safe / harmless...",
+      "parentUuid": "4050b4be_e1bfbc6f",
+      "revId": "f2df854cd0b788e01f40fa64dab8d91ed0771524",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "b632bed3_9883043d",
+        "filename": "src/demux/anim_decode.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2021-02-05T07:01:17Z",
+      "side": 1,
+      "message": "this check could be moved higher (at line 95) maybe",
+      "range": {
+        "startLine": 106,
+        "startChar": 17,
+        "endLine": 106,
+        "endChar": 18
+      },
+      "revId": "f2df854cd0b788e01f40fa64dab8d91ed0771524",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
