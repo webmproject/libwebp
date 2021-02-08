@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "fa35ff54_c7015e29",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2021-02-08T22:01:42Z",
+      "side": 1,
+      "message": "bug\u003d doesn\u0027t get linkified, but I think the bot might have caught it on submit to update the bug. either way, easier to go with a known.",
+      "revId": "373eb170f1428a011552e6cc72d404aba2b9d8b5",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
