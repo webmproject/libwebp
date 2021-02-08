@@ -16,6 +16,24 @@
       "message": "bug\u003d doesn\u0027t get linkified, but I think the bot might have caught it on submit to update the bug. either way, easier to go with a known.",
       "revId": "373eb170f1428a011552e6cc72d404aba2b9d8b5",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "89ca05da_82e84924",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2021-02-08T23:11:11Z",
+      "side": 1,
+      "message": "ah, right!",
+      "parentUuid": "fa35ff54_c7015e29",
+      "revId": "373eb170f1428a011552e6cc72d404aba2b9d8b5",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
