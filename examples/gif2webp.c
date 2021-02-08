@@ -465,8 +465,10 @@ int main(int argc, const char* argv[]) {
     fprintf(stderr, "%s\n", WebPAnimEncoderGetError(enc));
     goto End;
   }
-
-  if (!loop_compatibility) {
+  // If there's only one frame, we don't need to handle loop count.
+  if (frame_number == 1) {
+    loop_count = 0;
+  } else if (!loop_compatibility) {
     if (!stored_loop_count) {
       // if no loop-count element is seen, the default is '1' (loop-once)
       // and we need to signal it explicitly in WebP. Note however that
