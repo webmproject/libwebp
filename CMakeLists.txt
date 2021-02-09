@@ -29,6 +29,7 @@ option(WEBP_BUILD_WEBPINFO "Build the webpinfo command line tool." ON)
 option(WEBP_BUILD_WEBPMUX "Build the webpmux command line tool." ON)
 option(WEBP_BUILD_EXTRAS "Build extras." ON)
 option(WEBP_BUILD_WEBP_JS "Emscripten build of webp.js." OFF)
+option(WEBP_USE_THREAD "Enable threading support" ON)
 option(WEBP_NEAR_LOSSLESS "Enable near-lossless encoding" ON)
 option(WEBP_ENABLE_SWAP_16BIT_CSP "Enable byte swap for 16 bit colorspaces."
        OFF)
@@ -50,6 +51,7 @@ if(WEBP_BUILD_WEBP_JS)
   set(WEBP_BUILD_WEBPINFO OFF)
   set(WEBP_BUILD_WEBPMUX OFF)
   set(WEBP_BUILD_EXTRAS OFF)
+  set(WEBP_USE_THREAD OFF)
 
   if(WEBP_ENABLE_SIMD)
     message("wasm2js does not support SIMD, disabling webp.js generation.")
@@ -567,7 +569,6 @@ if(WEBP_BUILD_EXTRAS)
                              PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
                                      ${CMAKE_CURRENT_SOURCE_DIR}/src
                                      ${CMAKE_CURRENT_BINARY_DIR}/src)
-  install(TARGETS get_disto RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
   # webp_quality
   add_executable(webp_quality ${WEBP_QUALITY_SRCS} ${WEBP_EXTRAS_SRCS})
@@ -575,7 +576,6 @@ if(WEBP_BUILD_EXTRAS)
   target_include_directories(webp_quality
                              PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
                                      ${CMAKE_CURRENT_BINARY_DIR})
-  install(TARGETS webp_quality RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
   # vwebp_sdl
   find_package(SDL)
@@ -590,7 +590,6 @@ if(WEBP_BUILD_EXTRAS)
                                        ${SDL_INCLUDE_DIR})
     set(WEBP_HAVE_SDL 1)
     target_compile_definitions(vwebp_sdl PUBLIC WEBP_HAVE_SDL)
-    install(TARGETS vwebp_sdl RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
   endif()
 endif()
 
