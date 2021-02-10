@@ -286,8 +286,7 @@ int VP8IteratorNext(VP8EncIterator* const it);
 // save the yuv_out_ boundary values to top_/left_ arrays for next iterations.
 void VP8IteratorSaveBoundary(VP8EncIterator* const it);
 // Report progression based on macroblock rows. Return 0 for user-abort request.
-int VP8IteratorProgress(const VP8EncIterator* const it,
-                        int final_delta_percent);
+int VP8IteratorProgress(const VP8EncIterator* const it, int delta);
 // Intra4x4 iterations
 void VP8IteratorStartI4(VP8EncIterator* const it);
 // returns true if not done.

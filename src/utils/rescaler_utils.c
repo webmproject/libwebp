@@ -107,31 +107,34 @@ int WebPRescalerGetScaledDimensions(int src_width, int src_height,
 //------------------------------------------------------------------------------
 // all-in-one calls
 
-int WebPRescaleNeededLines(const WebPRescaler* const wrk, int max_num_lines) {
-  const int num_lines = (wrk->y_accum + wrk->y_sub - 1) / wrk->y_sub;
+int WebPRescaleNeededLines(const WebPRescaler* const rescaler,
+                           int max_num_lines) {
+  const int num_lines =
+      (rescaler->y_accum + rescaler->y_sub - 1) / rescaler->y_sub;
   return (num_lines > max_num_lines) ? max_num_lines : num_lines;
 }
 
-int WebPRescalerImport(WebPRescaler* const wrk, int num_lines,
+int WebPRescalerImport(WebPRescaler* const rescaler, int num_lines,
                        const uint8_t* src, int src_stride) {
   int total_imported = 0;
-  while (total_imported < num_lines && !WebPRescalerHasPendingOutput(wrk)) {
-    if (wrk->y_expand) {
-      rescaler_t* const tmp = wrk->irow;
-      wrk->irow = wrk->frow;
-      wrk->frow = tmp;
+  while (total_imported < num_lines &&
+         !WebPRescalerHasPendingOutput(rescaler)) {
+    if (rescaler->y_expand) {
+      rescaler_t* const tmp = rescaler->irow;
+      rescaler->irow = rescaler->frow;
+      rescaler->frow = tmp;
     }
-    WebPRescalerImportRow(wrk, src);
-    if (!wrk->y_expand) {     // Accumulate the contribution of the new row.
+    WebPRescalerImportRow(rescaler, src);
+    if (!rescaler->y_expand) {    // Accumulate the contribution of the new row.
       int x;
-      for (x = 0; x < wrk->num_channels * wrk->dst_width; ++x) {
-        wrk->irow[x] += wrk->frow[x];
+      for (x = 0; x < rescaler->num_channels * rescaler->dst_width; ++x) {
+        rescaler->irow[x] += rescaler->frow[x];
       }
     }
-    ++wrk->src_y;
+    ++rescaler->src_y;
     src += src_stride;
     ++total_imported;
-    wrk->y_accum -= wrk->y_sub;
+    rescaler->y_accum -= rescaler->y_sub;
   }
   return total_imported;
 }
