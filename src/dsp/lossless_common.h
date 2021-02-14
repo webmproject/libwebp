@@ -16,8 +16,9 @@
 #ifndef WEBP_DSP_LOSSLESS_COMMON_H_
 #define WEBP_DSP_LOSSLESS_COMMON_H_
 
+#include <sys/cdefs.h>   // needed for log2f declaration through __ISO_C_VISIBLE
+#include <math.h>
 #include "src/webp/types.h"
-
 #include "src/utils/utils.h"
 
 #ifdef __cplusplus
@@ -67,27 +68,18 @@ static WEBP_INLINE int VP8LNearLosslessBits(int near_lossless_quality) {
 // -----------------------------------------------------------------------------
 // Faster logarithm for integers. Small values use a look-up table.
 
-// The threshold till approximate version of log_2 can be used.
-// Practically, we can get rid of the call to log() as the two values match to
-// very high degree (the ratio of these two is 0.99999x).
-// Keeping a high threshold for now.
-#define APPROX_LOG_WITH_CORRECTION_MAX  65536
-#define APPROX_LOG_MAX                   4096
-#define LOG_2_RECIPROCAL 1.44269504088896338700465094007086
 #define LOG_LOOKUP_IDX_MAX 256
 extern const float kLog2Table[LOG_LOOKUP_IDX_MAX];
-extern const float kSLog2Table[LOG_LOOKUP_IDX_MAX];
-typedef float (*VP8LFastLog2SlowFunc)(uint32_t v);
+extern const float kSLog2m1Table[LOG_LOOKUP_IDX_MAX];
 
-extern VP8LFastLog2SlowFunc VP8LFastLog2Slow;
-extern VP8LFastLog2SlowFunc VP8LFastSLog2Slow;
+extern float VP8LFastSLog2m1Slow(uint32_t v);
 
 static WEBP_INLINE float VP8LFastLog2(uint32_t v) {
-  return (v < LOG_LOOKUP_IDX_MAX) ? kLog2Table[v] : VP8LFastLog2Slow(v);
+  return (v < LOG_LOOKUP_IDX_MAX) ? kLog2Table[v] : (float)log2f(v);
 }
-// Fast calculation of v * log2(v) for integer input.
-static WEBP_INLINE float VP8LFastSLog2(uint32_t v) {
-  return (v < LOG_LOOKUP_IDX_MAX) ? kSLog2Table[v] : VP8LFastSLog2Slow(v);
+// Fast calculation of v * (1 - log2(v)) for integer input.
+static WEBP_INLINE float VP8LFastSLog2m1(uint32_t v) {
+  return (v < LOG_LOOKUP_IDX_MAX) ? kSLog2m1Table[v] : VP8LFastSLog2m1Slow(v);
 }
 
 // -----------------------------------------------------------------------------
