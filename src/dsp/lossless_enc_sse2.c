@@ -16,6 +16,7 @@
 #if defined(WEBP_USE_SSE2)
 #include <assert.h>
 #include <emmintrin.h>
+#include <math.h>
 #include "src/dsp/lossless.h"
 #include "src/dsp/common_sse2.h"
 #include "src/dsp/lossless_common.h"
@@ -238,11 +239,10 @@ static void AddVectorEq_SSE2(const uint32_t* a, uint32_t* out, int size) {
 #if !(defined(WEBP_HAVE_SLOW_CLZ_CTZ) || defined(__i386__) || defined(_M_IX86))
 
 static float CombinedShannonEntropy_SSE2(const int X[256], const int Y[256]) {
-  int i;
   double retval = 0.;
-  int sumX = 0, sumXY = 0;
   const __m128i zero = _mm_setzero_si128();
 
+  int i;
   for (i = 0; i < 256; i += 16) {
     const __m128i x0 = _mm_loadu_si128((const __m128i*)(X + i +  0));
     const __m128i y0 = _mm_loadu_si128((const __m128i*)(Y + i +  0));
@@ -260,19 +260,11 @@ static float CombinedShannonEntropy_SSE2(const int X[256], const int Y[256]) {
     int32_t my = _mm_movemask_epi8(_mm_cmpgt_epi8(y4, zero)) | mx;
     while (my) {
       const int32_t j = BitsCtz(my);
-      int xy;
-      if ((mx >> j) & 1) {
-        const int x = X[i + j];
-        sumXY += x;
-        retval -= VP8LFastSLog2(x);
-      }
-      xy = X[i + j] + Y[i + j];
-      sumX += xy;
-      retval -= VP8LFastSLog2(xy);
+      if ((mx >> j) & 1) retval += VP8LFastSLog2m1(X[i + j]);
+      retval += VP8LFastSLog2m1(X[i + j] + Y[i + j]);
       my &= my - 1;
     }
   }
-  retval += VP8LFastSLog2(sumX) + VP8LFastSLog2(sumXY);
   return (float)retval;
 }
 
@@ -641,6 +633,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LEncDspInitSSE2(void) {
 #if !defined(DONT_USE_COMBINED_SHANNON_ENTROPY_SSE2_FUNC)
   VP8LCombinedShannonEntropy = CombinedShannonEntropy_SSE2;
 #endif
+
   VP8LVectorMismatch = VectorMismatch_SSE2;
   VP8LBundleColorMap = BundleColorMap_SSE2;
 
