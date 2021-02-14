@@ -23,75 +23,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-static float FastSLog2Slow_MIPS32(uint32_t v) {
-  assert(v >= LOG_LOOKUP_IDX_MAX);
-  if (v < APPROX_LOG_WITH_CORRECTION_MAX) {
-    uint32_t log_cnt, y, correction;
-    const int c24 = 24;
-    const float v_f = (float)v;
-    uint32_t temp;
-
-    // Xf = 256 = 2^8
-    // log_cnt is index of leading one in upper 24 bits
-    __asm__ volatile(
-      "clz      %[log_cnt], %[v]                      \n\t"
-      "addiu    %[y],       $zero,        1           \n\t"
-      "subu     %[log_cnt], %[c24],       %[log_cnt]  \n\t"
-      "sllv     %[y],       %[y],         %[log_cnt]  \n\t"
-      "srlv     %[temp],    %[v],         %[log_cnt]  \n\t"
-      : [log_cnt]"=&r"(log_cnt), [y]"=&r"(y),
-        [temp]"=r"(temp)
-      : [c24]"r"(c24), [v]"r"(v)
-    );
-
-    // vf = (2^log_cnt) * Xf; where y = 2^log_cnt and Xf < 256
-    // Xf = floor(Xf) * (1 + (v % y) / v)
-    // log2(Xf) = log2(floor(Xf)) + log2(1 + (v % y) / v)
-    // The correction factor: log(1 + d) ~ d; for very small d values, so
-    // log2(1 + (v % y) / v) ~ LOG_2_RECIPROCAL * (v % y)/v
-    // LOG_2_RECIPROCAL ~ 23/16
-
-    // (v % y) = (v % 2^log_cnt) = v & (2^log_cnt - 1)
-    correction = (23 * (v & (y - 1))) >> 4;
-    return v_f * (kLog2Table[temp] + log_cnt) + correction;
-  } else {
-    return (float)(LOG_2_RECIPROCAL * v * log((double)v));
-  }
-}
-
-static float FastLog2Slow_MIPS32(uint32_t v) {
-  assert(v >= LOG_LOOKUP_IDX_MAX);
-  if (v < APPROX_LOG_WITH_CORRECTION_MAX) {
-    uint32_t log_cnt, y;
-    const int c24 = 24;
-    double log_2;
-    uint32_t temp;
-
-    __asm__ volatile(
-      "clz      %[log_cnt], %[v]                      \n\t"
-      "addiu    %[y],       $zero,        1           \n\t"
-      "subu     %[log_cnt], %[c24],       %[log_cnt]  \n\t"
-      "sllv     %[y],       %[y],         %[log_cnt]  \n\t"
-      "srlv     %[temp],    %[v],         %[log_cnt]  \n\t"
-      : [log_cnt]"=&r"(log_cnt), [y]"=&r"(y),
-        [temp]"=r"(temp)
-      : [c24]"r"(c24), [v]"r"(v)
-    );
-
-    log_2 = kLog2Table[temp] + log_cnt;
-    if (v >= APPROX_LOG_MAX) {
-      // Since the division is still expensive, add this correction factor only
-      // for large values of 'v'.
-
-      const uint32_t correction = (23 * (v & (y - 1))) >> 4;
-      log_2 += (double)correction / v;
-    }
-    return (float)log_2;
-  } else {
-    return (float)(LOG_2_RECIPROCAL * log((double)v));
-  }
-}
-
 // C version of this function:
 //   int i = 0;
 //   int64_t cost = 0;
@@ -380,8 +311,6 @@ static void AddVectorEq_MIPS32(const uint32_t* pa, uint32_t* pout, int size) {
 extern void VP8LEncDspInitMIPS32(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8LEncDspInitMIPS32(void) {
-  VP8LFastSLog2Slow = FastSLog2Slow_MIPS32;
-  VP8LFastLog2Slow = FastLog2Slow_MIPS32;
   VP8LExtraCost = ExtraCost_MIPS32;
   VP8LExtraCostCombined = ExtraCostCombined_MIPS32;
   VP8LGetEntropyUnrefined = GetEntropyUnrefined_MIPS32;
