@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "e5362112_78757a30",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 11
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2021-02-16T21:12:35Z",
+      "side": 1,
+      "message": "\u003e Patch Set 11: Verified+1\n\u003e \n\u003e Build Successful \n\u003e \n\u003e https://build.webmproject.org/jenkins/job/libwebp__commit_trigger/4967/ : SUCCESS\n\nOk, so the float/double precision difference was the problem it seems.\nI\u0027ll prepare the \u0027final\u0027 patch next with all the #defines back.\n",
+      "revId": "c2101ccba053de351e83e3de05d746d1ea412422",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
