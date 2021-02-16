@@ -329,6 +329,15 @@ const uint8_t kPrefixEncodeExtraBitsValue[PREFIX_LOOKUP_IDX_MAX] = {
 static float FastSLog2Slow_C(uint32_t v) {
   assert(v >= LOG_LOOKUP_IDX_MAX);
   if (v < APPROX_LOG_WITH_CORRECTION_MAX) {
+#if !defined(WEBP_HAVE_SLOW_CLZ_CTZ)
+    // use clz if available
+    const int log_cnt = BitsLog2Floor(v) - 7;
+    const uint32_t y = 1 << log_cnt;
+    int correction = 0;
+    const float v_f = (float)v;
+    const uint32_t orig_v = v;
+    v >>= log_cnt;
+#else
     int log_cnt = 0;
     uint32_t y = 1;
     int correction = 0;
@@ -339,6 +348,7 @@ static float FastSLog2Slow_C(uint32_t v) {
       v = v >> 1;
       y = y << 1;
     } while (v >= LOG_LOOKUP_IDX_MAX);
+#endif
     // vf = (2^log_cnt) * Xf; where y = 2^log_cnt and Xf < 256
     // Xf = floor(Xf) * (1 + (v % y) / v)
     // log2(Xf) = log2(floor(Xf)) + log2(1 + (v % y) / v)
@@ -355,6 +365,14 @@ static float FastSLog2Slow_C(uint32_t v) {
 static float FastLog2Slow_C(uint32_t v) {
   assert(v >= LOG_LOOKUP_IDX_MAX);
   if (v < APPROX_LOG_WITH_CORRECTION_MAX) {
+#if !defined(WEBP_HAVE_SLOW_CLZ_CTZ)
+    // use clz if available
+    const int log_cnt = BitsLog2Floor(v) - 7;
+    const uint32_t y = 1 << log_cnt;
+    const uint32_t orig_v = v;
+    double log_2;
+    v >>= log_cnt;
+#else
     int log_cnt = 0;
     uint32_t y = 1;
     const uint32_t orig_v = v;
@@ -364,6 +382,7 @@ static float FastLog2Slow_C(uint32_t v) {
       v = v >> 1;
       y = y << 1;
     } while (v >= LOG_LOOKUP_IDX_MAX);
+#endif
     log_2 = kLog2Table[v] + log_cnt;
     if (orig_v >= APPROX_LOG_MAX) {
       // Since the division is still expensive, add this correction factor only
