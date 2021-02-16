@@ -114,14 +114,22 @@ static WEBP_INLINE void PutLE32(uint8_t* const data, uint32_t val) {
 static WEBP_INLINE int BitsLog2Floor(uint32_t n) {
   return 31 ^ __builtin_clz(n);
 }
+// counts the number of trailing zero
+static WEBP_INLINE int BitsCtz(uint32_t n) { return __builtin_ctz(n); }
 #elif defined(_MSC_VER) && _MSC_VER > 1310 && \
       (defined(_M_X64) || defined(_M_IX86))
 #include <intrin.h>
 #pragma intrinsic(_BitScanReverse)
+#pragma intrinsic(_BitScanForward)
 
 static WEBP_INLINE int BitsLog2Floor(uint32_t n) {
   unsigned long first_set_bit;
   _BitScanReverse(&first_set_bit, n);
+  return first_set_bit;
+}
+static WEBP_INLINE int BitsCtz(uint32_t n) {
+  unsigned long first_set_bit;  // NOLINT (runtime/int)
+  _BitScanForward(&first_set_bit, n);
   return first_set_bit;
 }
 #else   // default: use the C-version.

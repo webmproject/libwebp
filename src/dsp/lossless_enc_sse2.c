@@ -232,6 +232,47 @@ static void AddVectorEq_SSE2(const uint32_t* a, uint32_t* out, int size) {
 //------------------------------------------------------------------------------
 // Entropy
 
+#ifndef WEBP_NEED_LOG_TABLE_8BIT // requires BitsCtz
+static float CombinedShannonEntropy_SSE2(const int X[256], const int Y[256]) {
+  int i;
+  double retval = 0.;
+  int sumX = 0, sumXY = 0;
+  const __m128i zero = _mm_setzero_si128();
+
+  for (i = 0; i < 256; i += 16) {
+    const __m128i x0 = _mm_loadu_si128((const __m128i*)(X + i +  0));
+    const __m128i y0 = _mm_loadu_si128((const __m128i*)(Y + i +  0));
+    const __m128i x1 = _mm_loadu_si128((const __m128i*)(X + i +  4));
+    const __m128i y1 = _mm_loadu_si128((const __m128i*)(Y + i +  4));
+    const __m128i x2 = _mm_loadu_si128((const __m128i*)(X + i +  8));
+    const __m128i y2 = _mm_loadu_si128((const __m128i*)(Y + i +  8));
+    const __m128i x3 = _mm_loadu_si128((const __m128i*)(X + i + 12));
+    const __m128i y3 = _mm_loadu_si128((const __m128i*)(Y + i + 12));
+    const __m128i x4 = _mm_packs_epi16(_mm_packs_epi32(x0, x1),
+                                       _mm_packs_epi32(x2, x3));
+    const __m128i y4 = _mm_packs_epi16(_mm_packs_epi32(y0, y1),
+                                       _mm_packs_epi32(y2, y3));
+    const int32_t mx = _mm_movemask_epi8(_mm_cmpgt_epi8(x4, zero));
+    int32_t my = _mm_movemask_epi8(_mm_cmpgt_epi8(y4, zero)) | mx;
+    while (my) {
+      const int32_t j = BitsCtz(my);
+      const int xy = X[i + j] + Y[i + j];
+      sumX += xy;
+      retval -= VP8LFastSLog2(xy);
+      if ((mx >> j) & 1) {
+        const int x = X[i + j];
+        sumXY += x;
+        retval -= VP8LFastSLog2(x);
+      }
+      my &= my - 1;
+    }
+  }
+  retval += VP8LFastSLog2(sumX) + VP8LFastSLog2(sumXY);
+  return retval;
+}
+#else
+
+#if !(defined(__i386__) || defined(_M_IX86))
 // Checks whether the X or Y contribution is worth computing and adding.
 // Used in loop unrolling.
 #define ANALYZE_X_OR_Y(x_or_y, j)                                           \
@@ -249,7 +290,6 @@ static void AddVectorEq_SSE2(const uint32_t* a, uint32_t* out, int size) {
     }                                  \
   } while (0)
 
-#if !(defined(__i386__) || defined(_M_IX86))
 static float CombinedShannonEntropy_SSE2(const int X[256], const int Y[256]) {
   int i;
   double retval = 0.;
@@ -301,10 +341,10 @@ static float CombinedShannonEntropy_SSE2(const int X[256], const int Y[256]) {
   retval += VP8LFastSLog2(sumX) + VP8LFastSLog2(sumXY);
   return (float)retval;
 }
-#endif  // !(defined(__i386__) || defined(_M_IX86))
-
 #undef ANALYZE_X_OR_Y
 #undef ANALYZE_XY
+#endif  // !(defined(__i386__) || defined(_M_IX86))
+#endif
 
 //------------------------------------------------------------------------------
 
@@ -665,7 +705,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LEncDspInitSSE2(void) {
   // TODO(https://crbug.com/webp/499): this function produces different results
   // from the C code due to use of double/float resulting in output differences
   // when compared to -noasm.
-#if !(defined(__i386__) || defined(_M_IX86))
+#if !defined(WEBP_NEED_LOG_TABLE_8BIT) || !(defined(__i386__) || defined(_M_IX86))
   VP8LCombinedShannonEntropy = CombinedShannonEntropy_SSE2;
 #endif
   VP8LVectorMismatch = VectorMismatch_SSE2;
