@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "e65f07c8_9613d234",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 10
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2021-02-16T16:34:23Z",
+      "side": 1,
+      "message": "\u003e Patch Set 10: Verified-1\n\u003e \n\u003e Build Failed \n\u003e \n\u003e https://build.webmproject.org/jenkins/job/libwebp__commit_trigger/4966/ : FAILURE\n\nLooks like there\u0027s (subtle?) problem on some platform. Could be the testing system itself, not necessarily the code.\n\nI\u0027m going to try and split the patch in several parts to try to narrow the issue...",
+      "revId": "6e3e6003c58e8e670b47b2daaa9b39a3320ffd5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
