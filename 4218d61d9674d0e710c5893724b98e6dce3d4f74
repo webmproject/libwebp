@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "0c90ea92_0070a36b",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2021-02-16T07:38:06Z",
+      "side": 1,
+      "message": "\u003e Patch Set 1: Verified-1\n\u003e \n\u003e Build Failed \n\u003e \n\u003e https://build.webmproject.org/jenkins/job/libwebp__commit_trigger/4957/ : FAILURE\n\nThe syntax checker is unhappy:\n\nSource files with lines longer than 80 characters, split them and post a new patch:\nsrc/dsp/lossless_enc_sse2.c(708): #if !defined(WEBP_NEED_LOG_TABLE_8BIT) || !(defined(__i386__) || defined(_M_IX86))\nsrc/dsp/lossless_enc_sse41.c(53):                                       (green_to_blue \u0026 0xff) \u003c\u003c 8 | (-32 \u0026 0xff));\n",
+      "revId": "4218d61d9674d0e710c5893724b98e6dce3d4f74",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
