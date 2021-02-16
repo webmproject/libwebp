@@ -34,6 +34,24 @@
       "parentUuid": "e65f07c8_9613d234",
       "revId": "6e3e6003c58e8e670b47b2daaa9b39a3320ffd5e",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "de9fbddb_f6aff72b",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 10
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2021-02-16T17:33:44Z",
+      "side": 1,
+      "message": "well, normally the problem was with the *previous* version of this functions (the ordering of the float operation was different, leading to slightly different results).\n\nAll right, i just uploaded patch #11 as a test, that disables this SSE2 version totally. To see what bots are saying. This is just a test...",
+      "parentUuid": "94a227d3_16b3db09",
+      "revId": "6e3e6003c58e8e670b47b2daaa9b39a3320ffd5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
