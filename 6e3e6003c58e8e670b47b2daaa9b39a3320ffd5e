@@ -70,6 +70,24 @@
       "parentUuid": "de9fbddb_f6aff72b",
       "revId": "6e3e6003c58e8e670b47b2daaa9b39a3320ffd5e",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "0c31b77d_bc68933e",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 10
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2021-02-17T02:58:06Z",
+      "side": 1,
+      "message": "\u003e I have a guess as to why this is happening, perhaps it is because the compiler is using SSE float instead of x87 float in this function when it compiles for i386 with the -msse2 flags. Adding -mfpmath\u003d387 to CFLAGS for i386 (and any prior to SSE) may help resolve this issue.\n\nYou\u0027re right that was a part of it. -mfpmath might be a better solution, but we aren\u0027t currently all that concerned with 32-bit performance.",
+      "parentUuid": "e136b349_32b6d90b",
+      "revId": "6e3e6003c58e8e670b47b2daaa9b39a3320ffd5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }

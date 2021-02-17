@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "2c10d7d4_738ac010",
+        "filename": "src/dsp/lossless_enc_sse41.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2021-02-17T02:58:06Z",
+      "side": 0,
+      "message": "with a constant below I would have expected modern compilers to skip the store and unroll the loop, but I didn\u0027t check the disassembly and making this explicit is probably safer.",
+      "revId": "401da22bd6ad52586c4b4f2fc1d26804a78ccbbe",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "c19bcd2e_c48a4b60",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 12
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2021-02-17T02:58:06Z",
+      "side": 1,
+      "message": "Thanks for the patch. To be safe I might split this to a few different changes that introduce BitsCtz and then one each for sse2 and sse41 since they\u0027re independent and would make reverting them easier if any issues were later found.",
+      "revId": "22be147c14ced40ebf84489fc74d434de561af8f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
