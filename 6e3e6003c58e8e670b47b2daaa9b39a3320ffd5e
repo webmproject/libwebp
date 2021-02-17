@@ -88,6 +88,24 @@
       "parentUuid": "e136b349_32b6d90b",
       "revId": "6e3e6003c58e8e670b47b2daaa9b39a3320ffd5e",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "b09307d0_825d0a3e",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 10
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1471133
+      },
+      "writtenOn": "2021-02-17T03:43:24Z",
+      "side": 1,
+      "message": "The order of x/xy may also matter:\n\nCombinedShannonEntropy_C - Here\u0027s X first.\n\n    if (x !\u003d 0) {\n      const int xy \u003d x + Y[i];\n      sumX +\u003d x;\n      retval -\u003d VP8LFastSLog2(x);\n      sumXY +\u003d xy;\n      retval -\u003d VP8LFastSLog2(xy);\n    } else if (Y[i] !\u003d 0) {\n      sumXY +\u003d Y[i];\n      retval -\u003d VP8LFastSLog2(Y[i]);\n    }\n\nCombinedShannonEntropy_SSE2 - but here I\u0027m copied from the WebP2, where\u0027s XY first:\n\n      const int32_t j \u003d BitsCtz(my);\n      const int xy \u003d X[i + j] + Y[i + j];\n      sumX +\u003d xy;\n      retval -\u003d VP8LFastSLog2(xy);\n      if ((mx \u003e\u003e j) \u0026 1) {\n        const int x \u003d X[i + j];\n        sumXY +\u003d x;\n        retval -\u003d VP8LFastSLog2(x);\n      }\n\nSo better is to swap X and XY to match C reference code:\n\n      const int32_t j \u003d BitsCtz(my);\n      if ((mx \u003e\u003e j) \u0026 1) {\n        const int x \u003d X[i + j];\n        sumXY +\u003d x;\n        retval -\u003d VP8LFastSLog2(x);\n      }\n      const int xy \u003d X[i + j] + Y[i + j];\n      sumX +\u003d xy;\n      retval -\u003d VP8LFastSLog2(xy);",
+      "parentUuid": "0c31b77d_bc68933e",
+      "revId": "6e3e6003c58e8e670b47b2daaa9b39a3320ffd5e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
