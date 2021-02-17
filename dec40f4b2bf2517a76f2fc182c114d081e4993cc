@@ -46,6 +46,30 @@
       },
       "revId": "dec40f4b2bf2517a76f2fc182c114d081e4993cc",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "99b396ba_e4cc4bd1",
+        "filename": "src/dsp/lossless_sse41.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2021-02-17T23:52:40Z",
+      "side": 1,
+      "message": "\u003e Actually, the compiler managed to recover the pshufb\u0027s in the SSE2 version:\n\u003e \n\u003e ConvertBGRAToRGBA_SSE2:\n\u003e ...\n\u003e   7.19 │10:   mov    %esi,%eax                                                                                                    \n\u003e  11.12 │      movdqu (%rdi),%xmm1                                                                                                 \n\u003e  10.83 │      movdqu 0x10(%rdi),%xmm2                                                                                             \n\u003e   6.38 │      add    $0x20,%rdi                                                                                                   \n\u003e   8.87 │      pshufb %xmm0,%xmm1                                                                                                  \n\u003e   9.79 │      pshufb %xmm0,%xmm2                                                                                                  \n\u003e  12.20 │      movdqu %xmm1,(%rdx)                                                                                                 \n\u003e  14.50 │      movdqu %xmm2,0x10(%rdx)                                                                                             \n\u003e   5.84 │      add    $0x20,%rdx                                                                                                   \n\u003e   5.97 │      lea    -0x8(%rax),%esi                                                                                              \n\u003e   0.24 │      cmp    $0xf,%eax                                                                                                    \n\u003e   5.94 │    ↑ jg     10                                                                                                           \n\u003e   0.21 │3e:   test   %esi,%esi        \n\u003e ..\n\u003e \n\u003e !!\n\u003e \n\u003e So i\u0027m not sure we need a SSE41 special version here (for binary size\u0027s sake).\n\nIt might be better to compare with a build that doesn\u0027t set -msseXXX across the build. Chrome only defaults to -msse3 for instance.",
+      "parentUuid": "9e6a4216_7f28c379",
+      "range": {
+        "startLine": 87,
+        "startChar": 12,
+        "endLine": 87,
+        "endChar": 33
+      },
+      "revId": "dec40f4b2bf2517a76f2fc182c114d081e4993cc",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
