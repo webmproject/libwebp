@@ -22,6 +22,30 @@
       },
       "revId": "dec40f4b2bf2517a76f2fc182c114d081e4993cc",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "9e6a4216_7f28c379",
+        "filename": "src/dsp/lossless_sse41.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2021-02-17T21:33:28Z",
+      "side": 1,
+      "message": "Actually, the compiler managed to recover the pshufb\u0027s in the SSE2 version:\n\nConvertBGRAToRGBA_SSE2:\n...\n  7.19 │10:   mov    %esi,%eax                                                                                                    \n 11.12 │      movdqu (%rdi),%xmm1                                                                                                 \n 10.83 │      movdqu 0x10(%rdi),%xmm2                                                                                             \n  6.38 │      add    $0x20,%rdi                                                                                                   \n  8.87 │      pshufb %xmm0,%xmm1                                                                                                  \n  9.79 │      pshufb %xmm0,%xmm2                                                                                                  \n 12.20 │      movdqu %xmm1,(%rdx)                                                                                                 \n 14.50 │      movdqu %xmm2,0x10(%rdx)                                                                                             \n  5.84 │      add    $0x20,%rdx                                                                                                   \n  5.97 │      lea    -0x8(%rax),%esi                                                                                              \n  0.24 │      cmp    $0xf,%eax                                                                                                    \n  5.94 │    ↑ jg     10                                                                                                           \n  0.21 │3e:   test   %esi,%esi        \n..\n\n!!\n\nSo i\u0027m not sure we need a SSE41 special version here (for binary size\u0027s sake).",
+      "parentUuid": "7a726864_cecbbb27",
+      "range": {
+        "startLine": 87,
+        "startChar": 12,
+        "endLine": 87,
+        "endChar": 33
+      },
+      "revId": "dec40f4b2bf2517a76f2fc182c114d081e4993cc",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
