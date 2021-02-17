@@ -16,6 +16,24 @@
       "message": "note that this change will clash the other ones modifying CombinedShannonEntropy_XXX.\n\nIt\u0027s probably better to wait for the others to land before changing the functions further...",
       "revId": "283bef6ebec2b3e3f3b716a5ea267474036ad038",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "1eff3005_e5981677",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 6
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2021-02-17T10:53:35Z",
+      "side": 1,
+      "message": "I am waiting, just trying to understand what is failing here.",
+      "parentUuid": "bb3c3e67_df95256c",
+      "revId": "283bef6ebec2b3e3f3b716a5ea267474036ad038",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
