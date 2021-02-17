@@ -141,6 +141,7 @@ model {
             include "lossless_msa.c"
             include "lossless_neon.$NEON"
             include "lossless_sse2.c"
+            include "lossless_sse41.c"
             include "rescaler.c"
             include "rescaler_mips32.c"
             include "rescaler_mips_dsp_r2.c"
