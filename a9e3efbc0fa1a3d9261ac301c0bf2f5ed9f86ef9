@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "dc1635b8_b2562f7c",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2021-02-17T19:14:19Z",
+      "side": 1,
+      "message": "patch looking good overall, i\u0027ll do some side tests...",
+      "revId": "a9e3efbc0fa1a3d9261ac301c0bf2f5ed9f86ef9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "d79f5086_12fa8735",
+        "filename": "src/dsp/lossless_sse41.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2021-02-17T19:14:19Z",
+      "side": 1,
+      "message": "2021 already!",
+      "range": {
+        "startLine": 1,
+        "startChar": 13,
+        "endLine": 1,
+        "endChar": 17
+      },
+      "revId": "a9e3efbc0fa1a3d9261ac301c0bf2f5ed9f86ef9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
