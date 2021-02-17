@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "7a726864_cecbbb27",
+        "filename": "src/dsp/lossless_sse41.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2021-02-17T21:23:34Z",
+      "side": 1,
+      "message": "looks like this SSE41 version is a bit slower (~5%) than ConvertBGRAToRGBA_SSE2...",
+      "range": {
+        "startLine": 87,
+        "startChar": 12,
+        "endLine": 87,
+        "endChar": 33
+      },
+      "revId": "dec40f4b2bf2517a76f2fc182c114d081e4993cc",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}

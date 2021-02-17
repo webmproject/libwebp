@@ -39,6 +39,30 @@
       },
       "revId": "a9e3efbc0fa1a3d9261ac301c0bf2f5ed9f86ef9",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "bc12e360_14a114dc",
+        "filename": "src/dsp/lossless_sse41.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2021-02-17T21:23:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d79f5086_12fa8735",
+      "range": {
+        "startLine": 1,
+        "startChar": 13,
+        "endLine": 1,
+        "endChar": 17
+      },
+      "revId": "a9e3efbc0fa1a3d9261ac301c0bf2f5ed9f86ef9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
