@@ -16,6 +16,24 @@
       "message": "IACA gives 65 uops to 63 uops. I cannot reproduce the speed-ups locally.",
       "revId": "ebdb00a6e6e52442cc7dcbf6627445f95202c354",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "9fdcce12_04acbd17",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2021-02-18T14:48:45Z",
+      "side": 1,
+      "message": "ok, so seems the gain is not large enough to warrant the binary size increase",
+      "parentUuid": "8d4a99d8_442bba5d",
+      "revId": "ebdb00a6e6e52442cc7dcbf6627445f95202c354",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
