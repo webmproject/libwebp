@@ -36,6 +36,24 @@
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "20f0a9e3_881ef3d9",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 6
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1002029
+      },
+      "writtenOn": "2021-02-18T18:52:54Z",
+      "side": 1,
+      "message": "yes indeed, i was keeping this patch live for historic tracking, but let\u0027s just abandon it.",
+      "parentUuid": "529a4f6f_40169c04",
+      "revId": "b7e4a3bfb6256ce2f7b0025c14f8f97f89136278",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "4f0d245f_739e70af",
