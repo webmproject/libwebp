@@ -215,6 +215,7 @@ DSP_DEC_OBJS = \
     $(DIROBJ)\dsp\lossless_msa.obj \
     $(DIROBJ)\dsp\lossless_neon.obj \
     $(DIROBJ)\dsp\lossless_sse2.obj \
+    $(DIROBJ)\dsp\lossless_sse41.obj \
     $(DIROBJ)\dsp\rescaler.obj \
     $(DIROBJ)\dsp\rescaler_mips32.obj \
     $(DIROBJ)\dsp\rescaler_mips_dsp_r2.obj \
