@@ -25,8 +25,9 @@
 static void TransformColorInverse_SSE41(const VP8LMultipliers* const m,
                                         const uint32_t* const src,
                                         int num_pixels, uint32_t* dst) {
-#define CST(X)  ((int32_t)((int8_t)m->X) << 3)
-  const __m128i mults_rb = _mm_set1_epi32(CST(green_to_red_) << 16 |
+// sign-extended multiplying constants, pre-shifted by 5.
+#define CST(X)  (((int16_t)(m->X << 8)) >> 5)   // sign-extend
+  const __m128i mults_rb = _mm_set1_epi32((uint32_t)CST(green_to_red_) << 16 |
                                           (CST(green_to_blue_) & 0xffff));
   const __m128i mults_b2 = _mm_set1_epi32(CST(red_to_blue_));
 #undef CST
