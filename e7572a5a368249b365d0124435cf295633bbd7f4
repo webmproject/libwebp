@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "5e9026fc_ff95568a",
+        "filename": "src/dsp/lossless_sse41.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1471133
+      },
+      "writtenOn": "2021-02-18T07:57:20Z",
+      "side": 1,
+      "message": "My tests with rdtsc show that TransformColorInverse on SSE4.1 is 25% faster than SSE2 version.\nFor decoding in overall that\u0027s just ~1%, so you can remove it if that is not enough.",
+      "range": {
+        "startLine": 25,
+        "startChar": 12,
+        "endLine": 25,
+        "endChar": 39
+      },
+      "revId": "e7572a5a368249b365d0124435cf295633bbd7f4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
