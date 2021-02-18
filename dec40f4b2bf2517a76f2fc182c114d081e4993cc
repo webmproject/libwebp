@@ -94,6 +94,30 @@
       },
       "revId": "dec40f4b2bf2517a76f2fc182c114d081e4993cc",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "1b502416_1c855f5c",
+        "filename": "src/dsp/lossless_sse41.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1471133
+      },
+      "writtenOn": "2021-02-18T03:09:41Z",
+      "side": 1,
+      "message": "\u003e It might be better to compare with a build that doesn\u0027t set -msseXXX across the build. Chrome only defaults to -msse3 for instance.\n\nYes, this one instruction is from SSSE3:\n\n__m128i _mm_shuffle_epi8 (__m128i a, __m128i b)\n#include \u003ctmmintrin.h\u003e\nInstruction: pshufb xmm, xmm\nCPUID Flags: SSSE3",
+      "parentUuid": "7f1b864e_07d7a4f2",
+      "range": {
+        "startLine": 87,
+        "startChar": 12,
+        "endLine": 87,
+        "endChar": 33
+      },
+      "revId": "dec40f4b2bf2517a76f2fc182c114d081e4993cc",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
