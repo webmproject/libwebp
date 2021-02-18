@@ -16,6 +16,23 @@
       "message": "This function goes from ~2.1% to 1.8% decoding time on my test,\nso seems good to go.\n",
       "revId": "a09a647241a2ea17eda774a831ae07a1f4d461b1",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "b499012f_434d53c1",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2021-02-18T13:30:32Z",
+      "side": 1,
+      "message": "Confirmed by IACA: 38 uops vs 45 for SSE2",
+      "revId": "a09a647241a2ea17eda774a831ae07a1f4d461b1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
