@@ -18,6 +18,24 @@
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "529a4f6f_40169c04",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 6
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2021-02-18T18:51:12Z",
+      "side": 1,
+      "message": "\u003e Might need a rebase, gerrit is reporting a merge conflict.\n\nah I didn\u0027t follow the progression, looks like this came in with:\nhttps://chromium-review.googlesource.com/c/webm/libwebp/+/2703415\n\nI\u0027ll make some cosmetic changes.",
+      "parentUuid": "a6c2baf9_181a5ccc",
+      "revId": "b7e4a3bfb6256ce2f7b0025c14f8f97f89136278",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "4f0d245f_739e70af",
