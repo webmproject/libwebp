@@ -70,6 +70,30 @@
       },
       "revId": "dec40f4b2bf2517a76f2fc182c114d081e4993cc",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "7f1b864e_07d7a4f2",
+        "filename": "src/dsp/lossless_sse41.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1471133
+      },
+      "writtenOn": "2021-02-18T03:05:01Z",
+      "side": 1,
+      "message": "I guess, this can be because of different unroll?\n\n  while (num_pixels \u003e\u003d 16) {\n    const __m128i in0 \u003d _mm_loadu_si128(in + 0);\n    const __m128i in1 \u003d _mm_loadu_si128(in + 1);\n    const __m128i in2 \u003d _mm_loadu_si128(in + 2);\n    const __m128i in3 \u003d _mm_loadu_si128(in + 3);\n    const __m128i a0 \u003d _mm_shuffle_epi8(in0, perm);\n    const __m128i a1 \u003d _mm_shuffle_epi8(in1, perm);\n    const __m128i a2 \u003d _mm_shuffle_epi8(in2, perm);\n    const __m128i a3 \u003d _mm_shuffle_epi8(in3, perm);\n    _mm_storeu_si128(out + 0, a0);\n    _mm_storeu_si128(out + 1, a1);\n    _mm_storeu_si128(out + 2, a2);\n    _mm_storeu_si128(out + 3, a3);\n    in +\u003d 4;\n    out +\u003d 4;\n    num_pixels -\u003d 16;\n  }\n\nChanging to this should give the same code, as compiler did for SSE2 version:\n\n  while (num_pixels \u003e\u003d 8) {\n    const __m128i in0 \u003d _mm_loadu_si128(in + 0);\n    const __m128i in1 \u003d _mm_loadu_si128(in + 1);\n    const __m128i a0 \u003d _mm_shuffle_epi8(in0, perm);\n    const __m128i a1 \u003d _mm_shuffle_epi8(in1, perm);\n    _mm_storeu_si128(out + 0, a0);\n    _mm_storeu_si128(out + 1, a1);\n    in +\u003d 2;\n    out +\u003d 2;\n    num_pixels -\u003d 8;\n  }\n\nThe only situation where the compiler can compile SSE2 sources with SSE41 flags is compilation for a specific processor, and not for a distribution (where it should work for different ones).",
+      "parentUuid": "99b396ba_e4cc4bd1",
+      "range": {
+        "startLine": 87,
+        "startChar": 12,
+        "endLine": 87,
+        "endChar": 33
+      },
+      "revId": "dec40f4b2bf2517a76f2fc182c114d081e4993cc",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
