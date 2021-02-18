@@ -22,6 +22,30 @@
       },
       "revId": "e7572a5a368249b365d0124435cf295633bbd7f4",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "9fcfb444_b05d96b1",
+        "filename": "src/dsp/lossless_sse41.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2021-02-18T08:54:11Z",
+      "side": 1,
+      "message": "1% is interesting enough.\n\nOk, let\u0027s split the patch in several parts: the BGRAToRGB and BGRAToBGR seems pretty ok.\nThey should go in as separate patch, and then we\u0027ll see about the two other functions.\n\nI\u0027ll prepare the patch...",
+      "parentUuid": "5e9026fc_ff95568a",
+      "range": {
+        "startLine": 25,
+        "startChar": 12,
+        "endLine": 25,
+        "endChar": 39
+      },
+      "revId": "e7572a5a368249b365d0124435cf295633bbd7f4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
