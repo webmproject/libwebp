@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "2d9a95c9_3980e4af",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2021-02-18T12:01:35Z",
+      "side": 1,
+      "message": "On my test, this SSE4.1 seems to be indeed a bit slower (decoding goes from 1.26% to 1.35%).\n\nI don\u0027t think it\u0027s worth adding ConvertBGRAToRGBA_SSE41 then.",
+      "revId": "f26a776caa2abd2fb18c72f8349bcb50cf0a81f2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
