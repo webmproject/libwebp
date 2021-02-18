@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "b7c968c4_ef2bb039",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2021-02-18T11:50:38Z",
+      "side": 1,
+      "message": "This function goes from ~2.1% to 1.8% decoding time on my test,\nso seems good to go.\n",
+      "revId": "a09a647241a2ea17eda774a831ae07a1f4d461b1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
