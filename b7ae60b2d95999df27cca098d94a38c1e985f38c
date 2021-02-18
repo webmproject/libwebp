@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "775a899d_ef3da5c7",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2021-02-18T11:56:16Z",
+      "side": 1,
+      "message": "On my test:\n  ConvertBGRAToRGB seem to go from 3.1% decoding time down to 1.9%\n  ConvertBGRAToBGR goes from 1.7% to 1.3%. (using \u0027dwebp -bmp ...\u0027)\n\nso seems good to go",
+      "revId": "b7ae60b2d95999df27cca098d94a38c1e985f38c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
