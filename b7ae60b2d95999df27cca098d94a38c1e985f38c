@@ -16,6 +16,23 @@
       "message": "On my test:\n  ConvertBGRAToRGB seem to go from 3.1% decoding time down to 1.9%\n  ConvertBGRAToBGR goes from 1.7% to 1.3%. (using \u0027dwebp -bmp ...\u0027)\n\nso seems good to go",
       "revId": "b7ae60b2d95999df27cca098d94a38c1e985f38c",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "b4d28f63_a79ef3d6",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1140964
+      },
+      "writtenOn": "2021-02-18T13:23:09Z",
+      "side": 1,
+      "message": "Confirmed by IACA: only 39 uops for 16 channels, instead of 211 for 32 in SSE2.",
+      "revId": "b7ae60b2d95999df27cca098d94a38c1e985f38c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
