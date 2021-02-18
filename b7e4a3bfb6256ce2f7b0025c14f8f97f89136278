@@ -1,0 +1,129 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "a6c2baf9_181a5ccc",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 6
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2021-02-18T18:47:56Z",
+      "side": 1,
+      "message": "Might need a rebase, gerrit is reporting a merge conflict.",
+      "revId": "b7e4a3bfb6256ce2f7b0025c14f8f97f89136278",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "4f0d245f_739e70af",
+        "filename": "src/dsp/lossless_sse41.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2021-02-18T18:47:56Z",
+      "side": 1,
+      "message": "this is unused",
+      "range": {
+        "startLine": 19,
+        "startChar": 10,
+        "endLine": 19,
+        "endChar": 16
+      },
+      "revId": "b7e4a3bfb6256ce2f7b0025c14f8f97f89136278",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "1d74e18b_dc44abdb",
+        "filename": "src/dsp/lossless_sse41.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2021-02-18T18:47:56Z",
+      "side": 1,
+      "message": "this is redundant we must be picking up smmintrin.h from common_sse41.h",
+      "revId": "b7e4a3bfb6256ce2f7b0025c14f8f97f89136278",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "a2c70ab6_772c9e76",
+        "filename": "src/dsp/lossless_sse41.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2021-02-18T18:47:56Z",
+      "side": 1,
+      "message": "indent is off",
+      "revId": "b7e4a3bfb6256ce2f7b0025c14f8f97f89136278",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "7593030a_a58db878",
+        "filename": "src/dsp/lossless_sse41.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2021-02-18T18:47:56Z",
+      "side": 1,
+      "message": "indent is off",
+      "revId": "b7e4a3bfb6256ce2f7b0025c14f8f97f89136278",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "2276e2b1_cd531e63",
+        "filename": "src/dsp/lossless_sse41.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2021-02-18T18:47:56Z",
+      "side": 1,
+      "message": "I wonder what\u0027s getting generated for this block since everything is working with immediates",
+      "revId": "b7e4a3bfb6256ce2f7b0025c14f8f97f89136278",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "39d644f4_de7d4078",
+        "filename": "src/dsp/lossless_sse41.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2021-02-18T18:47:56Z",
+      "side": 1,
+      "message": "indent is off",
+      "revId": "b7e4a3bfb6256ce2f7b0025c14f8f97f89136278",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
