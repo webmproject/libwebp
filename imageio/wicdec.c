@@ -134,7 +134,14 @@ static HRESULT ExtractICCP(IWICImagingFactory* const factory,
   IWICColorContext** color_contexts;
 
   IFS(IWICBitmapFrameDecode_GetColorContexts(frame, 0, NULL, &count));
-  if (FAILED(hr) || count == 0) return hr;
+  if (FAILED(hr) || count == 0) {
+    // Treat unsupported operation as a non-fatal error. See crbug.com/webp/506.
+    if (hr == WINCODEC_ERR_UNSUPPORTEDOPERATION) {
+      count = 0;
+      return S_OK;
+    }
+    return hr;
+  }
 
   color_contexts = (IWICColorContext**)calloc(count, sizeof(*color_contexts));
   if (color_contexts == NULL) return E_OUTOFMEMORY;
