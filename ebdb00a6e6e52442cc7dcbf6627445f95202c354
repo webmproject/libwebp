@@ -34,6 +34,24 @@
       "parentUuid": "8d4a99d8_442bba5d",
       "revId": "ebdb00a6e6e52442cc7dcbf6627445f95202c354",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "532616f0_9f1337e2",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1471133
+      },
+      "writtenOn": "2021-02-18T17:23:51Z",
+      "side": 1,
+      "message": "It seems to be the compiler\u0027s problem, whether it unrolls the loop or not. I guess better to unroll the loop manually.",
+      "parentUuid": "9fdcce12_04acbd17",
+      "revId": "ebdb00a6e6e52442cc7dcbf6627445f95202c354",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
