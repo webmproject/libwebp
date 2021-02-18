@@ -118,6 +118,30 @@
       },
       "revId": "dec40f4b2bf2517a76f2fc182c114d081e4993cc",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "f241befb_d54f8e58",
+        "filename": "src/dsp/lossless_sse41.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2021-02-18T03:40:57Z",
+      "side": 1,
+      "message": "\u003e \u003e It might be better to compare with a build that doesn\u0027t set -msseXXX across the build. Chrome only defaults to -msse3 for instance.\n\u003e \n\u003e Yes, this one instruction is from SSSE3:\n\u003e \n\u003e __m128i _mm_shuffle_epi8 (__m128i a, __m128i b)\n\u003e #include \u003ctmmintrin.h\u003e\n\u003e Instruction: pshufb xmm, xmm\n\u003e CPUID Flags: SSSE3\n\nYou\u0027re correct, that\u0027s what I was referring to in my comment. Some products may have higher targets than sse2, as I mentioned Chrome does, so I think a fairer comparison would be a gcc/clang build with default flags so we don\u0027t introduce newer instructions -- Pascal\u0027s initial comparison had at least ssse3 enabled across the sse2 module.",
+      "parentUuid": "1b502416_1c855f5c",
+      "range": {
+        "startLine": 87,
+        "startChar": 12,
+        "endLine": 87,
+        "endChar": 33
+      },
+      "revId": "dec40f4b2bf2517a76f2fc182c114d081e4993cc",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
