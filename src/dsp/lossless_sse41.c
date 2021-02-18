@@ -16,8 +16,6 @@
 #include "src/dsp/common_sse41.h"
 #include "src/dsp/lossless.h"
 #include "src/dsp/lossless_common.h"
-#include <assert.h>
-#include <emmintrin.h>
 
 //------------------------------------------------------------------------------
 // Color-space conversion functions
