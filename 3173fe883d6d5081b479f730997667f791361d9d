@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "c34a072e_b71f48a4",
+        "filename": "src/dsp/lossless_enc_sse41.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2021-02-19T19:19:42Z",
+      "side": 1,
+      "message": "this can cause a sanitizer warning with negative values since a right shift is undefined in that case. That was the reason behind using uint16_t originally",
+      "range": {
+        "startLine": 22,
+        "startChar": 31,
+        "endLine": 22,
+        "endChar": 37
+      },
+      "revId": "3173fe883d6d5081b479f730997667f791361d9d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "c115c2eb_64a79440",
+        "filename": "src/dsp/lossless_enc_sse41.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2021-02-19T19:19:42Z",
+      "side": 1,
+      "message": "indent is off and we tend to use {}s in multi-line if statements in this project for readability / safety",
+      "revId": "3173fe883d6d5081b479f730997667f791361d9d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
