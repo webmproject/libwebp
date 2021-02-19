@@ -34,6 +34,24 @@
       "parentUuid": "cbcfad3c_a2be9c89",
       "revId": "b2c556cbfab09f70c4a7ca671f8dfecb3b90f41a",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "cb9d4d1e_79e09864",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1471133
+      },
+      "writtenOn": "2021-02-19T04:07:32Z",
+      "side": 1,
+      "message": "The proper perf with cpu-cycles (the last one is wrongly recorded with instructions), shows that result of a \"time\".\n\nOriginal:\n\n# Samples: 197K of event \u0027cycles:u\u0027\n# Event count (approx.): 13915861104\n\n    25.95%  cwebp    cwebp             [.] VP8LHashChainFill\n    13.78%  cwebp    cwebp             [.] VP8LResidualImage\n    11.48%  cwebp    cwebp             [.] GetCombinedEntropyUnrefined_C\n    10.45%  cwebp    cwebp             [.] CollectColorBlueTransforms_SSE41\n     5.10%  cwebp    cwebp             [.] CalculateBestCacheSize\n     4.68%  cwebp    cwebp             [.] CombinedShannonEntropy_SSE2\n     4.50%  cwebp    cwebp             [.] VP8LBackwardReferencesTraceBackwards\n     4.29%  cwebp    cwebp             [.] VectorMismatch_SSE2\n     2.39%  cwebp    cwebp             [.] CollectColorRedTransforms_SSE41\n     1.89%  cwebp    cwebp             [.] FastSLog2Slow_C\n     1.65%  cwebp    cwebp             [.] VP8LHistogramAddSinglePixOrCopy\n     1.50%  cwebp    libm-2.27.so      [.] __ieee754_log_fma\n     1.40%  cwebp    cwebp             [.] VP8LGetBackwardReferences\n\nProposed:\n\n# Samples: 194K of event \u0027cycles:u\u0027\n# Event count (approx.): 13735126887\n\n    26.21%  cwebp    cwebp               [.] VP8LHashChainFill\n    14.01%  cwebp    cwebp               [.] VP8LResidualImage\n    11.62%  cwebp    cwebp               [.] GetCombinedEntropyUnrefined_C\n     9.51%  cwebp    cwebp               [.] CollectColorBlueTransforms_SSE41\n     5.38%  cwebp    cwebp               [.] CalculateBestCacheSize\n     4.62%  cwebp    cwebp               [.] CombinedShannonEntropy_SSE2\n     4.56%  cwebp    cwebp               [.] VP8LBackwardReferencesTraceBackwards\n     4.35%  cwebp    cwebp               [.] VectorMismatch_SSE2\n     2.10%  cwebp    cwebp               [.] CollectColorRedTransforms_SSE41\n     1.93%  cwebp    cwebp               [.] FastSLog2Slow_C\n     1.68%  cwebp    cwebp               [.] VP8LHistogramAddSinglePixOrCopy\n     1.52%  cwebp    libm-2.27.so        [.] __ieee754_log_fma\n     1.43%  cwebp    cwebp               [.] VP8LGetBackwardReferences",
+      "parentUuid": "c4de6278_adcacb25",
+      "revId": "b2c556cbfab09f70c4a7ca671f8dfecb3b90f41a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
