@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "db516b55_8cb9d43c",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1002029
+      },
+      "writtenOn": "2021-02-19T13:52:27Z",
+      "side": 1,
+      "message": "turns out it\u0027s statistically faster overall (even if the previous version was already optimized in case of four successives zeros in the histograms).\n\u003d\u003e Seems good to go.",
+      "revId": "fae416179e0ad59dcce962a1e92d8fa3feeff0e9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
