@@ -107,10 +107,10 @@ static WEBP_INLINE void PutLE32(uint8_t* const data, uint32_t val) {
   PutLE16(data + 2, (int)(val >> 16));
 }
 
-// Returns (int)floor(log2(n)). n must be > 0.
 // use GNU builtins where available.
 #if defined(__GNUC__) && \
     ((__GNUC__ == 3 && __GNUC_MINOR__ >= 4) || __GNUC__ >= 4)
+// Returns (int)floor(log2(n)). n must be > 0.
 static WEBP_INLINE int BitsLog2Floor(uint32_t n) {
   return 31 ^ __builtin_clz(n);
 }
@@ -148,6 +148,15 @@ static WEBP_INLINE int WebPLog2FloorC(uint32_t n) {
 }
 
 static WEBP_INLINE int BitsLog2Floor(uint32_t n) { return WebPLog2FloorC(n); }
+
+static WEBP_INLINE int BitsCtz(uint32_t n) {
+  int i;
+  for (i = 0; i < 32; ++i, n >>= 1) {
+    if (n & 1) return i;
+  }
+  return 32;
+}
+
 #endif
 
 //------------------------------------------------------------------------------
