@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "cbcfad3c_a2be9c89",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1471133
+      },
+      "writtenOn": "2021-02-19T02:51:06Z",
+      "side": 1,
+      "message": "\nIt\u0027s very strange, in a separate test measured with rdtsc - the old code is a little faster indeed.\nBut counted with a perf in a real run - the new is a lot faster somehow on my Skylake. And it\u0027s mostly about using _mm_extract_epi8 versus reading from a stack in a loop.\n\nAnd even doing lossless encoding a five times measured with \"time -p\" shows that speedup.\n\nHow this can be? Because there is less cache pollution in the new code? Does this only show up on a specific processor that I have?\n\nOriginal code:\n\n# Event count (approx.): 24617283093\n\n    23.16%  cwebp    cwebp             [.] VP8LResidualImage\n    12.29%  cwebp    cwebp             [.] GetCombinedEntropyUnrefined_C\n    11.39%  cwebp    cwebp             [.] CollectColorBlueTransforms_SSE41\n     9.74%  cwebp    cwebp             [.] VP8LHashChainFill\n     7.31%  cwebp    cwebp             [.] CombinedShannonEntropy_SSE2\n     6.17%  cwebp    cwebp             [.] CalculateBestCacheSize\n     4.32%  cwebp    cwebp             [.] VP8LBackwardReferencesTraceBackwards\n     2.50%  cwebp    cwebp             [.] CollectColorRedTransforms_SSE41\n     2.39%  cwebp    cwebp             [.] FastSLog2Slow_C\n     2.31%  cwebp    cwebp             [.] VectorMismatch_SSE2\n     1.86%  cwebp    libm-2.27.so      [.] __ieee754_log_fma\n     1.45%  cwebp    cwebp             [.] VP8LGetBackwardReferences\n     1.41%  cwebp    cwebp             [.] VP8LHistogramAddSinglePixOrCopy\n     1.34%  cwebp    cwebp             [.] Predictor11_SSE2\n\nreal 3,68\nuser 3,64\nsys 0,04\nreal 3,67\nuser 3,63\nsys 0,03\nreal 3,68\nuser 3,64\nsys 0,04\nreal 3,67\nuser 3,64\nsys 0,03\nreal 3,66\nuser 3,59\nsys 0,06\n\nProposed code:\n\n# Event count (approx.): 23002641068\n\n    24.84%  cwebp    cwebp             [.] VP8LResidualImage\n    13.15%  cwebp    cwebp             [.] GetCombinedEntropyUnrefined_C\n    10.43%  cwebp    cwebp             [.] VP8LHashChainFill\n     7.68%  cwebp    cwebp             [.] CombinedShannonEntropy_SSE2\n     6.60%  cwebp    cwebp             [.] CalculateBestCacheSize\n     6.37%  cwebp    cwebp             [.] CollectColorBlueTransforms_SSE41\n     4.62%  cwebp    cwebp             [.] VP8LBackwardReferencesTraceBackwards\n     2.64%  cwebp    cwebp             [.] FastSLog2Slow_C\n     2.45%  cwebp    cwebp             [.] VectorMismatch_SSE2\n     1.97%  cwebp    libm-2.27.so      [.] __ieee754_log_fma\n     1.55%  cwebp    cwebp             [.] VP8LGetBackwardReferences\n     1.50%  cwebp    cwebp             [.] VP8LHistogramAddSinglePixOrCopy\n     1.44%  cwebp    cwebp             [.] CollectColorRedTransforms_SSE41\n     1.40%  cwebp    cwebp             [.] Predictor11_SSE2\n     1.05%  cwebp    cwebp             [.] VP8LEncodeStream\n\nreal 3,63\nuser 3,58\nsys 0,04\nreal 3,62\nuser 3,58\nsys 0,04\nreal 3,62\nuser 3,56\nsys 0,06\nreal 3,62\nuser 3,55\nsys 0,06\nreal 3,62\nuser 3,58\nsys 0,04\n\n",
+      "revId": "b2c556cbfab09f70c4a7ca671f8dfecb3b90f41a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
