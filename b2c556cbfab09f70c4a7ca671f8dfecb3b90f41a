@@ -75,6 +75,30 @@
       },
       "revId": "b2c556cbfab09f70c4a7ca671f8dfecb3b90f41a",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "c28d7f7a_ba40e8e6",
+        "filename": "src/dsp/lossless_enc_sse41.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1471133
+      },
+      "writtenOn": "2021-02-19T09:04:29Z",
+      "side": 1,
+      "message": "madd have big latency, as the other multiply instructions.\n\nAlso found this layout, but it doesn\u0027t work faster, despite that there are even fewer instructions:\n\n  const __m128i mult \u003d MK_CST_16(CST_5b(red_to_blue) + 256,\n                                 CST_5b(green_to_blue));\n\n      const __m128i A1 \u003d _mm_loadu_si128((const __m128i*)\u0026src[x + 0]);\n      const __m128i A2 \u003d _mm_loadu_si128((const __m128i*)\u0026src[x + 4]);\n      const __m128i B1 \u003d _mm_shuffle_epi8(A1, perm);\n      const __m128i B2 \u003d _mm_shuffle_epi8(A2, perm);\n      const __m128i C1 \u003d _mm_mulhi_epi16(B1, mult);\n      const __m128i C2 \u003d _mm_mulhi_epi16(B2, mult);\n      const __m128i X1 \u003d _mm_sub_epi16(A1, C1);\n      const __m128i X2 \u003d _mm_sub_epi16(A2, C2);\n      const __m128i D \u003d _mm_hadd_epi16(X1, X2);",
+      "parentUuid": "fbd3ed98_af06cd06",
+      "range": {
+        "startLine": 73,
+        "startChar": 41,
+        "endLine": 73,
+        "endChar": 55
+      },
+      "revId": "b2c556cbfab09f70c4a7ca671f8dfecb3b90f41a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
