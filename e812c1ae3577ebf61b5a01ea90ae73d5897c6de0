@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "b3b412f6_6e2c9c3f",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 14
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1471133
+      },
+      "writtenOn": "2021-02-19T15:58:44Z",
+      "side": 1,
+      "message": "\nThe last patchset (14) is the pipelined versions of CollectColorXXXTransforms_SSE41 from src/dsp/lossless_enc_sse41.c, can be really better, but need to check with different compilers.",
+      "revId": "e812c1ae3577ebf61b5a01ea90ae73d5897c6de0",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
