@@ -99,6 +99,30 @@
       },
       "revId": "b2c556cbfab09f70c4a7ca671f8dfecb3b90f41a",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "c72e3412_5c3a1681",
+        "filename": "src/dsp/lossless_enc_sse41.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1471133
+      },
+      "writtenOn": "2021-02-19T10:53:36Z",
+      "side": 1,
+      "message": "Can you give me permission to commit this patch? I have an idea what may be faster. This is faster in a standalone test.\n\nOr you can add it yourself from the code below:\n\nThat\u0027s pipelining technique. So CPU can compute the next pixels between histogram increments.\n\n static void CollectColorBlueTransforms_SSE41(const uint32_t* argb, int stride,\n                                             int tile_width, int tile_height,\n                                             int green_to_blue, int red_to_blue,\n                                             int histo[]) {\n  const __m128i mult \u003d MK_CST_16(CST_5b(red_to_blue) + 256,\n                                 CST_5b(green_to_blue));\n  const __m128i perm \u003d _mm_setr_epi8(-1, 1, -1, 2, -1, 5, -1, 6,\n                                     -1, 9, -1, 10, -1, 13, -1, 14);\n  int y;\n  if (tile_width \u003e\u003d 4)\n  for (y \u003d 0; y \u003c tile_height; ++y) {\n    const uint32_t* const src \u003d argb + y * stride;\n    const __m128i A1 \u003d _mm_loadu_si128((const __m128i*)src);\n    const __m128i B1 \u003d _mm_shuffle_epi8(A1, perm);\n    const __m128i C1 \u003d _mm_mulhi_epi16(B1, mult);\n    const __m128i D1 \u003d _mm_sub_epi16(A1, C1);\n    __m128i E;\n    int x;\n    E \u003d _mm_add_epi16(_mm_srli_epi32(D1, 16), D1);\n    for (x \u003d 4; x + 4 \u003c\u003d tile_width; x +\u003d 4) {\n      const __m128i A2 \u003d _mm_loadu_si128((const __m128i*)(src + x));\n      __m128i B2, C2, D2;\n      ++histo[_mm_extract_epi8(E,  0)];\n      B2 \u003d _mm_shuffle_epi8(A2, perm);\n      ++histo[_mm_extract_epi8(E,  4)];\n      C2 \u003d _mm_mulhi_epi16(B2, mult);\n      ++histo[_mm_extract_epi8(E,  8)];\n      D2 \u003d _mm_sub_epi16(A2, C2);\n      ++histo[_mm_extract_epi8(E, 12)];\n      E \u003d _mm_add_epi16(_mm_srli_epi32(D2, 16), D2);\n    }\n    ++histo[_mm_extract_epi8(E,  0)];\n    ++histo[_mm_extract_epi8(E,  4)];\n    ++histo[_mm_extract_epi8(E,  8)];\n    ++histo[_mm_extract_epi8(E, 12)];\n  }\n  {\n    const int left_over \u003d tile_width \u0026 3;\n    if (left_over \u003e 0) {\n      VP8LCollectColorBlueTransforms_C(argb + tile_width - left_over, stride,\n                                       left_over, tile_height,\n                                       green_to_blue, red_to_blue, histo);\n    }\n  }\n}",
+      "parentUuid": "c28d7f7a_ba40e8e6",
+      "range": {
+        "startLine": 73,
+        "startChar": 41,
+        "endLine": 73,
+        "endChar": 55
+      },
+      "revId": "b2c556cbfab09f70c4a7ca671f8dfecb3b90f41a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
