@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "50954c93_6725d768",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 4
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1002029
+      },
+      "writtenOn": "2021-02-19T11:20:18Z",
+      "side": 1,
+      "message": "(let\u0027s go step by step with ctz alone first, then CombineShannonEntropy_SSE2 and then we\u0027ll see about the impact on Log2 functions)",
+      "revId": "5bd2704e30361fc069c10827028b31442f0cb3d4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
