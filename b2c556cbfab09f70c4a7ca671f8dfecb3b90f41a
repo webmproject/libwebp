@@ -52,6 +52,29 @@
       "parentUuid": "c4de6278_adcacb25",
       "revId": "b2c556cbfab09f70c4a7ca671f8dfecb3b90f41a",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "fbd3ed98_af06cd06",
+        "filename": "src/dsp/lossless_enc_sse41.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1002029
+      },
+      "writtenOn": "2021-02-19T08:02:16Z",
+      "side": 1,
+      "message": "i wonder if the mulhi + hadd could be replaced by madd + packs ...\n(since hadd is rather slow).",
+      "range": {
+        "startLine": 73,
+        "startChar": 41,
+        "endLine": 73,
+        "endChar": 55
+      },
+      "revId": "b2c556cbfab09f70c4a7ca671f8dfecb3b90f41a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
