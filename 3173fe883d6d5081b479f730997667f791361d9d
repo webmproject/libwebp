@@ -24,6 +24,30 @@
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "2017faeb_d7275a23",
+        "filename": "src/dsp/lossless_enc_sse41.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1002029
+      },
+      "writtenOn": "2021-02-19T19:45:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c34a072e_b71f48a4",
+      "range": {
+        "startLine": 22,
+        "startChar": 31,
+        "endLine": 22,
+        "endChar": 37
+      },
+      "revId": "3173fe883d6d5081b479f730997667f791361d9d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "c115c2eb_64a79440",
@@ -37,6 +61,24 @@
       "writtenOn": "2021-02-19T19:19:42Z",
       "side": 1,
       "message": "indent is off and we tend to use {}s in multi-line if statements in this project for readability / safety",
+      "revId": "3173fe883d6d5081b479f730997667f791361d9d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "57c2ff04_bab436c7",
+        "filename": "src/dsp/lossless_enc_sse41.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1002029
+      },
+      "writtenOn": "2021-02-19T19:45:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c115c2eb_64a79440",
       "revId": "3173fe883d6d5081b479f730997667f791361d9d",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
