@@ -195,6 +195,30 @@
       },
       "revId": "b2c556cbfab09f70c4a7ca671f8dfecb3b90f41a",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "918fb99a_30b7bc63",
+        "filename": "src/dsp/lossless_enc_sse41.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1002029
+      },
+      "writtenOn": "2021-02-19T17:14:53Z",
+      "side": 1,
+      "message": "alright, let\u0027s continue the merge on https://chromium-review.googlesource.com/c/webm/libwebp/+/2696327 ! (and abandon this one)",
+      "parentUuid": "5210c0ff_69deed2d",
+      "range": {
+        "startLine": 73,
+        "startChar": 41,
+        "endLine": 73,
+        "endChar": 55
+      },
+      "revId": "b2c556cbfab09f70c4a7ca671f8dfecb3b90f41a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
