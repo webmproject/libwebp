@@ -148,6 +148,15 @@ static WEBP_INLINE int WebPLog2FloorC(uint32_t n) {
 }
 
 static WEBP_INLINE int BitsLog2Floor(uint32_t n) { return WebPLog2FloorC(n); }
+
+static WEBP_INLINE int BitsCtz(uint32_t n) {
+  int i;
+  for (i = 0; i < 32; ++i, n >>= 1) {
+    if (n & 1) return i;
+  }
+  return 32;
+}
+
 #endif
 
 //------------------------------------------------------------------------------
