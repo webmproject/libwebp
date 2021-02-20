@@ -48,6 +48,30 @@
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "4f452776_12dae40c",
+        "filename": "src/dsp/lossless_enc_sse41.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1471133
+      },
+      "writtenOn": "2021-02-20T03:05:00Z",
+      "side": 1,
+      "message": "The change behind this is to do fewer instructions.\nBut it looks like the compiler generates the same (movsb + shl 3) for both versions.",
+      "parentUuid": "2017faeb_d7275a23",
+      "range": {
+        "startLine": 22,
+        "startChar": 31,
+        "endLine": 22,
+        "endChar": 37
+      },
+      "revId": "3173fe883d6d5081b479f730997667f791361d9d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "c115c2eb_64a79440",
