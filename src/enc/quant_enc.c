@@ -1013,6 +1013,10 @@ static void PickBestIntra16(VP8EncIterator* const it, VP8ModeScore* rd) {
         rd_cur->SD *= 2;
       }
     }
+    if (it->lambda_weight_ != 128) {
+      rd_cur->D = (rd_cur->D * it->lambda_weight_) >> 7;
+      rd_cur->SD = (rd_cur->SD * it->lambda_weight_) >> 7;
+    }
 
     // Since we always examine Intra16 first, we can overwrite *rd directly.
     SetRDScore(lambda, rd_cur);
@@ -1090,6 +1094,11 @@ static int PickBestIntra4(VP8EncIterator* const it, VP8ModeScore* const rd) {
       rd_tmp.SD =
           tlambda ? MULT_8B(tlambda, VP8TDisto4x4(src, tmp_dst, kWeightY))
                   : 0;
+      if (it->lambda_weight_ != 128) {
+        rd_tmp.D = (rd_tmp.D * it->lambda_weight_) >> 7;
+        rd_tmp.SD = (rd_tmp.SD * it->lambda_weight_) >> 7;
+      }
+
       rd_tmp.H = mode_costs[mode];
 
       // Add flatness penalty, to avoid flat area to be mispredicted
@@ -1165,6 +1174,11 @@ static void PickBestUV(VP8EncIterator* const it, VP8ModeScore* const rd) {
     // Compute RD-score
     rd_uv.D  = VP8SSE16x8(src, tmp_dst);
     rd_uv.SD = 0;    // not calling TDisto here: it tends to flatten areas.
+    if (it->lambda_weight_ != 128) {
+      rd_uv.D = (rd_uv.D * it->lambda_weight_) >> 7;
+      rd_uv.SD = (rd_uv.SD * it->lambda_weight_) >> 7;
+    }
+
     rd_uv.H  = VP8FixedCostsUV[mode];
     rd_uv.R  = VP8GetCostUV(it, &rd_uv);
     if (mode > 0 && IsFlat(rd_uv.uv_levels[0], kNumBlocks, FLATNESS_LIMIT_UV)) {
@@ -1233,17 +1247,17 @@ static void RefineUsingDistortion(VP8EncIterator* const it,
   const int lambda_d_i16 = 106;
   const int lambda_d_i4 = 11;
   const int lambda_d_uv = 120;
+  const int lambda_mult = (RD_DISTO_MULT * it->lambda_weight_) >> 7;
   score_t score_i4 = dqm->i4_penalty_;
   score_t i4_bit_sum = 0;
   const score_t bit_limit = try_both_modes ? it->enc_->mb_header_limit_
                                            : MAX_COST;  // no early-out allowed
-
   if (is_i16) {   // First, evaluate Intra16 distortion
     int best_mode = -1;
     const uint8_t* const src = it->yuv_in_ + Y_OFF_ENC;
     for (mode = 0; mode < NUM_PRED_MODES; ++mode) {
       const uint8_t* const ref = it->yuv_p_ + VP8I16ModeOffsets[mode];
-      const score_t score = (score_t)VP8SSE16x16(src, ref) * RD_DISTO_MULT
+      const score_t score = (score_t)VP8SSE16x16(src, ref) * lambda_mult
                           + VP8FixedCostsI16[mode] * lambda_d_i16;
       if (mode > 0 && VP8FixedCostsI16[mode] > bit_limit) {
         continue;
@@ -1280,7 +1294,7 @@ static void RefineUsingDistortion(VP8EncIterator* const it,
       VP8MakeIntra4Preds(it);
       for (mode = 0; mode < NUM_BMODES; ++mode) {
         const uint8_t* const ref = it->yuv_p_ + VP8I4ModeOffsets[mode];
-        const score_t score = VP8SSE4x4(src, ref) * RD_DISTO_MULT
+        const score_t score = VP8SSE4x4(src, ref) * lambda_mult
                             + mode_costs[mode] * lambda_d_i4;
         if (score < best_i4_score) {
           best_i4_mode = mode;
@@ -1318,7 +1332,7 @@ static void RefineUsingDistortion(VP8EncIterator* const it,
     const uint8_t* const src = it->yuv_in_ + U_OFF_ENC;
     for (mode = 0; mode < NUM_PRED_MODES; ++mode) {
       const uint8_t* const ref = it->yuv_p_ + VP8UVModeOffsets[mode];
-      const score_t score = VP8SSE16x8(src, ref) * RD_DISTO_MULT
+      const score_t score = VP8SSE16x8(src, ref) * lambda_mult
                           + VP8FixedCostsUV[mode] * lambda_d_uv;
       if (score < best_uv_score) {
         best_mode = mode;

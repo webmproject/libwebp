@@ -995,7 +995,12 @@ static int ImportYUVAFromRGBA(const uint8_t* r_ptr,
 static int PictureARGBToYUVA(WebPPicture* picture, WebPEncCSP colorspace,
                              float dithering, int use_iterative_conversion) {
   if (picture == NULL) return 0;
-  if (picture->argb == NULL) {
+  if (!picture->use_argb && picture->colorspace == colorspace) {  // already ok?
+    if (picture->y == NULL || picture->u == NULL || picture->v == NULL) {
+      return WebPEncodingSetError(picture, VP8_ENC_ERROR_INVALID_CONFIGURATION);
+    }
+    return 1;
+  } else if (picture->argb == NULL) {
     return WebPEncodingSetError(picture, VP8_ENC_ERROR_NULL_PARAMETER);
   } else if ((colorspace & WEBP_CSP_UV_MASK) != WEBP_YUV420) {
     return WebPEncodingSetError(picture, VP8_ENC_ERROR_INVALID_CONFIGURATION);

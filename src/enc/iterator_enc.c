@@ -61,6 +61,7 @@ void VP8IteratorReset(VP8EncIterator* const it) {
   InitTop(it);
   memset(it->bit_count_, 0, sizeof(it->bit_count_));
   it->do_trellis_ = 0;
+  it->lambda_weight_ = 128;   // off by default
 }
 
 void VP8IteratorSetCountDown(VP8EncIterator* const it, int count_down) {
@@ -128,6 +129,8 @@ static void ImportLine(const uint8_t* src, int src_stride,
   for (; i < total_len; ++i) dst[i] = dst[len - 1];
 }
 
+//------------------------------------------------------------------------------
+
 void VP8IteratorImport(VP8EncIterator* const it, uint8_t* const tmp_32) {
   const VP8Encoder* const enc = it->enc_;
   const int x = it->x_, y = it->y_;
@@ -140,9 +143,16 @@ void VP8IteratorImport(VP8EncIterator* const it, uint8_t* const tmp_32) {
   const int uv_w = (w + 1) >> 1;
   const int uv_h = (h + 1) >> 1;
 
+  assert(!pic->use_argb);
   ImportBlock(ysrc, pic->y_stride,  it->yuv_in_ + Y_OFF_ENC, w, h, 16);
   ImportBlock(usrc, pic->uv_stride, it->yuv_in_ + U_OFF_ENC, uv_w, uv_h, 8);
   ImportBlock(vsrc, pic->uv_stride, it->yuv_in_ + V_OFF_ENC, uv_w, uv_h, 8);
+
+  if (enc->config_->get_importance != NULL) {
+    it->lambda_weight_ =
+        enc->config_->get_importance(pic, 16 * x, 16 * y,
+                                     enc->config_->importance_user_object);
+  }
 
   if (tmp_32 == NULL) return;
 
