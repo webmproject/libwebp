@@ -41,6 +41,8 @@ int WebPConfigInitInternal(WebPConfig* config,
   config->pass = 1;
   config->qmin = 0;
   config->qmax = 100;
+  config->get_importance = NULL;
+  config->importance_user_object = NULL;
   config->show_compressed = 0;
   config->preprocessing = 0;
   config->autofilter = 0;
