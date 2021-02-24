@@ -146,6 +146,13 @@ If the minimum value must be less or equal to the maximum one.
 Turns auto\-filter on. This algorithm will spend additional time optimizing
 the filtering strength to reach a well\-balanced quality.
 .TP
+.B \-importance_map " string
+Specifies the image name to load as importance map. The dimension of the map
+must fit the dimension of the input image (after resizing and cropping).
+The image to use as importance map can be any of the supported one, its
+luminance channel will be used to modulate the compression parameter.
+Luminance level 0 are the least important, level 255 the most important.
+.TP
 .B \-jpeg_like
 Change the internal parameter mapping to better match the expected size
 of JPEG compression. This flag will generally produce an output file of

@@ -7,8 +7,7 @@
 // be found in the AUTHORS file in the root of the source tree.
 // -----------------------------------------------------------------------------
 //
-//  simple command line calling the WebPEncode function.
-//  Encodes a raw .YUV into WebP bitstream
+//  simple command line to compress images as WebP bitstreams
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
@@ -513,6 +512,40 @@ static int ProgressReport(int percent, const WebPPicture* const picture) {
 }
 
 //------------------------------------------------------------------------------
+// Importance map
+
+// TODO(skal): make these constants user-settable?
+static const int32_t kAmp = 170;  // amplitude around 128 for lambda
+static const int32_t kLambdaMin = 30, kLambdaMax = 240;  // final lambda range
+
+static uint8_t GetImportance(const WebPPicture* const pic,
+                             int x, int y, void* opaque) {
+  const WebPPicture* const map = (WebPPicture*)opaque;
+  const int w = (x + 16 <= pic->width) ? 16 : pic->width - x;
+  const int h = (y + 16 <= pic->height) ? 16 : pic->height - y;
+  const uint64_t stride = map->y_stride;
+  const uint8_t* src = map->y + x + y * stride;
+  const uint32_t area = w * h;
+  int32_t sum = 0;
+  int lambda;
+  int i, j;
+
+  assert(map != NULL);
+  assert(!map->use_argb);
+  (void)pic;
+
+  for (j = 0; j < h; ++j, src += stride) {
+    for (i = 0; i < w; ++i) sum += src[i];
+  }
+  // kAmp * (128 - sum / area) ~= 128 * kAmp - (kAmp * sum) / area
+  sum = kAmp * sum / area;
+  lambda = 128 + 128 * (int)kAmp - (int)sum;
+  lambda = (lambda < kLambdaMin) ? 0 : 255;//kLambdaMin :
+//           (lambda > kLambdaMax) ? kLambdaMax : lambda;
+  return (uint8_t)lambda;
+}
+
+//------------------------------------------------------------------------------
 
 static void HelpShort(void) {
   printf("Usage:\n\n");
@@ -619,6 +652,7 @@ static void HelpLong(void) {
   printf("  -jpeg_like ............. roughly match expected JPEG size\n");
   printf("  -af .................... auto-adjust filter strength\n");
   printf("  -pre <int> ............. pre-processing filter\n");
+  printf("  -importance_map <name> . file name to use as importance-map\n");
   printf("\n");
 }
 
@@ -672,6 +706,8 @@ int main(int argc, const char* argv[]) {
   int use_memory_writer;
   Metadata metadata;
   Stopwatch stop_watch;
+  WebPPicture importance_map;
+  const char* importance_map_name = NULL;
 
   INIT_WARGV(argc, argv);
 
@@ -679,6 +715,7 @@ int main(int argc, const char* argv[]) {
   WebPMemoryWriterInit(&memory_writer);
   if (!WebPPictureInit(&picture) ||
       !WebPPictureInit(&original_picture) ||
+      !WebPPictureInit(&importance_map) ||
       !WebPConfigInit(&config)) {
     fprintf(stderr, "Error! Version mismatch!\n");
     FREE_WARGV_AND_RETURN(-1);
@@ -812,6 +849,8 @@ int main(int argc, const char* argv[]) {
       config.preprocessing = ExUtilGetInt(argv[++c], 0, &parse_error);
     } else if (!strcmp(argv[c], "-segments") && c + 1 < argc) {
       config.segments = ExUtilGetInt(argv[++c], 0, &parse_error);
+    } else if (!strcmp(argv[c], "-importance_map") && c + 1 < argc) {
+      importance_map_name = argv[++c];
     } else if (!strcmp(argv[c], "-partition_limit") && c + 1 < argc) {
       config.partition_limit = ExUtilGetInt(argv[++c], 0, &parse_error);
     } else if (!strcmp(argv[c], "-map") && c + 1 < argc) {
@@ -953,6 +992,17 @@ int main(int argc, const char* argv[]) {
   // omitted, force a reasonable value.
   if (config.target_size > 0 || config.target_PSNR > 0) {
     if (config.pass == 1) config.pass = 6;
+  }
+
+  if (importance_map_name != NULL) {
+    if (!ReadPicture(importance_map_name, &importance_map, 0, NULL) ||
+        !WebPPictureARGBToYUVA(&importance_map, WEBP_YUV420)) {
+      WFPRINTF(stderr, "Error while importing map [%s]\n",
+               importance_map_name);
+      goto Error;
+    }
+    config.get_importance = GetImportance;
+    config.importance_user_object = (void*)&importance_map;
   }
 
   if (!WebPValidateConfig(&config)) {
@@ -1106,6 +1156,19 @@ int main(int argc, const char* argv[]) {
     goto Error;
   }
 
+  // verify segment map
+  if (importance_map.y != NULL) {
+    if (importance_map.width != picture.width ||
+        importance_map.height != picture.height) {
+      fprintf(stderr, "Dimension are incompatible for the supplied importance "
+                      "map '%s'.\n", importance_map_name);
+      fprintf(stderr, "Expected %d x %d, got: %d x %d\n",
+                       picture.width, picture.height,
+                       importance_map.width, importance_map.height);
+      goto Error;
+    }
+  }
+
   // Compress.
   if (verbose) {
     StopwatchReset(&stop_watch);
@@ -1229,6 +1292,7 @@ int main(int argc, const char* argv[]) {
   MetadataFree(&metadata);
   WebPPictureFree(&picture);
   WebPPictureFree(&original_picture);
+  WebPPictureFree(&importance_map);
   if (out != NULL && out != stdout) {
     fclose(out);
   }
