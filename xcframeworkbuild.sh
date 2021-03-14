@@ -48,6 +48,7 @@ PLATFORMS[$MACOS_CATALYST]="MacOSX-Catalyst-x86_64"
 if [[ "${XCODE%%.*}" -ge 12 ]]; then
   PLATFORMS[$MACOS]+=" MacOSX-arm64"
   PLATFORMS[$MACOS_CATALYST]+=" MacOSX-Catalyst-arm64"
+  PLATFORMS[$IOS_SIMULATOR]+=" iPhoneSimulator-arm64"
 elif [[ "${XCODE%%.*}" -eq 11 ]]; then
   cat << EOF
 WARNING: Xcode 12.0 or higher is required to build targets for
@@ -140,7 +141,9 @@ for (( i = 0; i < $NUM_PLATFORMS; ++i )); do
     CFLAGS="-pipe -isysroot ${SDKROOT} -O3 -DNDEBUG"
     case "${PLATFORM}" in
       iPhone*)
-        CFLAGS+=" -miphoneos-version-min=${IOS_MIN_VERSION} -fembed-bitcode"
+        CFLAGS+=" -fembed-bitcode"
+        CFLAGS+=" -target ${ARCH}-apple-ios${IOS_MIN_VERSION}"
+        [[ "${PLATFORM}" == *Simulator* ]] && CFLAGS+="-simulator"
         ;;
       MacOSX-Catalyst*)
         CFLAGS+=" -target"
