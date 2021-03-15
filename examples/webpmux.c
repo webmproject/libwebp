@@ -472,11 +472,11 @@ static WebPMux* DuplicateMuxHeader(const WebPMux* const mux) {
 }
 
 static int ParseFrameArgs(const char* args, WebPMuxFrameInfo* const info) {
-  int dispose_method, dummy;
+  int dispose_method, unused;
   char plus_minus, blend_method;
   const int num_args = sscanf(args, "+%d+%d+%d+%d%c%c+%d", &info->duration,
                               &info->x_offset, &info->y_offset, &dispose_method,
-                              &plus_minus, &blend_method, &dummy);
+                              &plus_minus, &blend_method, &unused);
   switch (num_args) {
     case 1:
       info->x_offset = info->y_offset = 0;  // fall through

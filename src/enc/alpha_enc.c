@@ -361,7 +361,7 @@ static int EncodeAlpha(VP8Encoder* const enc,
 //------------------------------------------------------------------------------
 // Main calls
 
-static int CompressAlphaJob(void* arg1, void* dummy) {
+static int CompressAlphaJob(void* arg1, void* unused) {
   VP8Encoder* const enc = (VP8Encoder*)arg1;
   const WebPConfig* config = enc->config_;
   uint8_t* alpha_data = NULL;
@@ -381,7 +381,7 @@ static int CompressAlphaJob(void* arg1, void* dummy) {
   }
   enc->alpha_data_size_ = (uint32_t)alpha_size;
   enc->alpha_data_ = alpha_data;
-  (void)dummy;
+  (void)unused;
   return 1;
 }
 
