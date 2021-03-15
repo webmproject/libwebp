@@ -16,6 +16,24 @@
       "message": "i don\u0027t totally agree that \u0027dummy\u0027 is offensive when taken literally or etymologically [*], but i appreciate that the new names are certainly more self-documenting the code!\n\n[*] esp. in the British sense, derived from the dummy player at the game of Whist",
       "revId": "5d4ee4c3c02bf3b75f72fcbd4678862cdbaa935a",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "7c75b9ec_5f4c5e87",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2021-03-15T22:23:55Z",
+      "side": 1,
+      "message": "\u003e i don\u0027t totally agree that \u0027dummy\u0027 is offensive when taken literally or etymologically [*], but i appreciate that the new names are certainly more self-documenting the code!\n\u003e \n\u003e [*] esp. in the British sense, derived from the dummy player at the game of Whist\n\nYou\u0027re right it depends on the context, but when we have options there\u0027s no harm in rewording. The android lint tools flag this one though I believe.",
+      "parentUuid": "57bfb5c4_690db8ce",
+      "revId": "5d4ee4c3c02bf3b75f72fcbd4678862cdbaa935a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
