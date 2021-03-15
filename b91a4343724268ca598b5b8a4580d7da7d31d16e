@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "7815a275_b2aef8e7",
+        "filename": "xcframeworkbuild.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2021-03-15T20:47:37Z",
+      "side": 1,
+      "message": "i\u0027d put \u0027-target\u0027 and ${ARCH}-apple... on the same line, since they go together",
+      "range": {
+        "startLine": 144,
+        "startChar": 35,
+        "endLine": 144,
+        "endChar": 41
+      },
+      "revId": "b91a4343724268ca598b5b8a4580d7da7d31d16e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
