@@ -16,6 +16,29 @@
       "message": "/tmp/install-autoconf/lib/libwebpdecoder.so -\u003e libwebpdecoder.so.3.1.1\n/tmp/install-autoconf/lib/libwebpdecoder.so.3 -\u003e libwebpdecoder.so.3.1.1\n/tmp/install-autoconf/lib/libwebpdecoder.so.3.1.1\n/tmp/install-autoconf/lib/libwebpdemux.so -\u003e libwebpdemux.so.2.0.7\n/tmp/install-autoconf/lib/libwebpdemux.so.2 -\u003e libwebpdemux.so.2.0.7\n/tmp/install-autoconf/lib/libwebpdemux.so.2.0.7\n/tmp/install-autoconf/lib/libwebpmux.so -\u003e libwebpmux.so.3.0.6\n/tmp/install-autoconf/lib/libwebpmux.so.3 -\u003e libwebpmux.so.3.0.6\n/tmp/install-autoconf/lib/libwebpmux.so.3.0.6\n/tmp/install-autoconf/lib/libwebp.so -\u003e libwebp.so.7.1.1\n/tmp/install-autoconf/lib/libwebp.so.7 -\u003e libwebp.so.7.1.1\n/tmp/install-autoconf/lib/libwebp.so.7.1.1\n\n/tmp/install-cmake-new/lib/libwebpdecoder.so -\u003e libwebpdecoder.so.3\n/tmp/install-cmake-new/lib/libwebpdecoder.so.3 -\u003e libwebpdecoder.so.3.1.1\n/tmp/install-cmake-new/lib/libwebpdecoder.so.3.1.1\n/tmp/install-cmake-new/lib/libwebpdemux.so -\u003e libwebpdemux.so.2\n/tmp/install-cmake-new/lib/libwebpdemux.so.2 -\u003e libwebpdemux.so.2.0.7\n/tmp/install-cmake-new/lib/libwebpdemux.so.2.0.7\n/tmp/install-cmake-new/lib/libwebpmux.so -\u003e libwebpmux.so.3\n/tmp/install-cmake-new/lib/libwebpmux.so.3 -\u003e libwebpmux.so.3.0.6\n/tmp/install-cmake-new/lib/libwebpmux.so.3.0.6\n/tmp/install-cmake-new/lib/libwebp.so -\u003e libwebp.so.7\n/tmp/install-cmake-new/lib/libwebp.so.7 -\u003e libwebp.so.7.1.1\n/tmp/install-cmake-new/lib/libwebp.so.7.1.1\n\n/tmp/install-cmake-old/lib/libwebpdecoder.so -\u003e libwebpdecoder.so.4.1.1\n/tmp/install-cmake-old/lib/libwebpdecoder.so.1.2.0\n/tmp/install-cmake-old/lib/libwebpdecoder.so.4.1.1 -\u003e libwebpdecoder.so.1.2.0\n/tmp/install-cmake-old/lib/libwebpdemux.so -\u003e libwebpdemux.so.2.7.0\n/tmp/install-cmake-old/lib/libwebpdemux.so.1.2.0\n/tmp/install-cmake-old/lib/libwebpdemux.so.2.7.0 -\u003e libwebpdemux.so.1.2.0\n/tmp/install-cmake-old/lib/libwebpmux.so -\u003e libwebpmux.so.3.6.0\n/tmp/install-cmake-old/lib/libwebpmux.so.1.2.0\n/tmp/install-cmake-old/lib/libwebpmux.so.3.6.0 -\u003e libwebpmux.so.1.2.0\n/tmp/install-cmake-old/lib/libwebp.so -\u003e libwebp.so.8.1.1\n/tmp/install-cmake-old/lib/libwebp.so.1.2.0\n/tmp/install-cmake-old/lib/libwebp.so.8.1.1 -\u003e libwebp.so.1.2.0\n\n",
       "revId": "3bcfbcaeb7af2c4be2c35b52068b7711b08fea06",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "fe838578_fc9bc4d5",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 320,
+      "author": {
+        "id": 1144239
+      },
+      "writtenOn": "2021-04-07T12:51:17Z",
+      "side": 1,
+      "message": "would having this a macro that also does set_target_properties make things simpler ?\n\nI actually did it here:\nhttps://chromium-review.googlesource.com/c/webm/libwebp/+/2810605",
+      "range": {
+        "startLine": 320,
+        "startChar": 0,
+        "endLine": 320,
+        "endChar": 8
+      },
+      "revId": "3bcfbcaeb7af2c4be2c35b52068b7711b08fea06",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
