@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "fe45dfbe_853decbc",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1144239
+      },
+      "writtenOn": "2021-04-07T14:23:09Z",
+      "side": 1,
+      "message": "Sorry, I messed up with that patch, I thought it would be fine if changing the id.\nhttps://chromium-review.googlesource.com/c/webm/libwebp/+/2810605 is the one with my change only.",
+      "revId": "3546a35d1a357babaebd74c4ebd5083c97bdd967",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
