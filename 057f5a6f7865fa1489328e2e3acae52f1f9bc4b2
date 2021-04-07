@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "a334bf04_f5931e76",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 353,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2021-04-07T20:54:09Z",
+      "side": 1,
+      "message": "long line.",
+      "revId": "057f5a6f7865fa1489328e2e3acae52f1f9bc4b2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "41f90901_2a687722",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 466,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2021-04-07T20:54:09Z",
+      "side": 1,
+      "message": "we could probably normalize this one to drop the \u0027lib\u0027 like the others",
+      "range": {
+        "startLine": 466,
+        "startChar": 30,
+        "endLine": 466,
+        "endChar": 40
+      },
+      "revId": "057f5a6f7865fa1489328e2e3acae52f1f9bc4b2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
