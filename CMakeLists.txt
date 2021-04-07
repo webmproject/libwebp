@@ -10,7 +10,7 @@
 cmake_minimum_required(VERSION 3.5)
 
 project(WebP C)
-
+set(BUILD_SHARED_LIBS ON)
 # Options for coder / decoder executables.
 if(NOT EMSCRIPTEN)
   # Disable SIMD on Emscripten by default, as it's a new unstable Wasm feature.
