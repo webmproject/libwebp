@@ -317,7 +317,7 @@ ${CMAKE_CURRENT_SOURCE_DIR}/src/webp/types.h")
 configure_pkg_config("src/demux/libwebpdemux.pc")
 
 # Set the version numbers.
-function(parse_version FILE NAME VAR)
+function(parse_version FILE NAME MAJOR FULL)
   file(READ ${CMAKE_CURRENT_SOURCE_DIR}/src/${FILE} SOURCE_FILE)
   string(REGEX MATCH
                "${NAME}_la_LDFLAGS[^\n]* -version-info [0-9:]+"
@@ -329,29 +329,48 @@ function(parse_version FILE NAME VAR)
                ${TMP})
   string(REGEX
          REPLACE ":"
-                 "."
+                 ";"
                  VERSION
                  ${TMP})
-  set(${VAR} "${VERSION}" PARENT_SCOPE)
+
+  # See the libtool docs for more information:
+  # https://www.gnu.org/software/libtool/manual/libtool.html#Updating-version-info
+  #
+  # c=<current>, a=<age>, r=<revision>
+  #
+  # libtool generates a .so file as .so.[c-a].a.r, while -version-info c:r:a is
+  # passed to libtool.
+  #
+  # We set FULL = [c-a].a.r and MAJOR = [c-a].
+  list(APPEND LT_VERSION ${VERSION})
+  list(GET LT_VERSION 0 LT_CURRENT)
+  list(GET LT_VERSION 1 LT_REVISION)
+  list(GET LT_VERSION 2 LT_AGE)
+  math(EXPR LT_CURRENT_MINUS_AGE "${LT_CURRENT} - ${LT_AGE}")
+
+  set(${MAJOR} "${LT_CURRENT_MINUS_AGE}" PARENT_SCOPE)
+  set(${FULL} "${LT_CURRENT_MINUS_AGE}.${LT_AGE}.${LT_REVISION}" PARENT_SCOPE)
 endfunction()
-parse_version(Makefile.am webp WEBP_WEBP_SOVERSION)
+parse_version(Makefile.am webp WEBP_WEBP_SOVERSION_MAJOR WEBP_WEBP_SOVERSION)
 set_target_properties(webp
                       PROPERTIES VERSION
-                                 ${PACKAGE_VERSION}
+                                 ${WEBP_WEBP_SOVERSION}
                                  SOVERSION
-                                 ${WEBP_WEBP_SOVERSION})
-parse_version(Makefile.am webpdecoder WEBP_DECODER_SOVERSION)
+                                 ${WEBP_WEBP_SOVERSION_MAJOR})
+parse_version(Makefile.am webpdecoder
+              WEBP_DECODER_SOVERSION_MAJOR WEBP_DECODER_SOVERSION)
 set_target_properties(webpdecoder
                       PROPERTIES VERSION
-                                 ${PACKAGE_VERSION}
+                                 ${WEBP_DECODER_SOVERSION}
                                  SOVERSION
-                                 ${WEBP_DECODER_SOVERSION})
-parse_version(demux/Makefile.am webpdemux WEBP_DEMUX_SOVERSION)
+                                 ${WEBP_DECODER_SOVERSION_MAJOR})
+parse_version(demux/Makefile.am webpdemux
+              WEBP_DEMUX_SOVERSION_MAJOR WEBP_DEMUX_SOVERSION)
 set_target_properties(webpdemux
                       PROPERTIES VERSION
-                                 ${PACKAGE_VERSION}
+                                 ${WEBP_DEMUX_SOVERSION}
                                  SOVERSION
-                                 ${WEBP_DEMUX_SOVERSION})
+                                 ${WEBP_DEMUX_SOVERSION_MAJOR})
 file(READ ${CMAKE_CURRENT_SOURCE_DIR}/configure.ac CONFIGURE_FILE)
 string(REGEX MATCH
              "AC_INIT\\([^\n]*\\[[0-9\\.]+\\]"
@@ -458,12 +477,13 @@ if(WEBP_BUILD_GIF2WEBP OR WEBP_BUILD_IMG2WEBP)
   target_include_directories(libwebpmux
                              PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
                                      ${CMAKE_CURRENT_SOURCE_DIR})
-  parse_version(mux/Makefile.am webpmux WEBP_MUX_SOVERSION)
+  parse_version(mux/Makefile.am webpmux
+                WEBP_MUX_SOVERSION_MAJOR WEBP_MUX_SOVERSION)
   set_target_properties(libwebpmux
                         PROPERTIES VERSION
-                                   ${PACKAGE_VERSION}
+                                   ${WEBP_MUX_SOVERSION}
                                    SOVERSION
-                                   ${WEBP_MUX_SOVERSION})
+                                   ${WEBP_MUX_SOVERSION_MAJOR})
   set_target_properties(libwebpmux
                         PROPERTIES PUBLIC_HEADER
                                    "${CMAKE_CURRENT_SOURCE_DIR}/src/webp/mux.h;\
