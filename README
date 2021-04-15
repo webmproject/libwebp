@@ -619,7 +619,7 @@ The encoding flow looks like:
   pic.width = width;
   pic.height = height;
   // allocated picture of dimension width x height
-  if (!WebPPictureAllocate(&pic)) {
+  if (!WebPPictureAlloc(&pic)) {
     return 0;   // memory error
   }
   // at this point, 'pic' has been initialized as a container,
