@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "01e81889_3787fb4a",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2021-04-19T22:51:19Z",
+      "side": 1,
+      "message": "I have some real bug fixes coming, just clearing the cosmetics / simple ones.",
+      "revId": "7d416ff085b0553373663fe5941063bffe2318ce",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
