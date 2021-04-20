@@ -188,8 +188,7 @@ VP8StatusCode WebPAllocateDecBuffer(int width, int height,
       const int ch = options->crop_height;
       const int x = options->crop_left & ~1;
       const int y = options->crop_top & ~1;
-      if (x < 0 || y < 0 || cw <= 0 || ch <= 0 ||
-          x + cw > width || y + ch > height) {
+      if (!WebPCheckCropDimensions(width, height, x, y, cw, ch)) {
         return VP8_STATUS_INVALID_PARAM;   // out of frame boundary.
       }
       width = cw;
