@@ -835,8 +835,8 @@ int WebPIoInitFromOptions(const WebPDecoderOptions* const options,
 
   if (io->use_scaling) {
     // disable filter (only for large downscaling ratio).
-    io->bypass_filtering = (io->scaled_width < W * 3 / 4) &&
-                           (io->scaled_height < H * 3 / 4);
+    io->bypass_filtering |= (io->scaled_width < W * 3 / 4) &&
+                            (io->scaled_height < H * 3 / 4);
     io->fancy_upsampling = 0;
   }
   return 1;
