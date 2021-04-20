@@ -821,7 +821,7 @@ int WebPIoInitFromOptions(const WebPDecoderOptions* const options,
   io->mb_h = h;
 
   // Scaling
-  io->use_scaling = (options != NULL) && (options->use_scaling > 0);
+  io->use_scaling = (options != NULL) && options->use_scaling;
   if (io->use_scaling) {
     int scaled_width = options->scaled_width;
     int scaled_height = options->scaled_height;
