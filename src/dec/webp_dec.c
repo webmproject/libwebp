@@ -799,7 +799,7 @@ int WebPIoInitFromOptions(const WebPDecoderOptions* const options,
   int x = 0, y = 0, w = W, h = H;
 
   // Cropping
-  io->use_cropping = (options != NULL) && (options->use_cropping > 0);
+  io->use_cropping = (options != NULL) && options->use_cropping;
   if (io->use_cropping) {
     w = options->crop_width;
     h = options->crop_height;
