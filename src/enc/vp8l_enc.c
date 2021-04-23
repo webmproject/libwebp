@@ -1571,7 +1571,8 @@ static int EncodeStreamHook(void* input, void* data2) {
     enc->use_predict_ = (entropy_idx == kSpatial) ||
                         (entropy_idx == kSpatialSubGreen) ||
                         (entropy_idx == kPaletteAndSpatial);
-    if (low_effort) {
+    // When using a palette, R/B==0, hence no need to test for cross-color.
+    if (low_effort || enc->use_palette_) {
       enc->use_cross_color_ = 0;
     } else {
       enc->use_cross_color_ = red_and_blue_always_zero ? 0 : enc->use_predict_;
