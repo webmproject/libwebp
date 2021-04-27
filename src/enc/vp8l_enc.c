@@ -1973,6 +1973,8 @@ WebPEncodingError VP8LEncodeStream(const WebPConfig* const config,
         enc_side->palette_size_ = enc_main->palette_size_;
         memcpy(enc_side->palette_, enc_main->palette_,
                sizeof(enc_main->palette_));
+        memcpy(enc_side->palette_sorted_, enc_main->palette_sorted_,
+               sizeof(enc_main->palette_sorted_));
         param->enc_ = enc_side;
       }
       // Create the workers.
