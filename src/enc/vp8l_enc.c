@@ -230,7 +230,7 @@ static WebPEncodingError CoOccurrenceBuild(const WebPPicture* const pic,
 }
 
 struct Sum {
-  uint16_t index;
+  uint8_t index;
   uint32_t sum;
 };
 
@@ -282,7 +282,7 @@ static WebPEncodingError PaletteSortModifiedZeng(
     }
 
     while (num_sums > 0) {
-      const uint16_t best_index = best_sum->index;
+      const uint8_t best_index = best_sum->index;
       // Compute delta to know if we need to prepend or append the best index.
       int32_t delta = 0;
       const int32_t n = num_colors - num_sums;
