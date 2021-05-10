@@ -247,6 +247,7 @@ typedef struct {
   int           count_down_;       // number of mb still to be processed
   int           count_down0_;      // starting counter value (for progress)
   int           percent0_;         // saved initial progress percent
+  uint8_t       mb_weight_;        // deduced from importance_map. neutral~=128.
 
   DError        left_derr_;        // left error diffusion (u/v)
   DError*       top_derr_;         // top diffusion error - NULL if disabled

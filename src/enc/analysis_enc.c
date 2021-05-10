@@ -249,6 +249,7 @@ static int MBAnalyzeBestIntra16Mode(VP8EncIterator* const it) {
     }
   }
   VP8SetIntra16Mode(it, best_mode);
+  best_alpha = (best_alpha * it->mb_weight_) >> 7;
   return best_alpha;
 }
 
@@ -301,6 +302,7 @@ static int MBAnalyzeBestUVMode(VP8EncIterator* const it) {
     }
   }
   VP8SetIntraUVMode(it, best_mode);
+  best_alpha = (best_alpha * it->mb_weight_) >> 7;
   return best_alpha;
 }
 

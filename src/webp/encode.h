@@ -20,7 +20,7 @@
 extern "C" {
 #endif
 
-#define WEBP_ENCODER_ABI_VERSION 0x020f    // MAJOR(8b) + MINOR(8b)
+#define WEBP_ENCODER_ABI_VERSION 0x0210    // MAJOR(8b) + MINOR(8b)
 
 // Note: forward declaring enumerations is not allowed in (strict) C and C++,
 // the types are left here for reference.
@@ -150,6 +150,15 @@ struct WebPConfig {
 
   int qmin;               // minimum permissible quality factor
   int qmax;               // maximum permissible quality factor
+
+  // if not NULL, the following should point to a function returning the
+  // importance of the 16x16 block located at (x, y) in the source image 'pic'
+  // (possibly cropped and resized). The returned value should be in range 0
+  // (less important) to 255 (most important). Values around 128 are neutral.
+  // The 'opaque' object passed is the 'importance_user_object' field.
+  uint8_t (*get_importance)(const WebPPicture* const pic,
+                            int x, int y, void* opaque);
+  void* importance_user_object;
 };
 
 // Enumerate some predefined settings for WebPConfig, depending on the type
