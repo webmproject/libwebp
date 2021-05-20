@@ -495,7 +495,7 @@ static int ParseFrameArgs(const char* args, WebPMuxFrameInfo* const info) {
 
   WarnAboutOddOffset(info);
 
-  // Note: The sanity of the following conversion is checked by
+  // Note: The validity of the following conversion is checked by
   // WebPMuxPushFrame().
   info->dispose_method = (WebPMuxAnimDispose)dispose_method;
 

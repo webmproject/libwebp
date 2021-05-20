@@ -418,7 +418,7 @@ static void MinimizeChangeRectangle(const WebPPicture* const src,
   const int max_allowed_diff_lossy = QualityToMaxDiff(quality);
   const int max_allowed_diff = is_lossless ? 0 : max_allowed_diff_lossy;
 
-  // Sanity checks.
+  // Assumption/correctness checks.
   assert(src->width == dst->width && src->height == dst->height);
   assert(rect->x_offset_ + rect->width_ <= dst->width);
   assert(rect->y_offset_ + rect->height_ <= dst->height);

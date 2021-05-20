@@ -303,7 +303,7 @@ static int EncodeAlpha(VP8Encoder* const enc,
   int ok = 1;
   const int reduce_levels = (quality < 100);
 
-  // quick sanity checks
+  // quick correctness checks
   assert((uint64_t)data_size == (uint64_t)width * height);  // as per spec
   assert(enc != NULL && pic != NULL && pic->a != NULL);
   assert(output != NULL && output_size != NULL);
@@ -375,7 +375,7 @@ static int CompressAlphaJob(void* arg1, void* unused) {
                    filter, effort_level, &alpha_data, &alpha_size)) {
     return 0;
   }
-  if (alpha_size != (uint32_t)alpha_size) {  // Sanity check.
+  if (alpha_size != (uint32_t)alpha_size) {  // Soundness check.
     WebPSafeFree(alpha_data);
     return 0;
   }
