@@ -248,9 +248,6 @@ WebPAnimEncoder* WebPAnimEncoderNewInternal(
 
   enc = (WebPAnimEncoder*)WebPSafeCalloc(1, sizeof(*enc));
   if (enc == NULL) return NULL;
-  // sanity inits, so we can call WebPAnimEncoderDelete():
-  enc->encoded_frames_ = NULL;
-  enc->mux_ = NULL;
   MarkNoError(enc);
 
   // Dimensions and options.
