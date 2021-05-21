@@ -10,26 +10,18 @@ This file describes the compilation of libwebp into a JavaScript decoder
 using Emscripten and CMake.
 
  - install the Emscripten SDK following the procedure described at:
-   https://kripken.github.io/emscripten-site/docs/getting_started/downloads.html
+   https://emscripten.org/docs/getting_started/downloads.html#installation-instructions-using-the-emsdk-recommended
    After installation, you should have some global variable positioned to the
-   location of the SDK. In particular, $EMSCRIPTEN should point to the
+   location of the SDK. In particular, $EMSDK should point to the
    top-level directory containing Emscripten tools.
-
- - make sure the file $EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake is
-   accessible. This is the toolchain file used by CMake to invoke Emscripten.
-   If $EMSCRIPTEN is unset search for Emscripten.cmake under $EMSDK and set
-   $EMSCRIPTEN accordingly, for example:
-   unix-like environments: export EMSCRIPTEN=$EMSDK/upstream/emscripten
-   windows: set EMSCRIPTEN=%EMSDK%\upstream\emscripten
 
  - configure the project 'WEBP_JS' with CMake using:
 
  cd webp_js && \
- cmake -DWEBP_BUILD_WEBP_JS=ON \
-       -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake \
+ emcmake cmake -DWEBP_BUILD_WEBP_JS=ON \
        ../
 
- - compile webp.js using 'make'.
+ - compile webp.js using 'emmake make'.
 
  - that's it! Upon completion, you should have the webp.js and
    webp.wasm files generated.
