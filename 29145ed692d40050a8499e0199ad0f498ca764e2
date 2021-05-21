@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "821392f8_353f47bc",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 2
+      },
+      "lineNbr": 621,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2021-05-21T22:10:59Z",
+      "side": 0,
+      "message": "Zhi An, are there any compatibility concerns here? The build completed successfully with 2.0.9, so I don\u0027t know if it\u0027s worth inspecting the emscripten version or not.",
+      "range": {
+        "startLine": 621,
+        "startChar": 10,
+        "endLine": 621,
+        "endChar": 40
+      },
+      "revId": "29145ed692d40050a8499e0199ad0f498ca764e2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
