@@ -35,6 +35,24 @@
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "f2951990_494c4a40",
+        "filename": "src/dec/vp8_dec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 338,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2021-05-21T17:39:36Z",
+      "side": 1,
+      "message": "\u003e i\u0027d keep a comment here\n\u003e (these two assignments are not strictly needed iirc, it\u0027s just for soundness)\n\ngood point, I was wary of this one too.",
+      "parentUuid": "7a2e7b63_dd921ad2",
+      "revId": "f8ee68b7f25b3bc85b02b55e504c751d39915915",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "8e2606c0_a4fce93c",
@@ -48,6 +66,24 @@
       "writtenOn": "2021-05-21T05:54:37Z",
       "side": 1,
       "message": "ditto for these two, these are general sanitization",
+      "revId": "f8ee68b7f25b3bc85b02b55e504c751d39915915",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "2bf7ff7d_73a27c69",
+        "filename": "src/dec/vp8l_dec.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1517,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2021-05-21T17:39:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8e2606c0_a4fce93c",
       "revId": "f8ee68b7f25b3bc85b02b55e504c751d39915915",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
