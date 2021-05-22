@@ -16,6 +16,29 @@
       "message": "thanks Zhi An, this is definitely simpler",
       "revId": "29145ed692d40050a8499e0199ad0f498ca764e2",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "161fbdb5_0f483f73",
+        "filename": "README.webp_js",
+        "patchSetId": 2
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2021-05-22T07:12:50Z",
+      "side": 1,
+      "message": "note that we actually require \u003e 2.0.18 now, after the EXTRA_EXPORTED_RUNTIME_METHODS change in #2912263",
+      "range": {
+        "startLine": 53,
+        "startChar": 63,
+        "endLine": 53,
+        "endChar": 64
+      },
+      "revId": "29145ed692d40050a8499e0199ad0f498ca764e2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
