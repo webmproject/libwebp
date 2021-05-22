@@ -46,6 +46,30 @@
       },
       "revId": "29145ed692d40050a8499e0199ad0f498ca764e2",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "4e78ae98_b5dde939",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 2
+      },
+      "lineNbr": 621,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2021-05-22T01:52:08Z",
+      "side": 0,
+      "message": "\u003e Nope, I don\u0027t think so, from https://emscripten.org/docs/introducing_emscripten/release_notes.html?highlight\u003dEXTRA_EXPORTED_RUNTIME_METHODS it looks like a simple renaming.\n\nRight, I was wondering when that came in because 2.0.8 (before I upgraded the job to use the latest since it has python 3.7 available now) and 2.0.9 worked with this change. I see EXTRA_EXPORTED_RUNTIME_METHODS referenced in 1.3.x notes, but given how quickly this project has been changing I don\u0027t know if it\u0027s worth supporting very old versions.\n\nLet\u0027s go with this and see if there are any issues reported.",
+      "parentUuid": "d3045575_4c9970e1",
+      "range": {
+        "startLine": 621,
+        "startChar": 10,
+        "endLine": 621,
+        "endChar": 40
+      },
+      "revId": "29145ed692d40050a8499e0199ad0f498ca764e2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
