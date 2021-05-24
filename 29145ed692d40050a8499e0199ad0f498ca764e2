@@ -39,6 +39,30 @@
       },
       "revId": "29145ed692d40050a8499e0199ad0f498ca764e2",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "3af91499_0153ff11",
+        "filename": "README.webp_js",
+        "patchSetId": 2
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1249724
+      },
+      "writtenOn": "2021-05-24T17:36:43Z",
+      "side": 1,
+      "message": "Thanks, fixed in https://crrev.com/c/2915328",
+      "parentUuid": "161fbdb5_0f483f73",
+      "range": {
+        "startLine": 53,
+        "startChar": 63,
+        "endLine": 53,
+        "endChar": 64
+      },
+      "revId": "29145ed692d40050a8499e0199ad0f498ca764e2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
