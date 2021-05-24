@@ -50,7 +50,7 @@ Web-Assembly (WASM) version:
   See webp_js/index_wasm.html for a simple demo page using the WASM version
   of the library.
 
-  You will need a fairly recent version of Emscripten (at least 1.37.8,
+  You will need a fairly recent version of Emscripten (at least 2.0.18,
   latest-upstream is recommended) and of your WASM-enabled browser to run this
   version.
 
