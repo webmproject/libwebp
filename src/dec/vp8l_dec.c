@@ -1514,7 +1514,7 @@ static int AllocateInternalBuffers32b(VP8LDecoder* const dec, int final_width) {
   assert(dec->width_ <= final_width);
   dec->pixels_ = (uint32_t*)WebPSafeMalloc(total_num_pixels, sizeof(uint32_t));
   if (dec->pixels_ == NULL) {
-    dec->argb_cache_ = NULL;    // for sanity check
+    dec->argb_cache_ = NULL;    // for soundness
     dec->status_ = VP8_STATUS_OUT_OF_MEMORY;
     return 0;
   }
@@ -1524,7 +1524,7 @@ static int AllocateInternalBuffers32b(VP8LDecoder* const dec, int final_width) {
 
 static int AllocateInternalBuffers8b(VP8LDecoder* const dec) {
   const uint64_t total_num_pixels = (uint64_t)dec->width_ * dec->height_;
-  dec->argb_cache_ = NULL;    // for sanity check
+  dec->argb_cache_ = NULL;    // for soundness
   dec->pixels_ = (uint32_t*)WebPSafeMalloc(total_num_pixels, sizeof(uint8_t));
   if (dec->pixels_ == NULL) {
     dec->status_ = VP8_STATUS_OUT_OF_MEMORY;
@@ -1666,7 +1666,6 @@ int VP8LDecodeImage(VP8LDecoder* const dec) {
   VP8Io* io = NULL;
   WebPDecParams* params = NULL;
 
-  // Sanity checks.
   if (dec == NULL) return 0;
 
   assert(dec->hdr_.huffman_tables_ != NULL);

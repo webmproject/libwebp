@@ -816,7 +816,7 @@ RIFF/WEBP
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 [vp8spec]:  http://tools.ietf.org/html/rfc6386
-[webpllspec]: https://chromium.googlesource.com/webm/libwebp/+/master/doc/webp-lossless-bitstream-spec.txt
+[webpllspec]: https://chromium.googlesource.com/webm/libwebp/+/HEAD/doc/webp-lossless-bitstream-spec.txt
 [iccspec]: http://www.color.org/icc_specs2.xalter
 [metadata]: http://www.metadataworkinggroup.org/pdf/mwg_guidance.pdf
 [rfc 1166]: http://tools.ietf.org/html/rfc1166
