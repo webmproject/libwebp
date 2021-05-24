@@ -591,19 +591,6 @@ static int EncoderAnalyze(VP8LEncoder* const enc,
           sizeof(*enc->palette_sorted_), PaletteCompareColorsForQsort);
   }
 
-  if (use_palette && enc->palette_size_ == 1) {
-    crunch_configs[0].entropy_idx_ = kDirect;
-    crunch_configs[0].sub_configs_size_ = 1;
-    crunch_configs[0].sub_configs_[0].lz77_ = kLZ77None;
-    crunch_configs[0].sub_configs_[0].do_no_cache_ = 1;
-    *crunch_configs_size = 1;
-    // Get the entropy image as small as possible.
-    enc->histo_bits_ = MAX_HUFFMAN_BITS;
-    // The transform image is unused as we are direct.
-    enc->transform_bits_ = MAX_TRANSFORM_BITS;
-    return 1;
-  }
-
   // Empirical bit sizes.
   enc->histo_bits_ = GetHistoBits(method, use_palette,
                                   pic->width, pic->height);

@@ -550,25 +550,6 @@ static int BackwardReferencesLz77(int xsize, int ysize,
   return ok;
 }
 
-static int BackwardReferencesNone(int xsize, int ysize,
-                                  const uint32_t* const argb, int cache_bits,
-                                  VP8LBackwardRefs* const refs) {
-  const int pix_count = xsize * ysize;
-  int i;
-  const int use_color_cache = (cache_bits > 0);
-  VP8LColorCache hashers;
-
-  if (use_color_cache && !VP8LColorCacheInit(&hashers, cache_bits)) {
-    return 0;
-  }
-  VP8LClearBackwardRefs(refs);
-  for (i = 0; i < pix_count; ++i) {
-    AddSingleLiteral(argb[i], use_color_cache, &hashers, refs);
-  }
-  if (use_color_cache) VP8LColorCacheClear(&hashers);
-  return !refs->error_;
-}
-
 // Compute an LZ77 by forcing matches to happen within a given distance cost.
 // We therefore limit the algorithm to the lowest 32 values in the PlaneCode
 // definition.
@@ -937,9 +918,6 @@ static int GetBackwardReferences(int width, int height,
         if (!VP8LHashChainInit(&hash_chain_box, width * height)) goto Error;
         res = BackwardReferencesLz77Box(width, height, argb, 0, hash_chain,
                                         &hash_chain_box, refs_tmp);
-        break;
-      case kLZ77None:
-        res = BackwardReferencesNone(width, height, argb, 0, refs_tmp);
         break;
       default:
         assert(0);

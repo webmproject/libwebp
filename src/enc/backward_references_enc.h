@@ -213,10 +213,7 @@ static WEBP_INLINE void VP8LRefsCursorNext(VP8LRefsCursor* const c) {
 enum VP8LLZ77Type {
   kLZ77Standard = 1,
   kLZ77RLE = 2,
-  kLZ77Box = 4,
-  // With kLZ77None, LZ77 is not even tried. For now, this is only useful for
-  // 1-color images but we could use it if we are sure the image is a photo.
-  kLZ77None = 8
+  kLZ77Box = 4
 };
 
 // Evaluates best possible backward references for specified quality.
