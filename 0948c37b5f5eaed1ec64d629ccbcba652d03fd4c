@@ -16,6 +16,24 @@
       "message": "I received some notifications about this patch and failure to build. I had completely forgotten about these patches (from 2.5 years earlier). I don\u0027t mind taking a look at what\u0027s happening but I would appreciate some review first. I don\u0027t think it\u0027s necessary to spend more time working on this if no review ever happens. 😛\n\nCould I know what is the status for this? I have not retested everything in details, but the bug report is still opened on our side (GIMP) at the very least.",
       "revId": "0948c37b5f5eaed1ec64d629ccbcba652d03fd4c",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "d8e1db88_c985769f",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2021-05-27T23:40:48Z",
+      "side": 1,
+      "message": "\u003e I received some notifications about this patch and failure to build. I had completely forgotten about these patches (from 2.5 years earlier). I don\u0027t mind taking a look at what\u0027s happening but I would appreciate some review first. I don\u0027t think it\u0027s necessary to spend more time working on this if no review ever happens. 😛\n\u003e \n\u003e Could I know what is the status for this? I have not retested everything in details, but the bug report is still opened on our side (GIMP) at the very least.\n\nLooks like this got forgotten about. The retrigger happened because of a switch in the default branch name (master-\u003emain). I\u0027ll rebase these and we\u0027ll see where things stand.",
+      "parentUuid": "b7a64b6c_806593ac",
+      "revId": "0948c37b5f5eaed1ec64d629ccbcba652d03fd4c",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
