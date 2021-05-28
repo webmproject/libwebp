@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "b694d002_16c8755a",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2021-05-28T03:06:40Z",
+      "side": 1,
+      "message": "This should be ok. The demuxer clears any alpha data if the flag isn\u0027t set, but won\u0027t fail. When producing frame information the bitstream is used as the indicator. I\u0027ll let Pascal have another look since it\u0027s been so long.",
+      "revId": "ef6d5cce1e0acb7bfbf9113ca9b7e1d1560f87c6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
