@@ -101,6 +101,9 @@ static void Increment(int* const v) {
 #if defined(MALLOC_LIMIT)
     {
       const char* const malloc_limit_str = getenv("MALLOC_LIMIT");
+#if MALLOC_LIMIT > 1
+      mem_limit = (size_t)MALLOC_LIMIT;
+#endif
       if (malloc_limit_str != NULL) {
         mem_limit = atoi(malloc_limit_str);
       }
@@ -175,7 +178,7 @@ static int CheckSizeArgumentsOverflow(uint64_t nmemb, size_t size) {
     return 0;    // fake fail!
   }
 #endif
-#if defined(MALLOC_LIMIT)
+#if defined(PRINT_MEM_INFO) && defined(MALLOC_LIMIT)
   if (mem_limit > 0) {
     const uint64_t new_total_mem = (uint64_t)total_mem + total_size;
     if (new_total_mem != (size_t)new_total_mem ||
