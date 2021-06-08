@@ -38,8 +38,9 @@ void WebPRescalerImportRowExpand_C(WebPRescaler* const wrk,
     int x_out = channel;
     // simple bilinear interpolation
     int accum = wrk->x_add;
-    int left = src[x_in];
-    int right = (wrk->src_width > 1) ? src[x_in + x_stride] : left;
+    rescaler_t left = (rescaler_t)src[x_in];
+    rescaler_t right =
+        (wrk->src_width > 1) ? (rescaler_t)src[x_in + x_stride] : left;
     x_in += x_stride;
     while (1) {
       wrk->frow[x_out] = right * wrk->x_add + (left - right) * accum;
@@ -50,7 +51,7 @@ void WebPRescalerImportRowExpand_C(WebPRescaler* const wrk,
         left = right;
         x_in += x_stride;
         assert(x_in < wrk->src_width * x_stride);
-        right = src[x_in];
+        right = (rescaler_t)src[x_in];
         accum += wrk->x_add;
       }
     }
