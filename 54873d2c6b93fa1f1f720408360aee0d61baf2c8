@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "1bd1b429_bf0473ed",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2021-06-09T00:02:58Z",
+      "side": 1,
+      "message": "I\u0027m going to hold this one to avoid any duplicate reports from oss-fuzz.",
+      "revId": "54873d2c6b93fa1f1f720408360aee0d61baf2c8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
