@@ -8,6 +8,10 @@
 
 cmake_minimum_required(VERSION 3.5)
 
+if(POLICY CMP0072)
+  cmake_policy(SET CMP0072 NEW)
+endif()
+
 project(WebP C)
 
 # Options for coder / decoder executables.
