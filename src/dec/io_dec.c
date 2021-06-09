@@ -300,24 +300,30 @@ static int InitYUVRescaler(const VP8Io* const io, WebPDecParams* const p) {
   const int uv_in_height = (io->mb_h + 1) >> 1;
   const size_t work_size = 2 * out_width;   // scratch memory for luma rescaler
   const size_t uv_work_size = 2 * uv_out_width;  // and for each u/v ones
-  size_t tmp_size, rescaler_size;
+  uint64_t total_size;
+  size_t rescaler_size;
   rescaler_t* work;
   WebPRescaler* scalers;
   const int num_rescalers = has_alpha ? 4 : 3;
 
-  tmp_size = (work_size + 2 * uv_work_size) * sizeof(*work);
+  total_size = ((uint64_t)work_size + 2 * uv_work_size) * sizeof(*work);
   if (has_alpha) {
-    tmp_size += work_size * sizeof(*work);
+    total_size += (uint64_t)work_size * sizeof(*work);
   }
   rescaler_size = num_rescalers * sizeof(*p->scaler_y) + WEBP_ALIGN_CST;
+  total_size += rescaler_size;
+  if (total_size != (size_t)total_size) {
+    return 0;
+  }
 
-  p->memory = WebPSafeMalloc(1ULL, tmp_size + rescaler_size);
+  p->memory = WebPSafeMalloc(1ULL, (size_t)total_size);
   if (p->memory == NULL) {
     return 0;   // memory error
   }
   work = (rescaler_t*)p->memory;
 
-  scalers = (WebPRescaler*)WEBP_ALIGN((const uint8_t*)work + tmp_size);
+  scalers = (WebPRescaler*)WEBP_ALIGN(
+      (const uint8_t*)work + total_size - rescaler_size);
   p->scaler_y = &scalers[0];
   p->scaler_u = &scalers[1];
   p->scaler_v = &scalers[2];
@@ -483,27 +489,29 @@ static int InitRGBRescaler(const VP8Io* const io, WebPDecParams* const p) {
   const size_t work_size = 2 * out_width;   // scratch memory for one rescaler
   rescaler_t* work;  // rescalers work area
   uint8_t* tmp;   // tmp storage for scaled YUV444 samples before RGB conversion
-  size_t tmp_size1, tmp_size2, total_size, rescaler_size;
+  uint64_t tmp_size1, tmp_size2, total_size;
+  size_t rescaler_size;
   WebPRescaler* scalers;
   const int num_rescalers = has_alpha ? 4 : 3;
 
-  tmp_size1 = 3 * work_size;
-  tmp_size2 = 3 * out_width;
-  if (has_alpha) {
-    tmp_size1 += work_size;
-    tmp_size2 += out_width;
-  }
+  tmp_size1 = (uint64_t)num_rescalers * work_size;
+  tmp_size2 = (uint64_t)num_rescalers * out_width;
   total_size = tmp_size1 * sizeof(*work) + tmp_size2 * sizeof(*tmp);
   rescaler_size = num_rescalers * sizeof(*p->scaler_y) + WEBP_ALIGN_CST;
+  total_size += rescaler_size;
+  if (total_size != (size_t)total_size) {
+    return 0;
+  }
 
-  p->memory = WebPSafeMalloc(1ULL, total_size + rescaler_size);
+  p->memory = WebPSafeMalloc(1ULL, (size_t)total_size);
   if (p->memory == NULL) {
     return 0;   // memory error
   }
   work = (rescaler_t*)p->memory;
   tmp = (uint8_t*)(work + tmp_size1);
 
-  scalers = (WebPRescaler*)WEBP_ALIGN((const uint8_t*)work + total_size);
+  scalers = (WebPRescaler*)WEBP_ALIGN(
+      (const uint8_t*)work + total_size - rescaler_size);
   p->scaler_y = &scalers[0];
   p->scaler_u = &scalers[1];
   p->scaler_v = &scalers[2];
