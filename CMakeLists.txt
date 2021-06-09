@@ -451,7 +451,6 @@ if(WEBP_BUILD_ANIM_UTILS
                     "example_util_[^ ]*")
   list(APPEND EXAMPLEUTIL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/examples/stopwatch.h)
   add_library(exampleutil STATIC ${EXAMPLEUTIL_SRCS})
-  target_link_libraries(exampleutil imageioutil)
   target_include_directories(
     exampleutil
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>)
@@ -460,6 +459,7 @@ if(WEBP_BUILD_ANIM_UTILS
                     "imageio_util_[^ ]*")
   add_library(imageioutil STATIC ${IMAGEIOUTILS_SRCS})
   target_link_libraries(imageioutil webp)
+  target_link_libraries(exampleutil imageioutil)
 
   # Image-decoding utility library.
   parse_makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/imageio "IMAGEDEC_SRCS"
