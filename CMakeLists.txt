@@ -445,7 +445,8 @@ if(WEBP_BUILD_ANIM_UTILS
    OR WEBP_BUILD_DWEBP
    OR WEBP_BUILD_GIF2WEBP
    OR WEBP_BUILD_IMG2WEBP
-   OR WEBP_BUILD_VWEBP)
+   OR WEBP_BUILD_VWEBP
+   OR WEBP_BUILD_WEBPMUX)
   # Example utility library.
   parse_makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/examples "EXAMPLEUTIL_SRCS"
                     "example_util_[^ ]*")
