@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "ad799c07_87b9b85f",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1378811
+      },
+      "writtenOn": "2021-06-14T06:33:47Z",
+      "side": 1,
+      "message": "Hello James,\n\nCould I ask you to review this patch if possible? Else could you assign someone else who could?\n\n\nThe purpose of this patch is to de-attach building libwebpmux from the binaries so it\u0027s possible to build libwebpmux for ffmpeg etc without needing to build the binaries",
+      "revId": "352116eb65193a349d216e6dafdb5820596607ac",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
