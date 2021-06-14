@@ -12,6 +12,7 @@
 // Author: Skal (pascal.massimino@gmail.com)
 
 #include <assert.h>
+#include <limits.h>
 #include <stdlib.h>
 #include <string.h>
 #include "src/dsp/dsp.h"
@@ -83,6 +84,7 @@ int WebPRescalerGetScaledDimensions(int src_width, int src_height,
   {
     int width = *scaled_width;
     int height = *scaled_height;
+    const int max_size = INT_MAX / 2;
 
     // if width is unspecified, scale original proportionally to height ratio.
     if (width == 0 && src_height > 0) {
@@ -95,7 +97,7 @@ int WebPRescalerGetScaledDimensions(int src_width, int src_height,
           (int)(((uint64_t)src_height * width + src_width - 1) / src_width);
     }
     // Check if the overall dimensions still make sense.
-    if (width <= 0 || height <= 0) {
+    if (width <= 0 || height <= 0 || width > max_size || height > max_size) {
       return 0;
     }
 
