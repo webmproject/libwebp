@@ -312,7 +312,7 @@ static int InitYUVRescaler(const VP8Io* const io, WebPDecParams* const p) {
   }
   rescaler_size = num_rescalers * sizeof(*p->scaler_y) + WEBP_ALIGN_CST;
   total_size += rescaler_size;
-  if (total_size != (size_t)total_size) {
+  if (!CheckSizeOverflow(total_size)) {
     return 0;
   }
 
@@ -499,7 +499,7 @@ static int InitRGBRescaler(const VP8Io* const io, WebPDecParams* const p) {
   total_size = tmp_size1 * sizeof(*work) + tmp_size2 * sizeof(*tmp);
   rescaler_size = num_rescalers * sizeof(*p->scaler_y) + WEBP_ALIGN_CST;
   total_size += rescaler_size;
-  if (total_size != (size_t)total_size) {
+  if (!CheckSizeOverflow(total_size)) {
     return 0;
   }
 

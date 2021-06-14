@@ -153,7 +153,7 @@ static int ZeroFillCanvas(uint8_t* buf, uint32_t canvas_width,
                           uint32_t canvas_height) {
   const uint64_t size =
       (uint64_t)canvas_width * canvas_height * NUM_CHANNELS * sizeof(*buf);
-  if (size != (size_t)size) return 0;
+  if (!CheckSizeOverflow(size)) return 0;
   memset(buf, 0, (size_t)size);
   return 1;
 }
@@ -174,7 +174,7 @@ static void ZeroFillFrameRect(uint8_t* buf, int buf_stride, int x_offset,
 static int CopyCanvas(const uint8_t* src, uint8_t* dst,
                       uint32_t width, uint32_t height) {
   const uint64_t size = (uint64_t)width * height * NUM_CHANNELS;
-  if (size != (size_t)size) return 0;
+  if (!CheckSizeOverflow(size)) return 0;
   assert(src != NULL && dst != NULL);
   memcpy(dst, src, (size_t)size);
   return 1;

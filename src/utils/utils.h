@@ -42,6 +42,10 @@ extern "C" {
 #endif
 #endif  // WEBP_MAX_ALLOCABLE_MEMORY
 
+static WEBP_INLINE int CheckSizeOverflow(uint64_t size) {
+  return size == (size_t)size;
+}
+
 // size-checking safe malloc/calloc: verify that the requested size is not too
 // large, or return NULL. You don't need to call these for constructs like
 // malloc(sizeof(foo)), but only if there's picture-dependent size involved
