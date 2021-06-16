@@ -16,6 +16,23 @@
       "message": "LGTM, no linking errors and compiled binaries run fine as intended",
       "revId": "9fe8153e093d90fb895598f0aac634afb91d07e4",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "f987d74d_bfe4b58a",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2021-06-16T04:40:12Z",
+      "side": 1,
+      "message": "Gerrit was stalled a bit on this one, but it looks like it cleared up.",
+      "revId": "9fe8153e093d90fb895598f0aac634afb91d07e4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
