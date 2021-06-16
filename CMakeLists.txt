@@ -636,7 +636,6 @@ if(WEBP_BUILD_ANIM_UTILS)
                         imageenc
                         imageioutil
                         webp
-                        libwebpmux
                         webpdemux
                         ${WEBP_DEP_GIF_LIBRARIES})
   target_include_directories(anim_diff PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src)
@@ -652,7 +651,6 @@ if(WEBP_BUILD_ANIM_UTILS)
                         imageenc
                         imageioutil
                         webp
-                        libwebpmux
                         webpdemux
                         ${WEBP_DEP_GIF_LIBRARIES})
   target_include_directories(anim_dump PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src)
