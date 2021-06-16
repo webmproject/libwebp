@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "9a67abd6_c019eb39",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1378811
+      },
+      "writtenOn": "2021-06-16T02:01:11Z",
+      "side": 1,
+      "message": "LGTM, no linking errors and compiled binaries run fine as intended",
+      "revId": "9fe8153e093d90fb895598f0aac634afb91d07e4",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
