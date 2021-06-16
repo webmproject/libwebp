@@ -53,6 +53,24 @@
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "4cab4b4c_7d0327df",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 390,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2021-06-16T01:55:32Z",
+      "side": 1,
+      "message": "\u003e Ack\n\nfor the dependency removal:\nhttps://chromium-review.googlesource.com/c/webm/libwebp/+/2965765",
+      "parentUuid": "d3bbc2b4_85b465e8",
+      "revId": "352116eb65193a349d216e6dafdb5820596607ac",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "45fde115_13edc70f",
