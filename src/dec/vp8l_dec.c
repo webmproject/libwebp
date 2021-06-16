@@ -797,7 +797,8 @@ static void ProcessRows(VP8LDecoder* const dec, int row) {
       const WebPDecBuffer* const output = dec->output_;
       if (WebPIsRGBMode(output->colorspace)) {  // convert to RGBA
         const WebPRGBABuffer* const buf = &output->u.RGBA;
-        uint8_t* const rgba = buf->rgba + dec->last_out_row_ * buf->stride;
+        uint8_t* const rgba =
+            buf->rgba + (int64_t)dec->last_out_row_ * buf->stride;
         const int num_rows_out =
 #if !defined(WEBP_REDUCE_SIZE)
          io->use_scaling ?
