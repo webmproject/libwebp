@@ -16,6 +16,24 @@
       "message": "Thanks for the patch. I\u0027ll rebase this one on the libwebpmux dependency removal so when it lands things should compile.",
       "revId": "699c734569a5f319a260008c4068f74de6d6501f",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "be39e823_034d3aa8",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1378811
+      },
+      "writtenOn": "2021-06-16T16:14:33Z",
+      "side": 1,
+      "message": "Thanks, should I rebase this one now or will it automatically do that when it\u0027s submitted?",
+      "parentUuid": "51e34292_dac177e5",
+      "revId": "699c734569a5f319a260008c4068f74de6d6501f",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
