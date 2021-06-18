@@ -25,6 +25,16 @@
 #include "src/dsp/dsp.h"
 #include "src/webp/types.h"
 
+//------------------------------------------------------------------------------
+// restrict
+
+#if defined(__GNUC__) || defined(__clang__)
+#define WEBP_RESTRICT __restrict
+#else
+#define WEBP_RESTRICT
+#endif
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif

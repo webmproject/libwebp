@@ -104,7 +104,7 @@ void VP8LoadNewBytes(VP8BitReader* const br) {
 }
 
 // Read a bit with proba 'prob'. Speed-critical function!
-static WEBP_INLINE int VP8GetBit(VP8BitReader* const br,
+static WEBP_INLINE int VP8GetBit(VP8BitReader* WEBP_RESTRICT const br,
                                  int prob, const char label[]) {
   // Don't move this declaration! It makes a big speed difference to store
   // 'range' *before* calling VP8LoadNewBytes(), even if this function doesn't
