@@ -25,18 +25,25 @@
 #include "src/dsp/dsp.h"
 #include "src/webp/types.h"
 
-//------------------------------------------------------------------------------
-// restrict
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-#if defined(__GNUC__) || defined(__clang__)
+//------------------------------------------------------------------------------
+// WEBP_RESTRICT
+
+// Declares a pointer with the restrict type qualifier if available.
+// This allows code to hint to the compiler that only this pointer references a
+// particular object or memory region within the scope of the block in which it
+// is declared. This may allow for improved optimizations due to the lack of
+// pointer aliasing. See also:
+// https://en.cppreference.com/w/c/language/restrict
+#if defined(__GNUC__)
+#define WEBP_RESTRICT __restrict__
+#elif defined(_MSC_VER)
 #define WEBP_RESTRICT __restrict
 #else
 #define WEBP_RESTRICT
-#endif
-
-
-#ifdef __cplusplus
-extern "C" {
 #endif
 
 //------------------------------------------------------------------------------
