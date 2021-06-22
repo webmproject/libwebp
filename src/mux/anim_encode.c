@@ -946,7 +946,8 @@ static int IncreasePreviousDuration(WebPAnimEncoder* const enc, int duration) {
   int new_duration;
 
   assert(enc->count_ >= 1);
-  assert(prev_enc_frame->sub_frame_.duration ==
+  assert(!prev_enc_frame->is_key_frame_ ||
+         prev_enc_frame->sub_frame_.duration ==
          prev_enc_frame->key_frame_.duration);
   assert(prev_enc_frame->sub_frame_.duration ==
          (prev_enc_frame->sub_frame_.duration & (MAX_DURATION - 1)));
@@ -1353,6 +1354,12 @@ int WebPAnimEncoderAdd(WebPAnimEncoder* enc, WebPPicture* frame, int timestamp,
       return 0;
     }
     if (!IncreasePreviousDuration(enc, (int)prev_frame_duration)) {
+      return 0;
+    }
+    // IncreasePreviousDuration() may add a frame to avoid exceeding
+    // MAX_DURATION which could cause CacheFrame() to over read encoded_frames_
+    // before the next flush.
+    if (enc->count_ == enc->size_ && !FlushFrames(enc)) {
       return 0;
     }
   } else {
