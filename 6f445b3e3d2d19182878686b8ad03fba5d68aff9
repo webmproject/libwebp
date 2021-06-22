@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "0da64a14_4efe9949",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1378811
+      },
+      "writtenOn": "2021-06-22T03:45:04Z",
+      "side": 1,
+      "message": "Hello James again,\n\nCould I ask you to review this?\nI do not think it should cause an issue because at least on my system, it linked to GLVND and ran fine without an issue.\n\nI have a few more patches to follow after I fix some issues on CMake\u0027s side, but that may come much more later.\n\n",
+      "revId": "6f445b3e3d2d19182878686b8ad03fba5d68aff9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
