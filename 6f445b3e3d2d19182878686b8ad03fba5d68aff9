@@ -51,6 +51,24 @@
       "parentUuid": "940b79a5_d3ac1c96",
       "revId": "6f445b3e3d2d19182878686b8ad03fba5d68aff9",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "8036e284_ee7093ad",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2021-06-23T08:31:42Z",
+      "side": 1,
+      "message": "same here, on Big Sur. It works, but i guess a lot of:\nclang: warning: argument unused during compilation: \u0027-mno-dspr2\u0027 [-Wunused-command-line-argument]\nclang: warning: argument unused during compilation: \u0027-mno-msa\u0027 [-Wunused-command-line-argument]",
+      "parentUuid": "ce594840_980c9581",
+      "revId": "6f445b3e3d2d19182878686b8ad03fba5d68aff9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
