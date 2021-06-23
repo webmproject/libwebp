@@ -16,6 +16,24 @@
       "message": "This one\u0027s pretty old, did you want to try to rebase and land it?",
       "revId": "93d03cb20ce5d09003ff28057e219bb14786cfbc",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "37dbfb2a_a6599fd6",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 9
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2021-06-23T06:58:43Z",
+      "side": 1,
+      "message": "no, i think we can drop it: the results were so-so in terms of quality, and it was not radically faster than the real sharp-YUV.\nIt could be moved to the \u0027extra\u0027 library, but i\u0027m not sure it\u0027s worth the effort...",
+      "parentUuid": "e387c5c9_d522276f",
+      "revId": "93d03cb20ce5d09003ff28057e219bb14786cfbc",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
