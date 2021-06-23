@@ -964,7 +964,7 @@ static int IncreasePreviousDuration(WebPAnimEncoder* const enc, int duration) {
       0x10, 0x88, 0x88, 0x08
     };
     const WebPData lossless_1x1 = {
-        lossless_1x1_bytes, sizeof(lossless_1x1_bytes)
+      lossless_1x1_bytes, sizeof(lossless_1x1_bytes)
     };
     const uint8_t lossy_1x1_bytes[] = {
       0x52, 0x49, 0x46, 0x46, 0x40, 0x00, 0x00, 0x00, 0x57, 0x45, 0x42, 0x50,
