@@ -33,6 +33,24 @@
       "message": "Thanks for the patch. The builds on Jenkins use 3.13, I also tested a compile on Mac Big Sur.",
       "revId": "6f445b3e3d2d19182878686b8ad03fba5d68aff9",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "ce594840_980c9581",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2021-06-23T00:06:25Z",
+      "side": 1,
+      "message": "\u003e ... I also tested a compile on Mac Big Sur.\n\nWhich noisy for the unneeded -mno-msa/-mno-dspr2:\nclang: warning: argument unused during compilation: \u0027-mno-dspr2\u0027 [-Wunused-command-line-argument]\nclang: warning: argument unused during compilation: \u0027-mno-msa\u0027 [-Wunused-command-line-argument]",
+      "parentUuid": "940b79a5_d3ac1c96",
+      "revId": "6f445b3e3d2d19182878686b8ad03fba5d68aff9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
