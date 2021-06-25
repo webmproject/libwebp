@@ -559,8 +559,11 @@ static int AllocateAndInitRescaler(VP8LDecoder* const dec, VP8Io* const io) {
   memory += work_size * sizeof(*work);
   scaled_data = (uint32_t*)memory;
 
-  WebPRescalerInit(dec->rescaler, in_width, in_height, (uint8_t*)scaled_data,
-                   out_width, out_height, 0, num_channels, work);
+  if (!WebPRescalerInit(dec->rescaler, in_width, in_height,
+                        (uint8_t*)scaled_data, out_width, out_height,
+                        0, num_channels, work)) {
+    return 0;
+  }
   return 1;
 }
 #endif   // WEBP_REDUCE_SIZE

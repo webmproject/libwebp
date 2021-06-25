@@ -47,7 +47,8 @@ struct WebPRescaler {
 };
 
 // Initialize a rescaler given scratch area 'work' and dimensions of src & dst.
-void WebPRescalerInit(WebPRescaler* const rescaler,
+// Returns false in case of error.
+int WebPRescalerInit(WebPRescaler* const rescaler,
                       int src_width, int src_height,
                       uint8_t* const dst,
                       int dst_width, int dst_height, int dst_stride,

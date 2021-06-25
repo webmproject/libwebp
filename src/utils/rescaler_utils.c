@@ -17,63 +17,69 @@
 #include <string.h>
 #include "src/dsp/dsp.h"
 #include "src/utils/rescaler_utils.h"
+#include "src/utils/utils.h"
 
 //------------------------------------------------------------------------------
 
-void WebPRescalerInit(WebPRescaler* const wrk, int src_width, int src_height,
+int WebPRescalerInit(WebPRescaler* const rescaler,
+                     int src_width, int src_height,
                       uint8_t* const dst,
                       int dst_width, int dst_height, int dst_stride,
                       int num_channels, rescaler_t* const work) {
   const int x_add = src_width, x_sub = dst_width;
   const int y_add = src_height, y_sub = dst_height;
-  wrk->x_expand = (src_width < dst_width);
-  wrk->y_expand = (src_height < dst_height);
-  wrk->src_width = src_width;
-  wrk->src_height = src_height;
-  wrk->dst_width = dst_width;
-  wrk->dst_height = dst_height;
-  wrk->src_y = 0;
-  wrk->dst_y = 0;
-  wrk->dst = dst;
-  wrk->dst_stride = dst_stride;
-  wrk->num_channels = num_channels;
+  const uint64_t total_size = 2ull * dst_width * num_channels * sizeof(*work);
+  if (!CheckSizeOverflow(total_size)) return 0;
+
+  rescaler->x_expand = (src_width < dst_width);
+  rescaler->y_expand = (src_height < dst_height);
+  rescaler->src_width = src_width;
+  rescaler->src_height = src_height;
+  rescaler->dst_width = dst_width;
+  rescaler->dst_height = dst_height;
+  rescaler->src_y = 0;
+  rescaler->dst_y = 0;
+  rescaler->dst = dst;
+  rescaler->dst_stride = dst_stride;
+  rescaler->num_channels = num_channels;
 
   // for 'x_expand', we use bilinear interpolation
-  wrk->x_add = wrk->x_expand ? (x_sub - 1) : x_add;
-  wrk->x_sub = wrk->x_expand ? (x_add - 1) : x_sub;
-  if (!wrk->x_expand) {  // fx_scale is not used otherwise
-    wrk->fx_scale = WEBP_RESCALER_FRAC(1, wrk->x_sub);
+  rescaler->x_add = rescaler->x_expand ? (x_sub - 1) : x_add;
+  rescaler->x_sub = rescaler->x_expand ? (x_add - 1) : x_sub;
+  if (!rescaler->x_expand) {  // fx_scale is not used otherwise
+    rescaler->fx_scale = WEBP_RESCALER_FRAC(1, rescaler->x_sub);
   }
   // vertical scaling parameters
-  wrk->y_add = wrk->y_expand ? y_add - 1 : y_add;
-  wrk->y_sub = wrk->y_expand ? y_sub - 1 : y_sub;
-  wrk->y_accum = wrk->y_expand ? wrk->y_sub : wrk->y_add;
-  if (!wrk->y_expand) {
+  rescaler->y_add = rescaler->y_expand ? y_add - 1 : y_add;
+  rescaler->y_sub = rescaler->y_expand ? y_sub - 1 : y_sub;
+  rescaler->y_accum = rescaler->y_expand ? rescaler->y_sub : rescaler->y_add;
+  if (!rescaler->y_expand) {
     // This is WEBP_RESCALER_FRAC(dst_height, x_add * y_add) without the cast.
-    // Its value is <= WEBP_RESCALER_ONE, because dst_height <= wrk->y_add, and
-    // wrk->x_add >= 1;
+    // Its value is <= WEBP_RESCALER_ONE, because dst_height <= rescaler->y_add
+    // and rescaler->x_add >= 1;
     const uint64_t num = (uint64_t)dst_height * WEBP_RESCALER_ONE;
-    const uint64_t den = (uint64_t)wrk->x_add * wrk->y_add;
+    const uint64_t den = (uint64_t)rescaler->x_add * rescaler->y_add;
     const uint64_t ratio = num / den;
     if (ratio != (uint32_t)ratio) {
       // When ratio == WEBP_RESCALER_ONE, we can't represent the ratio with the
       // current fixed-point precision. This happens when src_height ==
-      // wrk->y_add (which == src_height), and wrk->x_add == 1.
+      // rescaler->y_add (which == src_height), and rescaler->x_add == 1.
       // => We special-case fxy_scale = 0, in WebPRescalerExportRow().
-      wrk->fxy_scale = 0;
+      rescaler->fxy_scale = 0;
     } else {
-      wrk->fxy_scale = (uint32_t)ratio;
+      rescaler->fxy_scale = (uint32_t)ratio;
     }
-    wrk->fy_scale = WEBP_RESCALER_FRAC(1, wrk->y_sub);
+    rescaler->fy_scale = WEBP_RESCALER_FRAC(1, rescaler->y_sub);
   } else {
-    wrk->fy_scale = WEBP_RESCALER_FRAC(1, wrk->x_add);
-    // wrk->fxy_scale is unused here.
+    rescaler->fy_scale = WEBP_RESCALER_FRAC(1, rescaler->x_add);
+    // rescaler->fxy_scale is unused here.
   }
-  wrk->irow = work;
-  wrk->frow = work + num_channels * dst_width;
-  memset(work, 0, 2 * dst_width * num_channels * sizeof(*work));
+  rescaler->irow = work;
+  rescaler->frow = work + num_channels * dst_width;
+  memset(work, 0, (size_t)total_size);
 
   WebPRescalerDspInit();
+  return 1;
 }
 
 int WebPRescalerGetScaledDimensions(int src_width, int src_height,

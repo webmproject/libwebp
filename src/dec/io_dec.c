@@ -330,21 +330,25 @@ static int InitYUVRescaler(const VP8Io* const io, WebPDecParams* const p) {
   p->scaler_v = &scalers[2];
   p->scaler_a = has_alpha ? &scalers[3] : NULL;
 
-  WebPRescalerInit(p->scaler_y, io->mb_w, io->mb_h,
+  if (!WebPRescalerInit(p->scaler_y, io->mb_w, io->mb_h,
                    buf->y, out_width, out_height, buf->y_stride, 1,
-                   work);
-  WebPRescalerInit(p->scaler_u, uv_in_width, uv_in_height,
+                        work) ||
+      !WebPRescalerInit(p->scaler_u, uv_in_width, uv_in_height,
                    buf->u, uv_out_width, uv_out_height, buf->u_stride, 1,
-                   work + work_size);
-  WebPRescalerInit(p->scaler_v, uv_in_width, uv_in_height,
+                        work + work_size) ||
+      !WebPRescalerInit(p->scaler_v, uv_in_width, uv_in_height,
                    buf->v, uv_out_width, uv_out_height, buf->v_stride, 1,
-                   work + work_size + uv_work_size);
+                        work + work_size + uv_work_size)) {
+    return 0;
+  }
   p->emit = EmitRescaledYUV;
 
   if (has_alpha) {
-    WebPRescalerInit(p->scaler_a, io->mb_w, io->mb_h,
+    if (!WebPRescalerInit(p->scaler_a, io->mb_w, io->mb_h,
                      buf->a, out_width, out_height, buf->a_stride, 1,
-                     work + work_size + 2 * uv_work_size);
+                          work + work_size + 2 * uv_work_size)) {
+      return 0;
+    }
     p->emit_alpha = EmitRescaledAlphaYUV;
     WebPInitAlphaProcessing();
   }
@@ -519,22 +523,26 @@ static int InitRGBRescaler(const VP8Io* const io, WebPDecParams* const p) {
   p->scaler_v = &scalers[2];
   p->scaler_a = has_alpha ? &scalers[3] : NULL;
 
-  WebPRescalerInit(p->scaler_y, io->mb_w, io->mb_h,
+  if (!WebPRescalerInit(p->scaler_y, io->mb_w, io->mb_h,
                    tmp + 0 * out_width, out_width, out_height, 0, 1,
-                   work + 0 * work_size);
-  WebPRescalerInit(p->scaler_u, uv_in_width, uv_in_height,
+                        work + 0 * work_size) ||
+      !WebPRescalerInit(p->scaler_u, uv_in_width, uv_in_height,
                    tmp + 1 * out_width, out_width, out_height, 0, 1,
-                   work + 1 * work_size);
-  WebPRescalerInit(p->scaler_v, uv_in_width, uv_in_height,
+                        work + 1 * work_size) ||
+      !WebPRescalerInit(p->scaler_v, uv_in_width, uv_in_height,
                    tmp + 2 * out_width, out_width, out_height, 0, 1,
-                   work + 2 * work_size);
+                        work + 2 * work_size)) {
+    return 0;
+  }
   p->emit = EmitRescaledRGB;
   WebPInitYUV444Converters();
 
   if (has_alpha) {
-    WebPRescalerInit(p->scaler_a, io->mb_w, io->mb_h,
+    if (!WebPRescalerInit(p->scaler_a, io->mb_w, io->mb_h,
                      tmp + 3 * out_width, out_width, out_height, 0, 1,
-                     work + 3 * work_size);
+                          work + 3 * work_size)) {
+      return 0;
+    }
     p->emit_alpha = EmitRescaledAlphaRGB;
     if (p->output->colorspace == MODE_RGBA_4444 ||
         p->output->colorspace == MODE_rgbA_4444) {
