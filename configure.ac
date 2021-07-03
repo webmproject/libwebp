@@ -442,6 +442,10 @@ AS_IF([test "x$enable_gl" != "xno"], [
 
   if test "$glut_support" = "yes" -a "$enable_libwebpdemux" = "yes"; then
     build_vwebp=yes
+  else
+    AC_MSG_NOTICE(
+      m4_normalize([Not building vwebp.
+                    OpenGL libraries and --enable-libwebpdemux are required.]))
   fi
 ])
 AM_CONDITIONAL([BUILD_VWEBP], [test "$build_vwebp" = "yes"])
@@ -501,7 +505,7 @@ AS_IF([test "x$enable_sdl" != "xno"], [
   if test x"$sdl_support" = "xyes"; then
     build_vwebp_sdl=yes
   else
-    AC_MSG_WARN(Optional SDL library not found)
+    AC_MSG_NOTICE([Not building vwebp-sdl. SDL library is required.])
   fi
 ])
 
@@ -625,11 +629,17 @@ AS_IF([test "x$enable_gif" != "xno"], [
   if test "$gif_support" = "yes" -a \
           "$enable_libwebpdemux" = "yes"; then
     build_anim_diff=yes
+  else
+    AC_MSG_NOTICE(
+      [Not building anim_diff. libgif and --enable-libwebpdemux are required.])
   fi
 
   if test "$gif_support" = "yes" -a \
           "$enable_libwebpmux" = "yes"; then
     build_gif2webp=yes
+  else
+    AC_MSG_NOTICE(
+      [Not building gif2webp. libgif and --enable-libwebpmux are required.])
   fi
 ])
 AM_CONDITIONAL([BUILD_ANIMDIFF], [test "${build_anim_diff}" = "yes"])
@@ -637,11 +647,17 @@ AM_CONDITIONAL([BUILD_GIF2WEBP], [test "${build_gif2webp}" = "yes"])
 
 if test "$enable_libwebpdemux" = "yes" -a "$enable_libwebpmux" = "yes"; then
   build_img2webp=yes
+else
+  AC_MSG_NOTICE(
+    m4_normalize([Not building img2webp.
+                  --enable-libwebpdemux & --enable-libwebpmux are required.]))
 fi
 AM_CONDITIONAL([BUILD_IMG2WEBP], [test "${build_img2webp}" = "yes"])
 
 if test "$enable_libwebpmux" = "yes"; then
   build_webpinfo=yes
+else
+  AC_MSG_NOTICE([Not building webpinfo. --enable-libwebpdemux is required.])
 fi
 AM_CONDITIONAL([BUILD_WEBPINFO], [test "${build_webpinfo}" = "yes"])
 
