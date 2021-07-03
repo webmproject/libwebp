@@ -35,8 +35,9 @@ AC_ARG_ENABLE([everything],
 dnl === Check whether libwebpmux should be built
 AC_MSG_CHECKING(whether libwebpmux is to be built)
 AC_ARG_ENABLE([libwebpmux],
-              AS_HELP_STRING([--enable-libwebpmux],
-                             [Build libwebpmux @<:@default=no@:>@]))
+              AS_HELP_STRING([--disable-libwebpmux],
+                             [Disable libwebpmux @<:@default=no@:>@]),
+              [], [enable_libwebpmux=yes])
 AC_MSG_RESULT(${enable_libwebpmux-no})
 AM_CONDITIONAL([BUILD_MUX], [test "$enable_libwebpmux" = "yes"])
 
