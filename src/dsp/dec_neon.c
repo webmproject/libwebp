@@ -916,8 +916,8 @@ static void HFilter16i_NEON(uint8_t* p, int stride,
 #endif  // !WORK_AROUND_GCC
 
 // 8-pixels wide variant, for chroma filtering
-static void VFilter8_NEON(uint8_t* u, uint8_t* v, int stride,
-                          int thresh, int ithresh, int hev_thresh) {
+static void VFilter8_NEON(uint8_t* WEBP_RESTRICT u, uint8_t* WEBP_RESTRICT v,
+                          int stride, int thresh, int ithresh, int hev_thresh) {
   uint8x16_t p3, p2, p1, p0, q0, q1, q2, q3;
   Load8x8x2_NEON(u, v, stride, &p3, &p2, &p1, &p0, &q0, &q1, &q2, &q3);
   {
@@ -932,7 +932,8 @@ static void VFilter8_NEON(uint8_t* u, uint8_t* v, int stride,
     Store8x2x2_NEON(oq1, oq2, u + 2 * stride, v + 2 * stride, stride);
   }
 }
-static void VFilter8i_NEON(uint8_t* u, uint8_t* v, int stride,
+static void VFilter8i_NEON(uint8_t* WEBP_RESTRICT u, uint8_t* WEBP_RESTRICT v,
+                           int stride,
                            int thresh, int ithresh, int hev_thresh) {
   uint8x16_t p3, p2, p1, p0, q0, q1, q2, q3;
   u += 4 * stride;
@@ -949,8 +950,8 @@ static void VFilter8i_NEON(uint8_t* u, uint8_t* v, int stride,
 }
 
 #if !defined(WORK_AROUND_GCC)
-static void HFilter8_NEON(uint8_t* u, uint8_t* v, int stride,
-                          int thresh, int ithresh, int hev_thresh) {
+static void HFilter8_NEON(uint8_t* WEBP_RESTRICT u, uint8_t* WEBP_RESTRICT v,
+                          int stride, int thresh, int ithresh, int hev_thresh) {
   uint8x16_t p3, p2, p1, p0, q0, q1, q2, q3;
   Load8x8x2T_NEON(u, v, stride, &p3, &p2, &p1, &p0, &q0, &q1, &q2, &q3);
   {
@@ -964,7 +965,8 @@ static void HFilter8_NEON(uint8_t* u, uint8_t* v, int stride,
   }
 }
 
-static void HFilter8i_NEON(uint8_t* u, uint8_t* v, int stride,
+static void HFilter8i_NEON(uint8_t* WEBP_RESTRICT u, uint8_t* WEBP_RESTRICT v,
+                           int stride,
                            int thresh, int ithresh, int hev_thresh) {
   uint8x16_t p3, p2, p1, p0, q0, q1, q2, q3;
   u += 4;
@@ -1041,7 +1043,8 @@ static WEBP_INLINE void TransformPass_NEON(int16x8x2_t* const rows) {
   Transpose8x2_NEON(E0, E1, rows);
 }
 
-static void TransformOne_NEON(const int16_t* in, uint8_t* dst) {
+static void TransformOne_NEON(const int16_t* WEBP_RESTRICT in,
+                              uint8_t* WEBP_RESTRICT dst) {
   int16x8x2_t rows;
   INIT_VECTOR2(rows, vld1q_s16(in + 0), vld1q_s16(in + 8));
   TransformPass_NEON(&rows);
@@ -1051,7 +1054,8 @@ static void TransformOne_NEON(const int16_t* in, uint8_t* dst) {
 
 #else
 
-static void TransformOne_NEON(const int16_t* in, uint8_t* dst) {
+static void TransformOne_NEON(const int16_t* WEBP_RESTRICT in,
+                              uint8_t* WEBP_RESTRICT dst) {
   const int kBPS = BPS;
   // kC1, kC2. Padded because vld1.16 loads 8 bytes
   const int16_t constants[4] = { kC1, kC2, 0, 0 };
@@ -1184,14 +1188,16 @@ static void TransformOne_NEON(const int16_t* in, uint8_t* dst) {
 
 #endif    // WEBP_USE_INTRINSICS
 
-static void TransformTwo_NEON(const int16_t* in, uint8_t* dst, int do_two) {
+static void TransformTwo_NEON(const int16_t* WEBP_RESTRICT in,
+                              uint8_t* WEBP_RESTRICT dst, int do_two) {
   TransformOne_NEON(in, dst);
   if (do_two) {
     TransformOne_NEON(in + 16, dst + 4);
   }
 }
 
-static void TransformDC_NEON(const int16_t* in, uint8_t* dst) {
+static void TransformDC_NEON(const int16_t* WEBP_RESTRICT in,
+                             uint8_t* WEBP_RESTRICT dst) {
   const int16x8_t DC = vdupq_n_s16(in[0]);
   Add4x4_NEON(DC, DC, dst);
 }
@@ -1205,7 +1211,8 @@ static void TransformDC_NEON(const int16_t* in, uint8_t* dst) {
   *dst = vgetq_lane_s32(rows.val[3], col); (dst) += 16; \
 } while (0)
 
-static void TransformWHT_NEON(const int16_t* in, int16_t* out) {
+static void TransformWHT_NEON(const int16_t* WEBP_RESTRICT in,
+                              int16_t* WEBP_RESTRICT out) {
   int32x4x4_t tmp;
 
   {
@@ -1256,7 +1263,8 @@ static void TransformWHT_NEON(const int16_t* in, int16_t* out) {
 
 //------------------------------------------------------------------------------
 
-static void TransformAC3_NEON(const int16_t* in, uint8_t* dst) {
+static void TransformAC3_NEON(const int16_t* WEBP_RESTRICT in,
+                              uint8_t* WEBP_RESTRICT dst) {
   const int16x4_t A = vld1_dup_s16(in);
   const int16x4_t c4 = vdup_n_s16(WEBP_TRANSFORM_AC3_MUL2(in[4]));
   const int16x4_t d4 = vdup_n_s16(WEBP_TRANSFORM_AC3_MUL1(in[4]));

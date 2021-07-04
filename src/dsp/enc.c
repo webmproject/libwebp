@@ -720,7 +720,7 @@ VP8CHisto VP8CollectHistogram;
 VP8Idct VP8ITransform;
 VP8Fdct VP8FTransform;
 VP8Fdct VP8FTransform2;
-VP8WHT VP8FTransformWHT;
+VP8FWHT VP8FTransformWHT;
 VP8Intra4Preds VP8EncPredLuma4;
 VP8IntraPreds VP8EncPredLuma16;
 VP8IntraPreds VP8EncPredChroma8;

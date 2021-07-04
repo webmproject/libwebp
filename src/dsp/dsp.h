@@ -63,11 +63,15 @@ extern "C" {
 typedef void (*VP8Idct)(const uint8_t* ref, const int16_t* in, uint8_t* dst,
                         int do_two);
 typedef void (*VP8Fdct)(const uint8_t* src, const uint8_t* ref, int16_t* out);
-typedef void (*VP8WHT)(const int16_t* in, int16_t* out);
+// TODO(jzern): merge these two typedefs after the encoder functions are
+// updated to use WEBP_RESTRICT.
+typedef void (*VP8FWHT)(const int16_t* in, int16_t* out);
+typedef void (*VP8IWHT)(const int16_t* WEBP_RESTRICT in,
+                        int16_t* WEBP_RESTRICT out);
 extern VP8Idct VP8ITransform;
 extern VP8Fdct VP8FTransform;
 extern VP8Fdct VP8FTransform2;   // performs two transforms at a time
-extern VP8WHT VP8FTransformWHT;
+extern VP8FWHT VP8FTransformWHT;
 // Predictions
 // *dst is the destination block. *top and *left can be NULL.
 typedef void (*VP8IntraPreds)(uint8_t* dst, const uint8_t* left,
@@ -194,15 +198,17 @@ void VP8SSIMDspInit(void);
 //------------------------------------------------------------------------------
 // Decoding
 
-typedef void (*VP8DecIdct)(const int16_t* coeffs, uint8_t* dst);
+typedef void (*VP8DecIdct)(const int16_t* WEBP_RESTRICT coeffs,
+                           uint8_t* WEBP_RESTRICT dst);
 // when doing two transforms, coeffs is actually int16_t[2][16].
-typedef void (*VP8DecIdct2)(const int16_t* coeffs, uint8_t* dst, int do_two);
+typedef void (*VP8DecIdct2)(const int16_t* WEBP_RESTRICT coeffs,
+                            uint8_t* WEBP_RESTRICT dst, int do_two);
 extern VP8DecIdct2 VP8Transform;
 extern VP8DecIdct VP8TransformAC3;
 extern VP8DecIdct VP8TransformUV;
 extern VP8DecIdct VP8TransformDC;
 extern VP8DecIdct VP8TransformDCUV;
-extern VP8WHT VP8TransformWHT;
+extern VP8IWHT VP8TransformWHT;
 
 #define WEBP_TRANSFORM_AC3_C1 20091
 #define WEBP_TRANSFORM_AC3_C2 35468
@@ -234,7 +240,8 @@ extern VP8SimpleFilterFunc VP8SimpleHFilter16i;
 // regular filter (on both macroblock edges and inner edges)
 typedef void (*VP8LumaFilterFunc)(uint8_t* luma, int stride,
                                   int thresh, int ithresh, int hev_t);
-typedef void (*VP8ChromaFilterFunc)(uint8_t* u, uint8_t* v, int stride,
+typedef void (*VP8ChromaFilterFunc)(uint8_t* WEBP_RESTRICT u,
+                                    uint8_t* WEBP_RESTRICT v, int stride,
                                     int thresh, int ithresh, int hev_t);
 // on outer edge
 extern VP8LumaFilterFunc VP8VFilter16;
@@ -254,8 +261,8 @@ extern VP8ChromaFilterFunc VP8HFilter8i;
 #define VP8_DITHER_DESCALE_ROUNDER (1 << (VP8_DITHER_DESCALE - 1))
 #define VP8_DITHER_AMP_BITS 7
 #define VP8_DITHER_AMP_CENTER (1 << VP8_DITHER_AMP_BITS)
-extern void (*VP8DitherCombine8x8)(const uint8_t* dither, uint8_t* dst,
-                                   int dst_stride);
+extern void (*VP8DitherCombine8x8)(const uint8_t* WEBP_RESTRICT dither,
+                                   uint8_t* WEBP_RESTRICT dst, int dst_stride);
 
 // must be called before anything using the above
 void VP8DspInit(void);
