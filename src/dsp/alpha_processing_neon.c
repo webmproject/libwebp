@@ -16,6 +16,7 @@
 #if defined(WEBP_USE_NEON)
 
 #include "src/dsp/neon.h"
+#include "src/utils/utils.h"
 
 //------------------------------------------------------------------------------
 
@@ -80,9 +81,9 @@ static void ApplyAlphaMultiply_NEON(uint8_t* rgba, int alpha_first,
 
 //------------------------------------------------------------------------------
 
-static int DispatchAlpha_NEON(const uint8_t* alpha, int alpha_stride,
-                              int width, int height,
-                              uint8_t* dst, int dst_stride) {
+static int DispatchAlpha_NEON(const uint8_t* WEBP_RESTRICT alpha,
+                              int alpha_stride, int width, int height,
+                              uint8_t* WEBP_RESTRICT dst, int dst_stride) {
   uint32_t alpha_mask = 0xffffffffu;
   uint8x8_t mask8 = vdup_n_u8(0xff);
   uint32_t tmp[2];
@@ -112,9 +113,10 @@ static int DispatchAlpha_NEON(const uint8_t* alpha, int alpha_stride,
   return (alpha_mask != 0xffffffffu);
 }
 
-static void DispatchAlphaToGreen_NEON(const uint8_t* alpha, int alpha_stride,
-                                      int width, int height,
-                                      uint32_t* dst, int dst_stride) {
+static void DispatchAlphaToGreen_NEON(const uint8_t* WEBP_RESTRICT alpha,
+                                      int alpha_stride, int width, int height,
+                                      uint32_t* WEBP_RESTRICT dst,
+                                      int dst_stride) {
   int i, j;
   uint8x8x4_t greens;   // leave A/R/B channels zero'd.
   greens.val[0] = vdup_n_u8(0);
@@ -131,9 +133,9 @@ static void DispatchAlphaToGreen_NEON(const uint8_t* alpha, int alpha_stride,
   }
 }
 
-static int ExtractAlpha_NEON(const uint8_t* argb, int argb_stride,
+static int ExtractAlpha_NEON(const uint8_t* WEBP_RESTRICT argb, int argb_stride,
                              int width, int height,
-                             uint8_t* alpha, int alpha_stride) {
+                             uint8_t* WEBP_RESTRICT alpha, int alpha_stride) {
   uint32_t alpha_mask = 0xffffffffu;
   uint8x8_t mask8 = vdup_n_u8(0xff);
   uint32_t tmp[2];
@@ -161,8 +163,8 @@ static int ExtractAlpha_NEON(const uint8_t* argb, int argb_stride,
   return (alpha_mask == 0xffffffffu);
 }
 
-static void ExtractGreen_NEON(const uint32_t* argb,
-                              uint8_t* alpha, int size) {
+static void ExtractGreen_NEON(const uint32_t* WEBP_RESTRICT argb,
+                              uint8_t* WEBP_RESTRICT alpha, int size) {
   int i;
   for (i = 0; i + 16 <= size; i += 16) {
     const uint8x16x4_t rgbX = vld4q_u8((const uint8_t*)(argb + i));
