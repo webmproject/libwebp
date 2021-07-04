@@ -168,7 +168,7 @@ static void TransformWHT_C(const int16_t* WEBP_RESTRICT in,
 }
 #endif  // !WEBP_NEON_OMIT_C_CODE
 
-VP8IWHT VP8TransformWHT;
+VP8WHT VP8TransformWHT;
 
 //------------------------------------------------------------------------------
 // Intra predictions

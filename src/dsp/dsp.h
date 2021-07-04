@@ -60,57 +60,66 @@ extern "C" {
 // Transforms
 // VP8Idct: Does one of two inverse transforms. If do_two is set, the transforms
 //          will be done for (ref, in, dst) and (ref + 4, in + 16, dst + 4).
-typedef void (*VP8Idct)(const uint8_t* ref, const int16_t* in, uint8_t* dst,
-                        int do_two);
-typedef void (*VP8Fdct)(const uint8_t* src, const uint8_t* ref, int16_t* out);
-// TODO(jzern): merge these two typedefs after the encoder functions are
-// updated to use WEBP_RESTRICT.
-typedef void (*VP8FWHT)(const int16_t* in, int16_t* out);
-typedef void (*VP8IWHT)(const int16_t* WEBP_RESTRICT in,
+typedef void (*VP8Idct)(const uint8_t* WEBP_RESTRICT ref,
+                        const int16_t* WEBP_RESTRICT in,
+                        uint8_t* WEBP_RESTRICT dst, int do_two);
+typedef void (*VP8Fdct)(const uint8_t* WEBP_RESTRICT src,
+                        const uint8_t* WEBP_RESTRICT ref,
                         int16_t* WEBP_RESTRICT out);
+typedef void (*VP8WHT)(const int16_t* WEBP_RESTRICT in,
+                       int16_t* WEBP_RESTRICT out);
 extern VP8Idct VP8ITransform;
 extern VP8Fdct VP8FTransform;
 extern VP8Fdct VP8FTransform2;   // performs two transforms at a time
-extern VP8FWHT VP8FTransformWHT;
+extern VP8WHT VP8FTransformWHT;
 // Predictions
 // *dst is the destination block. *top and *left can be NULL.
-typedef void (*VP8IntraPreds)(uint8_t* dst, const uint8_t* left,
-                              const uint8_t* top);
-typedef void (*VP8Intra4Preds)(uint8_t* dst, const uint8_t* top);
+typedef void (*VP8IntraPreds)(uint8_t* WEBP_RESTRICT dst,
+                              const uint8_t* WEBP_RESTRICT left,
+                              const uint8_t* WEBP_RESTRICT top);
+typedef void (*VP8Intra4Preds)(uint8_t* WEBP_RESTRICT dst,
+                               const uint8_t* WEBP_RESTRICT top);
 extern VP8Intra4Preds VP8EncPredLuma4;
 extern VP8IntraPreds VP8EncPredLuma16;
 extern VP8IntraPreds VP8EncPredChroma8;
 
-typedef int (*VP8Metric)(const uint8_t* pix, const uint8_t* ref);
+typedef int (*VP8Metric)(const uint8_t* WEBP_RESTRICT pix,
+                         const uint8_t* WEBP_RESTRICT ref);
 extern VP8Metric VP8SSE16x16, VP8SSE16x8, VP8SSE8x8, VP8SSE4x4;
-typedef int (*VP8WMetric)(const uint8_t* pix, const uint8_t* ref,
-                          const uint16_t* const weights);
+typedef int (*VP8WMetric)(const uint8_t* WEBP_RESTRICT pix,
+                          const uint8_t* WEBP_RESTRICT ref,
+                          const uint16_t* WEBP_RESTRICT const weights);
 // The weights for VP8TDisto4x4 and VP8TDisto16x16 contain a row-major
 // 4 by 4 symmetric matrix.
 extern VP8WMetric VP8TDisto4x4, VP8TDisto16x16;
 
 // Compute the average (DC) of four 4x4 blocks.
 // Each sub-4x4 block #i sum is stored in dc[i].
-typedef void (*VP8MeanMetric)(const uint8_t* ref, uint32_t dc[4]);
+typedef void (*VP8MeanMetric)(const uint8_t* WEBP_RESTRICT ref,
+                              uint32_t dc[4]);
 extern VP8MeanMetric VP8Mean16x4;
 
-typedef void (*VP8BlockCopy)(const uint8_t* src, uint8_t* dst);
+typedef void (*VP8BlockCopy)(const uint8_t* WEBP_RESTRICT src,
+                             uint8_t* WEBP_RESTRICT dst);
 extern VP8BlockCopy VP8Copy4x4;
 extern VP8BlockCopy VP8Copy16x8;
 // Quantization
 struct VP8Matrix;   // forward declaration
-typedef int (*VP8QuantizeBlock)(int16_t in[16], int16_t out[16],
-                                const struct VP8Matrix* const mtx);
+typedef int (*VP8QuantizeBlock)(
+    int16_t in[16], int16_t out[16],
+    const struct VP8Matrix* WEBP_RESTRICT const mtx);
 // Same as VP8QuantizeBlock, but quantizes two consecutive blocks.
-typedef int (*VP8Quantize2Blocks)(int16_t in[32], int16_t out[32],
-                                  const struct VP8Matrix* const mtx);
+typedef int (*VP8Quantize2Blocks)(
+    int16_t in[32], int16_t out[32],
+    const struct VP8Matrix* WEBP_RESTRICT const mtx);
 
 extern VP8QuantizeBlock VP8EncQuantizeBlock;
 extern VP8Quantize2Blocks VP8EncQuantize2Blocks;
 
 // specific to 2nd transform:
-typedef int (*VP8QuantizeBlockWHT)(int16_t in[16], int16_t out[16],
-                                   const struct VP8Matrix* const mtx);
+typedef int (*VP8QuantizeBlockWHT)(
+    int16_t in[16], int16_t out[16],
+    const struct VP8Matrix* WEBP_RESTRICT const mtx);
 extern VP8QuantizeBlockWHT VP8EncQuantizeBlockWHT;
 
 extern const int VP8DspScan[16 + 4 + 4];
@@ -208,7 +217,7 @@ extern VP8DecIdct VP8TransformAC3;
 extern VP8DecIdct VP8TransformUV;
 extern VP8DecIdct VP8TransformDC;
 extern VP8DecIdct VP8TransformDCUV;
-extern VP8IWHT VP8TransformWHT;
+extern VP8WHT VP8TransformWHT;
 
 #define WEBP_TRANSFORM_AC3_C1 20091
 #define WEBP_TRANSFORM_AC3_C2 35468
