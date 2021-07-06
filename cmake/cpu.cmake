@@ -125,6 +125,12 @@ foreach(I_SIMD RANGE ${WEBP_SIMD_FLAGS_RANGE})
       list(GET SIMD_DISABLE_FLAGS ${I_SIMD} SIMD_COMPILE_FLAG)
       include(CheckCCompilerFlag)
       if(SIMD_COMPILE_FLAG)
+        # Between 3.17.0 and 3.18.2 check_cxx_compiler_flag() sets a normal
+        # variable at parent scope while check_cxx_source_compiles() continues
+        # to set an internal cache variable, so we unset both to avoid the
+        # failure / success state persisting between checks. See
+        # https://gitlab.kitware.com/cmake/cmake/-/issues/21207.
+        unset(HAS_COMPILE_FLAG)
         unset(HAS_COMPILE_FLAG CACHE)
         check_c_compiler_flag(${SIMD_COMPILE_FLAG} HAS_COMPILE_FLAG)
         if(HAS_COMPILE_FLAG)
@@ -142,6 +148,7 @@ foreach(I_SIMD RANGE ${WEBP_SIMD_FLAGS_RANGE})
                                   "warning: argument unused during compilation:"
                                   ${COMMON_PATTERNS})
           if(NOT FLAG_${SIMD_COMPILE_FLAG})
+            unset(HAS_COMPILE_FLAG)
             unset(HAS_COMPILE_FLAG CACHE)
           endif()
         endif()
