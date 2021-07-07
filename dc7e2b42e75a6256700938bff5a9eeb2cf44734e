@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "982bb39c_ef35b6fa",
+        "filename": "configure.ac",
+        "patchSetId": 1
+      },
+      "lineNbr": 508,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2021-07-07T17:58:26Z",
+      "side": 1,
+      "message": "becomes \u0027configure: ...\u0027 from \u0027configure: WARNING: ...\u0027 in the log",
+      "revId": "dc7e2b42e75a6256700938bff5a9eeb2cf44734e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
