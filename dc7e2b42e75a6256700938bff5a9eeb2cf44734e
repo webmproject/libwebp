@@ -16,6 +16,24 @@
       "message": "becomes \u0027configure: ...\u0027 from \u0027configure: WARNING: ...\u0027 in the log",
       "revId": "dc7e2b42e75a6256700938bff5a9eeb2cf44734e",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "66baf357_0913a106",
+        "filename": "configure.ac",
+        "patchSetId": 1
+      },
+      "lineNbr": 508,
+      "author": {
+        "id": 1000898
+      },
+      "writtenOn": "2021-07-08T05:34:57Z",
+      "side": 1,
+      "message": "ack.",
+      "parentUuid": "982bb39c_ef35b6fa",
+      "revId": "dc7e2b42e75a6256700938bff5a9eeb2cf44734e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
