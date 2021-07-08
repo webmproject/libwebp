@@ -32,6 +32,40 @@ AC_ARG_ENABLE([everything],
                SET_IF_UNSET([enable_libwebpextras], [$enableval])
                SET_IF_UNSET([enable_libwebpmux], [$enableval])])
 
+dnl === Check whether libwebpmux should be built
+AC_MSG_CHECKING(whether libwebpmux is to be built)
+AC_ARG_ENABLE([libwebpmux],
+              AS_HELP_STRING([--disable-libwebpmux],
+                             [Disable libwebpmux @<:@default=no@:>@]),
+              [], [enable_libwebpmux=yes])
+AC_MSG_RESULT(${enable_libwebpmux-no})
+AM_CONDITIONAL([BUILD_MUX], [test "$enable_libwebpmux" = "yes"])
+
+dnl === Check whether libwebpdemux should be built
+AC_MSG_CHECKING(whether libwebpdemux is to be built)
+AC_ARG_ENABLE([libwebpdemux],
+              AS_HELP_STRING([--disable-libwebpdemux],
+                             [Disable libwebpdemux @<:@default=no@:>@]),
+              [], [enable_libwebpdemux=yes])
+AC_MSG_RESULT(${enable_libwebpdemux-no})
+AM_CONDITIONAL([BUILD_DEMUX], [test "$enable_libwebpdemux" = "yes"])
+
+dnl === Check whether decoder library should be built.
+AC_MSG_CHECKING(whether decoder library is to be built)
+AC_ARG_ENABLE([libwebpdecoder],
+              AS_HELP_STRING([--enable-libwebpdecoder],
+                             [Build libwebpdecoder @<:@default=no@:>@]))
+AC_MSG_RESULT(${enable_libwebpdecoder-no})
+AM_CONDITIONAL([BUILD_LIBWEBPDECODER], [test "$enable_libwebpdecoder" = "yes"])
+
+dnl === Check whether libwebpextras should be built
+AC_MSG_CHECKING(whether libwebpextras is to be built)
+AC_ARG_ENABLE([libwebpextras],
+              AS_HELP_STRING([--enable-libwebpextras],
+                             [Build libwebpextras @<:@default=no@:>@]))
+AC_MSG_RESULT(${enable_libwebpextras-no})
+AM_CONDITIONAL([BUILD_EXTRAS], [test "$enable_libwebpextras" = "yes"])
+
 dnl === If --enable-asserts is not defined, define NDEBUG
 
 AC_MSG_CHECKING(whether asserts are enabled)
@@ -409,6 +443,10 @@ AS_IF([test "x$enable_gl" != "xno"], [
 
   if test "$glut_support" = "yes" -a "$enable_libwebpdemux" = "yes"; then
     build_vwebp=yes
+  else
+    AC_MSG_NOTICE(
+      m4_normalize([Not building vwebp.
+                    OpenGL libraries and --enable-libwebpdemux are required.]))
   fi
 ])
 AM_CONDITIONAL([BUILD_VWEBP], [test "$build_vwebp" = "yes"])
@@ -468,7 +506,7 @@ AS_IF([test "x$enable_sdl" != "xno"], [
   if test x"$sdl_support" = "xyes"; then
     build_vwebp_sdl=yes
   else
-    AC_MSG_WARN(Optional SDL library not found)
+    AC_MSG_NOTICE([Not building vwebp-sdl. SDL library is required.])
   fi
 ])
 
@@ -592,11 +630,17 @@ AS_IF([test "x$enable_gif" != "xno"], [
   if test "$gif_support" = "yes" -a \
           "$enable_libwebpdemux" = "yes"; then
     build_anim_diff=yes
+  else
+    AC_MSG_NOTICE(
+      [Not building anim_diff. libgif and --enable-libwebpdemux are required.])
   fi
 
   if test "$gif_support" = "yes" -a \
           "$enable_libwebpmux" = "yes"; then
     build_gif2webp=yes
+  else
+    AC_MSG_NOTICE(
+      [Not building gif2webp. libgif and --enable-libwebpmux are required.])
   fi
 ])
 AM_CONDITIONAL([BUILD_ANIMDIFF], [test "${build_anim_diff}" = "yes"])
@@ -604,11 +648,17 @@ AM_CONDITIONAL([BUILD_GIF2WEBP], [test "${build_gif2webp}" = "yes"])
 
 if test "$enable_libwebpdemux" = "yes" -a "$enable_libwebpmux" = "yes"; then
   build_img2webp=yes
+else
+  AC_MSG_NOTICE(
+    m4_normalize([Not building img2webp.
+                  --enable-libwebpdemux & --enable-libwebpmux are required.]))
 fi
 AM_CONDITIONAL([BUILD_IMG2WEBP], [test "${build_img2webp}" = "yes"])
 
 if test "$enable_libwebpmux" = "yes"; then
   build_webpinfo=yes
+else
+  AC_MSG_NOTICE([Not building webpinfo. --enable-libwebpdemux is required.])
 fi
 AM_CONDITIONAL([BUILD_WEBPINFO], [test "${build_webpinfo}" = "yes"])
 
@@ -691,39 +741,6 @@ if test "$enable_near_lossless" = "no"; then
 else
   AC_MSG_RESULT([no])
 fi
-
-dnl === Check whether libwebpmux should be built
-AC_MSG_CHECKING(whether libwebpmux is to be built)
-AC_ARG_ENABLE([libwebpmux],
-              AS_HELP_STRING([--enable-libwebpmux],
-                             [Build libwebpmux @<:@default=no@:>@]))
-AC_MSG_RESULT(${enable_libwebpmux-no})
-AM_CONDITIONAL([BUILD_MUX], [test "$enable_libwebpmux" = "yes"])
-
-dnl === Check whether libwebpdemux should be built
-AC_MSG_CHECKING(whether libwebpdemux is to be built)
-AC_ARG_ENABLE([libwebpdemux],
-              AS_HELP_STRING([--disable-libwebpdemux],
-                             [Disable libwebpdemux @<:@default=no@:>@]),
-              [], [enable_libwebpdemux=yes])
-AC_MSG_RESULT(${enable_libwebpdemux-no})
-AM_CONDITIONAL([BUILD_DEMUX], [test "$enable_libwebpdemux" = "yes"])
-
-dnl === Check whether decoder library should be built.
-AC_MSG_CHECKING(whether decoder library is to be built)
-AC_ARG_ENABLE([libwebpdecoder],
-              AS_HELP_STRING([--enable-libwebpdecoder],
-                             [Build libwebpdecoder @<:@default=no@:>@]))
-AC_MSG_RESULT(${enable_libwebpdecoder-no})
-AM_CONDITIONAL([BUILD_LIBWEBPDECODER], [test "$enable_libwebpdecoder" = "yes"])
-
-dnl === Check whether libwebpextras should be built
-AC_MSG_CHECKING(whether libwebpextras is to be built)
-AC_ARG_ENABLE([libwebpextras],
-              AS_HELP_STRING([--enable-libwebpextras],
-                             [Build libwebpextras @<:@default=no@:>@]))
-AC_MSG_RESULT(${enable_libwebpextras-no})
-AM_CONDITIONAL([BUILD_EXTRAS], [test "$enable_libwebpextras" = "yes"])
 
 dnl =========================
 
