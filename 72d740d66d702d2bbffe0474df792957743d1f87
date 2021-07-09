@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "0a0b31ee_8e0de4c5",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2021-07-09T18:41:03Z",
+      "side": 1,
+      "message": "I thought I had checked this, but it must have just been a trivial change, not the final one.",
+      "revId": "72d740d66d702d2bbffe0474df792957743d1f87",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "ad238738_1fce412c",
+        "filename": "src/dsp/dsp.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2021-07-09T18:41:03Z",
+      "side": 1,
+      "message": "maybe a utils/compiler_attributes.h or similar to collect our various clang/gnuc defines...",
+      "revId": "72d740d66d702d2bbffe0474df792957743d1f87",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
