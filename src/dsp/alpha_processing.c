@@ -13,7 +13,6 @@
 
 #include <assert.h>
 #include "src/dsp/dsp.h"
-#include "src/utils/utils.h"
 
 // Tables can be faster on some platform but incur some extra binary size (~2k).
 #if !defined(USE_TABLES_FOR_ALPHA_MULT)
@@ -180,7 +179,8 @@ void WebPMultRow_C(uint8_t* WEBP_RESTRICT const ptr,
 #undef MFIX
 
 void (*WebPMultARGBRow)(uint32_t* const ptr, int width, int inverse);
-void (*WebPMultRow)(uint8_t* const ptr, const uint8_t* const alpha,
+void (*WebPMultRow)(uint8_t* WEBP_RESTRICT const ptr,
+                    const uint8_t* WEBP_RESTRICT const alpha,
                     int width, int inverse);
 
 //------------------------------------------------------------------------------
@@ -401,16 +401,22 @@ static void PackRGB_C(const uint8_t* WEBP_RESTRICT r,
 
 void (*WebPApplyAlphaMultiply)(uint8_t*, int, int, int, int);
 void (*WebPApplyAlphaMultiply4444)(uint8_t*, int, int, int);
-int (*WebPDispatchAlpha)(const uint8_t*, int, int, int, uint8_t*, int);
-void (*WebPDispatchAlphaToGreen)(const uint8_t*, int, int, int, uint32_t*, int);
-int (*WebPExtractAlpha)(const uint8_t*, int, int, int, uint8_t*, int);
-void (*WebPExtractGreen)(const uint32_t* argb, uint8_t* alpha, int size);
+int (*WebPDispatchAlpha)(const uint8_t* WEBP_RESTRICT, int, int, int,
+                         uint8_t* WEBP_RESTRICT, int);
+void (*WebPDispatchAlphaToGreen)(const uint8_t* WEBP_RESTRICT, int, int, int,
+                                 uint32_t* WEBP_RESTRICT, int);
+int (*WebPExtractAlpha)(const uint8_t* WEBP_RESTRICT, int, int, int,
+                        uint8_t* WEBP_RESTRICT, int);
+void (*WebPExtractGreen)(const uint32_t* WEBP_RESTRICT argb,
+                         uint8_t* WEBP_RESTRICT alpha, int size);
 #ifdef WORDS_BIGENDIAN
 void (*WebPPackARGB)(const uint8_t* a, const uint8_t* r, const uint8_t* g,
                      const uint8_t* b, int, uint32_t*);
 #endif
-void (*WebPPackRGB)(const uint8_t* r, const uint8_t* g, const uint8_t* b,
-                    int len, int step, uint32_t* out);
+void (*WebPPackRGB)(const uint8_t* WEBP_RESTRICT r,
+                    const uint8_t* WEBP_RESTRICT g,
+                    const uint8_t* WEBP_RESTRICT b,
+                    int len, int step, uint32_t* WEBP_RESTRICT out);
 
 int (*WebPHasAlpha8b)(const uint8_t* src, int length);
 int (*WebPHasAlpha32b)(const uint8_t* src, int length);

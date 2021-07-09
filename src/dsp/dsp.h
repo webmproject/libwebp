@@ -27,6 +27,23 @@ extern "C" {
 #define BPS 32   // this is the common stride for enc/dec
 
 //------------------------------------------------------------------------------
+// WEBP_RESTRICT
+
+// Declares a pointer with the restrict type qualifier if available.
+// This allows code to hint to the compiler that only this pointer references a
+// particular object or memory region within the scope of the block in which it
+// is declared. This may allow for improved optimizations due to the lack of
+// pointer aliasing. See also:
+// https://en.cppreference.com/w/c/language/restrict
+#if defined(__GNUC__)
+#define WEBP_RESTRICT __restrict__
+#elif defined(_MSC_VER)
+#define WEBP_RESTRICT __restrict
+#else
+#define WEBP_RESTRICT
+#endif
+
+//------------------------------------------------------------------------------
 // CPU detection
 
 #if defined(__GNUC__)
@@ -578,26 +595,29 @@ extern void (*WebPApplyAlphaMultiply4444)(
 
 // Dispatch the values from alpha[] plane to the ARGB destination 'dst'.
 // Returns true if alpha[] plane has non-trivial values different from 0xff.
-extern int (*WebPDispatchAlpha)(const uint8_t* alpha, int alpha_stride,
-                                int width, int height,
-                                uint8_t* dst, int dst_stride);
+extern int (*WebPDispatchAlpha)(const uint8_t* WEBP_RESTRICT alpha,
+                                int alpha_stride, int width, int height,
+                                uint8_t* WEBP_RESTRICT dst, int dst_stride);
 
 // Transfer packed 8b alpha[] values to green channel in dst[], zero'ing the
 // A/R/B values. 'dst_stride' is the stride for dst[] in uint32_t units.
-extern void (*WebPDispatchAlphaToGreen)(const uint8_t* alpha, int alpha_stride,
-                                        int width, int height,
-                                        uint32_t* dst, int dst_stride);
+extern void (*WebPDispatchAlphaToGreen)(const uint8_t* WEBP_RESTRICT alpha,
+                                        int alpha_stride, int width, int height,
+                                        uint32_t* WEBP_RESTRICT dst,
+                                        int dst_stride);
 
 // Extract the alpha values from 32b values in argb[] and pack them into alpha[]
 // (this is the opposite of WebPDispatchAlpha).
 // Returns true if there's only trivial 0xff alpha values.
-extern int (*WebPExtractAlpha)(const uint8_t* argb, int argb_stride,
-                               int width, int height,
-                               uint8_t* alpha, int alpha_stride);
+extern int (*WebPExtractAlpha)(const uint8_t* WEBP_RESTRICT argb,
+                               int argb_stride, int width, int height,
+                               uint8_t* WEBP_RESTRICT alpha,
+                               int alpha_stride);
 
 // Extract the green values from 32b values in argb[] and pack them into alpha[]
 // (this is the opposite of WebPDispatchAlphaToGreen).
-extern void (*WebPExtractGreen)(const uint32_t* argb, uint8_t* alpha, int size);
+extern void (*WebPExtractGreen)(const uint32_t* WEBP_RESTRICT argb,
+                                uint8_t* WEBP_RESTRICT alpha, int size);
 
 // Pre-Multiply operation transforms x into x * A / 255  (where x=Y,R,G or B).
 // Un-Multiply operation transforms x into x * 255 / A.
@@ -610,29 +630,35 @@ void WebPMultARGBRows(uint8_t* ptr, int stride, int width, int num_rows,
                       int inverse);
 
 // Same for a row of single values, with side alpha values.
-extern void (*WebPMultRow)(uint8_t* const ptr, const uint8_t* const alpha,
+extern void (*WebPMultRow)(uint8_t* WEBP_RESTRICT const ptr,
+                           const uint8_t* WEBP_RESTRICT const alpha,
                            int width, int inverse);
 
 // Same a WebPMultRow(), but for several 'num_rows' rows.
-void WebPMultRows(uint8_t* ptr, int stride,
-                  const uint8_t* alpha, int alpha_stride,
+void WebPMultRows(uint8_t* WEBP_RESTRICT ptr, int stride,
+                  const uint8_t* WEBP_RESTRICT alpha, int alpha_stride,
                   int width, int num_rows, int inverse);
 
 // Plain-C versions, used as fallback by some implementations.
-void WebPMultRow_C(uint8_t* const ptr, const uint8_t* const alpha,
+void WebPMultRow_C(uint8_t* WEBP_RESTRICT const ptr,
+                   const uint8_t* WEBP_RESTRICT const alpha,
                    int width, int inverse);
 void WebPMultARGBRow_C(uint32_t* const ptr, int width, int inverse);
 
 #ifdef WORDS_BIGENDIAN
 // ARGB packing function: a/r/g/b input is rgba or bgra order.
-extern void (*WebPPackARGB)(const uint8_t* a, const uint8_t* r,
-                            const uint8_t* g, const uint8_t* b, int len,
-                            uint32_t* out);
+extern void (*WebPPackARGB)(const uint8_t* WEBP_RESTRICT a,
+                            const uint8_t* WEBP_RESTRICT r,
+                            const uint8_t* WEBP_RESTRICT g,
+                            const uint8_t* WEBP_RESTRICT b,
+                            int len, uint32_t* WEBP_RESTRICT out);
 #endif
 
 // RGB packing function. 'step' can be 3 or 4. r/g/b input is rgb or bgr order.
-extern void (*WebPPackRGB)(const uint8_t* r, const uint8_t* g, const uint8_t* b,
-                           int len, int step, uint32_t* out);
+extern void (*WebPPackRGB)(const uint8_t* WEBP_RESTRICT r,
+                           const uint8_t* WEBP_RESTRICT g,
+                           const uint8_t* WEBP_RESTRICT b,
+                           int len, int step, uint32_t* WEBP_RESTRICT out);
 
 // This function returns true if src[i] contains a value different from 0xff.
 extern int (*WebPHasAlpha8b)(const uint8_t* src, int length);
