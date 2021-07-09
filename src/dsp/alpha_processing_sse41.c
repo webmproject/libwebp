@@ -17,8 +17,6 @@
 
 #include <smmintrin.h>
 
-#include "src/utils/utils.h"
-
 //------------------------------------------------------------------------------
 
 static int ExtractAlpha_SSE41(const uint8_t* WEBP_RESTRICT argb,

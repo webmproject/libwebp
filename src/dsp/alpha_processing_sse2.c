@@ -16,8 +16,6 @@
 #if defined(WEBP_USE_SSE2)
 #include <emmintrin.h>
 
-#include "src/utils/utils.h"
-
 //------------------------------------------------------------------------------
 
 static int DispatchAlpha_SSE2(const uint8_t* WEBP_RESTRICT alpha,
