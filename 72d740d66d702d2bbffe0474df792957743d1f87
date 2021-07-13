@@ -56,6 +56,24 @@
       "message": "maybe a utils/compiler_attributes.h or similar to collect our various clang/gnuc defines...",
       "revId": "72d740d66d702d2bbffe0474df792957743d1f87",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "86529cef_882fffde",
+        "filename": "src/dsp/dsp.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1002029
+      },
+      "writtenOn": "2021-07-13T21:03:03Z",
+      "side": 1,
+      "message": "well, it\u0027s still under control, i\u0027d say",
+      "parentUuid": "ad238738_1fce412c",
+      "revId": "72d740d66d702d2bbffe0474df792957743d1f87",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
