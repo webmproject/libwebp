@@ -273,10 +273,15 @@ int ReadPictureWithWIC(const char* const filename,
   WICPixelFormatGUID src_pixel_format = GUID_WICPixelFormatUndefined;
   const WICFormatImporter* importer = NULL;
   GUID src_container_format = GUID_NULL_;
+  // From Windows Kits\10\Include\10.0.19041.0\um\wincodec.h
+  WEBP_DEFINE_GUID(GUID_ContainerFormatWebp_,
+                   0xe094b0e2, 0x67f2, 0x45b3,
+                   0xb0, 0xea, 0x11, 0x53, 0x37, 0xca, 0x7c, 0xf3);
   static const GUID* kAlphaContainers[] = {
     &GUID_ContainerFormatBmp,
     &GUID_ContainerFormatPng,
     &GUID_ContainerFormatTiff,
+    &GUID_ContainerFormatWebp_,
     NULL
   };
   int has_alpha = 0;
