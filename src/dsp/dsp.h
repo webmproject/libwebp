@@ -84,11 +84,13 @@ extern "C" {
 // files without intrinsics, allowing the corresponding Init() to be called.
 // Files containing intrinsics will need to be built targeting the instruction
 // set so should succeed on one of the earlier tests.
-#if defined(__SSE2__) || defined(WEBP_MSC_SSE2) || defined(WEBP_HAVE_SSE2)
+#if (defined(__SSE2__) || defined(WEBP_MSC_SSE2)) && \
+    (!defined(HAVE_CONFIG_H) || defined(WEBP_HAVE_SSE2))
 #define WEBP_USE_SSE2
 #endif
 
-#if defined(__SSE4_1__) || defined(WEBP_MSC_SSE41) || defined(WEBP_HAVE_SSE41)
+#if (defined(__SSE4_1__) || defined(WEBP_MSC_SSE41)) && \
+    (!defined(HAVE_CONFIG_H) || defined(WEBP_HAVE_SSE41))
 #define WEBP_USE_SSE41
 #endif
 
@@ -97,8 +99,8 @@ extern "C" {
 
 // The intrinsics currently cause compiler errors with arm-nacl-gcc and the
 // inline assembly would need to be modified for use with Native Client.
-#if (defined(__ARM_NEON__) || \
-     defined(__aarch64__) || defined(WEBP_HAVE_NEON)) && \
+#if ((defined(__ARM_NEON__) || defined(__aarch64__)) && \
+     (!defined(HAVE_CONFIG_H) || defined(WEBP_HAVE_NEON))) && \
     !defined(__native_client__)
 #define WEBP_USE_NEON
 #endif
@@ -133,7 +135,7 @@ extern "C" {
 #define WEBP_DSP_OMIT_C_CODE 1
 #endif
 
-#if (defined(__aarch64__) || defined(__ARM_NEON__)) && WEBP_DSP_OMIT_C_CODE
+#if defined(WEBP_USE_NEON) && WEBP_DSP_OMIT_C_CODE
 #define WEBP_NEON_OMIT_C_CODE 1
 #else
 #define WEBP_NEON_OMIT_C_CODE 0

@@ -259,6 +259,9 @@ AS_IF([test "x$enable_neon" != "xno"], [
         *android*) AC_CHECK_HEADERS([cpu-features.h]) ;;
       esac
       ;;
+    aarch64*|arm64*)
+      AC_DEFINE(WEBP_HAVE_NEON, [1], [Set to 1 if NEON is supported])
+      ;;
   esac
   AC_SUBST([NEON_FLAGS])])
 
