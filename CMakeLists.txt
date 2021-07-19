@@ -283,10 +283,12 @@ if(XCODE)
   libwebp_add_stub_file(webp)
 endif()
 target_link_libraries(webp ${WEBP_DEP_LIBRARIES})
-target_include_directories(webp
-                           PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
-                                   ${CMAKE_CURRENT_BINARY_DIR}
-                           PUBLIC $<INSTALL_INTERFACE:include>)
+target_include_directories(
+  webp
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+          ${CMAKE_CURRENT_BINARY_DIR}
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+         $<INSTALL_INTERFACE:include>)
 set_target_properties(
   webp
   PROPERTIES PUBLIC_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/src/webp/decode.h;\
