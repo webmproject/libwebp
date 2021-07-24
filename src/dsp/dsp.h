@@ -89,9 +89,17 @@ extern "C" {
 #define WEBP_USE_SSE2
 #endif
 
+#if defined(WEBP_USE_SSE2) && !defined(WEBP_HAVE_SSE2)
+#define WEBP_HAVE_SSE2
+#endif
+
 #if (defined(__SSE4_1__) || defined(WEBP_MSC_SSE41)) && \
     (!defined(HAVE_CONFIG_H) || defined(WEBP_HAVE_SSE41))
 #define WEBP_USE_SSE41
+#endif
+
+#if defined(WEBP_USE_SSE41) && !defined(WEBP_HAVE_SSE41)
+#define WEBP_HAVE_SSE41
 #endif
 
 #undef WEBP_MSC_SSE41
@@ -114,6 +122,10 @@ extern "C" {
 #if defined(_MSC_VER) && _MSC_VER >= 1700 && defined(_M_ARM)
 #define WEBP_USE_NEON
 #define WEBP_USE_INTRINSICS
+#endif
+
+#if defined(WEBP_USE_NEON) && !defined(WEBP_HAVE_NEON)
+#define WEBP_HAVE_NEON
 #endif
 
 #if defined(__mips__) && !defined(__mips64) && \
