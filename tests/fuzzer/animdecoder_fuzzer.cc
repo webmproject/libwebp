@@ -16,7 +16,7 @@
 
 #include "examples/anim_util.h"
 #include "imageio/imageio_util.h"
-#include "webp/demux.h"
+#include "src/webp/demux.h"
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
   // WebPAnimDecoderGetInfo() is too late to check the canvas size as

@@ -17,7 +17,7 @@
 #include <string.h>
 
 #include "./fuzz_utils.h"
-#include "webp/decode.h"
+#include "src/webp/decode.h"
 
 int LLVMFuzzerTestOneInput(const uint8_t* const data, size_t size) {
   int i;
