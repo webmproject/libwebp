@@ -331,13 +331,13 @@ static int InitYUVRescaler(const VP8Io* const io, WebPDecParams* const p) {
   p->scaler_a = has_alpha ? &scalers[3] : NULL;
 
   if (!WebPRescalerInit(p->scaler_y, io->mb_w, io->mb_h,
-                   buf->y, out_width, out_height, buf->y_stride, 1,
+                        buf->y, out_width, out_height, buf->y_stride, 1,
                         work) ||
       !WebPRescalerInit(p->scaler_u, uv_in_width, uv_in_height,
-                   buf->u, uv_out_width, uv_out_height, buf->u_stride, 1,
+                        buf->u, uv_out_width, uv_out_height, buf->u_stride, 1,
                         work + work_size) ||
       !WebPRescalerInit(p->scaler_v, uv_in_width, uv_in_height,
-                   buf->v, uv_out_width, uv_out_height, buf->v_stride, 1,
+                        buf->v, uv_out_width, uv_out_height, buf->v_stride, 1,
                         work + work_size + uv_work_size)) {
     return 0;
   }
@@ -345,7 +345,7 @@ static int InitYUVRescaler(const VP8Io* const io, WebPDecParams* const p) {
 
   if (has_alpha) {
     if (!WebPRescalerInit(p->scaler_a, io->mb_w, io->mb_h,
-                     buf->a, out_width, out_height, buf->a_stride, 1,
+                          buf->a, out_width, out_height, buf->a_stride, 1,
                           work + work_size + 2 * uv_work_size)) {
       return 0;
     }
@@ -524,13 +524,13 @@ static int InitRGBRescaler(const VP8Io* const io, WebPDecParams* const p) {
   p->scaler_a = has_alpha ? &scalers[3] : NULL;
 
   if (!WebPRescalerInit(p->scaler_y, io->mb_w, io->mb_h,
-                   tmp + 0 * out_width, out_width, out_height, 0, 1,
+                        tmp + 0 * out_width, out_width, out_height, 0, 1,
                         work + 0 * work_size) ||
       !WebPRescalerInit(p->scaler_u, uv_in_width, uv_in_height,
-                   tmp + 1 * out_width, out_width, out_height, 0, 1,
+                        tmp + 1 * out_width, out_width, out_height, 0, 1,
                         work + 1 * work_size) ||
       !WebPRescalerInit(p->scaler_v, uv_in_width, uv_in_height,
-                   tmp + 2 * out_width, out_width, out_height, 0, 1,
+                        tmp + 2 * out_width, out_width, out_height, 0, 1,
                         work + 2 * work_size)) {
     return 0;
   }
@@ -539,7 +539,7 @@ static int InitRGBRescaler(const VP8Io* const io, WebPDecParams* const p) {
 
   if (has_alpha) {
     if (!WebPRescalerInit(p->scaler_a, io->mb_w, io->mb_h,
-                     tmp + 3 * out_width, out_width, out_height, 0, 1,
+                          tmp + 3 * out_width, out_width, out_height, 0, 1,
                           work + 3 * work_size)) {
       return 0;
     }

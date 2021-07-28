@@ -165,15 +165,15 @@ int WebPPictureCrop(WebPPicture* pic,
 // Simple picture rescaler
 
 static int RescalePlane(const uint8_t* src,
-                         int src_width, int src_height, int src_stride,
-                         uint8_t* dst,
-                         int dst_width, int dst_height, int dst_stride,
-                         rescaler_t* const work,
-                         int num_channels) {
+                        int src_width, int src_height, int src_stride,
+                        uint8_t* dst,
+                        int dst_width, int dst_height, int dst_stride,
+                        rescaler_t* const work,
+                        int num_channels) {
   WebPRescaler rescaler;
   int y = 0;
   if (!WebPRescalerInit(&rescaler, src_width, src_height,
-                   dst, dst_width, dst_height, dst_stride,
+                        dst, dst_width, dst_height, dst_stride,
                         num_channels, work)) {
     return 0;
   }
@@ -237,12 +237,12 @@ int WebPPictureRescale(WebPPicture* pic, int width, int height) {
     if (!RescalePlane(pic->y, prev_width, prev_height, pic->y_stride,
                       tmp.y, width, height, tmp.y_stride, work, 1) ||
         !RescalePlane(pic->u,
-                 HALVE(prev_width), HALVE(prev_height), pic->uv_stride,
-                 tmp.u,
+                      HALVE(prev_width), HALVE(prev_height), pic->uv_stride,
+                      tmp.u,
                       HALVE(width), HALVE(height), tmp.uv_stride, work, 1) ||
         !RescalePlane(pic->v,
-                 HALVE(prev_width), HALVE(prev_height), pic->uv_stride,
-                 tmp.v,
+                      HALVE(prev_width), HALVE(prev_height), pic->uv_stride,
+                      tmp.v,
                       HALVE(width), HALVE(height), tmp.uv_stride, work, 1)) {
       return 0;
     }
@@ -259,8 +259,8 @@ int WebPPictureRescale(WebPPicture* pic, int width, int height) {
     WebPInitAlphaProcessing();
     AlphaMultiplyARGB(pic, 0);
     if (!RescalePlane((const uint8_t*)pic->argb, prev_width, prev_height,
-                 pic->argb_stride * 4,
-                 (uint8_t*)tmp.argb, width, height,
+                      pic->argb_stride * 4,
+                      (uint8_t*)tmp.argb, width, height,
                       tmp.argb_stride * 4, work, 4)) {
       return 0;
     }
