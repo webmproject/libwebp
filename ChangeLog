@@ -1,3 +1,6 @@
+d9191588 fuzzer/*: normalize src/ includes
+53b6f762 fix indent
+731246ba update ChangeLog (tag: v1.2.1-rc2)
 d250f01d dsp/*: use WEBP_HAVE_* to determine Init availability
 3a4d3ecd update NEWS
 b2bc8093 bump version to 1.2.1
