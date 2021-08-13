@@ -19,7 +19,7 @@
 
 #define XTRA_MAJ_VERSION 1
 #define XTRA_MIN_VERSION 2
-#define XTRA_REV_VERSION 0
+#define XTRA_REV_VERSION 1
 
 //------------------------------------------------------------------------------
 

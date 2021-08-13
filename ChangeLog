@@ -1,10 +1,109 @@
+d9191588 fuzzer/*: normalize src/ includes
+53b6f762 fix indent
+731246ba update ChangeLog (tag: v1.2.1-rc2)
+d250f01d dsp/*: use WEBP_HAVE_* to determine Init availability
+3a4d3ecd update NEWS
+b2bc8093 bump version to 1.2.1
+e542fc7a update AUTHORS
+e0241154 Merge "libwebp/CMake: Add <BUILD_INTERFACE> to webp incl" into main
+edea6444 libwebp/CMake: Add <BUILD_INTERFACE> to webp incl
+ece18e55 dsp.h: respect --disable-sse2/sse4.1/neon
+a89a3230 wicdec: support alpha from WebP WIC decoder
+26f4aa01 Merge "alpha_processing: fix visual studio warnings" into main
+8f594663 alpha_processing: fix visual studio warnings
+46d844e6 Merge "cpu.cmake: fix compiler flag detection w/3.17.0+" into main
+298d26ea Merge changes I593adf92,If20675e7,Ifac68eac into main
+a1e5dae0 alpha_processing*: use WEBP_RESTRICT qualifier
+327ef24f cpu.cmake: fix compiler flag detection w/3.17.0+
+f70819de configure: enable libwebpmux by default
+dc7e2b42 configure: add informational notices when disabling binaries
+9df23ddd configure: move lib flag checks before binaries
+a2e18f10 Merge "WebPConfig.config.in: correct WEBP_INCLUDE_DIRS" into main
+e1a8d4f3 Merge "bit_reader_inl_utils: uniformly apply WEBP_RESTRICT" into main
+4de35f43 rescaler.c: fix alignment
+0f13eec7 bit_reader_inl_utils: uniformly apply WEBP_RESTRICT
+277d3074 Fix size_t overflow in  WebPRescalerInit
+97adbba5 WebPConfig.config.in: correct WEBP_INCLUDE_DIRS
+b60d4603 advanced_api_fuzzer: add extreme config value coverage
+72fe52f6 anim_encode.c,cosmetics: normalize indent
+116d235c anim_encode: Fix encoded_frames_[] overflow
+6f445b3e CMake: set CMP0072 to NEW
+b1cf887f define WEBP_RESTRICT for MSVC
+3e265136 Add WEBP_RESTRICT & use it in VP8BitReader
+f6d29247 vp8l_dec::ProcessRows: fix int overflow in multiply
+de3b4ba8 CMake: add WEBP_BUILD_LIBWEBPMUX
+7f09d3d1 CMakeLists.txt: rm libwebpmux dep from anim_{diff,dump}
+4edea4a6 Init{RGB,YUV}Rescaler: fix a few more int overflows
+c9e26bdb rescaler_utils: set max valid scaled w/h to INT_MAX/2
+28d488e6 utils.h: add SizeOverflow()
+695bdaa2 Export/EmitRescaledRowsRGBA: fix pointer offset int overflow
+685d073e Init{RGB,YUV}Rescaler: fix int overflows in multiplication
+d38bd0dd WebPFlipBuffer: fix integer overflow
+109ff0f1 utils: allow MALLOC_LIMIT to indicate a max
+a2fce867 WebPRescalerImportRowExpand_C: promote some vals before multiply
+776983d4 AllocateBuffer: fix int multiplication overflow check
+315abbd6 Merge "Revert "Do not use a palette for one color images.""
+eae815d0 Merge changes Ica3bbf75,I82f82954
+afbca5a1 Require Emscripten 2.0.18
+3320416b CMakeLists,emscripten: use EXPORTED_RUNTIME_METHODS
+29145ed6 Update README instructions for using Emscripten
+1f579139 cosmetics: remove use of 'sanity' / 'master'
+29b6129c WebPAnimEncoderNewInternal: remove some unnecessary inits
+b60869a1 Revert "Do not use a palette for one color images."
+6fb4cddc demux: move padded size calc post unpadded validation
+05b72d42 vp8l_enc.c: normalize index types
+b6513fba Do not use a palette for one color images.
+98bbe35b Fix multi-threading with palettes.
+b1674240 Add modified Zeng's method to palette sorting.
+88c90c45 add CONTRIBUTING.md
+6a9916d7 WebPRescalerInit: add missing int64_t promotion
+b6cf52d5 WebPIoInitFromOptions: treat use_scaling as a bool
+3b12b7f4 WebPIoInitFromOptions: treat use_cropping as a bool
+595fa13f add WebPCheckCropDimensions()
+8fdaecb0 Disable cross-color when palette is used.
+8933bac2 WebPIoInitFromOptions: respect incoming bypass_filtering val
+7d416ff0 webpdec,cosmetics: match error text to function call
+ec6cfeb5 Fix typo on WebPPictureAlloc() in README
+7e58a1a2 *.cmake: add license header
+5651a6b2 cmake: fix .so versioning
+25ae67b3 xcframeworkbuild.sh: add arm64 simulator target
+5d4ee4c3 cosmetics: remove use of the term 'dummy'
+01b38ee1 faster CollectColorXXXTransforms_SSE41
+652aa344 Merge "Use BitCtz for FastSLog2Slow_C"
+0320e1e3 add the missing default BitsCtz() code
+8886f620 Use BitCtz for FastSLog2Slow_C
+fae41617 faster CombinedShannonEntropy_SSE2
+5bd2704e Introduce the BitCtz() function.
+fee64287 Merge "wicdec,icc: treat unsupported op as non-fatal"
+33ddb894 lossless_sse{2,41}: remove some unneeded includes
+b27ea852 wicdec,icc: treat unsupported op as non-fatal
+b78494a9 Merge "Fix undefined signed shift."
+e79974cd Fix undefined signed shift.
+a8853394 SSE4.1 versions of BGRA to RGB/BGR color-space conversions
+a09a6472 SSE4.1 version of TransformColorInverse
+401da22b Merge "pngdec: check version before using png_get_chunk_malloc_max"
+26907822 pngdec: check version before using png_get_chunk_malloc_max
+06c1e72e Code cleanup
+8f0d41aa Merge changes Id135bbf4,I99e59797
+373eb170 gif2webp: don't store loop-count if there's only 1 frame
+759b9d5a cmake: add WEBP_USE_THREAD option
+926ce921 cmake: don't install binaries from extras/
+9c367bc6 WebPAnimDecoderNewInternal: validate bitstream before alloc
+47f64f6e filters_sse2: import Chromium change
+cc3577e9 fuzzer/*: use src/ based include paths
+004d77ff Merge tag 'v1.2.0'
+fedac6cc update ChangeLog (tag: v1.2.0-rc3, tag: v1.2.0)
 170a8712 Fix check_c_source_compiles with pthread.
+ceddb5fc Fix check_c_source_compiles with pthread.
 85995719 disable CombinedShannonEntropy_SSE2 on x86
+289757fe TiffDec: enforce stricter mem/dimension limit on tiles
 8af7436f Merge "{ios,xcframework}build.sh: make min version(s) more visible" into 1.2.0
 e56c3c5b pngdec: raise memory limit if needed
+8696147d pngdec: raise memory limit if needed
 13b8e9fe {ios,xcframework}build.sh: make min version(s) more visible
 a9225410 animdecoder_fuzzer: fix memory leak
 d6c2285d update gradle to 6.1.1
+8df77fb1 animdecoder_fuzzer: fix memory leak
 52ce6333 update NEWS
 28c49820 bump version to 1.2.0
 7363dff2 webp/encode.h: restore WEBP_ENCODER_ABI_VERSION to v1.1.0
