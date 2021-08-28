@@ -47,3 +47,13 @@ make_build_dir() {
   rm -rf "${build_dir}"
   mkdir -p "${build_dir}"
 }
+
+#######################################
+# Setup ccache for toolchain.
+#######################################
+setup_ccache() {
+  if [[ -x "$(command -v ccache)" ]]; then
+    export CCACHE_CPP2=yes
+    export PATH="/usr/lib/ccache:${PATH}"
+  fi
+}
