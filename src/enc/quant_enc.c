@@ -657,16 +657,17 @@ static int TrellisQuantizeBlock(const VP8Encoder* const enc,
     // test all alternate level values around level0.
     for (m = -MIN_DELTA; m <= MAX_DELTA; ++m) {
       Node* const cur = &NODE(n, m);
-      int level = level0 + m;
+      const int level = level0 + m;
       const int ctx = (level > 2) ? 2 : level;
       const int band = VP8EncBands[n + 1];
       score_t base_score;
-      score_t best_cur_score = MAX_COST;
-      int best_prev = 0;   // default, in case
+      score_t best_cur_score;
+      int best_prev;
+      score_t cost, score;
 
-      ss_cur[m].score = MAX_COST;
       ss_cur[m].costs = costs[n + 1][ctx];
       if (level < 0 || level > thresh_level) {
+        ss_cur[m].score = MAX_COST;
         // Node is dead.
         continue;
       }
@@ -682,18 +683,24 @@ static int TrellisQuantizeBlock(const VP8Encoder* const enc,
       }
 
       // Inspect all possible non-dead predecessors. Retain only the best one.
-      for (p = -MIN_DELTA; p <= MAX_DELTA; ++p) {
+      // The base_score is added to all scores so it is only added for the final
+      // value after the loop.
+      cost = VP8LevelCost(ss_prev[-MIN_DELTA].costs, level);
+      best_cur_score =
+          ss_prev[-MIN_DELTA].score + RDScoreTrellis(lambda, cost, 0);
+      best_prev = -MIN_DELTA;
+      for (p = -MIN_DELTA + 1; p <= MAX_DELTA; ++p) {
         // Dead nodes (with ss_prev[p].score >= MAX_COST) are automatically
         // eliminated since their score can't be better than the current best.
-        const score_t cost = VP8LevelCost(ss_prev[p].costs, level);
+        cost = VP8LevelCost(ss_prev[p].costs, level);
         // Examine node assuming it's a non-terminal one.
-        const score_t score =
-            base_score + ss_prev[p].score + RDScoreTrellis(lambda, cost, 0);
+        score = ss_prev[p].score + RDScoreTrellis(lambda, cost, 0);
         if (score < best_cur_score) {
           best_cur_score = score;
           best_prev = p;
         }
       }
+      best_cur_score += base_score;
       // Store best finding in current node.
       cur->sign = sign;
       cur->level = level;
@@ -701,11 +708,11 @@ static int TrellisQuantizeBlock(const VP8Encoder* const enc,
       ss_cur[m].score = best_cur_score;
 
       // Now, record best terminal node (and thus best entry in the graph).
-      if (level != 0) {
+      if (level != 0 && best_cur_score < best_score) {
         const score_t last_pos_cost =
             (n < 15) ? VP8BitCost(0, probas[band][ctx][0]) : 0;
         const score_t last_pos_score = RDScoreTrellis(lambda, last_pos_cost, 0);
-        const score_t score = best_cur_score + last_pos_score;
+        score = best_cur_score + last_pos_score;
         if (score < best_score) {
           best_score = score;
           best_path[0] = n;                     // best eob position
