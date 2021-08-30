@@ -585,6 +585,9 @@ static WEBP_INLINE score_t RDScoreTrellis(int lambda, score_t rate,
   return rate * lambda + RD_DISTO_MULT * distortion;
 }
 
+// Coefficient type.
+enum { TYPE_I16_AC = 0, TYPE_I16_DC = 1, TYPE_CHROMA_A = 2, TYPE_I4_AC = 3 };
+
 static int TrellisQuantizeBlock(const VP8Encoder* const enc,
                                 int16_t in[16], int16_t out[16],
                                 int ctx0, int coeff_type,
@@ -593,7 +596,7 @@ static int TrellisQuantizeBlock(const VP8Encoder* const enc,
   const ProbaArray* const probas = enc->proba_.coeffs_[coeff_type];
   CostArrayPtr const costs =
       (CostArrayPtr)enc->proba_.remapped_costs_[coeff_type];
-  const int first = (coeff_type == 0) ? 1 : 0;
+  const int first = (coeff_type == TYPE_I16_AC) ? 1 : 0;
   Node nodes[16][NUM_NODES];
   ScoreState score_states[2][NUM_NODES];
   ScoreState* ss_cur = &SCORE_STATE(0, MIN_DELTA);
@@ -724,10 +727,16 @@ static int TrellisQuantizeBlock(const VP8Encoder* const enc,
   }
 
   // Fresh start
-  memset(in + first, 0, (16 - first) * sizeof(*in));
-  memset(out + first, 0, (16 - first) * sizeof(*out));
+  // Beware! We must preserve in[0]/out[0] value for TYPE_I16_AC case.
+  if (coeff_type == TYPE_I16_AC) {
+    memset(in + 1, 0, 15 * sizeof(*in));
+    memset(out + 1, 0, 15 * sizeof(*out));
+  } else {
+    memset(in, 0, 16 * sizeof(*in));
+    memset(out, 0, 16 * sizeof(*out));
+  }
   if (best_path[0] == -1) {
-    return 0;   // skip!
+    return 0;  // skip!
   }
 
   {
@@ -782,9 +791,9 @@ static int ReconstructIntra16(VP8EncIterator* const it,
     for (y = 0, n = 0; y < 4; ++y) {
       for (x = 0; x < 4; ++x, ++n) {
         const int ctx = it->top_nz_[x] + it->left_nz_[y];
-        const int non_zero =
-            TrellisQuantizeBlock(enc, tmp[n], rd->y_ac_levels[n], ctx, 0,
-                                 &dqm->y1_, dqm->lambda_trellis_i16_);
+        const int non_zero = TrellisQuantizeBlock(
+            enc, tmp[n], rd->y_ac_levels[n], ctx, TYPE_I16_AC, &dqm->y1_,
+            dqm->lambda_trellis_i16_);
         it->top_nz_[x] = it->left_nz_[y] = non_zero;
         rd->y_ac_levels[n][0] = 0;
         nz |= non_zero << n;
@@ -825,7 +834,7 @@ static int ReconstructIntra4(VP8EncIterator* const it,
   if (DO_TRELLIS_I4 && it->do_trellis_) {
     const int x = it->i4_ & 3, y = it->i4_ >> 2;
     const int ctx = it->top_nz_[x] + it->left_nz_[y];
-    nz = TrellisQuantizeBlock(enc, tmp, levels, ctx, 3, &dqm->y1_,
+    nz = TrellisQuantizeBlock(enc, tmp, levels, ctx, TYPE_I4_AC, &dqm->y1_,
                               dqm->lambda_trellis_i4_);
   } else {
     nz = VP8EncQuantizeBlock(tmp, levels, &dqm->y1_);
@@ -934,9 +943,9 @@ static int ReconstructUV(VP8EncIterator* const it, VP8ModeScore* const rd,
       for (y = 0; y < 2; ++y) {
         for (x = 0; x < 2; ++x, ++n) {
           const int ctx = it->top_nz_[4 + ch + x] + it->left_nz_[4 + ch + y];
-          const int non_zero =
-              TrellisQuantizeBlock(enc, tmp[n], rd->uv_levels[n], ctx, 2,
-                                   &dqm->uv_, dqm->lambda_trellis_uv_);
+          const int non_zero = TrellisQuantizeBlock(
+              enc, tmp[n], rd->uv_levels[n], ctx, TYPE_CHROMA_A, &dqm->uv_,
+              dqm->lambda_trellis_uv_);
           it->top_nz_[4 + ch + x] = it->left_nz_[4 + ch + y] = non_zero;
           nz |= non_zero << n;
         }
