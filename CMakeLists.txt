@@ -580,7 +580,6 @@ if(WEBP_BUILD_EXTRAS)
   target_link_libraries(get_disto imagedec)
   target_include_directories(get_disto
                              PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
-                                     ${CMAKE_CURRENT_SOURCE_DIR}/src
                                      ${CMAKE_CURRENT_BINARY_DIR}/src)
 
   # webp_quality
@@ -597,7 +596,6 @@ if(WEBP_BUILD_EXTRAS)
     target_link_libraries(vwebp_sdl ${SDL_LIBRARY} imageioutil webp)
     target_include_directories(vwebp_sdl
                                PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
-                                       ${CMAKE_CURRENT_SOURCE_DIR}/src
                                        ${CMAKE_CURRENT_BINARY_DIR}
                                        ${CMAKE_CURRENT_BINARY_DIR}/src
                                        ${SDL_INCLUDE_DIR})
