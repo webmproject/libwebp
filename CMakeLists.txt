@@ -6,7 +6,7 @@
 #  in the file PATENTS.  All contributing project authors may
 #  be found in the AUTHORS file in the root of the source tree.
 
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.7)
 
 if(POLICY CMP0072)
   cmake_policy(SET CMP0072 NEW)
