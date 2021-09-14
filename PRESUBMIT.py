@@ -90,10 +90,12 @@ def _CommonChecks(input_api, output_api):
         input_api.canned_checks.CheckLongLines(
             input_api, output_api, maxlen=_LIBWEBP_MAX_LINE_LENGTH))
     results.extend(
-        input_api.canned_checks.CheckPatchFormatted(input_api,
-                                                    output_api,
-                                                    check_clang_format=False,
-                                                    check_python=True))
+        input_api.canned_checks.CheckPatchFormatted(
+            input_api,
+            output_api,
+            check_clang_format=False,
+            check_python=True,
+            result_factory=output_api.PresubmitError))
     return results
 
 
