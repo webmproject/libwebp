@@ -36,6 +36,7 @@ details on the presubmit API built into depot_tools.
 import subprocess2
 
 USE_PYTHON3 = True
+_INCLUDE_BASH_FILES_ONLY = [r".*\.sh$"]
 _INCLUDE_MAN_FILES_ONLY = [r"man/.+\.1$"]
 _LIBWEBP_MAX_LINE_LENGTH = 80
 
@@ -69,11 +70,39 @@ def _CheckManFiles(input_api, output_api):
   return results
 
 
+def _RunShellCheckCmd(input_api, output_api, bash_file):
+  """shellcheck command wrapper."""
+  cmd = ["shellcheck", "-x", "-oall", "-sbash", bash_file]
+  name = "Check %s file." % bash_file
+  start = input_api.time.time()
+  subprocess2.communicate(["shellcheck", "--version"])
+  output, rc = subprocess2.communicate(
+      cmd, stdout=None, stderr=subprocess2.PIPE, universal_newlines=True)
+  duration = input_api.time.time() - start
+  if rc == 0:
+    return output_api.PresubmitResult("%s\n%s (%4.2fs)\n" %
+                                      (name, " ".join(cmd), duration))
+  return output_api.PresubmitError("%s\n%s (%4.2fs) failed\n%s" %
+                                   (name, " ".join(cmd), duration, output[1]))
+
+
+def _RunCmdOnCheckedFiles(input_api, output_api, run_cmd, files_to_check):
+  """Ensure that libwebp/ files are clean."""
+  file_filter = lambda x: input_api.FilterSourceFile(
+      x, files_to_check=files_to_check, files_to_skip=None)
+
+  affected_files = input_api.change.AffectedFiles(file_filter=file_filter)
+  results = [
+      run_cmd(input_api, output_api, f.AbsoluteLocalPath())
+      for f in affected_files
+  ]
+  return results
+
+
 def _CommonChecks(input_api, output_api):
   """Ensures this patch does not have trailing spaces, extra EOLs,
      or long lines.
   """
-
   results = []
   results.extend(
       input_api.canned_checks.CheckChangeHasNoCrAndHasOnlyOneEol(
@@ -99,12 +128,22 @@ def _CommonChecks(input_api, output_api):
 def CheckChangeOnUpload(input_api, output_api):
   results = []
   results.extend(_CommonChecks(input_api, output_api))
-  results.extend(_CheckManFiles(input_api, output_api))
+  results.extend(
+      _RunCmdOnCheckedFiles(input_api, output_api, _RunManCmd,
+                            _INCLUDE_MAN_FILES_ONLY))
+  results.extend(
+      _RunCmdOnCheckedFiles(input_api, output_api, _RunShellCheckCmd,
+                            _INCLUDE_BASH_FILES_ONLY))
   return results
 
 
 def CheckChangeOnCommit(input_api, output_api):
   results = []
   results.extend(_CommonChecks(input_api, output_api))
-  results.extend(_CheckManFiles(input_api, output_api))
+  results.extend(
+      _RunCmdOnCheckedFiles(input_api, output_api, _RunManCmd,
+                            _INCLUDE_MAN_FILES_ONLY))
+  results.extend(
+      _RunCmdOnCheckedFiles(input_api, output_api, _RunShellCheckCmd,
+                            _INCLUDE_BASH_FILES_ONLY))
   return results
