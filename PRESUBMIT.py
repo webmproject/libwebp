@@ -34,80 +34,77 @@ details on the presubmit API built into depot_tools.
 """
 
 import subprocess2
+
 USE_PYTHON3 = True
 _INCLUDE_MAN_FILES_ONLY = [r"man/.+\.1$"]
 _LIBWEBP_MAX_LINE_LENGTH = 80
 
 
 def _RunManCmd(input_api, output_api, man_file):
-    """man command wrapper."""
-    cmd = ["man", "--warnings", "-EUTF-8", "-l", "-Tutf8", "-Z", man_file]
-    name = "Check %s file." % man_file
-    start = input_api.time.time()
-    output, _ = subprocess2.communicate(cmd,
-                                        stdout=None,
-                                        stderr=subprocess2.PIPE,
-                                        universal_newlines=True)
-    duration = input_api.time.time() - start
-    if output[1]:
-        return output_api.PresubmitError(
-            "%s\n%s (%4.2fs) failed\n%s" %
-            (name, " ".join(cmd), duration, output[1]))
-    return output_api.PresubmitResult("%s\n%s (%4.2fs)\n" %
-                                      (name, " ".join(cmd), duration))
+  """man command wrapper."""
+  cmd = ["man", "--warnings", "-EUTF-8", "-l", "-Tutf8", "-Z", man_file]
+  name = "Check %s file." % man_file
+  start = input_api.time.time()
+  output, _ = subprocess2.communicate(
+      cmd, stdout=None, stderr=subprocess2.PIPE, universal_newlines=True)
+  duration = input_api.time.time() - start
+  if output[1]:
+    return output_api.PresubmitError("%s\n%s (%4.2fs) failed\n%s" %
+                                     (name, " ".join(cmd), duration, output[1]))
+  return output_api.PresubmitResult("%s\n%s (%4.2fs)\n" %
+                                    (name, " ".join(cmd), duration))
 
 
 def _CheckManFiles(input_api, output_api):
-    """Makes sure that libwebp/ man files are clean."""
+  """Makes sure that libwebp/ man files are clean."""
 
-    man_sources = lambda x: input_api.FilterSourceFile(
-        x, files_to_check=_INCLUDE_MAN_FILES_ONLY, files_to_skip=None)
+  man_sources = lambda x: input_api.FilterSourceFile(
+      x, files_to_check=_INCLUDE_MAN_FILES_ONLY, files_to_skip=None)
 
-    affected_man_files = input_api.change.AffectedFiles(
-        file_filter=man_sources)
-    results = [
-        _RunManCmd(input_api, output_api, man_file.AbsoluteLocalPath())
-        for man_file in affected_man_files
-    ]
-    return results
+  affected_man_files = input_api.change.AffectedFiles(file_filter=man_sources)
+  results = [
+      _RunManCmd(input_api, output_api, man_file.AbsoluteLocalPath())
+      for man_file in affected_man_files
+  ]
+  return results
 
 
 def _CommonChecks(input_api, output_api):
-    """Ensures this patch does not have trailing spaces, extra EOLs,
-       or long lines.
-    """
+  """Ensures this patch does not have trailing spaces, extra EOLs,
+     or long lines.
+  """
 
-    results = []
-    results.extend(
-        input_api.canned_checks.CheckChangeHasNoCrAndHasOnlyOneEol(
-            input_api, output_api))
-    results.extend(
-        input_api.canned_checks.CheckChangeHasNoTabs(input_api, output_api))
-    results.extend(
-        input_api.canned_checks.CheckChangeHasNoStrayWhitespace(
-            input_api, output_api))
-    results.extend(
-        input_api.canned_checks.CheckLongLines(
-            input_api, output_api, maxlen=_LIBWEBP_MAX_LINE_LENGTH))
-    results.extend(
-        input_api.canned_checks.CheckPatchFormatted(
-            input_api,
-            output_api,
-            check_clang_format=False,
-            check_python=True,
-            result_factory=output_api.PresubmitError))
-    return results
+  results = []
+  results.extend(
+      input_api.canned_checks.CheckChangeHasNoCrAndHasOnlyOneEol(
+          input_api, output_api))
+  results.extend(
+      input_api.canned_checks.CheckChangeHasNoTabs(input_api, output_api))
+  results.extend(
+      input_api.canned_checks.CheckChangeHasNoStrayWhitespace(
+          input_api, output_api))
+  results.extend(
+      input_api.canned_checks.CheckLongLines(
+          input_api, output_api, maxlen=_LIBWEBP_MAX_LINE_LENGTH))
+  results.extend(
+      input_api.canned_checks.CheckPatchFormatted(
+          input_api,
+          output_api,
+          check_clang_format=False,
+          check_python=True,
+          result_factory=output_api.PresubmitError))
+  return results
 
 
 def CheckChangeOnUpload(input_api, output_api):
-    results = []
-    results.extend(_CommonChecks(input_api, output_api))
-    results.extend(_CheckManFiles(input_api, output_api))
-    return results
+  results = []
+  results.extend(_CommonChecks(input_api, output_api))
+  results.extend(_CheckManFiles(input_api, output_api))
+  return results
 
 
 def CheckChangeOnCommit(input_api, output_api):
-    results = []
-    results.extend(_CommonChecks(input_api, output_api))
-    results.extend(_CheckManFiles(input_api, output_api))
-    return results
+  results = []
+  results.extend(_CommonChecks(input_api, output_api))
+  results.extend(_CheckManFiles(input_api, output_api))
+  return results
