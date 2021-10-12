@@ -42,6 +42,13 @@ _INCLUDE_MAN_FILES_ONLY = [r"man/.+\.1$"]
 _LIBWEBP_MAX_LINE_LENGTH = 80
 
 
+def _GetFilesToSkip(input_api):
+  return list(input_api.DEFAULT_FILES_TO_SKIP) + [
+      r"swig/.*\.py$",
+      r"\.pylintrc$",
+  ]
+
+
 def _RunManCmd(input_api, output_api, man_file):
   """man command wrapper."""
   cmd = ["man", "--warnings", "-EUTF-8", "-l", "-Tutf8", "-Z", man_file]
@@ -55,20 +62,6 @@ def _RunManCmd(input_api, output_api, man_file):
                                      (name, " ".join(cmd), duration, output[1]))
   return output_api.PresubmitResult("%s\n%s (%4.2fs)\n" %
                                     (name, " ".join(cmd), duration))
-
-
-def _CheckManFiles(input_api, output_api):
-  """Makes sure that libwebp/ man files are clean."""
-
-  man_sources = lambda x: input_api.FilterSourceFile(
-      x, files_to_check=_INCLUDE_MAN_FILES_ONLY, files_to_skip=None)
-
-  affected_man_files = input_api.change.AffectedFiles(file_filter=man_sources)
-  results = [
-      _RunManCmd(input_api, output_api, man_file.AbsoluteLocalPath())
-      for man_file in affected_man_files
-  ]
-  return results
 
 
 def _RunShellCheckCmd(input_api, output_api, bash_file):
@@ -130,9 +123,16 @@ def _CommonChecks(input_api, output_api):
   results.extend(
       input_api.canned_checks.CheckChangeHasNoStrayWhitespace(
           input_api, output_api))
+
+  source_file_filter = lambda x: input_api.FilterSourceFile(
+      x, files_to_skip=_GetFilesToSkip(input_api))
   results.extend(
       input_api.canned_checks.CheckLongLines(
-          input_api, output_api, maxlen=_LIBWEBP_MAX_LINE_LENGTH))
+          input_api,
+          output_api,
+          maxlen=_LIBWEBP_MAX_LINE_LENGTH,
+          source_file_filter=source_file_filter))
+
   results.extend(
       input_api.canned_checks.CheckPatchFormatted(
           input_api,
@@ -143,6 +143,14 @@ def _CommonChecks(input_api, output_api):
   results.extend(
       _RunCmdOnCheckedFiles(input_api, output_api, _RunManCmd,
                             _INCLUDE_MAN_FILES_ONLY))
+  # Run pylint.
+  results.extend(
+      input_api.canned_checks.RunPylint(
+          input_api,
+          output_api,
+          files_to_skip=_GetFilesToSkip(input_api),
+          pylintrc=".pylintrc",
+          version="2.7"))
 
   # Binaries shellcheck and shfmt are not installed in depot_tools.
   # Installation is needed
@@ -159,7 +167,7 @@ def _CommonChecks(input_api, output_api):
   except OSError as os_error:
     results.append(
         output_api.PresubmitPromptWarning(
-            '%s\nPlease install missing binaries locally.' % os_error.args[0]))
+            "%s\nPlease install missing binaries locally." % os_error.args[0]))
   return results
 
 
