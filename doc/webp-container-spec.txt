@@ -53,10 +53,6 @@ document are to be interpreted as described in [RFC 2119][].
 Bit numbering in chunk diagrams starts at `0` for the most significant bit
 ('MSB 0') as described in [RFC 1166][].
 
-**Note:** Out of the features mentioned above, lossy compression, lossless
-compression, transparency, metadata, color profile and animation are finalized
-and are to be considered stable.
-
 Terminology &amp; Basics
 ------------------------
 
@@ -269,7 +265,7 @@ An extended format file consists of:
 
   * An optional 'XMP ' chunk with XMP metadata.
 
-  * An optional list of [unknown chunks](#unknown-chunks). _\[status: experimental\]_
+  * An optional list of [unknown chunks](#unknown-chunks).
 
 For a _still image_, the _image data_ consists of a single frame, which is made
 up of:
@@ -705,7 +701,7 @@ XMP Metadata: _Chunk Size_ bytes
 Additional guidance about handling metadata can be found in the
 Metadata Working Group's [Guidelines for Handling Metadata][metadata].
 
-#### Unknown Chunks _\[status: experimental\]_
+#### Unknown Chunks
 
 A RIFF chunk (described in [this](#terminology-amp-basics) section) whose _chunk
 tag_ is different from any of the chunks described in this document, is
