@@ -34,8 +34,10 @@ log_err() {
 
 #######################################
 # Create build directory. Build directory will be deleted if it exists.
+# Arguments:
+#   None.
 # Returns:
-#   mkdir result
+#   mkdir result.
 #######################################
 make_build_dir() {
   if [[ "$#" -ne 1 ]]; then
@@ -50,10 +52,10 @@ make_build_dir() {
 
 #######################################
 # Cleanup files from the build directory.
-# Args:
-#   $1 build directory
 # Globals:
-#   LIBWEBP_ROOT  repository's root path
+#   LIBWEBP_ROOT repository's root path.
+# Arguments:
+#   $1 build directory.
 #######################################
 cleanup() {
   # $1 is not completely removed to allow for binary artifacts to be
@@ -64,6 +66,10 @@ cleanup() {
 
 #######################################
 # Setup ccache for toolchain.
+# Globals:
+#   PATH
+# Arguments:
+#   None.
 #######################################
 setup_ccache() {
   if [[ -x "$(command -v ccache)" ]]; then
