@@ -77,3 +77,30 @@ setup_ccache() {
     export PATH="/usr/lib/ccache:${PATH}"
   fi
 }
+
+#######################################
+# Detects whether test block should be run in the current test shard.
+# Globals:
+#   TEST_TOTAL_SHARDS: Valid range: [1, N]. Defaults to 1.
+#   TEST_SHARD_INDEX: Valid range: [0, TEST_TOTAL_SHARDS). Defaults to 0.
+#   libwebp_test_id: current test number; incremented with each call.
+# Arguments:
+#   None
+# Returns:
+#   true if the shard is active
+#   false if the shard is inactive
+#######################################
+shard_should_run() {
+  TEST_TOTAL_SHARDS=${TEST_TOTAL_SHARDS:=1}
+  TEST_SHARD_INDEX=${TEST_SHARD_INDEX:=0}
+  libwebp_test_id=${libwebp_test_id:=-1}
+  : $((libwebp_test_id += 1))
+
+  if [[ "${TEST_SHARD_INDEX}" -lt 0 ||
+    "${TEST_SHARD_INDEX}" -ge "${TEST_TOTAL_SHARDS}" ]]; then
+    log_err "Invalid TEST_SHARD_INDEX (${TEST_SHARD_INDEX})!" \
+      "Expected [0, ${TEST_TOTAL_SHARDS})."
+  fi
+
+  [[ "$((libwebp_test_id % TEST_TOTAL_SHARDS))" -eq "${TEST_SHARD_INDEX}" ]]
+}
