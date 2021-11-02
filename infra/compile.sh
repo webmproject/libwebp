@@ -261,7 +261,6 @@ case "${TARGET}" in
   cmake*)
     setup_ccache
     # exercise cmake then quit
-    [ -f "${LIBWEBP_ROOT}/CMakeLists.txt" ] || exit 0
     opts=()
     case "${TARGET}" in
       cmake-clang)
