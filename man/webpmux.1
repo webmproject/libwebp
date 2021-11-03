@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH WEBPMUX 1 "December 12, 2020"
+.TH WEBPMUX 1 "November 3, 2021"
 .SH NAME
 webpmux \- create animated WebP files from non\-animated WebP images, extract
 frames from animated WebP images, and manage XMP/EXIF metadata and ICC profile.
@@ -79,6 +79,11 @@ Get nth frame from an animated image. (n = 0 has a special meaning: last frame).
 .TP
 .BI loop " loop_count
 Set loop count on an animated file.
+.P
+Where: 'loop_count' must be in range [0, 65535].
+.TP
+.BI bgcolor " A,R,G,B
+Set the background color of the canvas on an animated file.
 .P
 Where: 'loop_count' must be in range [0, 65535].
 .TP

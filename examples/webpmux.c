@@ -99,6 +99,7 @@ typedef enum {
   FEATURE_ANMF,
   FEATURE_DURATION,
   FEATURE_LOOP,
+  FEATURE_BGCOLOR,
   LAST_FEATURE
 } FeatureType;
 
@@ -315,11 +316,12 @@ static void PrintHelp(void) {
 
   printf("\n");
   printf("SET_OPTIONS:\n");
-  printf(" Set color profile/metadata:\n");
-  printf("   loop LOOP_COUNT   set the loop count\n");
-  printf("   icc  file.icc     set ICC profile\n");
-  printf("   exif file.exif    set EXIF metadata\n");
-  printf("   xmp  file.xmp     set XMP metadata\n");
+  printf(" Set color profile/metadata/parameters:\n");
+  printf("   loop LOOP_COUNT            set the loop count\n");
+  printf("   bgcolor BACKGROUND_COLOR   set the animation background color\n");
+  printf("   icc  file.icc              set ICC profile\n");
+  printf("   exif file.exif             set EXIF metadata\n");
+  printf("   xmp  file.xmp              set XMP metadata\n");
   printf("   where:    'file.icc' contains the ICC profile to be set,\n");
   printf("             'file.exif' contains the EXIF metadata to be set\n");
   printf("             'file.xmp' contains the XMP metadata to be set\n");
@@ -778,6 +780,13 @@ static int ParseCommandLine(Config* config, const W_CHAR** const unicode_argv) {
         arg->params_ = argv[i + 1];
         ++feature_arg_index;
         i += 2;
+      } else if (!strcmp(argv[i], "bgcolor") &&
+                 (config->action_type_ == ACTION_SET)) {
+        CHECK_NUM_ARGS_AT_LEAST(2, ErrParse);
+        config->type_ = FEATURE_BGCOLOR;
+        arg->params_ = argv[i + 1];
+        ++feature_arg_index;
+        i += 2;
       } else {  // Assume input file.
         if (config->input_ == NULL) {
           config->input_ = wargv[i];
@@ -1045,6 +1054,30 @@ static int Process(const Config* config) {
                         Err2);
           }
           params.loop_count = loop_count;
+          err = WebPMuxSetAnimationParams(mux, &params);
+          ok = (err == WEBP_MUX_OK);
+          if (!ok) {
+            ERROR_GOTO2("ERROR (%s): Could not set animation parameters.\n",
+                        ErrorString(err), Err2);
+          }
+          break;
+        }
+        case FEATURE_BGCOLOR: {
+          WebPMuxAnimParams params = { 0xFFFFFFFF, 0 };
+          uint32_t bgcolor;
+          ok = ParseBgcolorArgs(config->args_[0].params_, &bgcolor);
+          if (!ok) {
+            ERROR_GOTO1("ERROR: Could not parse the background color.\n",
+                        Err2);
+          }
+          ok = CreateMux(config->input_, &mux);
+          if (!ok) goto Err2;
+          ok = (WebPMuxGetAnimationParams(mux, &params) == WEBP_MUX_OK);
+          if (!ok) {
+            ERROR_GOTO1("ERROR: input file does not seem to be an animation.\n",
+                        Err2);
+          }
+          params.bgcolor = bgcolor;
           err = WebPMuxSetAnimationParams(mux, &params);
           ok = (err == WEBP_MUX_OK);
           if (!ok) {
