@@ -43,11 +43,12 @@ GET_OPTIONS:
    frame n   get nth frame
 
 SET_OPTIONS:
- Set color profile/metadata:
-   loop LOOP_COUNT   set the loop count
-   icc  file.icc     set ICC profile
-   exif file.exif    set EXIF metadata
-   xmp  file.xmp     set XMP metadata
+ Set color profile/metadata/parameters:
+   loop LOOP_COUNT            set the loop count
+   bgcolor BACKGROUND_COLOR   set the animation background color
+   icc  file.icc              set ICC profile
+   exif file.exif             set EXIF metadata
+   xmp  file.xmp              set XMP metadata
    where:    'file.icc' contains the ICC profile to be set,
              'file.exif' contains the EXIF metadata to be set
              'file.xmp' contains the XMP metadata to be set
