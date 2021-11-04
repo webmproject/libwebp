@@ -41,6 +41,7 @@
     if (webp_info->show_diagnosis_) {            \
       fprintf(stderr, "Warning: %s\n", MESSAGE); \
     }                                            \
+    ++webp_info->num_warnings_;                  \
   } while (0)
 
 static const char* const kFormats[3] = {
@@ -116,6 +117,7 @@ typedef struct WebPInfo {
   int is_processing_anim_frame_, seen_alpha_subchunk_, seen_image_subchunk_;
   // Print output control.
   int quiet_, show_diagnosis_, show_summary_;
+  int num_warnings_;
   int parse_bitstream_;
 } WebPInfo;
 
@@ -580,7 +582,7 @@ static WebPInfoStatus ParseAlphaHeader(const ChunkData* const chunk_data,
 // -----------------------------------------------------------------------------
 // Chunk parsing.
 
-static WebPInfoStatus ParseRIFFHeader(const WebPInfo* const webp_info,
+static WebPInfoStatus ParseRIFFHeader(WebPInfo* const webp_info,
                                       MemBuffer* const mem) {
   const size_t min_size = RIFF_HEADER_SIZE + CHUNK_HEADER_SIZE;
   size_t riff_size;
@@ -988,7 +990,7 @@ static WebPInfoStatus ProcessChunk(const ChunkData* const chunk_data,
   return status;
 }
 
-static WebPInfoStatus Validate(const WebPInfo* const webp_info) {
+static WebPInfoStatus Validate(WebPInfo* const webp_info) {
   if (webp_info->num_frames_ < 1) {
     LOG_ERROR("No image/frame detected.");
     return WEBP_INFO_MISSING_DATA;
@@ -1093,16 +1095,14 @@ static WebPInfoStatus AnalyzeWebP(WebPInfo* const webp_info,
     } else {
       printf("Errors detected.\n");
     }
+    if (webp_info->num_warnings_ > 0) {
+      printf("There were %d warning(s).\n", webp_info->num_warnings_);
+    }
   }
   return webp_info_status;
 }
 
-static void HelpShort(void) {
-  printf("Usage: webpinfo [options] in_files\n"
-         "Try -longhelp for an exhaustive list of options.\n");
-}
-
-static void HelpLong(void) {
+static void Help(void) {
   printf("Usage: webpinfo [options] in_files\n"
          "Note: there could be multiple input files;\n"
          "      options must come before input files.\n"
@@ -1123,17 +1123,15 @@ int main(int argc, const char* argv[]) {
   INIT_WARGV(argc, argv);
 
   if (argc == 1) {
-    HelpShort();
+    Help();
     FREE_WARGV_AND_RETURN(WEBP_INFO_OK);
   }
 
   // Parse command-line input.
   for (c = 1; c < argc; ++c) {
-    if (!strcmp(argv[c], "-h") || !strcmp(argv[c], "-help")) {
-      HelpShort();
-      FREE_WARGV_AND_RETURN(WEBP_INFO_OK);
-    } else if (!strcmp(argv[c], "-H") || !strcmp(argv[c], "-longhelp")) {
-      HelpLong();
+    if (!strcmp(argv[c], "-h") || !strcmp(argv[c], "-help") ||
+        !strcmp(argv[c], "-H") || !strcmp(argv[c], "-longhelp")) {
+      Help();
       FREE_WARGV_AND_RETURN(WEBP_INFO_OK);
     } else if (!strcmp(argv[c], "-quiet")) {
       quiet = 1;
@@ -1154,7 +1152,7 @@ int main(int argc, const char* argv[]) {
   }
 
   if (c == argc) {
-    HelpShort();
+    Help();
     FREE_WARGV_AND_RETURN(WEBP_INFO_INVALID_COMMAND);
   }
 
