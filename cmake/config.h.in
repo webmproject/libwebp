@@ -108,6 +108,9 @@
 /* Set to 1 if JPEG library is installed */
 #cmakedefine WEBP_HAVE_JPEG 1
 
+/* Set to 1 if Wasm SIMD is supported */
+#cmakedefine WEBP_HAVE_WASM_SIMD
+
 /* Set to 1 if NEON is supported */
 #cmakedefine WEBP_HAVE_NEON
 

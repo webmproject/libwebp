@@ -80,6 +80,11 @@ extern "C" {
 #endif
 #endif
 
+#if (defined(EMSCRIPTEN) || defined(WEBP_HAVE_WASM_SIMD)) && \
+    defined(__wasm_simd128__) && defined(WEBP_ENABLE_WASM_SIMD)
+#define WEBP_USE_WASM_SIMD
+#endif
+
 // WEBP_HAVE_* are used to indicate the presence of the instruction set in dsp
 // files without intrinsics, allowing the corresponding Init() to be called.
 // Files containing intrinsics will need to be built targeting the instruction
@@ -257,7 +262,8 @@ typedef enum {
   kNEON,
   kMIPS32,
   kMIPSdspR2,
-  kMSA
+  kMSA,
+  kWasmSIMD
 } CPUFeature;
 // returns true if the CPU supports the feature.
 typedef int (*VP8CPUInfo)(CPUFeature feature);

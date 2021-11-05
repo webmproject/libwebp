@@ -22,6 +22,9 @@ if(NOT EMSCRIPTEN)
 endif()
 option(WEBP_ENABLE_SIMD "Enable any SIMD optimization."
        ${WEBP_ENABLE_SIMD_DEFAULT})
+# Emscripten supports SSE builds using its compatibility headers, by default it
+# will use SSE4 if WEBP_ENABLE_WASM_SIMD is OFF and WEBP_ENABLE_SIMD is ON.
+option(WEBP_ENABLE_WASM_SIMD "Enable WebAssembly SIMD optimizations" OFF)
 option(WEBP_BUILD_ANIM_UTILS "Build animation utilities." ON)
 option(WEBP_BUILD_CWEBP "Build the cwebp command line tool." ON)
 option(WEBP_BUILD_DWEBP "Build the dwebp command line tool." ON)
@@ -48,7 +51,6 @@ endif()
 if(WEBP_BUILD_WEBP_JS)
   set(WEBP_BUILD_ANIM_UTILS OFF)
   set(WEBP_BUILD_CWEBP OFF)
-  set(WEBP_BUILD_DWEBP OFF)
   set(WEBP_BUILD_GIF2WEBP OFF)
   set(WEBP_BUILD_IMG2WEBP OFF)
   set(WEBP_BUILD_VWEBP OFF)
@@ -79,6 +81,9 @@ include(GNUInstallDirs)
 # Options.
 if(WEBP_ENABLE_SWAP_16BIT_CSP)
   add_definitions(-DWEBP_SWAP_16BIT_CSP=1)
+endif()
+if(WEBP_ENABLE_WASM_SIMD)
+  add_definitions(-DWEBP_ENABLE_WASM_SIMD)
 endif()
 
 if(NOT WEBP_BITTRACE STREQUAL "0")

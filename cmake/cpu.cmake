@@ -36,9 +36,9 @@ function(webp_check_compiler_flag WEBP_SIMD_FLAG ENABLE_SIMD)
 endfunction()
 
 # those are included in the names of WEBP_USE_* in c++ code.
-set(WEBP_SIMD_FLAGS "SSE41;SSE2;MIPS32;MIPS_DSP_R2;NEON;MSA")
+set(WEBP_SIMD_FLAGS "WASM_SIMD;SSE41;SSE2;MIPS32;MIPS_DSP_R2;NEON;MSA")
 set(WEBP_SIMD_FILE_EXTENSIONS
-    "_sse41.c;_sse2.c;_mips32.c;_mips_dsp_r2.c;_neon.c;_msa.c")
+    "_wasm.c;_sse41.c;_sse2.c;_mips32.c;_mips_dsp_r2.c;_neon.c;_msa.c")
 if(MSVC AND CMAKE_C_COMPILER_ID STREQUAL "MSVC")
   # With at least Visual Studio 12 (2013)+ /arch is not necessary to build SSE2
   # or SSE4 code unless a lesser /arch is forced. MSVC does not have a SSE4
@@ -53,9 +53,9 @@ if(MSVC AND CMAKE_C_COMPILER_ID STREQUAL "MSVC")
   set(SIMD_DISABLE_FLAGS)
 else()
   set(SIMD_ENABLE_FLAGS
-      "-msse4.1;-msse2;-mips32;-mdspr2;-mfpu=neon;-mmsa")
+      "-msimd128;-msse4.1;-msse2;-mips32;-mdspr2;-mfpu=neon;-mmsa")
   set(SIMD_DISABLE_FLAGS
-      "-mno-sse4.1;-mno-sse2;;-mno-dspr2;;-mno-msa")
+      "-mno-simd128;-mno-sse4.1;-mno-sse2;;-mno-dspr2;;-mno-msa")
 endif()
 
 set(WEBP_SIMD_FILES_TO_NOT_INCLUDE)
@@ -77,7 +77,12 @@ math(EXPR WEBP_SIMD_FLAGS_RANGE "${WEBP_SIMD_FLAGS_LENGTH} - 1")
 foreach(I_SIMD RANGE ${WEBP_SIMD_FLAGS_RANGE})
   # With Emscripten 2.0.9 -msimd128 -mfpu=neon will enable NEON, but the
   # source will fail to compile.
-  if(EMSCRIPTEN AND ${I_SIMD} GREATER_EQUAL 2)
+  if(EMSCRIPTEN AND ${I_SIMD} GREATER_EQUAL 5)
+    break()
+  endif()
+  # Emscripten supports SSE via compat headers, if WEBP_ENABLED_WASM_SIMD is
+  # specified skip testing those (because it will succeed).
+  if (EMSCRIPTEN AND ${I_SIMD} GREATER_EQUAL 1 AND ${WEBP_ENABLE_WASM_SIMD})
     break()
   endif()
 
@@ -91,6 +96,7 @@ foreach(I_SIMD RANGE ${WEBP_SIMD_FLAGS_RANGE})
   webp_check_compiler_flag(${WEBP_SIMD_FLAG} ${WEBP_ENABLE_SIMD})
   if(NOT WEBP_HAVE_${WEBP_SIMD_FLAG})
     list(GET SIMD_ENABLE_FLAGS ${I_SIMD} SIMD_COMPILE_FLAG)
+    # This enables using Emscripten's SSE compatibility headers.
     if(EMSCRIPTEN)
       set(SIMD_COMPILE_FLAG "-msimd128 ${SIMD_COMPILE_FLAG}")
     endif()

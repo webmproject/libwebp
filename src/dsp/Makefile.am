@@ -13,6 +13,7 @@ noinst_LTLIBRARIES += libwebpdsp_mips32.la
 noinst_LTLIBRARIES += libwebpdspdecode_mips32.la
 noinst_LTLIBRARIES += libwebpdsp_mips_dsp_r2.la
 noinst_LTLIBRARIES += libwebpdspdecode_mips_dsp_r2.la
+noinst_LTLIBRARIES += libwebpdspdecode_wasm.la
 
 if BUILD_LIBWEBPDECODER
   noinst_LTLIBRARIES += libwebpdspdecode.la
@@ -105,6 +106,8 @@ libwebpdspdecode_mips_dsp_r2_la_SOURCES += upsampling_mips_dsp_r2.c
 libwebpdspdecode_mips_dsp_r2_la_SOURCES += yuv_mips_dsp_r2.c
 libwebpdspdecode_mips_dsp_r2_la_CPPFLAGS = $(libwebpdsp_mips_dsp_r2_la_CPPFLAGS)
 libwebpdspdecode_mips_dsp_r2_la_CFLAGS = $(libwebpdsp_mips_dsp_r2_la_CFLAGS)
+
+libwebpdspdecode_wasm_la_SOURCES = dec_wasm.c
 
 libwebpdsp_sse2_la_SOURCES =
 libwebpdsp_sse2_la_SOURCES += cost_sse2.c
