@@ -811,9 +811,9 @@ RIFF/WEBP
 +- EXIF (metadata)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-[vp8spec]:  http://tools.ietf.org/html/rfc6386
+[vp8spec]:  https://datatracker.ietf.org/doc/html/rfc6386
 [webpllspec]: https://chromium.googlesource.com/webm/libwebp/+/HEAD/doc/webp-lossless-bitstream-spec.txt
 [iccspec]: http://www.color.org/icc_specs2.xalter
 [metadata]: http://www.metadataworkinggroup.org/pdf/mwg_guidance.pdf
-[rfc 1166]: http://tools.ietf.org/html/rfc1166
-[rfc 2119]: http://tools.ietf.org/html/rfc2119
+[rfc 1166]: https://datatracker.ietf.org/doc/html/rfc1166
+[rfc 2119]: https://datatracker.ietf.org/doc/html/rfc2119
