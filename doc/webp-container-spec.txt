@@ -2,7 +2,7 @@
 
 Although you may be viewing an alternate representation, this document
 is sourced in Markdown, a light-duty markup scheme, and is optimized for
-the [kramdown](http://kramdown.rubyforge.org/) transformer.
+the [kramdown](https://kramdown.gettalong.org/) transformer.
 
 See the accompanying README. External link targets are referenced at the
 end of this file.
@@ -813,7 +813,7 @@ RIFF/WEBP
 
 [vp8spec]:  https://datatracker.ietf.org/doc/html/rfc6386
 [webpllspec]: https://chromium.googlesource.com/webm/libwebp/+/HEAD/doc/webp-lossless-bitstream-spec.txt
-[iccspec]: http://www.color.org/icc_specs2.xalter
-[metadata]: http://www.metadataworkinggroup.org/pdf/mwg_guidance.pdf
+[iccspec]: https://www.color.org/icc_specs2.xalter
+[metadata]: https://web.archive.org/web/20180919181934/http://www.metadataworkinggroup.org/pdf/mwg_guidance.pdf
 [rfc 1166]: https://datatracker.ietf.org/doc/html/rfc1166
 [rfc 2119]: https://datatracker.ietf.org/doc/html/rfc2119

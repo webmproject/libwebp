@@ -2,7 +2,7 @@
 
 Although you may be viewing an alternate representation, this document
 is sourced in Markdown, a light-duty markup scheme, and is optimized for
-the [kramdown](http://kramdown.rubyforge.org/) transformer.
+the [kramdown](https://kramdown.gettalong.org/) transformer.
 
 See the accompanying README. External link targets are referenced at the
 end of this file.
@@ -1087,4 +1087,4 @@ A possible example sequence:
 <lz77-coded image>
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-[canonical_huff]: http://en.wikipedia.org/wiki/Canonical_Huffman_code
+[canonical_huff]: https://en.wikipedia.org/wiki/Canonical_Huffman_code

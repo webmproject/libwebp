@@ -47,7 +47,7 @@ else
 endif
 
 # To install libraries on Mac OS X:
-# 1. Install MacPorts (http://www.macports.org/install.php)
+# 1. Install MacPorts (https://www.macports.org/install.php)
 # 2. Run "sudo port install jpeg"
 # 3. Run "sudo port install libpng"
 # 4. Run "sudo port install tiff"

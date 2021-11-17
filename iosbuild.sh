@@ -9,7 +9,7 @@
 # (the previous build will be erased if it exists).
 #
 # This script is inspired by the build script written by Carson McDonald.
-# (http://www.ioncannon.net/programming/1483/using-webp-to-reduce-native-ios-app-size/).
+# (https://www.ioncannon.net/programming/1483/using-webp-to-reduce-native-ios-app-size/).
 
 set -e
 
@@ -86,7 +86,7 @@ if [[ ! -e ${SRCDIR}/configure ]]; then
 Error creating configure script!
 This script requires the autoconf/automake and libtool to build. MacPorts can
 be used to obtain these:
-http://www.macports.org/install.php
+https://www.macports.org/install.php
 EOF
     exit 1
   fi

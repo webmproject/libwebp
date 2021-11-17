@@ -105,7 +105,7 @@ if [[ ! -e ${SRCDIR}/configure ]]; then
 Error creating configure script!
 This script requires the autoconf/automake and libtool to build. MacPorts or
 Homebrew can be used to obtain these:
-http://www.macports.org/install.php
+https://www.macports.org/install.php
 https://brew.sh/
 EOF
     exit 1
