@@ -833,7 +833,8 @@ WEBP_DSP_INIT_FUNC(VP8DspInit) {
       VP8DspInitMSA();
     }
 #endif
-#if defined(WEBP_USE_WASM_SIMD)
+#if defined(WEBP_USE_WASM_SIMD) && defined(WEBP_ENABLE_WASM_SIMD_INTRINSICS)
+    // Check that SIMD is supported and that we want to use Wasm intrinsics.
     if (VP8GetCPUInfo(kWasmSIMD)) {
       VP8DspInitWasmSIMD();
     }

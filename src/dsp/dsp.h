@@ -81,7 +81,7 @@ extern "C" {
 #endif
 
 #if (defined(EMSCRIPTEN) || defined(WEBP_HAVE_WASM_SIMD)) && \
-    defined(__wasm_simd128__) && defined(WEBP_ENABLE_WASM_SIMD)
+    defined(__wasm_simd128__)
 #define WEBP_USE_WASM_SIMD
 #endif
 

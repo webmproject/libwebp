@@ -83,7 +83,7 @@ if(WEBP_ENABLE_SWAP_16BIT_CSP)
   add_definitions(-DWEBP_SWAP_16BIT_CSP=1)
 endif()
 if(WEBP_ENABLE_WASM_SIMD)
-  add_definitions(-DWEBP_ENABLE_WASM_SIMD)
+  add_definitions(-DWEBP_ENABLE_WASM_SIMD_INTRINSICS)
 endif()
 
 if(NOT WEBP_BITTRACE STREQUAL "0")
