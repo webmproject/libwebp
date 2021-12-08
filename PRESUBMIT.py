@@ -33,13 +33,43 @@ See https://dev.chromium.org/developers/how-tos/depottools/presubmit-scripts for
 details on the presubmit API built into depot_tools.
 """
 
+import re
 import subprocess2
 
 USE_PYTHON3 = True
 _BASH_INDENTATION = "2"
+_GIT_COMMIT_SUBJECT_LENGTH = 65
 _INCLUDE_BASH_FILES_ONLY = [r".*\.sh$"]
 _INCLUDE_MAN_FILES_ONLY = [r"man/.+\.1$"]
 _LIBWEBP_MAX_LINE_LENGTH = 80
+
+
+def _CheckCommitSubjectLength(input_api, output_api):
+  """Ensures commit's subject length is no longer than 65 chars."""
+  name = "git-commit subject"
+  cmd = ["git", "log", "-1", "--pretty=%s"]
+  start = input_api.time.time()
+  proc = subprocess2.Popen(
+      cmd,
+      stderr=subprocess2.PIPE,
+      stdout=subprocess2.PIPE,
+      universal_newlines=True)
+
+  stdout, _ = proc.communicate()
+  duration = input_api.time.time() - start
+
+  if not re.match(r"^Revert",
+                  stdout) and (len(stdout) - 1) > _GIT_COMMIT_SUBJECT_LENGTH:
+    failure_msg = (
+        "The commit subject: %s is too long (%d chars)\n"
+        "Try to keep this to 50 or less (up to 65 is permitted for "
+        "non-reverts).\n"
+        "https://www.git-scm.com/book/en/v2/Distributed-Git-Contributing-to-a-"
+        "Project#_commit_guidelines") % (stdout, len(stdout) - 1)
+    return output_api.PresubmitError("%s\n (%4.2fs) failed\n%s" %
+                                     (name, duration, failure_msg))
+
+  return output_api.PresubmitResult("%s\n (%4.2fs) success" % (name, duration))
 
 
 def _GetFilesToSkip(input_api):
@@ -123,6 +153,7 @@ def _CommonChecks(input_api, output_api):
   results.extend(
       input_api.canned_checks.CheckChangeHasNoStrayWhitespace(
           input_api, output_api))
+  results.append(_CheckCommitSubjectLength(input_api, output_api))
 
   source_file_filter = lambda x: input_api.FilterSourceFile(
       x, files_to_skip=_GetFilesToSkip(input_api))
