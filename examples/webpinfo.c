@@ -125,16 +125,16 @@ static void WebPInfoInit(WebPInfo* const webp_info) {
   memset(webp_info, 0, sizeof(*webp_info));
 }
 
-static const char kWebPChunkTags[CHUNK_TYPES][4] = {
-  { 'V', 'P', '8', ' ' },
-  { 'V', 'P', '8', 'L' },
-  { 'V', 'P', '8', 'X' },
-  { 'A', 'L', 'P', 'H' },
-  { 'A', 'N', 'I', 'M' },
-  { 'A', 'N', 'M', 'F' },
-  { 'I', 'C', 'C', 'P' },
-  { 'E', 'X', 'I', 'F' },
-  { 'X', 'M', 'P', ' ' },
+static const uint32_t kWebPChunkTags[CHUNK_TYPES] = {
+  MKFOURCC('V', 'P', '8', ' '),
+  MKFOURCC('V', 'P', '8', 'L'),
+  MKFOURCC('V', 'P', '8', 'X'),
+  MKFOURCC('A', 'L', 'P', 'H'),
+  MKFOURCC('A', 'N', 'I', 'M'),
+  MKFOURCC('A', 'N', 'M', 'F'),
+  MKFOURCC('I', 'C', 'C', 'P'),
+  MKFOURCC('E', 'X', 'I', 'F'),
+  MKFOURCC('X', 'M', 'P', ' '),
 };
 
 // -----------------------------------------------------------------------------
@@ -644,7 +644,7 @@ static WebPInfoStatus ParseChunk(const WebPInfo* const webp_info,
       return WEBP_INFO_TRUNCATED_DATA;
     }
     for (i = 0; i < CHUNK_TYPES; ++i) {
-      if (!memcmp(kWebPChunkTags[i], &fourcc, TAG_SIZE)) break;
+      if (kWebPChunkTags[i] == fourcc) break;
     }
     chunk_data->offset_ = chunk_start_offset;
     chunk_data->size_ = chunk_size;
@@ -939,7 +939,13 @@ static WebPInfoStatus ProcessChunk(const ChunkData* const chunk_data,
     LOG_WARN(error_message);
   } else {
     if (!webp_info->quiet_) {
-      const char* tag = kWebPChunkTags[chunk_data->id_];
+      char tag[4];
+      uint32_t fourcc = kWebPChunkTags[chunk_data->id_];
+#ifdef WORDS_BIGENDIAN
+      fourcc = (fourcc >> 24) | ((fourcc >> 8) & 0xff00) |
+               ((fourcc << 8) & 0xff0000) | (fourcc << 24);
+#endif
+      memcpy(tag, &fourcc, sizeof(tag));
       printf("Chunk %c%c%c%c at offset %6d, length %6d\n",
              tag[0], tag[1], tag[2], tag[3], (int)chunk_data->offset_,
              (int)chunk_data->size_);
