@@ -456,7 +456,7 @@ modes, etc.
 
 Usage:
 
-  img2webp [file-level options] [image files...] [per-frame options...]
+  img2webp [file_options] [[frame_options] frame_file]...
 
 File-level options (only used at the start of compression):
  -min_size ............ minimize size
