@@ -35,8 +35,7 @@
 
 static void Help(void) {
   printf("Usage:\n\n");
-  printf("  img2webp [file-level options] [image files...] "
-         "[per-frame options...]\n");
+  printf("  img2webp [file_options] [[frame_options] frame_file]...\n");
   printf("\n");
 
   printf("File-level options (only used at the start of compression):\n");
