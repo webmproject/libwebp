@@ -1,3 +1,8 @@
+883f0633 man/img2webp.1: update date
+567e1f44 Reword img2webp synopsis command line
+f084244d anim_decode: fix alpha blending with big-endian
+b217b4ff webpinfo: fix fourcc comparison w/big-endian
+f035d2e4 update ChangeLog (tag: v1.2.2-rc1)
 7031946a update NEWS
 973390b6 bump version to 1.2.2
 abd6664f update AUTHORS
