@@ -1,3 +1,8 @@
+6db8248c libwebp: Fix VP8EncTokenLoop() progress
+827a307f BMP enc: fix the transparency case
+286e7fce libwebp: do not destroy jpeg codec twice on error
+9195ea05 update ChangeLog (tag: v1.2.2-rc2)
+4acae017 update NEWS
 883f0633 man/img2webp.1: update date
 567e1f44 Reword img2webp synopsis command line
 f084244d anim_decode: fix alpha blending with big-endian
