@@ -1,7 +1,58 @@
+6db8248c libwebp: Fix VP8EncTokenLoop() progress
+827a307f BMP enc: fix the transparency case
+286e7fce libwebp: do not destroy jpeg codec twice on error
+9195ea05 update ChangeLog (tag: v1.2.2-rc2)
+4acae017 update NEWS
+883f0633 man/img2webp.1: update date
+567e1f44 Reword img2webp synopsis command line
+f084244d anim_decode: fix alpha blending with big-endian
+b217b4ff webpinfo: fix fourcc comparison w/big-endian
+f035d2e4 update ChangeLog (tag: v1.2.2-rc1)
+7031946a update NEWS
+973390b6 bump version to 1.2.2
+abd6664f update AUTHORS
+5b7e7930 Merge "add missing USE_{MSA,NEON} checks in headers" into main
+02ca04c3 add missing USE_{MSA,NEON} checks in headers
+e94716e2 xcframeworkbuild.sh: place headers in a subdir
+c846efd8 patch-check: commit subject length check
+b6f756e8 update http links
+8f5cb4c1 update rfc links
+8ea81561 change VP8LPredictorFunc signature to avoid reading 'left'
+6b1d18c3 webpmux: fix the -bgcolor description
+3368d876 Merge "webpmux: add "-set bgcolor A,R,G,B"" into main
+f213abf6 webpinfo: print the number of warnings
+50c97c30 webpmux: add "-set bgcolor A,R,G,B"
+2c206aaf Remove CMakeLists.txt check in compile.sh
+96e3dfef Merge "infra/common.sh: add shard_should_run()" into main
+0e0f74b7 infra/common.sh: add shard_should_run()
+35b7436a Jenkins scripts port: update shell function comments
+21d24b4c webp-container-spec.txt: remove 'experimental' markers
+cdcf8902 Merge "Port Jenkins script: compile" into main
+dc683cde Jenkins scripts port: static analysis
+0858494e Port Jenkins script: compile
+c2cf6a93 Jenkins scripts port: android compilation
+df0e808f presubmit: Add pylint-2.7 and .pylintrc
+676c57db patch-check: shfmt
+7bb7f747 patch-check: Add shellcheck
+abcd1797 Reformat docstrings and imports
+edaf0895 Port Jenkins scripts: compile js
+b9622063 Set CheckPatchFormatted flags to fail on diffs
+e23cd548 dsp.h: enable NEON w/VS2019+ ARM64 targets
+3875c7de CMakeLists.txt: set minimum version to 3.7
+1a8f0d45 Have a hard-coded value for memset in TrellisQuantizeBlock.
+93480160 Speed up TrellisQuantizeBlock
+45eaacc9 Convert deprecated uint32 to uint32_t.
+42592af8 webp,cmake: Remove unnecessary include dirs
+e298e05f Add patch-check steps in PRESUBMIT.py
+29148919 Merge tag 'v1.2.1'
+9ce5843d update ChangeLog (tag: v1.2.1, origin/1.2.1)
 d9191588 fuzzer/*: normalize src/ includes
+c5bc3624 fuzzer/*: normalize src/ includes
 53b6f762 fix indent
+d2caaba4 fix indent
 731246ba update ChangeLog (tag: v1.2.1-rc2)
 d250f01d dsp/*: use WEBP_HAVE_* to determine Init availability
+1fe31625 dsp/*: use WEBP_HAVE_* to determine Init availability
 3a4d3ecd update NEWS
 b2bc8093 bump version to 1.2.1
 e542fc7a update AUTHORS
