@@ -36,7 +36,7 @@ for:
   * **Lossless compression.** An image can be losslessly compressed, using the
     WebP Lossless Format.
 
-  * **Metadata.** An image may have metadata stored in EXIF or XMP formats.
+  * **Metadata.** An image may have metadata stored in Exif or XMP formats.
 
   * **Transparency.** An image may have transparency, i.e., an alpha channel.
 
@@ -94,7 +94,7 @@ _1-based_
 RIFF File Format
 ----------------
 
-The WebP file format is based on the RIFF (resource interchange file format)
+The WebP file format is based on the RIFF (Resource Interchange File Format)
 document format.
 
 The basic element of a RIFF file is a _chunk_. It consists of:
@@ -261,7 +261,7 @@ An extended format file consists of:
 
   * Image data.
 
-  * An optional 'EXIF' chunk with EXIF metadata.
+  * An optional 'EXIF' chunk with Exif metadata.
 
   * An optional 'XMP ' chunk with XMP metadata.
 
@@ -317,9 +317,9 @@ Alpha (L): 1 bit
 : Set if any of the frames of the image contain transparency information
   ("alpha").
 
-EXIF metadata (E): 1 bit
+Exif metadata (E): 1 bit
 
-: Set if the file contains EXIF metadata.
+: Set if the file contains Exif metadata.
 
 XMP metadata (X): 1 bit
 
@@ -341,12 +341,12 @@ Reserved: 24 bits
 Canvas Width Minus One: 24 bits
 
 : _1-based_ width of the canvas in pixels.
-  The actual canvas width is '1 + Canvas Width Minus One'
+  The actual canvas width is `1 + Canvas Width Minus One`.
 
 Canvas Height Minus One: 24 bits
 
 : _1-based_ height of the canvas in pixels.
-  The actual canvas height is '1 + Canvas Height Minus One'
+  The actual canvas height is `1 + Canvas Height Minus One`.
 
 The product of _Canvas Width_ and _Canvas Height_ MUST be at most `2^32 - 1`.
 
@@ -423,21 +423,21 @@ If the _Animation flag_ is not set, then this chunk SHOULD NOT be present.
 
 Frame X: 24 bits (_uint24_)
 
-: The X coordinate of the upper left corner of the frame is `Frame X * 2`
+: The X coordinate of the upper left corner of the frame is `Frame X * 2`.
 
 Frame Y: 24 bits (_uint24_)
 
-: The Y coordinate of the upper left corner of the frame is `Frame Y * 2`
+: The Y coordinate of the upper left corner of the frame is `Frame Y * 2`.
 
 Frame Width Minus One: 24 bits (_uint24_)
 
 : The _1-based_ width of the frame.
-  The frame width is `1 + Frame Width Minus One`
+  The frame width is `1 + Frame Width Minus One`.
 
 Frame Height Minus One: 24 bits (_uint24_)
 
 : The _1-based_ height of the frame.
-  The frame height is `1 + Frame Height Minus One`
+  The frame height is `1 + Frame Height Minus One`.
 
 Frame Duration: 24 bits (_uint24_)
 
@@ -677,12 +677,12 @@ EXIF chunk:
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                      ChunkHeader('EXIF')                      |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |                        EXIF Metadata                          |
+    |                        Exif Metadata                          |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-EXIF Metadata: _Chunk Size_ bytes
+Exif Metadata: _Chunk Size_ bytes
 
-: image metadata in EXIF format.
+: image metadata in Exif format.
 
 XMP chunk:
 
@@ -798,7 +798,7 @@ RIFF/WEBP
 +- XMP  (metadata)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-An animated image with EXIF metadata may look as follows:
+An animated image with Exif metadata may look as follows:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 RIFF/WEBP
