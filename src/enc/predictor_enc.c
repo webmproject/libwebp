@@ -16,6 +16,7 @@
 
 #include "src/dsp/lossless.h"
 #include "src/dsp/lossless_common.h"
+#include "src/enc/vp8i_enc.h"
 #include "src/enc/vp8li_enc.h"
 
 #define MAX_DIFF_COST (1e30f)
@@ -472,12 +473,15 @@ static void CopyImageWithPrediction(int width, int height,
 // with respect to predictions. If near_lossless_quality < 100, applies
 // near lossless processing, shaving off more bits of residuals for lower
 // qualities.
-void VP8LResidualImage(int width, int height, int bits, int low_effort,
-                       uint32_t* const argb, uint32_t* const argb_scratch,
-                       uint32_t* const image, int near_lossless_quality,
-                       int exact, int used_subtract_green) {
+int VP8LResidualImage(int width, int height, int bits, int low_effort,
+                      uint32_t* const argb, uint32_t* const argb_scratch,
+                      uint32_t* const image, int near_lossless_quality,
+                      int exact, int used_subtract_green,
+                      const WebPPicture* const pic, int percent_range,
+                      int* const percent) {
   const int tiles_per_row = VP8LSubSampleSize(width, bits);
   const int tiles_per_col = VP8LSubSampleSize(height, bits);
+  int percent_start = *percent;
   int tile_y;
   int histo[4][256];
   const int max_quantization = 1 << VP8LNearLosslessBits(near_lossless_quality);
@@ -491,10 +495,16 @@ void VP8LResidualImage(int width, int height, int bits, int low_effort,
     for (tile_y = 0; tile_y < tiles_per_col; ++tile_y) {
       int tile_x;
       for (tile_x = 0; tile_x < tiles_per_row; ++tile_x) {
-        const int pred = GetBestPredictorForTile(width, height, tile_x, tile_y,
-            bits, histo, argb_scratch, argb, max_quantization, exact,
-            used_subtract_green, image);
+        const int pred = GetBestPredictorForTile(
+            width, height, tile_x, tile_y, bits, histo, argb_scratch, argb,
+            max_quantization, exact, used_subtract_green, image);
         image[tile_y * tiles_per_row + tile_x] = ARGB_BLACK | (pred << 8);
+      }
+
+      if (!WebPReportProgress(
+              pic, percent_start + percent_range * tile_y / tiles_per_col,
+              percent)) {
+        return 0;
       }
     }
   }
@@ -502,6 +512,7 @@ void VP8LResidualImage(int width, int height, int bits, int low_effort,
   CopyImageWithPrediction(width, height, bits, image, argb_scratch, argb,
                           low_effort, max_quantization, exact,
                           used_subtract_green);
+  return WebPReportProgress(pic, percent_start + percent_range, percent);
 }
 
 //------------------------------------------------------------------------------
@@ -714,11 +725,14 @@ static void CopyTileWithColorTransform(int xsize, int ysize,
   }
 }
 
-void VP8LColorSpaceTransform(int width, int height, int bits, int quality,
-                             uint32_t* const argb, uint32_t* image) {
+int VP8LColorSpaceTransform(int width, int height, int bits, int quality,
+                            uint32_t* const argb, uint32_t* image,
+                            const WebPPicture* const pic, int percent_range,
+                            int* const percent) {
   const int max_tile_size = 1 << bits;
   const int tile_xsize = VP8LSubSampleSize(width, bits);
   const int tile_ysize = VP8LSubSampleSize(height, bits);
+  int percent_start = *percent;
   int accumulated_red_histo[256] = { 0 };
   int accumulated_blue_histo[256] = { 0 };
   int tile_x, tile_y;
@@ -768,5 +782,11 @@ void VP8LColorSpaceTransform(int width, int height, int bits, int quality,
         }
       }
     }
+    if (!WebPReportProgress(
+            pic, percent_start + percent_range * tile_y / tile_ysize,
+            percent)) {
+      return 0;
+    }
   }
+  return 1;
 }
