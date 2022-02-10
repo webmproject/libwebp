@@ -470,7 +470,8 @@ int VP8EncAnalyze(VP8Encoder* const enc);
 // Sets up segment's quantization values, base_quant_ and filter strengths.
 void VP8SetSegmentParams(VP8Encoder* const enc, float quality);
 // Pick best modes and fills the levels. Returns true if skipped.
-int VP8Decimate(VP8EncIterator* const it, VP8ModeScore* const rd,
+int VP8Decimate(VP8EncIterator* WEBP_RESTRICT const it,
+                VP8ModeScore* WEBP_RESTRICT const rd,
                 VP8RDLevel rd_opt);
 
   // in alpha.c
