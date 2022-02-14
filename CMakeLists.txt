@@ -564,7 +564,8 @@ if(WEBP_BUILD_WEBPMUX)
   add_executable(webpmux_app ${WEBPMUX_SRCS})
   set_target_properties(webpmux_app PROPERTIES OUTPUT_NAME webpmux)
   target_link_libraries(webpmux_app exampleutil imageioutil webpmux webp)
-  target_include_directories(webpmux_app PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src)
+  target_include_directories(webpmux_app
+                             PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src)
   install(TARGETS webpmux_app RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
