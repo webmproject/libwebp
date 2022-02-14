@@ -4,8 +4,8 @@ Although you may be viewing an alternate representation, this document
 is sourced in Markdown, a light-duty markup scheme, and is optimized for
 the [kramdown](https://kramdown.gettalong.org/) transformer.
 
-See the accompanying README. External link targets are referenced at the
-end of this file.
+See the accompanying specs_generation.md. External link targets are referenced
+at the end of this file.
 
 -->
 
