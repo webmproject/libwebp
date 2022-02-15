@@ -212,7 +212,7 @@ int ReadTIFF(const uint8_t* const data, size_t data_size,
       TIFFGetField(tif, TIFFTAG_TILELENGTH, &tile_height)) {
     if ((tile_width > 32 && tile_width / 2 > image_width) ||
         (tile_height > 32 && tile_height / 2 > image_height) ||
-        ImgIoUtilCheckSizeArgumentsOverflow(
+        !ImgIoUtilCheckSizeArgumentsOverflow(
             (uint64_t)tile_width * sizeof(*raster), tile_height)) {
       fprintf(stderr, "Error! TIFF tile dimension (%d x %d) is too large.\n",
               tile_width, tile_height);
