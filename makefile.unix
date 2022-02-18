@@ -304,6 +304,7 @@ HDRS = \
     src/dec/vp8li_dec.h \
     src/dec/webpi_dec.h \
     src/dsp/common_sse2.h \
+    src/dsp/cpu.h \
     src/dsp/dsp.h \
     src/dsp/lossless.h \
     src/dsp/lossless_common.h \

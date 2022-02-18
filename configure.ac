@@ -27,7 +27,8 @@ AC_ARG_ENABLE([everything],
               AS_HELP_STRING([--enable-everything],
                              [Enable all optional targets. These can still be
                               disabled with --disable-target]),
-              [SET_IF_UNSET([enable_libwebpdecoder], [$enableval])
+              [SET_IF_UNSET([enable_libsharpyuv], [$enableval])
+               SET_IF_UNSET([enable_libwebpdecoder], [$enableval])
                SET_IF_UNSET([enable_libwebpdemux], [$enableval])
                SET_IF_UNSET([enable_libwebpextras], [$enableval])
                SET_IF_UNSET([enable_libwebpmux], [$enableval])])
@@ -65,6 +66,14 @@ AC_ARG_ENABLE([libwebpextras],
                              [Build libwebpextras @<:@default=no@:>@]))
 AC_MSG_RESULT(${enable_libwebpextras-no})
 AM_CONDITIONAL([BUILD_EXTRAS], [test "$enable_libwebpextras" = "yes"])
+
+dnl === Check whether libsharpyuv should be built
+AC_MSG_CHECKING(whether libsharpyuv is to be built)
+AC_ARG_ENABLE([libsharpyuv],
+              AS_HELP_STRING([--enable-libsharpyuv],
+                             [Build libsharpyuv @<:@default=no@:>@]))
+AC_MSG_RESULT(${enable_libsharpyuv-no})
+AM_CONDITIONAL([BUILD_SHARPYUV], [test "$enable_libsharpyuv" = "yes"])
 
 dnl === If --enable-asserts is not defined, define NDEBUG
 
@@ -751,6 +760,7 @@ AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADERS([src/webp/config.h])
 AC_CONFIG_FILES([Makefile src/Makefile man/Makefile \
                  examples/Makefile extras/Makefile imageio/Makefile \
+                 sharpyuv/Makefile \
                  src/dec/Makefile src/enc/Makefile src/dsp/Makefile \
                  src/demux/Makefile src/mux/Makefile \
                  src/utils/Makefile \
@@ -772,6 +782,7 @@ libwebpdecoder: ${enable_libwebpdecoder-no}
 libwebpdemux: ${enable_libwebpdemux-no}
 libwebpmux: ${enable_libwebpmux-no}
 libwebpextras: ${enable_libwebpextras-no}
+libsharpyuv: ${enable_libsharpyuv-no}
 
 Tools:
 cwebp : ${enable_libwebpdemux-no}
