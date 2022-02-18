@@ -467,7 +467,7 @@ SET_OPTIONS:
 
 DURATION_OPTIONS:
  Set duration of selected frames:
-   duration            set duration for each frames
+   duration            set duration for all frames
    duration,frame      set duration of a particular frame
    duration,start,end  set duration of frames in the
                         interval [start,end])
@@ -484,7 +484,7 @@ STRIP_OPTIONS:
 
 FRAME_OPTIONS(i):
  Create animation:
-   file_i +di+[xi+yi[+mi[bi]]]
+   file_i +di[+xi+yi[+mi[bi]]]
    where:    'file_i' is the i'th animation frame (WebP format),
              'di' is the pause duration before next frame,
              'xi','yi' specify the image offset for this frame,

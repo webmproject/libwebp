@@ -329,7 +329,7 @@ static void PrintHelp(void) {
   printf("\n");
   printf("DURATION_OPTIONS:\n");
   printf(" Set duration of selected frames:\n");
-  printf("   duration            set duration for each frames\n");
+  printf("   duration            set duration for all frames\n");
   printf("   duration,frame      set duration of a particular frame\n");
   printf("   duration,start,end  set duration of frames in the\n");
   printf("                        interval [start,end])\n");
@@ -348,7 +348,7 @@ static void PrintHelp(void) {
   printf("\n");
   printf("FRAME_OPTIONS(i):\n");
   printf(" Create animation:\n");
-  printf("   file_i +di+[xi+yi[+mi[bi]]]\n");
+  printf("   file_i +di[+xi+yi[+mi[bi]]]\n");
   printf("   where:    'file_i' is the i'th animation frame (WebP format),\n");
   printf("             'di' is the pause duration before next frame,\n");
   printf("             'xi','yi' specify the image offset for this frame,\n");
@@ -460,7 +460,8 @@ static WebPMux* DuplicateMuxHeader(const WebPMux* const mux) {
     if (err == WEBP_MUX_OK && metadata.size > 0) {
       err = WebPMuxSetChunk(new_mux, kFourccList[i], &metadata, 1);
       if (err != WEBP_MUX_OK) {
-        ERROR_GOTO1("Error transferring metadata in DuplicateMux().", End);
+        ERROR_GOTO1("Error transferring metadata in DuplicateMuxHeader().",
+                    End);
       }
     }
   }
