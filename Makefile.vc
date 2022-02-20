@@ -31,12 +31,11 @@ CCNODBG    = cl.exe $(NOLOGO) /O2 /DNDEBUG
 CCDEBUG    = cl.exe $(NOLOGO) /Od /Zi /D_DEBUG /RTC1
 CFLAGS     = /I. /Isrc $(NOLOGO) /W3 /EHsc /c
 CFLAGS     = $(CFLAGS) /DWIN32 /D_CRT_SECURE_NO_WARNINGS /DWIN32_LEAN_AND_MEAN
-LDFLAGS    = /LARGEADDRESSAWARE /MANIFEST /NXCOMPAT /DYNAMICBASE
+LDFLAGS    = /LARGEADDRESSAWARE /MANIFEST:EMBED /NXCOMPAT /DYNAMICBASE
 LDFLAGS    = $(LDFLAGS) $(PLATFORM_LDFLAGS)
 LNKDLL     = link.exe /DLL $(NOLOGO)
 LNKEXE     = link.exe $(NOLOGO)
 LNKLIB     = lib.exe $(NOLOGO)
-MT         = mt.exe $(NOLOGO)
 RCNODBG    = rc.exe $(NOLOGO) /l"0x0409"  # 0x409 = U.S. English
 RCDEBUG    = $(RCNODBG) /D_DEBUG
 
@@ -502,13 +501,9 @@ LNKLIBS     = $(LNKLIBS) Shell32.lib
 
 {$(DIROBJ)\examples}.obj{$(DIRBIN)}.exe:
 	$(LNKEXE) $(LDFLAGS) /OUT:$@ $** $(LNKLIBS)
-	$(MT) -manifest $@.manifest -outputresource:$@;1
-	del $@.manifest
 
 {$(DIROBJ)\extras}.obj{$(DIRBIN)}.exe:
 	$(LNKEXE) $(LDFLAGS) /OUT:$@ $** $(LNKLIBS)
-	$(MT) -manifest $@.manifest -outputresource:$@;1
-	del $@.manifest
 
 clean::
 	@-erase /s $(DIROBJ)\*.dll 2> NUL
