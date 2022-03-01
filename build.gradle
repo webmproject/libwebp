@@ -105,6 +105,11 @@ model {
       sources {
         c {
           source {
+            srcDir "sharpyuv"
+            include "sharpyuv.c"
+            include "sharpyuv_dsp.c"
+            include "sharpyuv_neon.c"
+            include "sharpyuv_sse2.c"
             srcDir "src/dec"
             include "alpha_dec.c"
             include "buffer_dec.c"

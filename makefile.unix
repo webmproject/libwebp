@@ -125,6 +125,12 @@ endif
 ANIM_UTIL_OBJS = \
     examples/anim_util.o \
 
+SHARPYUV_OBJS = \
+    sharpyuv/sharpyuv.o \
+    sharpyuv/sharpyuv_dsp.o \
+    sharpyuv/sharpyuv_neon.o \
+    sharpyuv/sharpyuv_sse2.o \
+
 DEC_OBJS = \
     src/dec/alpha_dec.o \
     src/dec/buffer_dec.o \
@@ -282,8 +288,8 @@ EXTRA_OBJS = \
     extras/quality_estimate.o \
 
 LIBWEBPDECODER_OBJS = $(DEC_OBJS) $(DSP_DEC_OBJS) $(UTILS_DEC_OBJS)
-LIBWEBP_OBJS = $(LIBWEBPDECODER_OBJS) $(ENC_OBJS) $(DSP_ENC_OBJS) \
-               $(UTILS_ENC_OBJS)
+LIBWEBP_OBJS = $(SHARPYUV_OBJS) $(LIBWEBPDECODER_OBJS) $(ENC_OBJS) \
+               $(DSP_ENC_OBJS) $(UTILS_ENC_OBJS)
 LIBWEBPMUX_OBJS = $(MUX_OBJS)
 LIBWEBPDEMUX_OBJS = $(DEMUX_OBJS)
 LIBWEBPEXTRA_OBJS = $(EXTRA_OBJS)
