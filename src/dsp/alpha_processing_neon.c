@@ -158,7 +158,7 @@ static int ExtractAlpha_NEON(const uint8_t* WEBP_RESTRICT argb, int argb_stride,
     alpha += alpha_stride;
   }
   vst1_u8((uint8_t*)tmp, mask8);
-  alpha_mask *= 0x0101010101;
+  alpha_mask *= 0x01010101;
   alpha_mask &= tmp[0];
   alpha_mask &= tmp[1];
   return (alpha_mask == 0xffffffffu);
