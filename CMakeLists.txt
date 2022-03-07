@@ -31,7 +31,6 @@ option(WEBP_BUILD_VWEBP "Build the vwebp viewer tool." ON)
 option(WEBP_BUILD_WEBPINFO "Build the webpinfo command line tool." ON)
 option(WEBP_BUILD_LIBWEBPMUX "Build the libwebpmux library." ON)
 option(WEBP_BUILD_WEBPMUX "Build the webpmux command line tool." ON)
-option(WEBP_BUILD_SHARPYUV "Build the sharpyuv library." OFF)
 option(WEBP_BUILD_EXTRAS "Build extras." ON)
 option(WEBP_BUILD_WEBP_JS "Emscripten build of webp.js." OFF)
 option(WEBP_USE_THREAD "Enable threading support" ON)
@@ -212,18 +211,16 @@ function(libwebp_add_stub_file TARGET)
   target_sources(${TARGET} PRIVATE ${stub_source_file})
 endfunction()
 
-if(WEBP_BUILD_SHARPYUV)
-  parse_makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/sharpyuv "WEBP_SHARPYUV_SRCS"
-                    "")
-  add_library(sharpyuv OBJECT ${WEBP_SHARPYUV_SRCS})
-  target_include_directories(sharpyuv
-                             PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
-                             ${CMAKE_CURRENT_SOURCE_DIR})
-  set_target_properties(
-    sharpyuv
-    PROPERTIES PUBLIC_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/sharpyuv/sharpyuv.h;\
+parse_makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/sharpyuv "WEBP_SHARPYUV_SRCS"
+                  "")
+add_library(sharpyuv OBJECT ${WEBP_SHARPYUV_SRCS})
+target_include_directories(sharpyuv
+                            PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
+                            ${CMAKE_CURRENT_SOURCE_DIR})
+set_target_properties(
+  sharpyuv
+  PROPERTIES PUBLIC_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/sharpyuv/sharpyuv.h;\
 ${CMAKE_CURRENT_SOURCE_DIR}/src/webp/types.h")
-endif()
 
 if(MSVC)
   # avoid security warnings for e.g., fopen() used in the examples.
@@ -289,6 +286,7 @@ target_include_directories(webputils
                            PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
                                    ${CMAKE_CURRENT_SOURCE_DIR})
 add_library(webp
+            $<TARGET_OBJECTS:sharpyuv>
             $<TARGET_OBJECTS:webpdecode>
             $<TARGET_OBJECTS:webpdsp>
             $<TARGET_OBJECTS:webpencode>
@@ -311,7 +309,8 @@ ${CMAKE_CURRENT_SOURCE_DIR}/src/webp/types.h")
 
 # Make sure the OBJECT libraries are built with position independent code (it is
 # not ON by default).
-set_target_properties(webpdecode
+set_target_properties(sharpyuv
+                      webpdecode
                       webpdspdecode
                       webputilsdecode
                       webpencode

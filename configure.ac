@@ -67,14 +67,6 @@ AC_ARG_ENABLE([libwebpextras],
 AC_MSG_RESULT(${enable_libwebpextras-no})
 AM_CONDITIONAL([BUILD_EXTRAS], [test "$enable_libwebpextras" = "yes"])
 
-dnl === Check whether libsharpyuv should be built
-AC_MSG_CHECKING(whether libsharpyuv is to be built)
-AC_ARG_ENABLE([libsharpyuv],
-              AS_HELP_STRING([--enable-libsharpyuv],
-                             [Build libsharpyuv @<:@default=no@:>@]))
-AC_MSG_RESULT(${enable_libsharpyuv-no})
-AM_CONDITIONAL([BUILD_SHARPYUV], [test "$enable_libsharpyuv" = "yes"])
-
 dnl === If --enable-asserts is not defined, define NDEBUG
 
 AC_MSG_CHECKING(whether asserts are enabled)
@@ -782,7 +774,6 @@ libwebpdecoder: ${enable_libwebpdecoder-no}
 libwebpdemux: ${enable_libwebpdemux-no}
 libwebpmux: ${enable_libwebpmux-no}
 libwebpextras: ${enable_libwebpextras-no}
-libsharpyuv: ${enable_libsharpyuv-no}
 
 Tools:
 cwebp : ${enable_libwebpdemux-no}
