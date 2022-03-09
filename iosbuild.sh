@@ -133,10 +133,9 @@ for PLATFORM in ${PLATFORMS}; do
     CFLAGS="${CFLAGS}"
   set +x
 
-  # run make only in the src/ directory to create libwebp.a/libwebpdecoder.a
-  cd src/
-  make V=0
-  make install
+  # Build only the libraries, skip the examples.
+  make V=0 -C sharpyuv
+  make V=0 -C src install
 
   LIBLIST+=" ${ROOTDIR}/lib/libwebp.a"
   DECLIBLIST+=" ${ROOTDIR}/lib/libwebpdecoder.a"
@@ -144,7 +143,6 @@ for PLATFORM in ${PLATFORMS}; do
   DEMUXLIBLIST+=" ${ROOTDIR}/lib/libwebpdemux.a"
 
   make clean
-  cd ..
 
   export PATH=${OLDPATH}
 done
