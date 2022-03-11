@@ -395,8 +395,8 @@ typedef struct {
 The actual color transformation is done by defining a color transform
 delta. The color transform delta depends on the `ColorTransformElement`,
 which is the same for all the pixels in a particular block. The delta is
-added during color transform. The inverse color transform then is just
-subtracting those deltas.
+subtracted during color transform. The inverse color transform then is just
+adding those deltas.
 
 The color transform function is defined as follows:
 
@@ -405,13 +405,13 @@ void ColorTransform(uint8 red, uint8 blue, uint8 green,
                     ColorTransformElement *trans,
                     uint8 *new_red, uint8 *new_blue) {
   // Transformed values of red and blue components
-  uint32 tmp_red = red;
-  uint32 tmp_blue = blue;
+  int tmp_red = red;
+  int tmp_blue = blue;
 
-  // Applying transform is just adding the transform deltas
-  tmp_red  += ColorTransformDelta(trans->green_to_red, green);
-  tmp_blue += ColorTransformDelta(trans->green_to_blue, green);
-  tmp_blue += ColorTransformDelta(trans->red_to_blue, red);
+  // Applying the transform is just subtracting the transform deltas
+  tmp_red  -= ColorTransformDelta(p->green_to_red_,  green);
+  tmp_blue -= ColorTransformDelta(p->green_to_blue_, green);
+  tmp_blue -= ColorTransformDelta(p->red_to_blue_, red);
 
   *new_red = tmp_red & 0xff;
   *new_blue = tmp_blue & 0xff;
@@ -429,7 +429,7 @@ int8 ColorTransformDelta(int8 t, int8 c) {
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A conversion from the 8-bit unsigned representation (uint8) to the 8-bit
-signed one (int8) is required before calling ColorTransformDelta().
+signed one (int8) is required before calling `ColorTransformDelta()`.
 It should be performed using 8-bit two's complement (that is: uint8 range
 \[128-255\] is mapped to the \[-128, -1\] range of its converted int8 value).
 
@@ -467,14 +467,18 @@ channels.
 void InverseTransform(uint8 red, uint8 green, uint8 blue,
                       ColorTransformElement *p,
                       uint8 *new_red, uint8 *new_blue) {
-  // Applying inverse transform is just subtracting the
-  // color transform deltas
-  red  -= ColorTransformDelta(p->green_to_red_,  green);
-  blue -= ColorTransformDelta(p->green_to_blue_, green);
-  blue -= ColorTransformDelta(p->red_to_blue_, red & 0xff);
+  // Transformed values of red and blue components
+  int tmp_red = red;
+  int tmp_blue = blue;
 
-  *new_red = red & 0xff;
-  *new_blue = blue & 0xff;
+  // Applying inverse transform is just adding the
+  // color transform deltas
+  tmp_red  += ColorTransformDelta(trans->green_to_red, green);
+  tmp_blue += ColorTransformDelta(trans->green_to_blue, green);
+  tmp_blue += ColorTransformDelta(trans->red_to_blue, tmp_red & 0xff);
+
+  *new_red = tmp_red & 0xff;
+  *new_blue = tmp_blue & 0xff;
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
