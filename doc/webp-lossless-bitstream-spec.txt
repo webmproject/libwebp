@@ -369,9 +369,8 @@ pixels on the leftmost column.
 
 Addressing the TR-pixel for pixels on the rightmost column is
 exceptional. The pixels on the rightmost column are predicted by using
-the modes \[0..13\] just like pixels not on border, but by using the
-leftmost pixel on the same row as the current TR-pixel. The TR-pixel
-offset in memory is the same for border and non-border pixels.
+the modes \[0..13\] just like pixels not on the border, but the leftmost pixel
+on the same row as the current pixel is instead used as the TR-pixel.
 
 
 ### Color Transform
