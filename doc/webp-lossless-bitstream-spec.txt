@@ -235,7 +235,7 @@ transform, the current pixel value is predicted from the pixels already
 decoded (in scan-line order) and only the residual value (actual -
 predicted) is encoded. The _prediction mode_ determines the type of
 prediction to use. We divide the image into squares and all the pixels
-in a square use same prediction mode.
+in a square use the same prediction mode.
 
 The first 3 bits of prediction data define the block width and height in
 number of bits. The number of block columns, `block_xsize`, is used in
@@ -590,12 +590,12 @@ The values are packed into the green component as follows:
     4 most-significant bits of the green value at x / 2.
   * `width_bits` = 2: for every x value where x ≡ 0 (mod 4), a green
     value at x is positioned into the 2 least-significant bits of the
-    green value at x / 4, green values at x + 1 to x + 3 in order to the
-    more significant bits of the green value at x / 4.
+    green value at x / 4, green values at x + 1 to x + 3 are positioned in order
+    to the more significant bits of the green value at x / 4.
   * `width_bits` = 3: for every x value where x ≡ 0 (mod 8), a green
     value at x is positioned into the least-significant bit of the green
-    value at x / 8, green values at x + 1 to x + 7 in order to the more
-    significant bits of the green value at x / 8.
+    value at x / 8, green values at x + 1 to x + 7 are positioned in order to
+    the more significant bits of the green value at x / 8.
 
 
 4 Image Data
@@ -621,7 +621,7 @@ We use image data in five different roles:
      the image. Each `ColorTransformElement` `'cte'` is treated as a pixel whose
      alpha component is `255`, red component is `cte.red_to_blue`, green
      component is `cte.green_to_blue` and blue component is `cte.green_to_red`.
-  1. Color indexing image: An array of of size `color_table_size` (up to 256
+  1. Color indexing image: An array of size `color_table_size` (up to 256
      ARGB values) storing the metadata for the
      [Color Indexing Transform](#color-indexing-transform). This is stored as an
      image of width `color_table_size` and height `1`.
@@ -678,7 +678,7 @@ very few values in the image. Thus, this approach results in a better
 compression overall.
 
 The following table denotes the prefix codes and extra bits used for storing
-different range of values.
+different ranges of values.
 
 Note: The maximum backward reference length is limited to 4096. Hence, only the
 first 24 prefix codes (with the respective extra bits) are meaningful for length
@@ -753,13 +753,13 @@ The mapping between distance code `i` and the neighboring pixel offset
 (-6, 7), (7, 6),  (-7, 6), (8, 5),  (7, 7),  (-7, 7), (8, 6),  (8, 7)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-For example, distance code `1` indicates offset of `(0, 1)` for the neighboring
-pixel, that is, the pixel above the current pixel (0-pixel difference in
-X-direction and 1 pixel difference in Y-direction). Similarly, distance code
-`3` indicates left-top pixel.
+For example, distance code `1` indicates an offset of `(0, 1)` for the
+neighboring pixel, that is, the pixel above the current pixel (0 pixel
+difference in X-direction and 1 pixel difference in Y-direction). Similarly,
+distance code `3` indicates left-top pixel.
 
-The decoder can convert a distances code 'i' to a scan-line order distance
-'dist' as follows:
+The decoder can convert a distance code `i` to a scan-line order distance
+`dist` as follows:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 (xi, yi) = distance_map[i]
@@ -769,7 +769,7 @@ if (dist < 1) {
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-where 'distance_map' is the mapping noted above and `xsize` is the width of the
+where `distance_map` is the mapping noted above and `xsize` is the width of the
 image in pixels.
 
 
@@ -778,7 +778,7 @@ image in pixels.
 Color cache stores a set of colors that have been recently used in the image.
 
 **Rationale:** This way, the recently used colors can sometimes be referred to
-more efficiently than emitting them using other two methods (described in
+more efficiently than emitting them using the other two methods (described in
 [4.2.1](#huffman-coded-literals) and [4.2.2](#lz77-backward-reference)).
 
 Color cache codes are stored as follows. First, there is a 1-bit value that
@@ -822,8 +822,9 @@ In particular, the format uses **spatially-variant Huffman coding**. In other
 words, different blocks of the image can potentially use different entropy
 codes.
 
-**Rationale**: Different areas of the image may have different characteristics. So, allowing them to use different entropy codes provides more flexibility and
-potentially a better compression.
+**Rationale**: Different areas of the image may have different characteristics.
+So, allowing them to use different entropy codes provides more flexibility and
+potentially better compression.
 
 ### 5.2 Details
 
@@ -865,7 +866,7 @@ int huffman_ysize = DIV_ROUND_UP(ysize, 1 << huffman_bits);
 
 where `DIV_ROUND_UP` is as defined [earlier](#predictor-transform).
 
-Next bits contain an entropy image of width `huffman_xsize` and height
+The next bits contain an entropy image of width `huffman_xsize` and height
 `huffman_ysize`.
 
 **Interpretation of Meta Huffman Codes:**
@@ -890,7 +891,7 @@ int num_huff_groups = max(entropy image) + 1;
 where `max(entropy image)` indicates the largest Huffman code stored in the
 entropy image.
 
-As each Huffman code groups contains five Huffman codes, the total number of
+As each Huffman code group contains five Huffman codes, the total number of
 Huffman codes is:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -922,22 +923,22 @@ Huffman code group, the pixel is read and decoded as follows:
 Read next symbol S from the bitstream using Huffman code #1. \[See
 [next section](#decoding-the-code-lengths) for details on decoding the Huffman
 code lengths\]. Note that S is any integer in the range `0` to
-`(256 + 24 + ` [`color_cache_size`](#color-cache-code)`- 1)`.
+`(256 + 24 + ` [`color_cache_size`](#color-cache-code)` - 1)`.
 
 The interpretation of S depends on its value:
 
   1. if S < 256
-     1. Use S as the green component
-     1. Read red from the bitstream using Huffman code #2
-     1. Read blue from the bitstream using Huffman code #3
-     1. Read alpha from the bitstream using Huffman code #4
+     1. Use S as the green component.
+     1. Read red from the bitstream using Huffman code #2.
+     1. Read blue from the bitstream using Huffman code #3.
+     1. Read alpha from the bitstream using Huffman code #4.
   1. if S < 256 + 24
-     1. Use S - 256 as a length prefix code
-     1. Read extra bits for length from the bitstream
+     1. Use S - 256 as a length prefix code.
+     1. Read extra bits for length from the bitstream.
      1. Determine backward-reference length L from length prefix code and the
         extra bits read.
-     1. Read distance prefix code from the bitstream using Huffman code #5
-     1. Read extra bits for distance from the bitstream
+     1. Read distance prefix code from the bitstream using Huffman code #5.
+     1. Read extra bits for distance from the bitstream.
      1. Determine backward-reference distance D from distance prefix code and
         the extra bits read.
      1. Copy the L pixels (in scan-line order) from the sequence of pixels
@@ -1013,12 +1014,12 @@ for (i = 0; i < num_code_lengths; ++i) {
     * Value 0 means no symbols have been coded.
     * Values \[1..15\] indicate the bit length of the respective code.
   * Code 16 repeats the previous non-zero value \[3..6\] times, i.e.,
-    3 + `ReadBits(2)` times.  If code 16 is used before a non-zero
+    `3 + ReadBits(2)` times. If code 16 is used before a non-zero
     value has been emitted, a value of 8 is repeated.
-  * Code 17 emits a streak of zeros \[3..10\], i.e., 3 + `ReadBits(3)`
+  * Code 17 emits a streak of zeros \[3..10\], i.e., `3 + ReadBits(3)`
     times.
   * Code 18 emits a streak of zeros of length \[11..138\], i.e.,
-    11 + `ReadBits(7)` times.
+    `11 + ReadBits(7)` times.
 
 
 6 Overall Structure of the Format
