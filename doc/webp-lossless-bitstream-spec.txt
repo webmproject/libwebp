@@ -858,25 +858,29 @@ stream. This may be inefficient, but it is allowed by the format.
 
 **(i) Simple Code Length Code:**
 
-This variant is used in the special case when only 1 or 2 Huffman code lengths
-are non-zero, and are in the range of \[0..255\]. All other Huffman code lengths
+This variant is used in the special case when only 1 or 2 Huffman symbols are
+in the range \[0, 255\] with code length `1`. All other Huffman code lengths
 are implicitly zeros.
 
-The first bit indicates the number of non-zero code lengths:
+The first bit indicates the number of symbols:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-int num_code_lengths = ReadBits(1) + 1;
+int num_symbols = ReadBits(1) + 1;
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The first code length is stored either using a 1-bit code for values of 0 and 1,
-or using an 8-bit code for values in range \[0..255\]. The second code length,
-when present, is coded as an 8-bit code.
+Following are the symbol values.
+This first symbol is coded using 1 or 8 bits depending on the value of
+`is_first_8bits`. The range is \[0, 1\] or \[0, 255\], respectively.
+The second symbol, if present, is always assumed to be in the range \[0, 255\]
+and coded using 8 bits.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 int is_first_8bits = ReadBits(1);
-code_lengths[0] = ReadBits(1 + 7 * is_first_8bits);
-if (num_code_lengths == 2) {
-  code_lengths[1] = ReadBits(8);
+symbol0 = ReadBits(1 + 7 * is_first_8bits);
+code_lengths[symbol0] = 1;
+if (num_symbols == 2) {
+  symbol1 = ReadBits(8);
+  code_lengths[symbol1] = 1;
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
