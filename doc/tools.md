@@ -64,7 +64,7 @@ Options:
 -qrange <min> <max> .... specifies the permissible quality range
                          (default: 0 100)
 -crop <x> <y> <w> <h> .. crop picture with the given rectangle
--resize <w> <h> ........ resize picture (after any cropping)
+-resize <w> <h> ........ resize picture (*after* any cropping)
 -mt .................... use multi-threading if available
 -low_memory ............ reduce memory usage (slower encoding)
 -map <int> ............. print map of extra info
@@ -181,7 +181,7 @@ Other options are:
 -alpha_dither  use alpha-plane dithering if needed
 -mt .......... use multi-threading
 -crop <x> <y> <w> <h> ... crop output with the given rectangle
--resize <w> <h> ......... scale the output (*after* any cropping)
+-resize <w> <h> ......... resize output (*after* any cropping)
 -flip ........ flip the output vertically
 -alpha ....... only save the alpha plane
 -incremental . use incremental decoding (useful for tests)

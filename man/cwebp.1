@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH CWEBP 1 "November 17, 2021"
+.TH CWEBP 1 "March 17, 2022"
 .SH NAME
 cwebp \- compress an image file to a WebP file
 .SH SYNOPSIS
@@ -90,15 +90,17 @@ additional encoding possibilities and decide on the quality gain.
 Lower value can result in faster processing time at the expense of
 larger file size and lower compression quality.
 .TP
-.BI \-resize " width height
-Resize the source to a rectangle with size \fBwidth\fP x \fBheight\fP.
-If either (but not both) of the \fBwidth\fP or \fBheight\fP parameters is 0,
-the value will be calculated preserving the aspect\-ratio.
-.TP
 .BI \-crop " x_position y_position width height
 Crop the source to a rectangle with top\-left corner at coordinates
 (\fBx_position\fP, \fBy_position\fP) and size \fBwidth\fP x \fBheight\fP.
 This cropping area must be fully contained within the source rectangle.
+Note: the cropping is applied \fIbefore\fP any scaling.
+.TP
+.BI \-resize " width height
+Resize the source to a rectangle with size \fBwidth\fP x \fBheight\fP.
+If either (but not both) of the \fBwidth\fP or \fBheight\fP parameters is 0,
+the value will be calculated preserving the aspect\-ratio. Note: scaling
+is applied \fIafter\fP cropping.
 .TP
 .B \-mt
 Use multi\-threading for encoding, if possible.

@@ -571,7 +571,7 @@ static void HelpLong(void) {
   printf("  -qrange <min> <max> .... specifies the permissible quality range\n"
          "                           (default: 0 100)\n");
   printf("  -crop <x> <y> <w> <h> .. crop picture with the given rectangle\n");
-  printf("  -resize <w> <h> ........ resize picture (after any cropping)\n");
+  printf("  -resize <w> <h> ........ resize picture (*after* any cropping)\n");
   printf("  -mt .................... use multi-threading if available\n");
   printf("  -low_memory ............ reduce memory usage (slower encoding)\n");
   printf("  -map <int> ............. print map of extra info\n");
