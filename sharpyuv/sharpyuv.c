@@ -252,25 +252,18 @@ static void InterpolateTwoRows(const fixed_y_t* const best_y,
   }
 }
 
-static WEBP_INLINE uint8_t ConvertRGBToY(int r, int g, int b) {
-  const int luma = 16839 * r + 33059 * g + 6420 * b + SROUNDER;
-  return clip_8b(16 + (luma >> (YUV_FIX + SFIX)));
-}
-
-static WEBP_INLINE uint8_t ConvertRGBToU(int r, int g, int b) {
-  const int u =  -9719 * r - 19081 * g + 28800 * b + SROUNDER;
-  return clip_8b(128 + (u >> (YUV_FIX + SFIX)));
-}
-
-static WEBP_INLINE uint8_t ConvertRGBToV(int r, int g, int b) {
-  const int v = +28800 * r - 24116 * g - 4684 * b + SROUNDER;
-  return clip_8b(128 + (v >> (YUV_FIX + SFIX)));
+static WEBP_INLINE uint8_t RGBToYUVComponent(int r, int g, int b,
+                                             const int coeffs[4]) {
+  const int luma = coeffs[0] * r + coeffs[1] * g + coeffs[2] * b +
+                   (coeffs[3] << SFIX) + SROUNDER;
+  return clip_8b((luma >> (YUV_FIX + SFIX)));
 }
 
 static int ConvertWRGBToYUV(const fixed_y_t* best_y, const fixed_t* best_uv,
                             uint8_t* dst_y, int dst_stride_y, uint8_t* dst_u,
                             int dst_stride_u, uint8_t* dst_v, int dst_stride_v,
-                            int width, int height) {
+                            int width, int height,
+                            const SharpYuvConversionMatrix* yuv_matrix) {
   int i, j;
   const fixed_t* const best_uv_base = best_uv;
   const int w = (width + 1) & ~1;
@@ -284,7 +277,7 @@ static int ConvertWRGBToYUV(const fixed_y_t* best_y, const fixed_t* best_uv,
       const int r = best_uv[off + 0 * uv_w] + W;
       const int g = best_uv[off + 1 * uv_w] + W;
       const int b = best_uv[off + 2 * uv_w] + W;
-      dst_y[i] = ConvertRGBToY(r, g, b);
+      dst_y[i] = RGBToYUVComponent(r, g, b, yuv_matrix->rgb_to_y);
     }
     best_y += w;
     best_uv += (j & 1) * 3 * uv_w;
@@ -296,8 +289,8 @@ static int ConvertWRGBToYUV(const fixed_y_t* best_y, const fixed_t* best_uv,
       const int r = best_uv[off + 0 * uv_w];
       const int g = best_uv[off + 1 * uv_w];
       const int b = best_uv[off + 2 * uv_w];
-      dst_u[i] = ConvertRGBToU(r, g, b);
-      dst_v[i] = ConvertRGBToV(r, g, b);
+      dst_u[i] = RGBToYUVComponent(r, g, b, yuv_matrix->rgb_to_u);
+      dst_v[i] = RGBToYUVComponent(r, g, b, yuv_matrix->rgb_to_v);
     }
     best_uv += 3 * uv_w;
     dst_u += dst_stride_u;
@@ -321,7 +314,8 @@ static int DoSharpArgbToYuv(const uint8_t* r_ptr, const uint8_t* g_ptr,
                             const uint8_t* b_ptr, int step, int rgb_stride,
                             uint8_t* dst_y, int dst_stride_y, uint8_t* dst_u,
                             int dst_stride_u, uint8_t* dst_v, int dst_stride_v,
-                            int width, int height) {
+                            int width, int height,
+                            const SharpYuvConversionMatrix* yuv_matrix) {
   // we expand the right/bottom border if needed
   const int w = (width + 1) & ~1;
   const int h = (height + 1) & ~1;
@@ -429,7 +423,8 @@ static int DoSharpArgbToYuv(const uint8_t* r_ptr, const uint8_t* g_ptr,
   }
   // final reconstruction
   ok = ConvertWRGBToYUV(best_y_base, best_uv_base, dst_y, dst_stride_y, dst_u,
-                        dst_stride_u, dst_v, dst_stride_v, width, height);
+                        dst_stride_u, dst_v, dst_stride_v, width, height,
+                        yuv_matrix);
 
  End:
   free(best_y_base);
@@ -443,18 +438,30 @@ static int DoSharpArgbToYuv(const uint8_t* r_ptr, const uint8_t* g_ptr,
  }
 #undef SAFE_ALLOC
 
-int SharpArgbToYuv(const uint8_t* r_ptr, const uint8_t* g_ptr,
-                   const uint8_t* b_ptr, int step, int rgb_stride,
-                   uint8_t* dst_y, int dst_stride_y, uint8_t* dst_u,
-                   int dst_stride_u, uint8_t* dst_v, int dst_stride_v,
-                   int width, int height) {
+// In YUV_FIX fixed point precision.
+static const SharpYuvConversionMatrix kWebpYuvMatrix = {
+  {16839,  33059,  6420,  16 << 16},
+  {-9719, -19081, 28800, 128 << 16},
+  {28800, -24116, -4684, 128 << 16},
+};
+
+const SharpYuvConversionMatrix* SharpYuvGetWebpMatrix(void) {
+  return &kWebpYuvMatrix;
+}
+
+int SharpYuvConvert(const uint8_t* r_ptr, const uint8_t* g_ptr,
+                  const uint8_t* b_ptr, int step, int rgb_stride,
+                  uint8_t* dst_y, int dst_stride_y, uint8_t* dst_u,
+                  int dst_stride_u, uint8_t* dst_v, int dst_stride_v,
+                  int width, int height,
+                  const SharpYuvConversionMatrix* yuv_matrix) {
   if (width < kMinDimensionIterativeConversion ||
       height < kMinDimensionIterativeConversion) {
     return 0;
   }
-  return DoSharpArgbToYuv(
-      r_ptr, g_ptr, b_ptr, step, rgb_stride, dst_y, dst_stride_y, dst_u,
-      dst_stride_u, dst_v, dst_stride_v, width, height);
+  return DoSharpArgbToYuv(r_ptr, g_ptr, b_ptr, step, rgb_stride, dst_y,
+                          dst_stride_y, dst_u, dst_stride_u, dst_v,
+                          dst_stride_v, width, height, yuv_matrix);
 }
 
 //------------------------------------------------------------------------------
