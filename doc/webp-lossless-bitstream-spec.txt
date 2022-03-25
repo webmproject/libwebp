@@ -16,6 +16,8 @@ _Jyrki Alakuijala, Ph.D., Google, Inc., 2012-06-19_
 
 Paragraphs marked as \[AMENDED\] were amended on 2014-09-16.
 
+Paragraphs marked as \[AMENDED2\] were amended on 2022-05-13.
+
 Abstract
 --------
 
@@ -367,6 +369,7 @@ the predicted value for the left-topmost pixel of the image is
 0xff000000, L-pixel for all pixels on the top row, and T-pixel for all
 pixels on the leftmost column.
 
+\[AMENDED2\]
 Addressing the TR-pixel for pixels on the rightmost column is
 exceptional. The pixels on the rightmost column are predicted by using
 the modes \[0..13\] just like pixels not on the border, but the leftmost pixel
@@ -374,6 +377,8 @@ on the same row as the current pixel is instead used as the TR-pixel.
 
 
 ### Color Transform
+
+\[AMENDED2\]
 
 The goal of the color transform is to decorrelate the R, G and B values
 of each pixel. Color transform keeps the green (G) value as it is,
@@ -834,7 +839,7 @@ potentially better compression.
 
 The encoded image data consists of several parts:
 
-  1. Decoding and building the prefix codes
+  1. Decoding and building the prefix codes \[AMENDED2\]
   1. Meta Huffman codes
   1. Entropy-coded image data
 
@@ -857,6 +862,8 @@ In both cases, there can be unused code lengths that are still part of the
 stream. This may be inefficient, but it is allowed by the format.
 
 **(i) Simple Code Length Code:**
+
+\[AMENDED2\]
 
 This variant is used in the special case when only 1 or 2 Huffman symbols are
 in the range \[0, 255\] with code length `1`. All other Huffman code lengths
@@ -1031,6 +1038,8 @@ The decoder then uses Huffman code group `huff_group` to decode the pixel
 
 #### 5.2.3 Decoding Entropy-coded Image Data
 
+\[AMENDED2\]
+
 For the current position (x, y) in the image, the decoder first identifies the
 corresponding Huffman code group (as explained in the last section). Given the
 Huffman code group, the pixel is read and decoded as follows:
@@ -1096,6 +1105,8 @@ of pixels (xsize * ysize).
 
 
 #### Structure of the Image Data
+
+\[AMENDED2\]
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <spatially-coded image> ::= <color cache info><meta huffman><data>
