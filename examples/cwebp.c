@@ -620,6 +620,7 @@ static void HelpLong(void) {
   printf("  -af .................... auto-adjust filter strength\n");
   printf("  -pre <int> ............. pre-processing filter\n");
   printf("\n");
+  printf("Supported input formats:\n  %s\n", WebPGetEnabledInputFileFormats());
 }
 
 //------------------------------------------------------------------------------

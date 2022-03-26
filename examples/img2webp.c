@@ -65,6 +65,8 @@ static void Help(void) {
          "arguments will be\n");
   printf("tokenized from this file. The file name must not start with "
          "the character '-'.\n");
+  printf("\nSupported input formats:\n  %s\n",
+         WebPGetEnabledInputFileFormats());
 }
 
 //------------------------------------------------------------------------------
@@ -186,7 +188,7 @@ int main(int argc, const char* argv[]) {
         verbose = 1;
       } else if (!strcmp(argv[c], "-h") || !strcmp(argv[c], "-help")) {
         Help();
-        goto End;
+        FREE_WARGV_AND_RETURN(0);
       } else if (!strcmp(argv[c], "-version")) {
         const int enc_version = WebPGetEncoderVersion();
         const int mux_version = WebPGetMuxVersion();
