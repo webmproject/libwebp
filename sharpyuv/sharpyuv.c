@@ -62,9 +62,8 @@ static uint32_t kLinearToGammaTabS[kGammaTabSize + 2];
 #define GAMMA_TO_LINEAR_BITS 14
 static uint32_t kGammaToLinearTabS[MAX_Y_T + 1];   // size scales with Y_FIX
 static volatile int kGammaTablesSOk = 0;
-static void InitGammaTablesS(void);
 
-WEBP_DSP_INIT_FUNC(InitGammaTablesS) {
+static void InitGammaTablesS(void) {
   assert(2 * GAMMA_TO_LINEAR_BITS < 32);  // we use uint32_t intermediate values
   if (!kGammaTablesSOk) {
     int v;
@@ -180,6 +179,7 @@ static void UpdateChroma(const fixed_y_t* src1, const fixed_y_t* src2,
 
 static void StoreGray(const fixed_y_t* rgb, fixed_y_t* y, int w) {
   int i;
+  assert(w > 0);
   for (i = 0; i < w; ++i) {
     y[i] = RGBToGray(rgb[0 * w + i], rgb[1 * w + i], rgb[2 * w + i]);
   }
@@ -348,9 +348,6 @@ static int DoSharpArgbToYuv(const uint8_t* r_ptr, const uint8_t* g_ptr,
     goto End;
   }
 
-  InitGammaTablesS();
-  InitSharpYuv();
-
   // Import RGB samples to W/RGB representation.
   for (j = 0; j < height; j += 2) {
     const int is_last_row = (j == height - 1);
@@ -438,6 +435,26 @@ static int DoSharpArgbToYuv(const uint8_t* r_ptr, const uint8_t* g_ptr,
  }
 #undef SAFE_ALLOC
 
+// Hidden exported init function.
+// By default SharpYuvConvert calls it with NULL. If needed, users can declare
+// it as extern and call it with a VP8CPUInfo function.
+extern void SharpYuvInit(VP8CPUInfo cpu_info_func);
+void SharpYuvInit(VP8CPUInfo cpu_info_func) {
+  static volatile VP8CPUInfo sharpyuv_last_cpuinfo_used =
+      (VP8CPUInfo)&sharpyuv_last_cpuinfo_used;
+  const int initialized =
+      (sharpyuv_last_cpuinfo_used != (VP8CPUInfo)&sharpyuv_last_cpuinfo_used);
+  if (cpu_info_func == NULL && initialized) return;
+  if (sharpyuv_last_cpuinfo_used == cpu_info_func) return;
+
+  SharpYuvInitDsp(cpu_info_func);
+  if (!initialized) {
+    InitGammaTablesS();
+  }
+
+  sharpyuv_last_cpuinfo_used = cpu_info_func;
+}
+
 // In YUV_FIX fixed point precision.
 static const SharpYuvConversionMatrix kWebpYuvMatrix = {
   {16839,  33059,  6420,  16 << 16},
@@ -459,6 +476,7 @@ int SharpYuvConvert(const uint8_t* r_ptr, const uint8_t* g_ptr,
       height < kMinDimensionIterativeConversion) {
     return 0;
   }
+  SharpYuvInit(NULL);
   return DoSharpArgbToYuv(r_ptr, g_ptr, b_ptr, step, rgb_stride, dst_y,
                           dst_stride_y, dst_u, dst_stride_u, dst_v,
                           dst_stride_v, width, height, yuv_matrix);
