@@ -22,6 +22,11 @@
 #include "src/dsp/dsp.h"
 #include "src/dsp/lossless.h"
 #include "src/dsp/yuv.h"
+#include "src/dsp/cpu.h"
+
+#if defined(WEBP_USE_THREAD) && !defined(_WIN32)
+#include <pthread.h>
+#endif
 
 // Uncomment to disable gamma-compression during RGB->U/V averaging
 #define USE_GAMMA_COMPRESSION
@@ -173,6 +178,21 @@ typedef uint16_t fixed_y_t;   // unsigned type with extra SFIX precision for W
 
 //------------------------------------------------------------------------------
 // Main function
+
+extern void SharpYuvInit(VP8CPUInfo cpu_info_func);
+
+static void SafeInitSharpYuv(void) {
+#if defined(WEBP_USE_THREAD) && !defined(_WIN32)
+  static pthread_mutex_t initsharpyuv_lock = PTHREAD_MUTEX_INITIALIZER;
+  if (pthread_mutex_lock(&initsharpyuv_lock)) return;
+#endif
+
+  SharpYuvInit(VP8GetCPUInfo);
+
+#if defined(WEBP_USE_THREAD) && !defined(_WIN32)
+  (void)pthread_mutex_unlock(&initsharpyuv_lock);
+#endif
+}
 
 static int PreprocessARGB(const uint8_t* r_ptr,
                           const uint8_t* g_ptr,
@@ -495,6 +515,7 @@ static int ImportYUVAFromRGBA(const uint8_t* r_ptr,
   }
 
   if (use_iterative_conversion) {
+    SafeInitSharpYuv();
     if (!PreprocessARGB(r_ptr, g_ptr, b_ptr, step, rgb_stride, picture)) {
       return 0;
     }

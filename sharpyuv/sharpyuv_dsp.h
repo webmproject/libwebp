@@ -23,6 +23,6 @@ extern void (*SharpYUVUpdateRGB)(const int16_t* src, const int16_t* ref,
 extern void (*SharpYUVFilterRow)(const int16_t* A, const int16_t* B, int len,
                                  const uint16_t* best_y, uint16_t* out);
 
-void InitSharpYuv(void);
+void SharpYuvInitDsp(VP8CPUInfo cpu_info_func);
 
 #endif  // WEBP_SHARPYUV_DSP_H_

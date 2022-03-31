@@ -74,7 +74,8 @@ void (*SharpYUVFilterRow)(const int16_t* A, const int16_t* B, int len,
 extern void InitSharpYUVSSE2(void);
 extern void InitSharpYUVNEON(void);
 
-WEBP_DSP_INIT_FUNC(InitSharpYuv) {
+void SharpYuvInitDsp(VP8CPUInfo cpu_info_func) {
+  (void)cpu_info_func;
 
 #if !WEBP_NEON_OMIT_C_CODE
   SharpYUVUpdateY = SharpYUVUpdateY_C;
@@ -83,14 +84,13 @@ WEBP_DSP_INIT_FUNC(InitSharpYuv) {
 #endif
 
 #if defined(WEBP_HAVE_SSE2)
-  if (VP8GetCPUInfo != NULL && VP8GetCPUInfo(kSSE2)) {
+  if (cpu_info_func == NULL || cpu_info_func(kSSE2)) {
     InitSharpYUVSSE2();
   }
 #endif  // WEBP_HAVE_SSE2
 
 #if defined(WEBP_HAVE_NEON)
-  if (WEBP_NEON_OMIT_C_CODE ||
-      (VP8GetCPUInfo != NULL && VP8GetCPUInfo(kNEON))) {
+  if (WEBP_NEON_OMIT_C_CODE || cpu_info_func == NULL || cpu_info_func(kNEON)) {
     InitSharpYUVNEON();
   }
 #endif  // WEBP_HAVE_NEON
