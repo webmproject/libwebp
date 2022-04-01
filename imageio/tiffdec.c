@@ -188,7 +188,9 @@ int ReadTIFF(const uint8_t* const data, size_t data_size,
     fprintf(stderr, "Error! Cannot retrieve TIFF samples-per-pixel info.\n");
     goto End;
   }
-  if (samples_per_px < 3 || samples_per_px > 4) goto End;  // not supported
+  if (!(samples_per_px == 1 || samples_per_px == 3 || samples_per_px == 4)) {
+    goto End;  // not supported
+  }
 
   if (!(TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &image_width) &&
         TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &image_height))) {
