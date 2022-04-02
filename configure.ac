@@ -9,7 +9,8 @@ dnl === automake >= 1.12 requires this for 'unusual archivers' support.
 dnl === it must occur before LT_INIT (AC_PROG_LIBTOOL).
 m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 
-AC_PROG_LIBTOOL
+dnl === AC_PROG_LIBTOOL is deprecated.
+m4_ifdef([LT_INIT], [LT_INIT], [AC_PROG_LIBTOOL])
 AC_PROG_SED
 AM_PROG_CC_C_O
 
