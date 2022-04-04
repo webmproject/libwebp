@@ -912,13 +912,14 @@ static VP8LBackwardRefs* GetBackwardReferences(
       quality >= 25) {
     const VP8LHashChain* const hash_chain_tmp =
         (lz77_type_best == kLZ77Standard) ? hash_chain : &hash_chain_box;
-    if (VP8LBackwardReferencesTraceBackwards(width, height, argb, *cache_bits,
-                                             hash_chain_tmp, best, worst)) {
-      double bit_cost_trace;
-      VP8LHistogramCreate(histo, worst, *cache_bits);
-      bit_cost_trace = VP8LHistogramEstimateBits(histo);
-      if (bit_cost_trace < bit_cost_best) best = worst;
+    double bit_cost_trace;
+    if (!VP8LBackwardReferencesTraceBackwards(width, height, argb, *cache_bits,
+                                              hash_chain_tmp, best, worst)) {
+      goto Error;
     }
+    VP8LHistogramCreate(histo, worst, *cache_bits);
+    bit_cost_trace = VP8LHistogramEstimateBits(histo);
+    if (bit_cost_trace < bit_cost_best) best = worst;
   }
 
   BackwardReferences2DLocality(width, best);
