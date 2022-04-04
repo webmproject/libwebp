@@ -1035,7 +1035,7 @@ static int HistogramCombineStochastic(VP8LHistogramSet* const image_histo,
   *do_greedy = (*num_used <= min_cluster_size);
   ok = 1;
 
-End:
+ End:
   HistoQueueClear(&histo_queue);
   WebPSafeFree(mappings);
   return ok;
@@ -1252,7 +1252,7 @@ int VP8LGetHistoImageSymbols(int xsize, int ysize,
     goto Error;
   }
 
-Error:
+ Error:
   VP8LFreeHistogramSet(orig_histo);
   WebPSafeFree(map_tmp);
   return (pic->error_code == VP8_ENC_OK);

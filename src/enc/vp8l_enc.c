@@ -1101,7 +1101,7 @@ static int EncodeImageNoHuffman(VP8LBitWriter* const bw,
     goto Error;
   }
 
-Error:
+ Error:
   WebPSafeFree(tokens);
   WebPSafeFree(huff_tree);
   VP8LFreeHistogramSet(histogram_image);
@@ -1333,7 +1333,7 @@ static int EncodeImageInternal(
     goto Error;
   }
 
-Error:
+ Error:
   WebPSafeFree(tokens);
   WebPSafeFree(huff_tree);
   VP8LFreeHistogramSet(histogram_image);
@@ -1942,7 +1942,7 @@ static int EncodeStreamHook(void* input, void* data2) {
   }
   VP8LBitWriterSwap(&bw_best, bw);
 
-Error:
+ Error:
   VP8LBitWriterWipeOut(&bw_best);
   // The hook should return false in case of error.
   return (params->picture_->error_code == VP8_ENC_OK);
@@ -2089,7 +2089,7 @@ int VP8LEncodeStream(const WebPConfig* const config,
     }
   }
 
-Error:
+ Error:
   VP8LBitWriterWipeOut(&bw_side);
   VP8LEncoderDelete(enc_main);
   VP8LEncoderDelete(enc_side);
@@ -2181,7 +2181,7 @@ int VP8LEncodeImage(const WebPConfig* const config,
     memset(picture->extra_info, 0, mb_w * mb_h * sizeof(*picture->extra_info));
   }
 
-Error:
+ Error:
   if (bw.error_) {
     WebPEncodingSetError(picture, VP8_ENC_ERROR_OUT_OF_MEMORY);
   }

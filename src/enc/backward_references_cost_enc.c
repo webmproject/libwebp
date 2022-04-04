@@ -675,7 +675,7 @@ static int BackwardReferencesHashChainDistanceOnly(
   }
 
   ok = !refs->error_;
-Error:
+ Error:
   if (cc_init) VP8LColorCacheClear(&hashers);
   CostManagerClear(cost_manager);
   WebPSafeFree(cost_model);
