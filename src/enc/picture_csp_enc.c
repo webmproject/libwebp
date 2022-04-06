@@ -16,6 +16,7 @@
 #include <math.h>
 
 #include "sharpyuv/sharpyuv.h"
+#include "sharpyuv/sharpyuv_csp.h"
 #include "src/enc/vp8i_enc.h"
 #include "src/utils/random_utils.h"
 #include "src/utils/utils.h"
@@ -202,7 +203,8 @@ static int PreprocessARGB(const uint8_t* r_ptr,
   const int ok = SharpYuvConvert(
       r_ptr, g_ptr, b_ptr, step, rgb_stride, picture->y, picture->y_stride,
       picture->u, picture->uv_stride, picture->v, picture->uv_stride,
-      picture->width, picture->height, SharpYuvGetWebpMatrix());
+      picture->width, picture->height,
+      SharpYuvGetConversionMatrix(kSharpYuvMatrixWebp));
   if (!ok) {
     return WebPEncodingSetError(picture, VP8_ENC_ERROR_OUT_OF_MEMORY);
   }

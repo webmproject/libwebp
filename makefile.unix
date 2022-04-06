@@ -127,6 +127,7 @@ ANIM_UTIL_OBJS = \
 
 SHARPYUV_OBJS = \
     sharpyuv/sharpyuv.o \
+    sharpyuv/sharpyuv_csp.o \
     sharpyuv/sharpyuv_dsp.o \
     sharpyuv/sharpyuv_neon.o \
     sharpyuv/sharpyuv_sse2.o \

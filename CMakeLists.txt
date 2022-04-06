@@ -220,6 +220,7 @@ target_include_directories(sharpyuv
 set_target_properties(
   sharpyuv
   PROPERTIES PUBLIC_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/sharpyuv/sharpyuv.h;\
+${CMAKE_CURRENT_SOURCE_DIR}/sharpyuv/sharpyuv_csp.h;\
 ${CMAKE_CURRENT_SOURCE_DIR}/src/webp/types.h")
 
 if(MSVC)
