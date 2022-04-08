@@ -11,7 +11,7 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
-#include "./sharpyuv.h"
+#include "sharpyuv/sharpyuv.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -453,17 +453,6 @@ void SharpYuvInit(VP8CPUInfo cpu_info_func) {
   }
 
   sharpyuv_last_cpuinfo_used = cpu_info_func;
-}
-
-// In YUV_FIX fixed point precision.
-static const SharpYuvConversionMatrix kWebpYuvMatrix = {
-  {16839,  33059,  6420,  16 << 16},
-  {-9719, -19081, 28800, 128 << 16},
-  {28800, -24116, -4684, 128 << 16},
-};
-
-const SharpYuvConversionMatrix* SharpYuvGetWebpMatrix(void) {
-  return &kWebpYuvMatrix;
 }
 
 int SharpYuvConvert(const uint8_t* r_ptr, const uint8_t* g_ptr,

@@ -29,18 +29,15 @@ typedef struct {
   int rgb_to_v[4];
 } SharpYuvConversionMatrix;
 
-// Returns the RGB to YUV matrix used by WebP.
-const SharpYuvConversionMatrix* SharpYuvGetWebpMatrix(void);
-
 // Converts RGB to YUV420 using a downsampling algorithm that minimizes
 // artefacts caused by chroma subsampling.
 // This is slower than standard downsampling (averaging of 4 UV values).
 // Assumes that the image will be upsampled using a bilinear filter. If nearest
 // neighbor is used instead, the upsampled image might look worse than with
 // standard downsampling.
-// TODO(maryla): add 10 bits and handling of various colorspaces. Add YUV444 to
-// YUV420 conversion. Maybe also add 422 support (it's rarely used in practice,
-// especially for images).
+// TODO(maryla): add 10 bits support. Add YUV444 to YUV420 conversion.
+// Maybe also add 422 support (it's rarely used in practice, especially for
+// images).
 int SharpYuvConvert(const uint8_t* r_ptr, const uint8_t* g_ptr,
                     const uint8_t* b_ptr, int step, int rgb_stride,
                     uint8_t* dst_y, int dst_stride_y, uint8_t* dst_u,

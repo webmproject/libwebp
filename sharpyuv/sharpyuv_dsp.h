@@ -9,8 +9,8 @@
 //
 // Speed-critical functions for Sharp YUV.
 
-#ifndef WEBP_SHARPYUV_DSP_H_
-#define WEBP_SHARPYUV_DSP_H_
+#ifndef WEBP_SHARPYUV_SHARPYUV_DSP_H_
+#define WEBP_SHARPYUV_SHARPYUV_DSP_H_
 
 #include <stdint.h>
 
@@ -25,4 +25,4 @@ extern void (*SharpYUVFilterRow)(const int16_t* A, const int16_t* B, int len,
 
 void SharpYuvInitDsp(VP8CPUInfo cpu_info_func);
 
-#endif  // WEBP_SHARPYUV_DSP_H_
+#endif  // WEBP_SHARPYUV_SHARPYUV_DSP_H_
