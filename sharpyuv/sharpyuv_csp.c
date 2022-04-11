@@ -32,7 +32,7 @@ void SharpYuvComputeConversionMatrix(const SharpYuvColorSpace* yuv_color_space,
   float addY = 0.0f;
   float scaleU = cr;
   float scaleV = cb;
-  float addUV = (128 << shift);
+  float addUV = (float)(128 << shift);
 
   assert(yuv_color_space->bits >= 8);
 
@@ -40,7 +40,7 @@ void SharpYuvComputeConversionMatrix(const SharpYuvColorSpace* yuv_color_space,
     scaleY *= (219 << shift) / denom;
     scaleU *= (224 << shift) / denom;
     scaleV *= (224 << shift) / denom;
-    addY = (16 << shift);
+    addY = (float)(16 << shift);
   }
 
   matrix->rgb_to_y[0] = ToFixed16(kr * scaleY);
