@@ -19,7 +19,7 @@
 #include <arm_neon.h>
 #endif
 
-extern void InitSharpYUVNEON(void);
+extern void InitSharpYuvNEON(void);
 
 #if defined(WEBP_USE_NEON)
 
@@ -28,7 +28,7 @@ static uint16_t clip_y_NEON(int v) {
   return (v < 0) ? 0 : (v > MAX_Y) ? MAX_Y : (uint16_t)v;
 }
 
-static uint64_t SharpYUVUpdateY_NEON(const uint16_t* ref, const uint16_t* src,
+static uint64_t SharpYuvUpdateY_NEON(const uint16_t* ref, const uint16_t* src,
                                      uint16_t* dst, int len) {
   int i;
   const int16x8_t zero = vdupq_n_s16(0);
@@ -58,7 +58,7 @@ static uint64_t SharpYUVUpdateY_NEON(const uint16_t* ref, const uint16_t* src,
   return diff;
 }
 
-static void SharpYUVUpdateRGB_NEON(const int16_t* ref, const int16_t* src,
+static void SharpYuvUpdateRGB_NEON(const int16_t* ref, const int16_t* src,
                                    int16_t* dst, int len) {
   int i;
   for (i = 0; i + 8 <= len; i += 8) {
@@ -75,7 +75,7 @@ static void SharpYUVUpdateRGB_NEON(const int16_t* ref, const int16_t* src,
   }
 }
 
-static void SharpYUVFilterRow_NEON(const int16_t* A, const int16_t* B, int len,
+static void SharpYuvFilterRow_NEON(const int16_t* A, const int16_t* B, int len,
                                    const uint16_t* best_y, uint16_t* out) {
   int i;
   const int16x8_t max = vdupq_n_s16(MAX_Y);
@@ -120,14 +120,14 @@ static void SharpYUVFilterRow_NEON(const int16_t* A, const int16_t* B, int len,
 
 //------------------------------------------------------------------------------
 
-WEBP_TSAN_IGNORE_FUNCTION void InitSharpYUVNEON(void) {
-  SharpYUVUpdateY = SharpYUVUpdateY_NEON;
-  SharpYUVUpdateRGB = SharpYUVUpdateRGB_NEON;
-  SharpYUVFilterRow = SharpYUVFilterRow_NEON;
+WEBP_TSAN_IGNORE_FUNCTION void InitSharpYuvNEON(void) {
+  SharpYuvUpdateY = SharpYuvUpdateY_NEON;
+  SharpYuvUpdateRGB = SharpYuvUpdateRGB_NEON;
+  SharpYuvFilterRow = SharpYuvFilterRow_NEON;
 }
 
 #else  // !WEBP_USE_NEON
 
-void InitSharpYUVNEON(void) {}
+void InitSharpYuvNEON(void) {}
 
 #endif  // WEBP_USE_NEON

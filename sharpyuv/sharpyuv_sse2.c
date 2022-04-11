@@ -18,7 +18,7 @@
 #include <emmintrin.h>
 #endif
 
-extern void InitSharpYUVSSE2(void);
+extern void InitSharpYuvSSE2(void);
 
 #if defined(WEBP_USE_SSE2)
 
@@ -27,7 +27,7 @@ static uint16_t clip_y(int v) {
   return (v < 0) ? 0 : (v > MAX_Y) ? MAX_Y : (uint16_t)v;
 }
 
-static uint64_t SharpYUVUpdateY_SSE2(const uint16_t* ref, const uint16_t* src,
+static uint64_t SharpYuvUpdateY_SSE2(const uint16_t* ref, const uint16_t* src,
                                      uint16_t* dst, int len) {
   uint64_t diff = 0;
   uint32_t tmp[4];
@@ -61,7 +61,7 @@ static uint64_t SharpYUVUpdateY_SSE2(const uint16_t* ref, const uint16_t* src,
   return diff;
 }
 
-static void SharpYUVUpdateRGB_SSE2(const int16_t* ref, const int16_t* src,
+static void SharpYuvUpdateRGB_SSE2(const int16_t* ref, const int16_t* src,
                                    int16_t* dst, int len) {
   int i = 0;
   for (i = 0; i + 8 <= len; i += 8) {
@@ -78,7 +78,7 @@ static void SharpYUVUpdateRGB_SSE2(const int16_t* ref, const int16_t* src,
   }
 }
 
-static void SharpYUVFilterRow_SSE2(const int16_t* A, const int16_t* B, int len,
+static void SharpYuvFilterRow_SSE2(const int16_t* A, const int16_t* B, int len,
                                    const uint16_t* best_y, uint16_t* out) {
   int i;
   const __m128i kCst8 = _mm_set1_epi16(8);
@@ -129,15 +129,15 @@ static void SharpYUVFilterRow_SSE2(const int16_t* A, const int16_t* B, int len,
 
 //------------------------------------------------------------------------------
 
-extern void InitSharpYUVSSE2(void);
+extern void InitSharpYuvSSE2(void);
 
-WEBP_TSAN_IGNORE_FUNCTION void InitSharpYUVSSE2(void) {
-  SharpYUVUpdateY = SharpYUVUpdateY_SSE2;
-  SharpYUVUpdateRGB = SharpYUVUpdateRGB_SSE2;
-  SharpYUVFilterRow = SharpYUVFilterRow_SSE2;
+WEBP_TSAN_IGNORE_FUNCTION void InitSharpYuvSSE2(void) {
+  SharpYuvUpdateY = SharpYuvUpdateY_SSE2;
+  SharpYuvUpdateRGB = SharpYuvUpdateRGB_SSE2;
+  SharpYuvFilterRow = SharpYuvFilterRow_SSE2;
 }
 #else  // !WEBP_USE_SSE2
 
-void InitSharpYUVSSE2(void) {}
+void InitSharpYuvSSE2(void) {}
 
 #endif  // WEBP_USE_SSE2

@@ -26,7 +26,7 @@ static uint16_t clip_y(int v) {
   return (v < 0) ? 0 : (v > MAX_Y) ? MAX_Y : (uint16_t)v;
 }
 
-static uint64_t SharpYUVUpdateY_C(const uint16_t* ref, const uint16_t* src,
+static uint64_t SharpYuvUpdateY_C(const uint16_t* ref, const uint16_t* src,
                                   uint16_t* dst, int len) {
   uint64_t diff = 0;
   int i;
@@ -39,7 +39,7 @@ static uint64_t SharpYUVUpdateY_C(const uint16_t* ref, const uint16_t* src,
   return diff;
 }
 
-static void SharpYUVUpdateRGB_C(const int16_t* ref, const int16_t* src,
+static void SharpYuvUpdateRGB_C(const int16_t* ref, const int16_t* src,
                                 int16_t* dst, int len) {
   int i;
   for (i = 0; i < len; ++i) {
@@ -48,7 +48,7 @@ static void SharpYUVUpdateRGB_C(const int16_t* ref, const int16_t* src,
   }
 }
 
-static void SharpYUVFilterRow_C(const int16_t* A, const int16_t* B, int len,
+static void SharpYuvFilterRow_C(const int16_t* A, const int16_t* B, int len,
                                 const uint16_t* best_y, uint16_t* out) {
   int i;
   for (i = 0; i < len; ++i, ++A, ++B) {
@@ -64,38 +64,38 @@ static void SharpYUVFilterRow_C(const int16_t* A, const int16_t* B, int len,
 
 //-----------------------------------------------------------------------------
 
-uint64_t (*SharpYUVUpdateY)(const uint16_t* src, const uint16_t* ref,
+uint64_t (*SharpYuvUpdateY)(const uint16_t* src, const uint16_t* ref,
                             uint16_t* dst, int len);
-void (*SharpYUVUpdateRGB)(const int16_t* src, const int16_t* ref, int16_t* dst,
+void (*SharpYuvUpdateRGB)(const int16_t* src, const int16_t* ref, int16_t* dst,
                           int len);
-void (*SharpYUVFilterRow)(const int16_t* A, const int16_t* B, int len,
+void (*SharpYuvFilterRow)(const int16_t* A, const int16_t* B, int len,
                           const uint16_t* best_y, uint16_t* out);
 
-extern void InitSharpYUVSSE2(void);
-extern void InitSharpYUVNEON(void);
+extern void InitSharpYuvSSE2(void);
+extern void InitSharpYuvNEON(void);
 
 void SharpYuvInitDsp(VP8CPUInfo cpu_info_func) {
   (void)cpu_info_func;
 
 #if !WEBP_NEON_OMIT_C_CODE
-  SharpYUVUpdateY = SharpYUVUpdateY_C;
-  SharpYUVUpdateRGB = SharpYUVUpdateRGB_C;
-  SharpYUVFilterRow = SharpYUVFilterRow_C;
+  SharpYuvUpdateY = SharpYuvUpdateY_C;
+  SharpYuvUpdateRGB = SharpYuvUpdateRGB_C;
+  SharpYuvFilterRow = SharpYuvFilterRow_C;
 #endif
 
 #if defined(WEBP_HAVE_SSE2)
   if (cpu_info_func == NULL || cpu_info_func(kSSE2)) {
-    InitSharpYUVSSE2();
+    InitSharpYuvSSE2();
   }
 #endif  // WEBP_HAVE_SSE2
 
 #if defined(WEBP_HAVE_NEON)
   if (WEBP_NEON_OMIT_C_CODE || cpu_info_func == NULL || cpu_info_func(kNEON)) {
-    InitSharpYUVNEON();
+    InitSharpYuvNEON();
   }
 #endif  // WEBP_HAVE_NEON
 
-  assert(SharpYUVUpdateY != NULL);
-  assert(SharpYUVUpdateRGB != NULL);
-  assert(SharpYUVFilterRow != NULL);
+  assert(SharpYuvUpdateY != NULL);
+  assert(SharpYuvUpdateRGB != NULL);
+  assert(SharpYuvFilterRow != NULL);
 }
