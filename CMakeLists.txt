@@ -15,6 +15,14 @@ endif()
 project(WebP C)
 
 # Options for coder / decoder executables.
+if(BUILD_SHARED_LIBS)
+  set(WEBP_LINK_STATIC_DEFAULT OFF)
+else()
+  set(WEBP_LINK_STATIC_DEFAULT ON)
+endif()
+option(WEBP_LINK_STATIC
+       "Link using static libraries. If OFF, use dynamic libraries."
+       ${WEBP_LINK_STATIC_DEFAULT})
 if(NOT EMSCRIPTEN)
   # Disable SIMD on Emscripten by default, as it's a new unstable Wasm feature.
   # Users can still explicitly opt-in to make a SIMD-enabled build.
@@ -39,6 +47,18 @@ option(WEBP_ENABLE_SWAP_16BIT_CSP "Enable byte swap for 16 bit colorspaces."
        OFF)
 set(WEBP_BITTRACE "0" CACHE STRING "Bit trace mode (0=none, 1=bit, 2=bytes)")
 set_property(CACHE WEBP_BITTRACE PROPERTY STRINGS 0 1 2)
+
+if(WEBP_LINK_STATIC)
+  if(WIN32)
+    SET(CMAKE_FIND_LIBRARY_SUFFIXES .lib .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
+  else()
+    SET(CMAKE_FIND_LIBRARY_SUFFIXES .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
+  endif()
+  set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+  # vwebp does not compile on Ubuntu with static libraries so disabling it for
+  # now.
+  set(WEBP_BUILD_VWEBP OFF)
+endif()
 
 # Option needed for handling Unicode file names on Windows.
 if(WIN32)
@@ -606,7 +626,7 @@ if(WEBP_BUILD_EXTRAS)
 
   # vwebp_sdl
   find_package(SDL)
-  if(SDL_FOUND)
+  if(WEBP_BUILD_VWEBP AND SDL_FOUND)
     add_executable(vwebp_sdl ${VWEBP_SDL_SRCS})
     target_link_libraries(vwebp_sdl ${SDL_LIBRARY} imageioutil webp)
     target_include_directories(vwebp_sdl
