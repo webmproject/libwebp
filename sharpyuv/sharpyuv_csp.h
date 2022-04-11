@@ -41,11 +41,11 @@ void SharpYuvComputeConversionMatrix(const SharpYuvColorSpace* yuv_color_space,
 // Enums for precomputed conversion matrices.
 typedef enum {
   kSharpYuvMatrixWebp = 0,
-  kSharpYuvMarixRec601Limited,
-  kSharpYuvMarixRec601Full,
-  kSharpYuvMarixRec709Limited,
-  kSharpYuvMarixRec709Full,
-  kSharpYuvMarixNum
+  kSharpYuvMatrixRec601Limited,
+  kSharpYuvMatrixRec601Full,
+  kSharpYuvMatrixRec709Limited,
+  kSharpYuvMatrixRec709Full,
+  kSharpYuvMatrixNum
 } SharpYuvMatrixType;
 
 // Returns a pointer to a matrix for one of the predefined colorspaces.
