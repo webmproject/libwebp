@@ -96,15 +96,15 @@ const SharpYuvConversionMatrix* SharpYuvGetConversionMatrix(
   switch (matrix_type) {
     case kSharpYuvMatrixWebp:
       return &kWebpMatrix;
-    case kSharpYuvMarixRec601Limited:
+    case kSharpYuvMatrixRec601Limited:
       return &kRec601LimitedMatrix;
-    case kSharpYuvMarixRec601Full:
+    case kSharpYuvMatrixRec601Full:
       return &kRec601FullMatrix;
-    case kSharpYuvMarixRec709Limited:
+    case kSharpYuvMatrixRec709Limited:
       return &kRec709LimitedMatrix;
-    case kSharpYuvMarixRec709Full:
+    case kSharpYuvMatrixRec709Full:
       return &kRec709FullMatrix;
-    case kSharpYuvMarixNum:
+    case kSharpYuvMatrixNum:
       return NULL;
   }
   return NULL;
