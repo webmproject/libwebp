@@ -40,10 +40,10 @@ typedef struct {
   int palette_code_bits_;
   uint32_t trivial_symbol_;  // True, if histograms for Red, Blue & Alpha
                              // literal symbols are single valued.
-  double bit_cost_;          // cached value of bit cost.
-  double literal_cost_;      // Cached values of dominant entropy costs:
-  double red_cost_;          // literal, red & blue.
-  double blue_cost_;
+  float bit_cost_;           // cached value of bit cost.
+  float literal_cost_;       // Cached values of dominant entropy costs:
+  float red_cost_;           // literal, red & blue.
+  float blue_cost_;
   uint8_t is_used_[5];       // 5 for literal, red, blue, alpha, distance
 } VP8LHistogram;
 
@@ -117,11 +117,11 @@ int VP8LGetHistoImageSymbols(int xsize, int ysize,
                              int* const percent);
 
 // Returns the entropy for the symbols in the input array.
-double VP8LBitsEntropy(const uint32_t* const array, int n);
+float VP8LBitsEntropy(const uint32_t* const array, int n);
 
 // Estimate how many bits the combined entropy of literals and distance
 // approximately maps to.
-double VP8LHistogramEstimateBits(VP8LHistogram* const p);
+float VP8LHistogramEstimateBits(VP8LHistogram* const p);
 
 #ifdef __cplusplus
 }

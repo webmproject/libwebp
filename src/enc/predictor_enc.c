@@ -32,10 +32,10 @@ static WEBP_INLINE int GetMin(int a, int b) { return (a > b) ? b : a; }
 // Methods to calculate Entropy (Shannon).
 
 static float PredictionCostSpatial(const int counts[256], int weight_0,
-                                   double exp_val) {
+                                   float exp_val) {
   const int significant_symbols = 256 >> 4;
-  const double exp_decay_factor = 0.6;
-  double bits = weight_0 * counts[0];
+  const float exp_decay_factor = 0.6f;
+  float bits = weight_0 * counts[0];
   int i;
   for (i = 1; i < significant_symbols; ++i) {
     bits += exp_val * (counts[i] + counts[256 - i]);
@@ -47,9 +47,9 @@ static float PredictionCostSpatial(const int counts[256], int weight_0,
 static float PredictionCostSpatialHistogram(const int accumulated[4][256],
                                             const int tile[4][256]) {
   int i;
-  double retval = 0;
+  float retval = 0.f;
   for (i = 0; i < 4; ++i) {
-    const double kExpValue = 0.94;
+    const float kExpValue = 0.94f;
     retval += PredictionCostSpatial(tile[i], 1, kExpValue);
     retval += VP8LCombinedShannonEntropy(tile[i], accumulated[i]);
   }
@@ -543,7 +543,7 @@ static float PredictionCostCrossColor(const int accumulated[256],
                                       const int counts[256]) {
   // Favor low entropy, locally and globally.
   // Favor small absolute values for PredictionCostSpatial
-  static const double kExpValue = 2.4;
+  static const float kExpValue = 2.4f;
   return VP8LCombinedShannonEntropy(counts, accumulated) +
          PredictionCostSpatial(counts, 3, kExpValue);
 }

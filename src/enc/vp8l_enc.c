@@ -438,8 +438,8 @@ static int AnalyzeEntropy(const uint32_t* argb,
       curr_row += argb_stride;
     }
     {
-      double entropy_comp[kHistoTotal];
-      double entropy[kNumEntropyIx];
+      float entropy_comp[kHistoTotal];
+      float entropy[kNumEntropyIx];
       int k;
       int last_mode_to_analyze = use_palette ? kPalette : kSpatialSubGreen;
       int j;
