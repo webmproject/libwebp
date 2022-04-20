@@ -256,7 +256,7 @@ static WEBP_INLINE float BitsEntropyRefine(const VP8LBitEntropy* entropy) {
   }
 
   {
-    float min_limit = 2 * entropy->sum - entropy->max_val;
+    float min_limit = 2.f * entropy->sum - entropy->max_val;
     min_limit = mix * min_limit + (1.f - mix) * entropy->entropy;
     return (entropy->entropy < min_limit) ? min_limit : entropy->entropy;
   }
