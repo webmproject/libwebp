@@ -23,42 +23,32 @@
 #include "sharpyuv/sharpyuv_dsp.h"
 
 //------------------------------------------------------------------------------
-// Code for gamma correction
-
-// gamma-compensates loss of resolution during chroma subsampling
-#define kGamma 0.80      // for now we use a different gamma value than kGammaF
-#define kGammaFix 12     // fixed-point precision for linear values
-#define kGammaScale ((1 << kGammaFix) - 1)
-#define kGammaTabFix 7   // fixed-point fractional bits precision
-#define kGammaTabScale (1 << kGammaTabFix)
-#define kGammaTabRounder (kGammaTabScale >> 1)
-#define kGammaTabSize (1 << (kGammaFix - kGammaTabFix))
-
-enum {
-  YUV_FIX = 16,                    // fixed-point precision for RGB->YUV
-  YUV_HALF = 1 << (YUV_FIX - 1),
-};
-
-//------------------------------------------------------------------------------
 // Sharp RGB->YUV conversion
 
 static const int kNumIterations = 4;
 static const int kMinDimensionIterativeConversion = 4;
 
+#define YUV_FIX 16  // fixed-point precision for RGB->YUV
+static const int kYuvHalf = 1 << (YUV_FIX - 1);
+
 // We could use SFIX=0 and only uint8_t for fixed_y_t, but it produces some
 // banding sometimes. Better use extra precision.
 #define SFIX 2                // fixed-point precision of RGB and Y/W
+#define MAX_Y_T ((256 << SFIX) - 1)
 typedef int16_t fixed_t;      // signed type with extra SFIX precision for UV
 typedef uint16_t fixed_y_t;   // unsigned type with extra SFIX precision for W
 
-#define SHALF (1 << SFIX >> 1)
-#define MAX_Y_T ((256 << SFIX) - 1)
-#define SROUNDER (1 << (YUV_FIX + SFIX - 1))
+static const int kSfixHalf = (1 << SFIX >> 1);
+static const int kYuvRounder = (1 << (YUV_FIX + SFIX - 1));
 
-// We use tables of different size and precision for the Rec709 / BT2020
-// transfer function.
-#define kGammaF (1./0.45)
-static uint32_t kLinearToGammaTabS[kGammaTabSize + 2];
+//------------------------------------------------------------------------------
+// Code for gamma correction
+
+// Gamma correction compensates loss of resolution during chroma subsampling.
+static const double kGammaF = 1./0.45;
+#define GAMMA_TAB_FIX 5
+#define GAMMA_TAB_SIZE (1 << GAMMA_TAB_FIX)
+static uint32_t kLinearToGammaTabS[GAMMA_TAB_SIZE + 2];
 #define GAMMA_TO_LINEAR_BITS 14
 static uint32_t kGammaToLinearTabS[MAX_Y_T + 1];   // size scales with Y_FIX
 static volatile int kGammaTablesSOk = 0;
@@ -68,7 +58,7 @@ static void InitGammaTablesS(void) {
   if (!kGammaTablesSOk) {
     int v;
     const double norm = 1. / MAX_Y_T;
-    const double scale = 1. / kGammaTabSize;
+    const double scale = 1. / GAMMA_TAB_SIZE;
     const double a = 0.09929682680944;
     const double thresh = 0.018053968510807;
     const double final_scale = 1 << GAMMA_TO_LINEAR_BITS;
@@ -83,7 +73,7 @@ static void InitGammaTablesS(void) {
       }
       kGammaToLinearTabS[v] = (uint32_t)(value * final_scale + .5);
     }
-    for (v = 0; v <= kGammaTabSize; ++v) {
+    for (v = 0; v <= GAMMA_TAB_SIZE; ++v) {
       const double g = scale * v;
       double value;
       if (g <= thresh) {
@@ -96,7 +86,7 @@ static void InitGammaTablesS(void) {
           (uint32_t)(MAX_Y_T * value) + (1 << GAMMA_TO_LINEAR_BITS >> 1);
     }
     // to prevent small rounding errors to cause read-overflow:
-    kLinearToGammaTabS[kGammaTabSize + 1] = kLinearToGammaTabS[kGammaTabSize];
+    kLinearToGammaTabS[GAMMA_TAB_SIZE + 1] = kLinearToGammaTabS[GAMMA_TAB_SIZE];
     kGammaTablesSOk = 1;
   }
 }
@@ -108,7 +98,7 @@ static WEBP_INLINE uint32_t GammaToLinearS(int v) {
 
 static WEBP_INLINE uint32_t LinearToGammaS(uint32_t value) {
   // 'value' is in GAMMA_TO_LINEAR_BITS fractional precision
-  const uint32_t v = value * kGammaTabSize;
+  const uint32_t v = value * GAMMA_TAB_SIZE;
   const uint32_t tab_pos = v >> GAMMA_TO_LINEAR_BITS;
   // fractional part, in GAMMA_TO_LINEAR_BITS fixed-point precision
   const uint32_t x = v - (tab_pos << GAMMA_TO_LINEAR_BITS);  // fractional part
@@ -134,7 +124,7 @@ static fixed_y_t clip_y(int y) {
 //------------------------------------------------------------------------------
 
 static int RGBToGray(int r, int g, int b) {
-  const int luma = 13933 * r + 46871 * g + 4732 * b + YUV_HALF;
+  const int luma = 13933 * r + 46871 * g + 4732 * b + kYuvHalf;
   return (luma >> YUV_FIX);
 }
 
@@ -195,7 +185,7 @@ static WEBP_INLINE fixed_y_t Filter2(int A, int B, int W0) {
 //------------------------------------------------------------------------------
 
 static WEBP_INLINE fixed_y_t UpLift(uint8_t a) {  // 8bit -> SFIX
-  return ((fixed_y_t)a << SFIX) | SHALF;
+  return ((fixed_y_t)a << SFIX) | kSfixHalf;
 }
 
 static void ImportOneRow(const uint8_t* const r_ptr,
@@ -255,7 +245,7 @@ static void InterpolateTwoRows(const fixed_y_t* const best_y,
 static WEBP_INLINE uint8_t RGBToYUVComponent(int r, int g, int b,
                                              const int coeffs[4]) {
   const int luma = coeffs[0] * r + coeffs[1] * g + coeffs[2] * b +
-                   (coeffs[3] << SFIX) + SROUNDER;
+                   (coeffs[3] << SFIX) + kYuvRounder;
   return clip_8b((luma >> (YUV_FIX + SFIX)));
 }
 

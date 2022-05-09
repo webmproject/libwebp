@@ -28,35 +28,35 @@ void SharpYuvComputeConversionMatrix(const SharpYuvColorSpace* yuv_color_space,
   const int shift = yuv_color_space->bits - 8;
 
   const float denom = (float)((1 << yuv_color_space->bits) - 1);
-  float scaleY = 1.0f;
+  float scale_y = 1.0f;
   float addY = 0.0f;
-  float scaleU = cr;
-  float scaleV = cb;
-  float addUV = (float)(128 << shift);
+  float scale_u = cr;
+  float scale_v = cb;
+  float add_uv = (float)(128 << shift);
 
   assert(yuv_color_space->bits >= 8);
 
   if (yuv_color_space->range == kSharpYuvRangeLimited) {
-    scaleY *= (219 << shift) / denom;
-    scaleU *= (224 << shift) / denom;
-    scaleV *= (224 << shift) / denom;
+    scale_y *= (219 << shift) / denom;
+    scale_u *= (224 << shift) / denom;
+    scale_v *= (224 << shift) / denom;
     addY = (float)(16 << shift);
   }
 
-  matrix->rgb_to_y[0] = ToFixed16(kr * scaleY);
-  matrix->rgb_to_y[1] = ToFixed16(kg * scaleY);
-  matrix->rgb_to_y[2] = ToFixed16(kb * scaleY);
+  matrix->rgb_to_y[0] = ToFixed16(kr * scale_y);
+  matrix->rgb_to_y[1] = ToFixed16(kg * scale_y);
+  matrix->rgb_to_y[2] = ToFixed16(kb * scale_y);
   matrix->rgb_to_y[3] = ToFixed16(addY);
 
-  matrix->rgb_to_u[0] = ToFixed16(-kr * scaleU);
-  matrix->rgb_to_u[1] = ToFixed16(-kg * scaleU);
-  matrix->rgb_to_u[2] = ToFixed16((1 - kb) * scaleU);
-  matrix->rgb_to_u[3] = ToFixed16(addUV);
+  matrix->rgb_to_u[0] = ToFixed16(-kr * scale_u);
+  matrix->rgb_to_u[1] = ToFixed16(-kg * scale_u);
+  matrix->rgb_to_u[2] = ToFixed16((1 - kb) * scale_u);
+  matrix->rgb_to_u[3] = ToFixed16(add_uv);
 
-  matrix->rgb_to_v[0] = ToFixed16((1 - kr) * scaleV);
-  matrix->rgb_to_v[1] = ToFixed16(-kg * scaleV);
-  matrix->rgb_to_v[2] = ToFixed16(-kb * scaleV);
-  matrix->rgb_to_v[3] = ToFixed16(addUV);
+  matrix->rgb_to_v[0] = ToFixed16((1 - kr) * scale_v);
+  matrix->rgb_to_v[1] = ToFixed16(-kg * scale_v);
+  matrix->rgb_to_v[2] = ToFixed16(-kb * scale_v);
+  matrix->rgb_to_v[3] = ToFixed16(add_uv);
 }
 
 // Matrices are in YUV_FIX fixed point precision.

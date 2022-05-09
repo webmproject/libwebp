@@ -83,16 +83,16 @@ int WebPPictureHasTransparency(const WebPPicture* picture) {
 
 #if defined(USE_GAMMA_COMPRESSION)
 
-// gamma-compensates loss of resolution during chroma subsampling
-#define kGamma 0.80      // for now we use a different gamma value than kGammaF
-#define kGammaFix 12     // fixed-point precision for linear values
-#define kGammaScale ((1 << kGammaFix) - 1)
-#define kGammaTabFix 7   // fixed-point fractional bits precision
-#define kGammaTabScale (1 << kGammaTabFix)
-#define kGammaTabRounder (kGammaTabScale >> 1)
-#define kGammaTabSize (1 << (kGammaFix - kGammaTabFix))
+// Gamma correction compensates loss of resolution during chroma subsampling.
+#define GAMMA_FIX 12      // fixed-point precision for linear values
+#define GAMMA_TAB_FIX 7   // fixed-point fractional bits precision
+#define GAMMA_TAB_SIZE (1 << (GAMMA_FIX - GAMMA_TAB_FIX))
+static const double kGamma = 0.80;
+static const int kGammaScale = ((1 << GAMMA_FIX) - 1);
+static const int kGammaTabScale = (1 << GAMMA_TAB_FIX);
+static const int kGammaTabRounder = (1 << GAMMA_TAB_FIX >> 1);
 
-static int kLinearToGammaTab[kGammaTabSize + 1];
+static int kLinearToGammaTab[GAMMA_TAB_SIZE + 1];
 static uint16_t kGammaToLinearTab[256];
 static volatile int kGammaTablesOk = 0;
 static void InitGammaTables(void);
@@ -100,13 +100,13 @@ static void InitGammaTables(void);
 WEBP_DSP_INIT_FUNC(InitGammaTables) {
   if (!kGammaTablesOk) {
     int v;
-    const double scale = (double)(1 << kGammaTabFix) / kGammaScale;
+    const double scale = (double)(1 << GAMMA_TAB_FIX) / kGammaScale;
     const double norm = 1. / 255.;
     for (v = 0; v <= 255; ++v) {
       kGammaToLinearTab[v] =
           (uint16_t)(pow(norm * v, kGamma) * kGammaScale + .5);
     }
-    for (v = 0; v <= kGammaTabSize; ++v) {
+    for (v = 0; v <= GAMMA_TAB_SIZE; ++v) {
       kLinearToGammaTab[v] = (int)(255. * pow(scale * v, 1. / kGamma) + .5);
     }
     kGammaTablesOk = 1;
@@ -118,12 +118,12 @@ static WEBP_INLINE uint32_t GammaToLinear(uint8_t v) {
 }
 
 static WEBP_INLINE int Interpolate(int v) {
-  const int tab_pos = v >> (kGammaTabFix + 2);    // integer part
+  const int tab_pos = v >> (GAMMA_TAB_FIX + 2);    // integer part
   const int x = v & ((kGammaTabScale << 2) - 1);  // fractional part
   const int v0 = kLinearToGammaTab[tab_pos];
   const int v1 = kLinearToGammaTab[tab_pos + 1];
   const int y = v1 * x + v0 * ((kGammaTabScale << 2) - x);   // interpolate
-  assert(tab_pos + 1 < kGammaTabSize + 1);
+  assert(tab_pos + 1 < GAMMA_TAB_SIZE + 1);
   return y;
 }
 
@@ -131,7 +131,7 @@ static WEBP_INLINE int Interpolate(int v) {
 // U/V value, suitable for RGBToU/V calls.
 static WEBP_INLINE int LinearToGamma(uint32_t base_value, int shift) {
   const int y = Interpolate(base_value << shift);   // final uplifted value
-  return (y + kGammaTabRounder) >> kGammaTabFix;    // descale
+  return (y + kGammaTabRounder) >> GAMMA_TAB_FIX;    // descale
 }
 
 #else
@@ -166,16 +166,6 @@ static int RGBToV(int r, int g, int b, VP8Random* const rg) {
 // Sharp RGB->YUV conversion
 
 static const int kMinDimensionIterativeConversion = 4;
-
-// We could use SFIX=0 and only uint8_t for fixed_y_t, but it produces some
-// banding sometimes. Better use extra precision.
-#define SFIX 2                // fixed-point precision of RGB and Y/W
-typedef int16_t fixed_t;      // signed type with extra SFIX precision for UV
-typedef uint16_t fixed_y_t;   // unsigned type with extra SFIX precision for W
-
-#define SHALF (1 << SFIX >> 1)
-#define MAX_Y_T ((256 << SFIX) - 1)
-#define SROUNDER (1 << (YUV_FIX + SFIX - 1))
 
 //------------------------------------------------------------------------------
 // Main function
@@ -234,8 +224,8 @@ static const int kAlphaFix = 19;
 // and constant are adjusted very tightly to fit 32b arithmetic.
 // In particular, they use the fact that the operands for 'v / a' are actually
 // derived as v = (a0.p0 + a1.p1 + a2.p2 + a3.p3) and a = a0 + a1 + a2 + a3
-// with ai in [0..255] and pi in [0..1<<kGammaFix). The constraint to avoid
-// overflow is: kGammaFix + kAlphaFix <= 31.
+// with ai in [0..255] and pi in [0..1<<GAMMA_FIX). The constraint to avoid
+// overflow is: GAMMA_FIX + kAlphaFix <= 31.
 static const uint32_t kInvAlpha[4 * 0xff + 1] = {
   0,  /* alpha = 0 */
   524288, 262144, 174762, 131072, 104857, 87381, 74898, 65536,
@@ -512,7 +502,7 @@ static int ImportYUVAFromRGBA(const uint8_t* r_ptr,
   if (has_alpha) {
     assert(step == 4);
 #if defined(USE_GAMMA_COMPRESSION) && defined(USE_INVERSE_ALPHA_TABLE)
-    assert(kAlphaFix + kGammaFix <= 31);
+    assert(kAlphaFix + GAMMA_FIX <= 31);
 #endif
   }
 
