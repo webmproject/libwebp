@@ -739,6 +739,8 @@ static int Import(WebPPicture* const picture,
   const int width = picture->width;
   const int height = picture->height;
 
+  if (abs(rgb_stride) < (import_alpha ? 4 : 3) * width) return 0;
+
   if (!picture->use_argb) {
     const uint8_t* a_ptr = import_alpha ? rgb + 3 : NULL;
     return ImportYUVAFromRGBA(r_ptr, g_ptr, b_ptr, a_ptr, step, rgb_stride,
