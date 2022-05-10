@@ -38,7 +38,6 @@ static const int kYuvHalf = 1 << (YUV_FIX - 1);
 typedef int16_t fixed_t;      // signed type with extra SFIX precision for UV
 typedef uint16_t fixed_y_t;   // unsigned type with extra SFIX precision for W
 
-static const int kSfixHalf = (1 << SFIX >> 1);
 static const int kYuvRounder = (1 << (YUV_FIX + SFIX - 1));
 
 //------------------------------------------------------------------------------
@@ -46,10 +45,11 @@ static const int kYuvRounder = (1 << (YUV_FIX + SFIX - 1));
 
 // Gamma correction compensates loss of resolution during chroma subsampling.
 static const double kGammaF = 1./0.45;
-#define GAMMA_TAB_FIX 5
+#define GAMMA_TAB_FIX 8
 #define GAMMA_TAB_SIZE (1 << GAMMA_TAB_FIX)
 static uint32_t kLinearToGammaTabS[GAMMA_TAB_SIZE + 2];
 #define GAMMA_TO_LINEAR_BITS 14
+static const int kGammaToLinearHalf = 1 << (GAMMA_TO_LINEAR_BITS - 1);
 static uint32_t kGammaToLinearTabS[MAX_Y_T + 1];   // size scales with Y_FIX
 static volatile int kGammaTablesSOk = 0;
 
@@ -81,9 +81,7 @@ static void InitGammaTablesS(void) {
       } else {
         value = (1. + a) * pow(g, 1. / kGammaF) - a;
       }
-      // we already incorporate the 1/2 rounding constant here
-      kLinearToGammaTabS[v] =
-          (uint32_t)(MAX_Y_T * value) + (1 << GAMMA_TO_LINEAR_BITS >> 1);
+      kLinearToGammaTabS[v] = (uint32_t)(MAX_Y_T * value + 0.5);
     }
     // to prevent small rounding errors to cause read-overflow:
     kLinearToGammaTabS[GAMMA_TAB_SIZE + 1] = kLinearToGammaTabS[GAMMA_TAB_SIZE];
@@ -105,9 +103,10 @@ static WEBP_INLINE uint32_t LinearToGammaS(uint32_t value) {
   // v0 / v1 are in GAMMA_TO_LINEAR_BITS fixed-point precision (range [0..1])
   const uint32_t v0 = kLinearToGammaTabS[tab_pos + 0];
   const uint32_t v1 = kLinearToGammaTabS[tab_pos + 1];
-  // Final interpolation. Note that rounding is already included.
+  // Final interpolation.
   const uint32_t v2 = (v1 - v0) * x;    // note: v1 >= v0.
-  const uint32_t result = v0 + (v2 >> GAMMA_TO_LINEAR_BITS);
+  const uint32_t result =
+      v0 + ((v2 + kGammaToLinearHalf) >> GAMMA_TO_LINEAR_BITS);
   return result;
 }
 
@@ -185,7 +184,7 @@ static WEBP_INLINE fixed_y_t Filter2(int A, int B, int W0) {
 //------------------------------------------------------------------------------
 
 static WEBP_INLINE fixed_y_t UpLift(uint8_t a) {  // 8bit -> SFIX
-  return ((fixed_y_t)a << SFIX) | kSfixHalf;
+  return ((fixed_y_t)a << SFIX);
 }
 
 static void ImportOneRow(const uint8_t* const r_ptr,
