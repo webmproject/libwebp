@@ -422,7 +422,7 @@ static int DoSharpArgbToYuv(const uint8_t* r_ptr, const uint8_t* g_ptr,
   free(best_rgb_uv);
   free(tmp_buffer);
   return ok;
- }
+}
 #undef SAFE_ALLOC
 
 // Hidden exported init function.
@@ -446,11 +446,11 @@ void SharpYuvInit(VP8CPUInfo cpu_info_func) {
 }
 
 int SharpYuvConvert(const uint8_t* r_ptr, const uint8_t* g_ptr,
-                  const uint8_t* b_ptr, int step, int rgb_stride,
-                  uint8_t* dst_y, int dst_stride_y, uint8_t* dst_u,
-                  int dst_stride_u, uint8_t* dst_v, int dst_stride_v,
-                  int width, int height,
-                  const SharpYuvConversionMatrix* yuv_matrix) {
+                    const uint8_t* b_ptr, int step, int rgb_stride,
+                    uint8_t* dst_y, int dst_stride_y, uint8_t* dst_u,
+                    int dst_stride_u, uint8_t* dst_v, int dst_stride_v,
+                    int width, int height,
+                    const SharpYuvConversionMatrix* yuv_matrix) {
   if (width < kMinDimensionIterativeConversion ||
       height < kMinDimensionIterativeConversion) {
     return 0;
