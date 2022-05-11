@@ -774,6 +774,7 @@ image in pixels.
 
 
 #### 4.2.3 Color Cache Coding
+{:#color-cache-code}
 
 Color cache stores a set of colors that have been recently used in the image.
 
@@ -828,12 +829,119 @@ potentially better compression.
 
 ### 5.2 Details
 
-The encoded image data consists of two parts:
+The encoded image data consists of several parts:
 
+  1. Decoding and building the prefix codes
   1. Meta Huffman codes
   1. Entropy-coded image data
 
-#### 5.2.1 Decoding of Meta Huffman Codes
+#### 5.2.1 Decoding and Building the Prefix Codes
+
+There are several steps in decoding the Huffman codes.
+
+**Decoding the Code Lengths:**
+{:#decoding-the-code-lengths}
+
+This section describes how to read the Huffman code lengths from the bitstream.
+
+The Huffman code lengths can be coded in two ways. The method used is specified
+by a 1-bit value.
+
+  * If this bit is 1, it is a _simple code length code_, and
+  * If this bit is 0, it is a _normal code length code_.
+
+In both cases, there can be unused code lengths that are still part of the
+stream. This may be inefficient, but it is allowed by the format.
+
+**(i) Simple Code Length Code:**
+
+This variant is used in the special case when only 1 or 2 Huffman code lengths
+are non-zero, and are in the range of \[0..255\]. All other Huffman code lengths
+are implicitly zeros.
+
+The first bit indicates the number of non-zero code lengths:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+int num_code_lengths = ReadBits(1) + 1;
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The first code length is stored either using a 1-bit code for values of 0 and 1,
+or using an 8-bit code for values in range \[0..255\]. The second code length,
+when present, is coded as an 8-bit code.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+int is_first_8bits = ReadBits(1);
+code_lengths[0] = ReadBits(1 + 7 * is_first_8bits);
+if (num_code_lengths == 2) {
+  code_lengths[1] = ReadBits(8);
+}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**Note:** Another special case is when _all_ Huffman code lengths are _zeros_
+(an empty Huffman code). For example, a Huffman code for distance can be empty
+if there are no backward references. Similarly, Huffman codes for alpha, red,
+and blue can be empty if all pixels within the same meta Huffman code are
+produced using the color cache. However, this case doesn't need a special
+handling, as empty Huffman codes can be coded as those containing a single
+symbol `0`.
+
+**(ii) Normal Code Length Code:**
+
+The code lengths of the Huffman code fit in 8 bits and are read as follows.
+First, `num_code_lengths` specifies the number of code lengths.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+int num_code_lengths = 4 + ReadBits(4);
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If `num_code_lengths` is > 18, the bitstream is invalid.
+
+The code lengths are themselves encoded using Huffman codes: lower level code
+lengths `code_length_code_lengths` first have to be read. The rest of those
+`code_length_code_lengths` (according to the order in `kCodeLengthCodeOrder`)
+are zeros.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+int kCodeLengthCodes = 19;
+int kCodeLengthCodeOrder[kCodeLengthCodes] = {
+  17, 18, 0, 1, 2, 3, 4, 5, 16, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
+};
+int code_lengths[kCodeLengthCodes] = { 0 };  // All zeros.
+for (i = 0; i < num_code_lengths; ++i) {
+  code_length_code_lengths[kCodeLengthCodeOrder[i]] = ReadBits(3);
+}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Next, if `ReadBits(1) == 0`, the maximum number of different read symbols is
+`num_code_lengths`. Otherwise, it is defined as:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+int length_nbits = 2 + 2 * ReadBits(3);
+int max_symbol = 2 + ReadBits(length_nbits);
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A Huffman table is then built from `code_length_code_lengths` and used to read
+up to `max_symbol` code lengths.
+
+  * Code \[0..15\] indicates literal code lengths.
+    * Value 0 means no symbols have been coded.
+    * Values \[1..15\] indicate the bit length of the respective code.
+  * Code 16 repeats the previous non-zero value \[3..6\] times, i.e.,
+    `3 + ReadBits(2)` times. If code 16 is used before a non-zero
+    value has been emitted, a value of 8 is repeated.
+  * Code 17 emits a streak of zeros \[3..10\], i.e., `3 + ReadBits(3)`
+    times.
+  * Code 18 emits a streak of zeros of length \[11..138\], i.e.,
+    `11 + ReadBits(7)` times.
+
+Once code lengths are read, a prefix code for each symbol type (A, R, G, B,
+distance) is formed using their respective alphabet sizes:
+
+  * G channel: 256 + 24 + `color_cache_size`
+  * other literals (A,R,B): 256
+  * distance code: 40
+
+#### 5.2.2 Decoding of Meta Huffman Codes
 
 As noted earlier, the format allows the use of different Huffman codes for
 different blocks of the image. _Meta Huffman codes_ are indexes identifying
@@ -914,15 +1022,14 @@ of `HuffmanCodeGroup` (of size `num_huff_groups`).
 The decoder then uses Huffman code group `huff_group` to decode the pixel
 (x, y) as explained in the [next section](#decoding-entropy-coded-image-data).
 
-#### 5.2.2 Decoding Entropy-coded Image Data
+#### 5.2.3 Decoding Entropy-coded Image Data
 
 For the current position (x, y) in the image, the decoder first identifies the
 corresponding Huffman code group (as explained in the last section). Given the
 Huffman code group, the pixel is read and decoded as follows:
 
-Read next symbol S from the bitstream using Huffman code #1. \[See
-[next section](#decoding-the-code-lengths) for details on decoding the Huffman
-code lengths\]. Note that S is any integer in the range `0` to
+Read next symbol S from the bitstream using Huffman code #1. Note that S is any
+integer in the range `0` to
 `(256 + 24 + ` [`color_cache_size`](#color-cache-code)` - 1)`.
 
 The interpretation of S depends on its value:
@@ -932,7 +1039,7 @@ The interpretation of S depends on its value:
      1. Read red from the bitstream using Huffman code #2.
      1. Read blue from the bitstream using Huffman code #3.
      1. Read alpha from the bitstream using Huffman code #4.
-  1. if S < 256 + 24
+  1. if S >= 256 && S < 256 + 24
      1. Use S - 256 as a length prefix code.
      1. Read extra bits for length from the bitstream.
      1. Determine backward-reference length L from length prefix code and the
@@ -946,80 +1053,6 @@ The interpretation of S depends on its value:
   1. if S >= 256 + 24
      1. Use S - (256 + 24) as the index into the color cache.
      1. Get ARGB color from the color cache at that index.
-
-
-**Decoding the Code Lengths:**
-{:#decoding-the-code-lengths}
-
-This section describes the details about reading a symbol from the bitstream by
-decoding the Huffman code length.
-
-The Huffman code lengths can be coded in two ways. The method used is specified
-by a 1-bit value.
-
-  * If this bit is 1, it is a _simple code length code_, and
-  * If this bit is 0, it is a _normal code length code_.
-
-**(i) Simple Code Length Code:**
-
-This variant is used in the special case when only 1 or 2 Huffman code lengths
-are non-zero, and are in the range of \[0, 255\]. All other Huffman code lengths
-are implicitly zeros.
-
-The first bit indicates the number of non-zero code lengths:
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-int num_code_lengths = ReadBits(1) + 1;
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The first code length is stored either using a 1-bit code for values of 0 and 1,
-or using an 8-bit code for values in range \[0, 255\]. The second code length,
-when present, is coded as an 8-bit code.
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-int is_first_8bits = ReadBits(1);
-code_lengths[0] = ReadBits(1 + 7 * is_first_8bits);
-if (num_code_lengths == 2) {
-  code_lengths[1] = ReadBits(8);
-}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-**Note:** Another special case is when _all_ Huffman code lengths are _zeros_
-(an empty Huffman code). For example, a Huffman code for distance can be empty
-if there are no backward references. Similarly, Huffman codes for alpha, red,
-and blue can be empty if all pixels within the same meta Huffman code are
-produced using the color cache. However, this case doesn't need a special
-handling, as empty Huffman codes can be coded as those containing a single
-symbol `0`.
-
-**(ii) Normal Code Length Code:**
-
-The code lengths of a Huffman code are read as follows: `num_code_lengths`
-specifies the number of code lengths; the rest of the code lengths
-(according to the order in `kCodeLengthCodeOrder`) are zeros.
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-int kCodeLengthCodes = 19;
-int kCodeLengthCodeOrder[kCodeLengthCodes] = {
-  17, 18, 0, 1, 2, 3, 4, 5, 16, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
-};
-int code_lengths[kCodeLengthCodes] = { 0 };  // All zeros.
-int num_code_lengths = 4 + ReadBits(4);
-for (i = 0; i < num_code_lengths; ++i) {
-  code_lengths[kCodeLengthCodeOrder[i]] = ReadBits(3);
-}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-  * Code length code \[0..15\] indicates literal code lengths.
-    * Value 0 means no symbols have been coded.
-    * Values \[1..15\] indicate the bit length of the respective code.
-  * Code 16 repeats the previous non-zero value \[3..6\] times, i.e.,
-    `3 + ReadBits(2)` times. If code 16 is used before a non-zero
-    value has been emitted, a value of 8 is repeated.
-  * Code 17 emits a streak of zeros \[3..10\], i.e., `3 + ReadBits(3)`
-    times.
-  * Code 18 emits a streak of zeros of length \[11..138\], i.e.,
-    `11 + ReadBits(7)` times.
 
 
 6 Overall Structure of the Format
