@@ -920,7 +920,7 @@ int kCodeLengthCodes = 19;
 int kCodeLengthCodeOrder[kCodeLengthCodes] = {
   17, 18, 0, 1, 2, 3, 4, 5, 16, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
 };
-int code_lengths[kCodeLengthCodes] = { 0 };  // All zeros.
+int code_length_code_lengths[kCodeLengthCodes] = { 0 };  // All zeros.
 for (i = 0; i < num_code_lengths; ++i) {
   code_length_code_lengths[kCodeLengthCodeOrder[i]] = ReadBits(3);
 }
