@@ -866,7 +866,7 @@ stream. This may be inefficient, but it is allowed by the format.
 \[AMENDED2\]
 
 This variant is used in the special case when only 1 or 2 Huffman symbols are
-in the range \[0, 255\] with code length `1`. All other Huffman code lengths
+in the range \[0..255\] with code length `1`. All other Huffman code lengths
 are implicitly zeros.
 
 The first bit indicates the number of symbols:
@@ -877,8 +877,8 @@ int num_symbols = ReadBits(1) + 1;
 
 Following are the symbol values.
 This first symbol is coded using 1 or 8 bits depending on the value of
-`is_first_8bits`. The range is \[0, 1\] or \[0, 255\], respectively.
-The second symbol, if present, is always assumed to be in the range \[0, 255\]
+`is_first_8bits`. The range is \[0..1\] or \[0..255\], respectively.
+The second symbol, if present, is always assumed to be in the range \[0..255\]
 and coded using 8 bits.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
