@@ -496,7 +496,7 @@ static int ImportYUVAFromRGBA(const uint8_t* r_ptr,
     use_iterative_conversion = 0;
   }
 
-  if (!WebPPictureAllocYUVA(picture, width, height)) {
+  if (!WebPPictureAllocYUVA(picture)) {
     return 0;
   }
   if (has_alpha) {
@@ -677,7 +677,7 @@ int WebPPictureYUVAToARGB(WebPPicture* picture) {
     return WebPEncodingSetError(picture, VP8_ENC_ERROR_INVALID_CONFIGURATION);
   }
   // Allocate a new argb buffer (discarding the previous one).
-  if (!WebPPictureAllocARGB(picture, picture->width, picture->height)) return 0;
+  if (!WebPPictureAllocARGB(picture)) return 0;
   picture->use_argb = 1;
 
   // Convert

@@ -491,19 +491,24 @@ int VP8FilterStrengthFromDelta(int sharpness, int delta);
 
   // misc utils for picture_*.c:
 
+// Returns true if 'picture' is non-NULL and dimensions/colorspace are within
+// their valid ranges. If returning false, the 'error_code' in 'picture' is
+// updated.
+int WebPValidatePicture(const WebPPicture* picture);
+
 // Remove reference to the ARGB/YUVA buffer (doesn't free anything).
 void WebPPictureResetBuffers(WebPPicture* const picture);
 
-// Allocates ARGB buffer of given dimension (previous one is always free'd).
-// Preserves the YUV(A) buffer. Returns false in case of error (invalid param,
-// out-of-memory).
-int WebPPictureAllocARGB(WebPPicture* const picture, int width, int height);
+// Allocates ARGB buffer according to set width/height (previous one is
+// always free'd). Preserves the YUV(A) buffer. Returns false in case of error
+// (invalid param, out-of-memory).
+int WebPPictureAllocARGB(WebPPicture* const picture);
 
-// Allocates YUVA buffer of given dimension (previous one is always free'd).
-// Uses picture->csp to determine whether an alpha buffer is needed.
+// Allocates YUVA buffer according to set width/height (previous one is always
+// free'd). Uses picture->csp to determine whether an alpha buffer is needed.
 // Preserves the ARGB buffer.
 // Returns false in case of error (invalid param, out-of-memory).
-int WebPPictureAllocYUVA(WebPPicture* const picture, int width, int height);
+int WebPPictureAllocYUVA(WebPPicture* const picture);
 
 // Replace samples that are fully transparent by 'color' to help compressibility
 // (no guarantee, though). Assumes pic->use_argb is true.
