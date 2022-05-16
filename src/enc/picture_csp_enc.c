@@ -798,24 +798,24 @@ static int Import(WebPPicture* const picture,
 #if !defined(WEBP_REDUCE_CSP)
 
 int WebPPictureImportBGR(WebPPicture* picture,
-                         const uint8_t* rgb, int rgb_stride) {
-  return (picture != NULL && rgb != NULL)
-             ? Import(picture, rgb, rgb_stride, 3, 1, 0)
+                         const uint8_t* bgr, int bgr_stride) {
+  return (picture != NULL && bgr != NULL)
+             ? Import(picture, bgr, bgr_stride, 3, 1, 0)
              : 0;
 }
 
 int WebPPictureImportBGRA(WebPPicture* picture,
-                          const uint8_t* rgba, int rgba_stride) {
-  return (picture != NULL && rgba != NULL)
-             ? Import(picture, rgba, rgba_stride, 4, 1, 1)
+                          const uint8_t* bgra, int bgra_stride) {
+  return (picture != NULL && bgra != NULL)
+             ? Import(picture, bgra, bgra_stride, 4, 1, 1)
              : 0;
 }
 
 
 int WebPPictureImportBGRX(WebPPicture* picture,
-                          const uint8_t* rgba, int rgba_stride) {
-  return (picture != NULL && rgba != NULL)
-             ? Import(picture, rgba, rgba_stride, 4, 1, 0)
+                          const uint8_t* bgrx, int bgrx_stride) {
+  return (picture != NULL && bgrx != NULL)
+             ? Import(picture, bgrx, bgrx_stride, 4, 1, 0)
              : 0;
 }
 
@@ -836,9 +836,9 @@ int WebPPictureImportRGBA(WebPPicture* picture,
 }
 
 int WebPPictureImportRGBX(WebPPicture* picture,
-                          const uint8_t* rgba, int rgba_stride) {
-  return (picture != NULL && rgba != NULL)
-             ? Import(picture, rgba, rgba_stride, 4, 0, 0)
+                          const uint8_t* rgbx, int rgbx_stride) {
+  return (picture != NULL && rgbx != NULL)
+             ? Import(picture, rgbx, rgbx_stride, 4, 0, 0)
              : 0;
 }
 
