@@ -30,7 +30,7 @@ typedef struct {
   // Y = Kr * r + Kg * g + Kb * b where Kg = 1 - Kr - Kb.
   float kr;
   float kb;
-  int bits;  // Only 8 bit is supported by SharpYuvConvert.
+  int bit_depth;  // 8, 10 or 12
   SharpYuvRange range;
 } SharpYuvColorSpace;
 

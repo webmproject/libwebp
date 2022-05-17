@@ -22,18 +22,18 @@ extern void InitSharpYuvSSE2(void);
 
 #if defined(WEBP_USE_SSE2)
 
-#define MAX_Y ((1 << 10) - 1)    // 10b precision over 16b-arithmetic
-static uint16_t clip_y(int v) {
-  return (v < 0) ? 0 : (v > MAX_Y) ? MAX_Y : (uint16_t)v;
+static uint16_t clip_SSE2(int v, int max) {
+  return (v < 0) ? 0 : (v > max) ? max : (uint16_t)v;
 }
 
 static uint64_t SharpYuvUpdateY_SSE2(const uint16_t* ref, const uint16_t* src,
-                                     uint16_t* dst, int len) {
+                                     uint16_t* dst, int len, int bit_depth) {
+  const int max_y = (1 << bit_depth) - 1;
   uint64_t diff = 0;
   uint32_t tmp[4];
   int i;
   const __m128i zero = _mm_setzero_si128();
-  const __m128i max = _mm_set1_epi16(MAX_Y);
+  const __m128i max = _mm_set1_epi16(max_y);
   const __m128i one = _mm_set1_epi16(1);
   __m128i sum = zero;
 
@@ -55,7 +55,7 @@ static uint64_t SharpYuvUpdateY_SSE2(const uint16_t* ref, const uint16_t* src,
   for (; i < len; ++i) {
     const int diff_y = ref[i] - src[i];
     const int new_y = (int)dst[i] + diff_y;
-    dst[i] = clip_y(new_y);
+    dst[i] = clip_SSE2(new_y, max_y);
     diff += (uint64_t)abs(diff_y);
   }
   return diff;
@@ -79,10 +79,12 @@ static void SharpYuvUpdateRGB_SSE2(const int16_t* ref, const int16_t* src,
 }
 
 static void SharpYuvFilterRow_SSE2(const int16_t* A, const int16_t* B, int len,
-                                   const uint16_t* best_y, uint16_t* out) {
+                                   const uint16_t* best_y, uint16_t* out,
+                                   int bit_depth) {
+  const int max_y = (1 << bit_depth) - 1;
   int i;
   const __m128i kCst8 = _mm_set1_epi16(8);
-  const __m128i max = _mm_set1_epi16(MAX_Y);
+  const __m128i max = _mm_set1_epi16(max_y);
   const __m128i zero = _mm_setzero_si128();
   for (i = 0; i + 8 <= len; i += 8) {
     const __m128i a0 = _mm_loadu_si128((const __m128i*)(A + i + 0));
@@ -121,11 +123,10 @@ static void SharpYuvFilterRow_SSE2(const int16_t* A, const int16_t* B, int len,
     const int a0a1b0b1 = a0b1 + a1b0 + 8;
     const int v0 = (8 * A[i + 0] + 2 * a1b0 + a0a1b0b1) >> 4;
     const int v1 = (8 * A[i + 1] + 2 * a0b1 + a0a1b0b1) >> 4;
-    out[2 * i + 0] = clip_y(best_y[2 * i + 0] + v0);
-    out[2 * i + 1] = clip_y(best_y[2 * i + 1] + v1);
+    out[2 * i + 0] = clip_SSE2(best_y[2 * i + 0] + v0, max_y);
+    out[2 * i + 1] = clip_SSE2(best_y[2 * i + 1] + v1, max_y);
   }
 }
-#undef MAX_Y
 
 //------------------------------------------------------------------------------
 
