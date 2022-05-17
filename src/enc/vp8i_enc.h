@@ -494,7 +494,7 @@ int VP8FilterStrengthFromDelta(int sharpness, int delta);
 // Returns true if 'picture' is non-NULL and dimensions/colorspace are within
 // their valid ranges. If returning false, the 'error_code' in 'picture' is
 // updated.
-int WebPValidatePicture(const WebPPicture* picture);
+int WebPValidatePicture(const WebPPicture* const picture);
 
 // Remove reference to the ARGB/YUVA buffer (doesn't free anything).
 void WebPPictureResetBuffers(WebPPicture* const picture);
