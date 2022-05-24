@@ -23,16 +23,16 @@ extern void InitSharpYuvNEON(void);
 
 #if defined(WEBP_USE_NEON)
 
-#define MAX_Y ((1 << 10) - 1)    // 10b precision over 16b-arithmetic
-static uint16_t clip_y_NEON(int v) {
-  return (v < 0) ? 0 : (v > MAX_Y) ? MAX_Y : (uint16_t)v;
+static uint16_t clip_NEON(int v, int max) {
+  return (v < 0) ? 0 : (v > max) ? max : (uint16_t)v;
 }
 
 static uint64_t SharpYuvUpdateY_NEON(const uint16_t* ref, const uint16_t* src,
-                                     uint16_t* dst, int len) {
+                                     uint16_t* dst, int len, int bit_depth) {
+  const int max_y = (1 << bit_depth) - 1;
   int i;
   const int16x8_t zero = vdupq_n_s16(0);
-  const int16x8_t max = vdupq_n_s16(MAX_Y);
+  const int16x8_t max = vdupq_n_s16(max_y);
   uint64x2_t sum = vdupq_n_u64(0);
   uint64_t diff;
 
@@ -52,7 +52,7 @@ static uint64_t SharpYuvUpdateY_NEON(const uint16_t* ref, const uint16_t* src,
   for (; i < len; ++i) {
     const int diff_y = ref[i] - src[i];
     const int new_y = (int)(dst[i]) + diff_y;
-    dst[i] = clip_y_NEON(new_y);
+    dst[i] = clip_NEON(new_y, max_y);
     diff += (uint64_t)(abs(diff_y));
   }
   return diff;
@@ -76,9 +76,11 @@ static void SharpYuvUpdateRGB_NEON(const int16_t* ref, const int16_t* src,
 }
 
 static void SharpYuvFilterRow_NEON(const int16_t* A, const int16_t* B, int len,
-                                   const uint16_t* best_y, uint16_t* out) {
+                                   const uint16_t* best_y, uint16_t* out,
+                                   int bit_depth) {
+  const int max_y = (1 << bit_depth) - 1;
   int i;
-  const int16x8_t max = vdupq_n_s16(MAX_Y);
+  const int16x8_t max = vdupq_n_s16(max_y);
   const int16x8_t zero = vdupq_n_s16(0);
   for (i = 0; i + 8 <= len; i += 8) {
     const int16x8_t a0 = vld1q_s16(A + i + 0);
@@ -112,11 +114,10 @@ static void SharpYuvFilterRow_NEON(const int16_t* A, const int16_t* B, int len,
     const int a0a1b0b1 = a0b1 + a1b0 + 8;
     const int v0 = (8 * A[i + 0] + 2 * a1b0 + a0a1b0b1) >> 4;
     const int v1 = (8 * A[i + 1] + 2 * a0b1 + a0a1b0b1) >> 4;
-    out[2 * i + 0] = clip_y_NEON(best_y[2 * i + 0] + v0);
-    out[2 * i + 1] = clip_y_NEON(best_y[2 * i + 1] + v1);
+    out[2 * i + 0] = clip_NEON(best_y[2 * i + 0] + v0, max_y);
+    out[2 * i + 1] = clip_NEON(best_y[2 * i + 1] + v1, max_y);
   }
 }
-#undef MAX_Y
 
 //------------------------------------------------------------------------------
 

@@ -17,11 +17,12 @@
 #include "src/dsp/cpu.h"
 
 extern uint64_t (*SharpYuvUpdateY)(const uint16_t* src, const uint16_t* ref,
-                                   uint16_t* dst, int len);
+                                   uint16_t* dst, int len, int bit_depth);
 extern void (*SharpYuvUpdateRGB)(const int16_t* src, const int16_t* ref,
                                  int16_t* dst, int len);
 extern void (*SharpYuvFilterRow)(const int16_t* A, const int16_t* B, int len,
-                                 const uint16_t* best_y, uint16_t* out);
+                                 const uint16_t* best_y, uint16_t* out,
+                                 int bit_depth);
 
 void SharpYuvInitDsp(VP8CPUInfo cpu_info_func);
 

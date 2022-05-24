@@ -15,7 +15,7 @@
 #include <math.h>
 #include <string.h>
 
-static int ToFixed16(float f) { return (int)round(f * (1 << 16)); }
+static int ToFixed16(float f) { return (int)floor(f * (1 << 16) + 0.5f); }
 
 void SharpYuvComputeConversionMatrix(const SharpYuvColorSpace* yuv_color_space,
                                      SharpYuvConversionMatrix* matrix) {
@@ -25,28 +25,27 @@ void SharpYuvComputeConversionMatrix(const SharpYuvColorSpace* yuv_color_space,
   const float cr = 0.5f / (1.0f - kb);
   const float cb = 0.5f / (1.0f - kr);
 
-  const int shift = yuv_color_space->bits - 8;
+  const int shift = yuv_color_space->bit_depth - 8;
 
-  const float denom = (float)((1 << yuv_color_space->bits) - 1);
+  const float denom = (float)((1 << yuv_color_space->bit_depth) - 1);
   float scale_y = 1.0f;
-  float addY = 0.0f;
+  float add_y = 0.0f;
   float scale_u = cr;
   float scale_v = cb;
   float add_uv = (float)(128 << shift);
-
-  assert(yuv_color_space->bits >= 8);
+  assert(yuv_color_space->bit_depth >= 8);
 
   if (yuv_color_space->range == kSharpYuvRangeLimited) {
     scale_y *= (219 << shift) / denom;
     scale_u *= (224 << shift) / denom;
     scale_v *= (224 << shift) / denom;
-    addY = (float)(16 << shift);
+    add_y = (float)(16 << shift);
   }
 
   matrix->rgb_to_y[0] = ToFixed16(kr * scale_y);
   matrix->rgb_to_y[1] = ToFixed16(kg * scale_y);
   matrix->rgb_to_y[2] = ToFixed16(kb * scale_y);
-  matrix->rgb_to_y[3] = ToFixed16(addY);
+  matrix->rgb_to_y[3] = ToFixed16(add_y);
 
   matrix->rgb_to_u[0] = ToFixed16(-kr * scale_u);
   matrix->rgb_to_u[1] = ToFixed16(-kg * scale_u);
