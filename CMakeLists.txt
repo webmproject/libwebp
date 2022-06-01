@@ -445,13 +445,14 @@ if(WEBP_BUILD_ANIM_UTILS
    OR WEBP_BUILD_DWEBP
    OR WEBP_BUILD_GIF2WEBP
    OR WEBP_BUILD_IMG2WEBP
-   OR WEBP_BUILD_VWEBP)
+   OR WEBP_BUILD_VWEBP
+   OR WEBP_BUILD_WEBPMUX
+   OR WEBP_BUILD_WEBPINFO)
   # Example utility library.
   parse_makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/examples "EXAMPLEUTIL_SRCS"
                     "example_util_[^ ]*")
   list(APPEND EXAMPLEUTIL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/examples/stopwatch.h)
   add_library(exampleutil STATIC ${EXAMPLEUTIL_SRCS})
-  target_link_libraries(exampleutil imageioutil)
   target_include_directories(
     exampleutil
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>)
@@ -460,6 +461,7 @@ if(WEBP_BUILD_ANIM_UTILS
                     "imageio_util_[^ ]*")
   add_library(imageioutil STATIC ${IMAGEIOUTILS_SRCS})
   target_link_libraries(imageioutil webp)
+  target_link_libraries(exampleutil imageioutil)
 
   # Image-decoding utility library.
   parse_makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/imageio "IMAGEDEC_SRCS"
@@ -587,7 +589,9 @@ if(WEBP_BUILD_WEBPINFO)
                     "webpinfo")
   add_executable(webpinfo ${WEBPINFO_SRCS})
   target_link_libraries(webpinfo exampleutil imageioutil)
-  target_include_directories(webpinfo PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src)
+  target_include_directories(webpinfo
+                             PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src
+                                     ${CMAKE_CURRENT_SOURCE_DIR}/src)
   install(TARGETS webpinfo RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
