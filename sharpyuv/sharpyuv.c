@@ -21,6 +21,7 @@
 #include "src/webp/types.h"
 #include "src/dsp/cpu.h"
 #include "sharpyuv/sharpyuv_dsp.h"
+#include "sharpyuv/sharpyuv_gamma.h"
 
 //------------------------------------------------------------------------------
 // Sharp RGB->YUV conversion
@@ -46,100 +47,6 @@ typedef int16_t fixed_t;      // signed type with extra precision for UV
 typedef uint16_t fixed_y_t;   // unsigned type with extra precision for W
 
 //------------------------------------------------------------------------------
-// Code for gamma correction
-
-// Gamma correction compensates loss of resolution during chroma subsampling.
-// Size of pre-computed table for converting from gamma to linear.
-#define GAMMA_TO_LINEAR_TAB_BITS 10
-#define GAMMA_TO_LINEAR_TAB_SIZE (1 << GAMMA_TO_LINEAR_TAB_BITS)
-static uint32_t kGammaToLinearTabS[GAMMA_TO_LINEAR_TAB_SIZE + 2];
-// Size of pre-computed table for converting from linear to gamma.
-#define LINEAR_TO_GAMMA_TAB_BITS 8
-#define LINEAR_TO_GAMMA_TAB_SIZE (1 << LINEAR_TO_GAMMA_TAB_BITS)
-static uint32_t kLinearToGammaTabS[LINEAR_TO_GAMMA_TAB_SIZE + 2];
-
-static const double kGammaF = 1. / 0.45;
-#define GAMMA_TO_LINEAR_BITS 14
-
-static volatile int kGammaTablesSOk = 0;
-static void InitGammaTablesS(void) {
-  assert(2 * GAMMA_TO_LINEAR_BITS < 32);  // we use uint32_t intermediate values
-  if (!kGammaTablesSOk) {
-    int v;
-    const double a = 0.09929682680944;
-    const double thresh = 0.018053968510807;
-    // Precompute gamma to linear table.
-    {
-      const double norm = 1. / GAMMA_TO_LINEAR_TAB_SIZE;
-      const double a_rec = 1. / (1. + a);
-      const double final_scale = 1 << GAMMA_TO_LINEAR_BITS;
-      for (v = 0; v <= GAMMA_TO_LINEAR_TAB_SIZE; ++v) {
-        const double g = norm * v;
-        double value;
-        if (g <= thresh * 4.5) {
-          value = g / 4.5;
-        } else {
-          value = pow(a_rec * (g + a), kGammaF);
-        }
-        kGammaToLinearTabS[v] = (uint32_t)(value * final_scale + .5);
-      }
-      // to prevent small rounding errors to cause read-overflow:
-      kGammaToLinearTabS[GAMMA_TO_LINEAR_TAB_SIZE + 1] =
-          kGammaToLinearTabS[GAMMA_TO_LINEAR_TAB_SIZE];
-    }
-    // Precompute linear to gamma table.
-    {
-      const double scale = 1. / LINEAR_TO_GAMMA_TAB_SIZE;
-      for (v = 0; v <= LINEAR_TO_GAMMA_TAB_SIZE; ++v) {
-        const double g = scale * v;
-        double value;
-        if (g <= thresh) {
-          value = 4.5 * g;
-        } else {
-          value = (1. + a) * pow(g, 1. / kGammaF) - a;
-        }
-        kLinearToGammaTabS[v] =
-            (uint32_t)(GAMMA_TO_LINEAR_TAB_SIZE * value + 0.5);
-      }
-      // to prevent small rounding errors to cause read-overflow:
-      kLinearToGammaTabS[LINEAR_TO_GAMMA_TAB_SIZE + 1] =
-          kLinearToGammaTabS[LINEAR_TO_GAMMA_TAB_SIZE];
-    }
-    kGammaTablesSOk = 1;
-  }
-}
-
-static WEBP_INLINE uint32_t FixedPointInterpolation(int v, uint32_t* tab,
-                                                    int tab_pos_shift,
-                                                    int tab_value_shift) {
-  const uint32_t tab_pos = v >> tab_pos_shift;
-  // fractional part, in 'tab_pos_shift' fixed-point precision
-  const uint32_t x = v - (tab_pos << tab_pos_shift);  // fractional part
-  // v0 / v1 are in kGammaToLinearBits fixed-point precision (range [0..1])
-  const uint32_t v0 = tab[tab_pos + 0] << tab_value_shift;
-  const uint32_t v1 = tab[tab_pos + 1] << tab_value_shift;
-  // Final interpolation.
-  const uint32_t v2 = (v1 - v0) * x;  // note: v1 >= v0.
-  const int half = (tab_pos_shift > 0) ? 1 << (tab_pos_shift - 1) : 0;
-  const uint32_t result = v0 + ((v2 + half) >> tab_pos_shift);
-  return result;
-}
-
-static WEBP_INLINE uint32_t GammaToLinear(int v, int bit_depth) {
-  const int shift = GAMMA_TO_LINEAR_TAB_BITS - bit_depth;
-  if (shift > 0) {
-    return kGammaToLinearTabS[v << shift];
-  }
-  return FixedPointInterpolation(v, kGammaToLinearTabS, -shift, 0);
-}
-
-static WEBP_INLINE uint32_t LinearToGamma(uint32_t value, int bit_depth) {
-  const uint32_t v = value << LINEAR_TO_GAMMA_TAB_BITS;
-  return FixedPointInterpolation(v, kLinearToGammaTabS, GAMMA_TO_LINEAR_BITS,
-                                 bit_depth - GAMMA_TO_LINEAR_TAB_BITS);
-}
-
-//------------------------------------------------------------------------------
 
 static uint8_t clip_8b(fixed_t v) {
   return (!(v & ~0xff)) ? (uint8_t)v : (v < 0) ? 0u : 255u;
@@ -161,13 +68,14 @@ static int RGBToGray(int64_t r, int64_t g, int64_t b) {
   return (int)(luma >> YUV_FIX);
 }
 
-static uint32_t ScaleDown(int a, int b, int c, int d, int rgb_bit_depth) {
+static uint32_t ScaleDown(uint16_t a, uint16_t b, uint16_t c, uint16_t d,
+                          int rgb_bit_depth) {
   const int bit_depth = rgb_bit_depth + GetPrecisionShift(rgb_bit_depth);
-  const uint32_t A = GammaToLinear(a, bit_depth);
-  const uint32_t B = GammaToLinear(b, bit_depth);
-  const uint32_t C = GammaToLinear(c, bit_depth);
-  const uint32_t D = GammaToLinear(d, bit_depth);
-  return LinearToGamma((A + B + C + D + 2) >> 2, bit_depth);
+  const uint32_t A = SharpYuvGammaToLinear(a, bit_depth);
+  const uint32_t B = SharpYuvGammaToLinear(b, bit_depth);
+  const uint32_t C = SharpYuvGammaToLinear(c, bit_depth);
+  const uint32_t D = SharpYuvGammaToLinear(d, bit_depth);
+  return SharpYuvLinearToGamma((A + B + C + D + 2) >> 2, bit_depth);
 }
 
 static WEBP_INLINE void UpdateW(const fixed_y_t* src, fixed_y_t* dst, int w,
@@ -175,11 +83,11 @@ static WEBP_INLINE void UpdateW(const fixed_y_t* src, fixed_y_t* dst, int w,
   const int bit_depth = rgb_bit_depth + GetPrecisionShift(rgb_bit_depth);
   int i;
   for (i = 0; i < w; ++i) {
-    const uint32_t R = GammaToLinear(src[0 * w + i], bit_depth);
-    const uint32_t G = GammaToLinear(src[1 * w + i], bit_depth);
-    const uint32_t B = GammaToLinear(src[2 * w + i], bit_depth);
+    const uint32_t R = SharpYuvGammaToLinear(src[0 * w + i], bit_depth);
+    const uint32_t G = SharpYuvGammaToLinear(src[1 * w + i], bit_depth);
+    const uint32_t B = SharpYuvGammaToLinear(src[2 * w + i], bit_depth);
     const uint32_t Y = RGBToGray(R, G, B);
-    dst[i] = (fixed_y_t)LinearToGamma(Y, bit_depth);
+    dst[i] = (fixed_y_t)SharpYuvLinearToGamma(Y, bit_depth);
   }
 }
 
@@ -227,15 +135,6 @@ static WEBP_INLINE int Shift(int v, int shift) {
   return (shift >= 0) ? (v << shift) : (v >> -shift);
 }
 
-static WEBP_INLINE fixed_y_t ChangePrecision(uint16_t a, int shift) {
-  if (shift == 0) return a;
-  if (shift < 0) {
-    const int rounding = 1 << (-shift - 1);
-    return (a + rounding) >> -shift;
-  }
-  return ((fixed_y_t)a << shift);
-}
-
 static void ImportOneRow(const uint8_t* const r_ptr,
                          const uint8_t* const g_ptr,
                          const uint8_t* const b_ptr,
@@ -252,13 +151,13 @@ static void ImportOneRow(const uint8_t* const r_ptr,
     const int off = i * step;
     const int shift = GetPrecisionShift(rgb_bit_depth);
     if (rgb_bit_depth == 8) {
-      dst[i + 0 * w] = ChangePrecision(r_ptr[off], shift);
-      dst[i + 1 * w] = ChangePrecision(g_ptr[off], shift);
-      dst[i + 2 * w] = ChangePrecision(b_ptr[off], shift);
+      dst[i + 0 * w] = Shift(r_ptr[off], shift);
+      dst[i + 1 * w] = Shift(g_ptr[off], shift);
+      dst[i + 2 * w] = Shift(b_ptr[off], shift);
     } else {
-      dst[i + 0 * w] = ChangePrecision(((uint16_t*)r_ptr)[off], shift);
-      dst[i + 1 * w] = ChangePrecision(((uint16_t*)g_ptr)[off], shift);
-      dst[i + 2 * w] = ChangePrecision(((uint16_t*)b_ptr)[off], shift);
+      dst[i + 0 * w] = Shift(((uint16_t*)r_ptr)[off], shift);
+      dst[i + 1 * w] = Shift(((uint16_t*)g_ptr)[off], shift);
+      dst[i + 2 * w] = Shift(((uint16_t*)b_ptr)[off], shift);
     }
   }
   if (pic_width & 1) {  // replicate rightmost pixel
@@ -527,7 +426,7 @@ void SharpYuvInit(VP8CPUInfo cpu_info_func) {
 
   SharpYuvInitDsp(cpu_info_func);
   if (!initialized) {
-    InitGammaTablesS();
+    SharpYuvInitGammaTables();
   }
 
   sharpyuv_last_cpuinfo_used = cpu_info_func;

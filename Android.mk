@@ -37,6 +37,7 @@ sharpyuv_srcs := \
     sharpyuv/sharpyuv.c \
     sharpyuv/sharpyuv_csp.c \
     sharpyuv/sharpyuv_dsp.c \
+    sharpyuv/sharpyuv_gamma.c \
     sharpyuv/sharpyuv_neon.$(NEON) \
     sharpyuv/sharpyuv_sse2.c \
 
