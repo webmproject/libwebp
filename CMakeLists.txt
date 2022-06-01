@@ -589,7 +589,9 @@ if(WEBP_BUILD_WEBPINFO)
                     "webpinfo")
   add_executable(webpinfo ${WEBPINFO_SRCS})
   target_link_libraries(webpinfo exampleutil imageioutil)
-  target_include_directories(webpinfo PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src)
+  target_include_directories(webpinfo
+                             PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src
+                                     ${CMAKE_CURRENT_SOURCE_DIR}/src)
   install(TARGETS webpinfo RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
