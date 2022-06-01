@@ -32,9 +32,7 @@ static const int kMinDimensionIterativeConversion = 4;
 static const int kYuvHalf = 1 << (YUV_FIX - 1);
 
 // Max bit depth so that intermediate calculations fit in 16 bits.
-// TODO(b/194336375): the C code can handle up to 14 bits, but the SIMD code
-// currently needs more room.
-static const int kMaxBitDepth = 10;
+static const int kMaxBitDepth = 14;
 
 // Returns the precision shift to use based on the input rgb_bit_depth.
 static int GetPrecisionShift(int rgb_bit_depth) {

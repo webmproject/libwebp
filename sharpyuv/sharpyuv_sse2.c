@@ -78,9 +78,9 @@ static void SharpYuvUpdateRGB_SSE2(const int16_t* ref, const int16_t* src,
   }
 }
 
-static void SharpYuvFilterRow_SSE2(const int16_t* A, const int16_t* B, int len,
-                                   const uint16_t* best_y, uint16_t* out,
-                                   int bit_depth) {
+static void SharpYuvFilterRow16_SSE2(const int16_t* A, const int16_t* B,
+                                     int len, const uint16_t* best_y,
+                                     uint16_t* out, int bit_depth) {
   const int max_y = (1 << bit_depth) - 1;
   int i;
   const __m128i kCst8 = _mm_set1_epi16(8);
@@ -125,6 +125,66 @@ static void SharpYuvFilterRow_SSE2(const int16_t* A, const int16_t* B, int len,
     const int v1 = (8 * A[i + 1] + 2 * a0b1 + a0a1b0b1) >> 4;
     out[2 * i + 0] = clip_SSE2(best_y[2 * i + 0] + v0, max_y);
     out[2 * i + 1] = clip_SSE2(best_y[2 * i + 1] + v1, max_y);
+  }
+}
+
+static WEBP_INLINE __m128i s16_to_s32(__m128i in) {
+  return _mm_srai_epi32(_mm_unpacklo_epi16(in, in), 16);
+}
+
+static void SharpYuvFilterRow32_SSE2(const int16_t* A, const int16_t* B,
+                                     int len, const uint16_t* best_y,
+                                     uint16_t* out, int bit_depth) {
+  const int max_y = (1 << bit_depth) - 1;
+  int i;
+  const __m128i kCst8 = _mm_set1_epi32(8);
+  const __m128i max = _mm_set1_epi16(max_y);
+  const __m128i zero = _mm_setzero_si128();
+  for (i = 0; i + 4 <= len; i += 4) {
+    const __m128i a0 = s16_to_s32(_mm_loadl_epi64((const __m128i*)(A + i + 0)));
+    const __m128i a1 = s16_to_s32(_mm_loadl_epi64((const __m128i*)(A + i + 1)));
+    const __m128i b0 = s16_to_s32(_mm_loadl_epi64((const __m128i*)(B + i + 0)));
+    const __m128i b1 = s16_to_s32(_mm_loadl_epi64((const __m128i*)(B + i + 1)));
+    const __m128i a0b1 = _mm_add_epi32(a0, b1);
+    const __m128i a1b0 = _mm_add_epi32(a1, b0);
+    const __m128i a0a1b0b1 = _mm_add_epi32(a0b1, a1b0);  // A0+A1+B0+B1
+    const __m128i a0a1b0b1_8 = _mm_add_epi32(a0a1b0b1, kCst8);
+    const __m128i a0b1_2 = _mm_add_epi32(a0b1, a0b1);  // 2*(A0+B1)
+    const __m128i a1b0_2 = _mm_add_epi32(a1b0, a1b0);  // 2*(A1+B0)
+    const __m128i c0 = _mm_srai_epi32(_mm_add_epi32(a0b1_2, a0a1b0b1_8), 3);
+    const __m128i c1 = _mm_srai_epi32(_mm_add_epi32(a1b0_2, a0a1b0b1_8), 3);
+    const __m128i d0 = _mm_add_epi32(c1, a0);
+    const __m128i d1 = _mm_add_epi32(c0, a1);
+    const __m128i e0 = _mm_srai_epi32(d0, 1);
+    const __m128i e1 = _mm_srai_epi32(d1, 1);
+    const __m128i f0 = _mm_unpacklo_epi32(e0, e1);
+    const __m128i f1 = _mm_unpackhi_epi32(e0, e1);
+    const __m128i g = _mm_loadu_si128((const __m128i*)(best_y + 2 * i + 0));
+    const __m128i h_16 = _mm_add_epi16(g, _mm_packs_epi32(f0, f1));
+    const __m128i final = _mm_max_epi16(_mm_min_epi16(h_16, max), zero);
+    _mm_storeu_si128((__m128i*)(out + 2 * i + 0), final);
+  }
+  for (; i < len; ++i) {
+    //   (9 * A0 + 3 * A1 + 3 * B0 + B1 + 8) >> 4 =
+    // = (8 * A0 + 2 * (A1 + B0) + (A0 + A1 + B0 + B1 + 8)) >> 4
+    // We reuse the common sub-expressions.
+    const int a0b1 = A[i + 0] + B[i + 1];
+    const int a1b0 = A[i + 1] + B[i + 0];
+    const int a0a1b0b1 = a0b1 + a1b0 + 8;
+    const int v0 = (8 * A[i + 0] + 2 * a1b0 + a0a1b0b1) >> 4;
+    const int v1 = (8 * A[i + 1] + 2 * a0b1 + a0a1b0b1) >> 4;
+    out[2 * i + 0] = clip_SSE2(best_y[2 * i + 0] + v0, max_y);
+    out[2 * i + 1] = clip_SSE2(best_y[2 * i + 1] + v1, max_y);
+  }
+}
+
+static void SharpYuvFilterRow_SSE2(const int16_t* A, const int16_t* B, int len,
+                                   const uint16_t* best_y, uint16_t* out,
+                                   int bit_depth) {
+  if (bit_depth <= 10) {
+    SharpYuvFilterRow16_SSE2(A, B, len, best_y, out, bit_depth);
+  } else {
+    SharpYuvFilterRow32_SSE2(A, B, len, best_y, out, bit_depth);
   }
 }
 
