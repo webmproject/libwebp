@@ -22,6 +22,7 @@ libsharpyuv_neon_la_CFLAGS = $(AM_CFLAGS) $(NEON_FLAGS)
 libsharpyuv_la_SOURCES =
 libsharpyuv_la_SOURCES += sharpyuv_csp.c sharpyuv_csp.h
 libsharpyuv_la_SOURCES += sharpyuv_dsp.c sharpyuv_dsp.h
+libsharpyuv_la_SOURCES += sharpyuv_gamma.c sharpyuv_gamma.h
 libsharpyuv_la_SOURCES += sharpyuv.c sharpyuv.h
 
 libsharpyuv_la_CPPFLAGS = $(AM_CPPFLAGS)
