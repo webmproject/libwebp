@@ -85,10 +85,10 @@ scan_build make -j4
 
 index="$(find "${OUTPUT_DIR}" -name index.html)"
 if [[ -f "${index}" ]]; then
-  mv "$(dirname "${index}")/"* .
+  mv "$(dirname "${index}")/"* "${OUTPUT_DIR}"
 else
   # make a empty report to wipe out any old bug reports.
-  cat << EOT > index.html
+  cat << EOT > "${OUTPUT_DIR}/index.html"
 <html>
 <body>
 No bugs reported.
