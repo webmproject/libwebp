@@ -147,6 +147,12 @@
 #endif
 #endif
 
+#if defined(__has_feature)
+#if __has_feature(memory_sanitizer)
+#define WEBP_MSAN
+#endif
+#endif
+
 #if defined(WEBP_USE_THREAD) && !defined(_WIN32)
 #include <pthread.h>  // NOLINT
 
