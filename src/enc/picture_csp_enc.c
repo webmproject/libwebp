@@ -451,11 +451,20 @@ static WEBP_INLINE void AccumulateRGB(const uint8_t* const r_ptr,
     dst[0] = SUM4(r_ptr + j, step);
     dst[1] = SUM4(g_ptr + j, step);
     dst[2] = SUM4(b_ptr + j, step);
+    // MemorySanitizer may raise false positives with data that passes through
+    // RGBA32PackedToPlanar_16b_SSE41() due to incorrect modeling of shuffles.
+    // See https://crbug.com/webp/573.
+#ifdef WEBP_MSAN
+    dst[3] = 0;
+#endif
   }
   if (width & 1) {
     dst[0] = SUM2(r_ptr + j);
     dst[1] = SUM2(g_ptr + j);
     dst[2] = SUM2(b_ptr + j);
+#ifdef WEBP_MSAN
+    dst[3] = 0;
+#endif
   }
 }
 
