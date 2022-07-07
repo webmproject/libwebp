@@ -685,7 +685,7 @@ static int ParseCommandLine(Config* config, const W_CHAR** const unicode_argv) {
           ERROR_GOTO1("ERROR: Multiple features specified.\n", ErrParse);
         }
         arg->subtype_ = SUBTYPE_ANMF;
-        arg->filename_ = argv[i + 1];
+        arg->filename_ = wargv[i + 1];
         arg->params_ = argv[i + 2];
         ++feature_arg_index;
         i += 3;
