@@ -238,8 +238,17 @@ typedef enum {
   kMIPSdspR2,
   kMSA
 } CPUFeature;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // returns true if the CPU supports the feature.
 typedef int (*VP8CPUInfo)(CPUFeature feature);
 WEBP_EXTERN VP8CPUInfo VP8GetCPUInfo;
+
+#ifdef __cplusplus
+}    // extern "C"
+#endif
 
 #endif  // WEBP_DSP_CPU_H_
