@@ -498,6 +498,7 @@ clean:
               examples/*.o examples/*~ \
               extras/*.o extras/*~ \
               imageio/*.o imageio/*~ \
+              sharpyuv/*.o sharpyuv/*~ \
               src/dec/*.o src/dec/*~ \
               src/demux/*.o src/demux/*~ \
               src/dsp/*.o src/dsp/*~ \
