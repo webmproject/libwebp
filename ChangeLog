@@ -1,3 +1,5 @@
+56a480e8 dsp/cpu.h: add missing extern "C"
+62b45bdd update ChangeLog (tag: v1.2.3-rc1)
 8764ec7a Merge changes Idb037953,Id582e395 into 1.2.3
 bcb872c3 vwebp: fix file name display in windows unicode build
 67c44ac5 webpmux: fix -frame option in windows unicode build
