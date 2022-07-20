@@ -634,7 +634,7 @@ We use image data in five different roles:
      [Color Indexing Transform](#color-indexing-transform). This is stored as an
      image of width `color_table_size` and height `1`.
 
-### 4.2 Encoding of Image data
+### 4.2 Encoding of Image Data
 
 The encoding of image data is independent of its role.
 
