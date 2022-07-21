@@ -127,6 +127,13 @@ set(includedir "\$\{prefix\}/include")
 set(PTHREAD_LIBS ${CMAKE_THREAD_LIBS_INIT})
 set(INSTALLED_LIBRARIES)
 
+if(MSVC)
+  # match the naming convention used by nmake
+  set(CMAKE_SHARED_LIBRARY_PREFIX "lib")
+  set(CMAKE_IMPORT_LIBRARY_PREFIX "lib")
+  set(CMAKE_STATIC_LIBRARY_PREFIX "lib")
+endif()
+
 set(CMAKE_C_VISIBILITY_PRESET hidden)
 
 # ##############################################################################
@@ -775,6 +782,13 @@ include(CMakePackageConfigHelpers)
 # compatibility purposes, but the library mentioned in WebPConfig.cmake should
 # be the unprefixed version.
 list(TRANSFORM INSTALLED_LIBRARIES REPLACE "libwebpmux" "webpmux")
+if(MSVC)
+  # For compatibility with nmake, MSVC builds use a custom prefix (lib) that
+  # needs to be included in the library name.
+  list(TRANSFORM INSTALLED_LIBRARIES
+       REPLACE "[A-Za-z0-9_]+" "${CMAKE_STATIC_LIBRARY_PREFIX}\\0")
+endif()
+
 configure_package_config_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/cmake/WebPConfig.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/WebPConfig.cmake
