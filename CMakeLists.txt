@@ -6,7 +6,11 @@
 #  in the file PATENTS.  All contributing project authors may
 #  be found in the AUTHORS file in the root of the source tree.
 
-cmake_minimum_required(VERSION 3.7)
+if(APPLE)
+  cmake_minimum_required(VERSION 3.17)
+else()
+  cmake_minimum_required(VERSION 3.7)
+endif()
 
 if(POLICY CMP0072)
   cmake_policy(SET CMP0072 NEW)
@@ -396,6 +400,19 @@ macro(set_version FILE TARGET_NAME NAME_IN_MAKEFILE)
                ${LT_CURRENT_MINUS_AGE}.${LT_AGE}.${LT_REVISION}
                SOVERSION
                ${LT_CURRENT_MINUS_AGE})
+  if(APPLE)
+    # For compatibility, set MACHO_COMPATIBILITY_VERSION and
+    # MACHO_CURRENT_VERSION to match libtool. These properties were introduced
+    # in 3.17:
+    # https://cmake.org/cmake/help/latest/prop_tgt/MACHO_COMPATIBILITY_VERSION.html
+    math(EXPR LIBWEBP_MACHO_COMPATIBILITY_VERSION "${LT_CURRENT} + 1")
+    set_target_properties(
+      ${TARGET_NAME}
+      PROPERTIES MACHO_COMPATIBILITY_VERSION
+                 ${LIBWEBP_MACHO_COMPATIBILITY_VERSION}
+                 MACHO_CURRENT_VERSION
+                 ${LIBWEBP_MACHO_COMPATIBILITY_VERSION}.${LT_REVISION})
+  endif()
 endmacro()
 set_version(Makefile.am webp webp)
 set_version(Makefile.am webpdecoder webpdecoder)
