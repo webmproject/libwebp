@@ -737,6 +737,10 @@ write_basic_package_version_file(
 
 # Create the Config file.
 include(CMakePackageConfigHelpers)
+# Fix libwebpmux reference. The target name libwebpmux is used for
+# compatibility purposes, but the library mentioned in WebPConfig.cmake should
+# be the unprefixed version.
+list(TRANSFORM INSTALLED_LIBRARIES REPLACE "libwebpmux" "webpmux")
 configure_package_config_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/cmake/WebPConfig.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/WebPConfig.cmake
