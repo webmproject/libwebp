@@ -414,9 +414,9 @@ void ColorTransform(uint8 red, uint8 blue, uint8 green,
   int tmp_blue = blue;
 
   // Applying the transform is just subtracting the transform deltas
-  tmp_red  -= ColorTransformDelta(p->green_to_red_,  green);
-  tmp_blue -= ColorTransformDelta(p->green_to_blue_, green);
-  tmp_blue -= ColorTransformDelta(p->red_to_blue_, red);
+  tmp_red  -= ColorTransformDelta(trans->green_to_red_,  green);
+  tmp_blue -= ColorTransformDelta(trans->green_to_blue_, green);
+  tmp_blue -= ColorTransformDelta(trans->red_to_blue_, red);
 
   *new_red = tmp_red & 0xff;
   *new_blue = tmp_blue & 0xff;
@@ -470,7 +470,7 @@ channels.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void InverseTransform(uint8 red, uint8 green, uint8 blue,
-                      ColorTransformElement *p,
+                      ColorTransformElement *trans,
                       uint8 *new_red, uint8 *new_blue) {
   // Transformed values of red and blue components
   int tmp_red = red;
@@ -769,13 +769,13 @@ distance code `3` indicates left-top pixel.
 The decoder can convert a distance code `i` to a scan-line order distance
 `dist` as follows:
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 (xi, yi) = distance_map[i]
 dist = x + y * xsize
 if (dist < 1) {
   dist = 1
 }
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 where `distance_map` is the mapping noted above and `xsize` is the width of the
 image in pixels.
