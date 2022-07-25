@@ -99,6 +99,12 @@ endif()
 include(cmake/deps.cmake)
 include(GNUInstallDirs)
 
+if(BUILD_SHARED_LIBS AND NOT CMAKE_INSTALL_RPATH)
+  # Set the rpath to match autoconf/libtool behavior. Note this must be set
+  # before target creation.
+  set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
+endif()
+
 # ##############################################################################
 # Options.
 if(WEBP_ENABLE_SWAP_16BIT_CSP)
