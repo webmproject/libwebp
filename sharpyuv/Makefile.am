@@ -1,12 +1,16 @@
 AM_CPPFLAGS += -I$(top_builddir) -I$(top_srcdir)
 AM_CPPFLAGS += -I$(top_builddir)/src -I$(top_srcdir)/src
+
+lib_LTLIBRARIES = libsharpyuv.la
+
 noinst_LTLIBRARIES =
-noinst_LTLIBRARIES += libsharpyuv.la
 noinst_LTLIBRARIES += libsharpyuv_sse2.la
 noinst_LTLIBRARIES += libsharpyuv_neon.la
 
+libsharpyuvinclude_HEADERS =
+libsharpyuvinclude_HEADERS += sharpyuv.h
+libsharpyuvinclude_HEADERS += sharpyuv_csp.h
 noinst_HEADERS =
-noinst_HEADERS += ../src/webp/types.h
 noinst_HEADERS += ../src/dsp/cpu.h
 
 libsharpyuv_sse2_la_SOURCES =
@@ -26,9 +30,8 @@ libsharpyuv_la_SOURCES += sharpyuv_gamma.c sharpyuv_gamma.h
 libsharpyuv_la_SOURCES += sharpyuv.c sharpyuv.h
 
 libsharpyuv_la_CPPFLAGS = $(AM_CPPFLAGS)
-libsharpyuv_la_LDFLAGS =
+libsharpyuv_la_LDFLAGS = -no-undefined -version-info 0:0:0
 libsharpyuv_la_LIBADD =
 libsharpyuv_la_LIBADD += libsharpyuv_sse2.la
 libsharpyuv_la_LIBADD += libsharpyuv_neon.la
-
-noinst_PROGRAMS =
+libsharpyuvincludedir = $(includedir)/webp/sharpyuv
