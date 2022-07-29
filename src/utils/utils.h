@@ -64,7 +64,8 @@ WEBP_EXTERN void WebPSafeFree(void* const ptr);
 // Alignment
 
 #define WEBP_ALIGN_CST 31
-#define WEBP_ALIGN(PTR) (((uintptr_t)(PTR) + WEBP_ALIGN_CST) & ~WEBP_ALIGN_CST)
+#define WEBP_ALIGN(PTR) (((uintptr_t)(PTR) + WEBP_ALIGN_CST) & \
+                         ~(uintptr_t)WEBP_ALIGN_CST)
 
 #include <string.h>
 // memcpy() is the safe way of moving potentially unaligned 32b memory.
