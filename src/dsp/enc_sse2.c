@@ -156,10 +156,10 @@ static void ITransform_SSE2(const uint8_t* ref, const int16_t* in, uint8_t* dst,
       ref3 = _mm_loadl_epi64((const __m128i*)&ref[3 * BPS]);
     } else {
       // Load four bytes/pixels per line.
-      ref0 = _mm_cvtsi32_si128(WebPMemToUint32(&ref[0 * BPS]));
-      ref1 = _mm_cvtsi32_si128(WebPMemToUint32(&ref[1 * BPS]));
-      ref2 = _mm_cvtsi32_si128(WebPMemToUint32(&ref[2 * BPS]));
-      ref3 = _mm_cvtsi32_si128(WebPMemToUint32(&ref[3 * BPS]));
+      ref0 = _mm_cvtsi32_si128(WebPMemToInt32(&ref[0 * BPS]));
+      ref1 = _mm_cvtsi32_si128(WebPMemToInt32(&ref[1 * BPS]));
+      ref2 = _mm_cvtsi32_si128(WebPMemToInt32(&ref[2 * BPS]));
+      ref3 = _mm_cvtsi32_si128(WebPMemToInt32(&ref[3 * BPS]));
     }
     // Convert to 16b.
     ref0 = _mm_unpacklo_epi8(ref0, zero);
@@ -875,7 +875,7 @@ static WEBP_INLINE void HD4_SSE2(uint8_t* dst, const uint8_t* top) {
 
 static WEBP_INLINE void TM4_SSE2(uint8_t* dst, const uint8_t* top) {
   const __m128i zero = _mm_setzero_si128();
-  const __m128i top_values = _mm_cvtsi32_si128(WebPMemToUint32(top));
+  const __m128i top_values = _mm_cvtsi32_si128(WebPMemToInt32(top));
   const __m128i top_base = _mm_unpacklo_epi8(top_values, zero);
   int y;
   for (y = 0; y < 4; ++y, dst += BPS) {

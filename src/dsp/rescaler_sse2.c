@@ -132,7 +132,7 @@ static void RescalerImportRowShrink_SSE2(WebPRescaler* const wrk,
     __m128i base = zero;
     accum += wrk->x_add;
     while (accum > 0) {
-      const __m128i A = _mm_cvtsi32_si128(WebPMemToUint32(src));
+      const __m128i A = _mm_cvtsi32_si128(WebPMemToInt32(src));
       src += 4;
       base = _mm_unpacklo_epi8(A, zero);
       // To avoid overflow, we need: base * x_add / x_sub < 32768

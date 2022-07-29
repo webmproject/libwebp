@@ -158,10 +158,10 @@ static void Transform_SSE2(const int16_t* in, uint8_t* dst, int do_two) {
       dst3 = _mm_loadl_epi64((__m128i*)(dst + 3 * BPS));
     } else {
       // Load four bytes/pixels per line.
-      dst0 = _mm_cvtsi32_si128(WebPMemToUint32(dst + 0 * BPS));
-      dst1 = _mm_cvtsi32_si128(WebPMemToUint32(dst + 1 * BPS));
-      dst2 = _mm_cvtsi32_si128(WebPMemToUint32(dst + 2 * BPS));
-      dst3 = _mm_cvtsi32_si128(WebPMemToUint32(dst + 3 * BPS));
+      dst0 = _mm_cvtsi32_si128(WebPMemToInt32(dst + 0 * BPS));
+      dst1 = _mm_cvtsi32_si128(WebPMemToInt32(dst + 1 * BPS));
+      dst2 = _mm_cvtsi32_si128(WebPMemToInt32(dst + 2 * BPS));
+      dst3 = _mm_cvtsi32_si128(WebPMemToInt32(dst + 3 * BPS));
     }
     // Convert to 16b.
     dst0 = _mm_unpacklo_epi8(dst0, zero);
@@ -213,10 +213,10 @@ static void TransformAC3(const int16_t* in, uint8_t* dst) {
   const __m128i m3 = _mm_subs_epi16(B, d4);
   const __m128i zero = _mm_setzero_si128();
   // Load the source pixels.
-  __m128i dst0 = _mm_cvtsi32_si128(WebPMemToUint32(dst + 0 * BPS));
-  __m128i dst1 = _mm_cvtsi32_si128(WebPMemToUint32(dst + 1 * BPS));
-  __m128i dst2 = _mm_cvtsi32_si128(WebPMemToUint32(dst + 2 * BPS));
-  __m128i dst3 = _mm_cvtsi32_si128(WebPMemToUint32(dst + 3 * BPS));
+  __m128i dst0 = _mm_cvtsi32_si128(WebPMemToInt32(dst + 0 * BPS));
+  __m128i dst1 = _mm_cvtsi32_si128(WebPMemToInt32(dst + 1 * BPS));
+  __m128i dst2 = _mm_cvtsi32_si128(WebPMemToInt32(dst + 2 * BPS));
+  __m128i dst3 = _mm_cvtsi32_si128(WebPMemToInt32(dst + 3 * BPS));
   // Convert to 16b.
   dst0 = _mm_unpacklo_epi8(dst0, zero);
   dst1 = _mm_unpacklo_epi8(dst1, zero);
@@ -477,11 +477,11 @@ static WEBP_INLINE void Load8x4_SSE2(const uint8_t* const b, int stride,
   // A0 = 63 62 61 60 23 22 21 20 43 42 41 40 03 02 01 00
   // A1 = 73 72 71 70 33 32 31 30 53 52 51 50 13 12 11 10
   const __m128i A0 = _mm_set_epi32(
-      WebPMemToUint32(&b[6 * stride]), WebPMemToUint32(&b[2 * stride]),
-      WebPMemToUint32(&b[4 * stride]), WebPMemToUint32(&b[0 * stride]));
+      WebPMemToInt32(&b[6 * stride]), WebPMemToInt32(&b[2 * stride]),
+      WebPMemToInt32(&b[4 * stride]), WebPMemToInt32(&b[0 * stride]));
   const __m128i A1 = _mm_set_epi32(
-      WebPMemToUint32(&b[7 * stride]), WebPMemToUint32(&b[3 * stride]),
-      WebPMemToUint32(&b[5 * stride]), WebPMemToUint32(&b[1 * stride]));
+      WebPMemToInt32(&b[7 * stride]), WebPMemToInt32(&b[3 * stride]),
+      WebPMemToInt32(&b[5 * stride]), WebPMemToInt32(&b[1 * stride]));
 
   // B0 = 53 43 52 42 51 41 50 40 13 03 12 02 11 01 10 00
   // B1 = 73 63 72 62 71 61 70 60 33 23 32 22 31 21 30 20
@@ -1015,7 +1015,7 @@ static WEBP_INLINE void TrueMotion_SSE2(uint8_t* dst, int size) {
   const __m128i zero = _mm_setzero_si128();
   int y;
   if (size == 4) {
-    const __m128i top_values = _mm_cvtsi32_si128(WebPMemToUint32(top));
+    const __m128i top_values = _mm_cvtsi32_si128(WebPMemToInt32(top));
     const __m128i top_base = _mm_unpacklo_epi8(top_values, zero);
     for (y = 0; y < 4; ++y, dst += BPS) {
       const int val = dst[-1] - top[-1];

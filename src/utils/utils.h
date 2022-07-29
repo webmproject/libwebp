@@ -73,6 +73,11 @@ static WEBP_INLINE uint32_t WebPMemToUint32(const uint8_t* const ptr) {
   memcpy(&A, ptr, sizeof(A));
   return A;
 }
+
+static WEBP_INLINE int32_t WebPMemToInt32(const uint8_t* const ptr) {
+  return (int32_t)WebPMemToUint32(ptr);
+}
+
 static WEBP_INLINE void WebPUint32ToMem(uint8_t* const ptr, uint32_t val) {
   memcpy(ptr, &val, sizeof(val));
 }
