@@ -85,7 +85,7 @@ static void RescalerImportRowExpand_SSE2(WebPRescaler* const wrk,
       const __m128i mult = _mm_cvtsi32_si128(((x_add - accum) << 16) | accum);
       const __m128i out = _mm_madd_epi16(cur_pixels, mult);
       assert(sizeof(*frow) == sizeof(uint32_t));
-      WebPUint32ToMem((uint8_t*)frow, _mm_cvtsi128_si32(out));
+      WebPInt32ToMem((uint8_t*)frow, _mm_cvtsi128_si32(out));
       frow += 1;
       if (frow >= frow_end) break;
       accum -= wrk->x_sub;

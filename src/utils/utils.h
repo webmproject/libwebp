@@ -82,6 +82,10 @@ static WEBP_INLINE void WebPUint32ToMem(uint8_t* const ptr, uint32_t val) {
   memcpy(ptr, &val, sizeof(val));
 }
 
+static WEBP_INLINE void WebPInt32ToMem(uint8_t* const ptr, int val) {
+  WebPUint32ToMem(ptr, (uint32_t)val);
+}
+
 //------------------------------------------------------------------------------
 // Reading/writing data.
 
