@@ -18,6 +18,20 @@
 extern "C" {
 #endif
 
+#ifndef SHARPYUV_EXTERN
+#ifdef WEBP_EXTERN
+#define SHARPYUV_EXTERN WEBP_EXTERN
+#else
+// This explicitly marks library functions and allows for changing the
+// signature for e.g., Windows DLL builds.
+#if defined(__GNUC__) && __GNUC__ >= 4
+#define SHARPYUV_EXTERN extern __attribute__((visibility("default")))
+#else
+#define SHARPYUV_EXTERN extern
+#endif /* __GNUC__ >= 4 */
+#endif /* WEBP_EXTERN */
+#endif /* SHARPYUV_EXTERN */
+
 // SharpYUV API version following the convention from semver.org
 #define SHARPYUV_VERSION_MAJOR 0
 #define SHARPYUV_VERSION_MINOR 1
@@ -65,11 +79,13 @@ typedef struct {
 //     adjacent pixels on the y, u and v channels. If yuv_bit_depth > 8, they
 //     should be multiples of 2.
 // width, height: width and height of the image in pixels
-int SharpYuvConvert(const void* r_ptr, const void* g_ptr, const void* b_ptr,
-                    int rgb_step, int rgb_stride, int rgb_bit_depth,
-                    void* y_ptr, int y_stride, void* u_ptr, int u_stride,
-                    void* v_ptr, int v_stride, int yuv_bit_depth, int width,
-                    int height, const SharpYuvConversionMatrix* yuv_matrix);
+SHARPYUV_EXTERN int SharpYuvConvert(const void* r_ptr, const void* g_ptr,
+                                    const void* b_ptr, int rgb_step,
+                                    int rgb_stride, int rgb_bit_depth,
+                                    void* y_ptr, int y_stride, void* u_ptr,
+                                    int u_stride, void* v_ptr, int v_stride,
+                                    int yuv_bit_depth, int width, int height,
+                                    const SharpYuvConversionMatrix* yuv_matrix);
 
 // TODO(b/194336375): Add YUV444 to YUV420 conversion. Maybe also add 422
 // support (it's rarely used in practice, especially for images).

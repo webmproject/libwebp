@@ -218,159 +218,9 @@ configure_file(${CMAKE_CURRENT_LIST_DIR}/cmake/config.h.in
                ${CMAKE_CURRENT_BINARY_DIR}/src/webp/config.h)
 add_definitions(-DHAVE_CONFIG_H)
 
-# ##############################################################################
-# Build the webpdecoder library.
-
-# Creates a source file with an unused stub function in $CMAKE_BINARY_DIR and
-# adds it to the specified target. Currently used only with Xcode.
-#
-# See also:
-# https://cmake.org/cmake/help/v3.18/command/add_library.html#object-libraries
-# "Some native build systems (such as Xcode) may not like targets that have
-# only object files, so consider adding at least one real source file to any
-# target that references $<TARGET_OBJECTS:objlib>."
-function(libwebp_add_stub_file TARGET)
-  set(stub_source_dir "${CMAKE_BINARY_DIR}")
-  set(stub_source_file
-      "${stub_source_dir}/libwebp_${TARGET}_stub.c")
-  set(stub_source_code
-      "// Generated file. DO NOT EDIT!\n"
-      "// C source file created for target ${TARGET}.\n"
-      "void libwebp_${TARGET}_stub_function(void)\;\n"
-      "void libwebp_${TARGET}_stub_function(void) {}\n")
-  file(WRITE "${stub_source_file}" ${stub_source_code})
-
-  target_sources(${TARGET} PRIVATE ${stub_source_file})
-endfunction()
-
-parse_makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/sharpyuv "WEBP_SHARPYUV_SRCS"
-                  "")
-add_library(sharpyuv OBJECT ${WEBP_SHARPYUV_SRCS})
-target_include_directories(sharpyuv
-                            PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
-                            ${CMAKE_CURRENT_SOURCE_DIR})
-set_target_properties(
-  sharpyuv
-  PROPERTIES PUBLIC_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/sharpyuv/sharpyuv.h;\
-${CMAKE_CURRENT_SOURCE_DIR}/sharpyuv/sharpyuv_csp.h;\
-${CMAKE_CURRENT_SOURCE_DIR}/src/webp/types.h")
-
-if(MSVC)
-  # avoid security warnings for e.g., fopen() used in the examples.
-  add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-else()
-  add_definitions(-Wall)
-endif()
-include_directories(${WEBP_DEP_INCLUDE_DIRS})
-add_library(webpdecode OBJECT ${WEBP_DEC_SRCS})
-target_include_directories(webpdecode
-                           PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
-                                   ${CMAKE_CURRENT_SOURCE_DIR})
-add_library(webpdspdecode OBJECT ${WEBP_DSP_COMMON_SRCS} ${WEBP_DSP_DEC_SRCS})
-target_include_directories(webpdspdecode
-                           PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
-                                   ${CMAKE_CURRENT_SOURCE_DIR})
-add_library(webputilsdecode
-            OBJECT
-            ${WEBP_UTILS_COMMON_SRCS}
-            ${WEBP_UTILS_DEC_SRCS})
-target_include_directories(webputilsdecode
-                           PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
-                                   ${CMAKE_CURRENT_SOURCE_DIR})
-add_library(webpdecoder
-            $<TARGET_OBJECTS:webpdecode>
-            $<TARGET_OBJECTS:webpdspdecode>
-            $<TARGET_OBJECTS:webputilsdecode>)
-if(XCODE)
-  libwebp_add_stub_file(webpdecoder)
-endif()
-target_link_libraries(webpdecoder ${WEBP_DEP_LIBRARIES})
-target_include_directories(
-  webpdecoder
-  PRIVATE ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}
-  INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
-set_target_properties(
-  webpdecoder
-  PROPERTIES PUBLIC_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/src/webp/decode.h;\
-${CMAKE_CURRENT_SOURCE_DIR}/src/webp/types.h")
-
-configure_pkg_config("src/libwebpdecoder.pc")
-
-# Build the webp library.
-add_library(webpencode OBJECT ${WEBP_ENC_SRCS})
-target_include_directories(webpencode
-                           PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
-                                   ${CMAKE_CURRENT_SOURCE_DIR})
-add_library(webpdsp
-            OBJECT
-            ${WEBP_DSP_COMMON_SRCS}
-            ${WEBP_DSP_DEC_SRCS}
-            ${WEBP_DSP_ENC_SRCS})
-target_include_directories(webpdsp
-                           PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
-                                   ${CMAKE_CURRENT_SOURCE_DIR})
-add_library(webputils
-            OBJECT
-            ${WEBP_UTILS_COMMON_SRCS}
-            ${WEBP_UTILS_DEC_SRCS}
-            ${WEBP_UTILS_ENC_SRCS})
-target_include_directories(webputils
-                           PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
-                                   ${CMAKE_CURRENT_SOURCE_DIR})
-add_library(webp
-            $<TARGET_OBJECTS:sharpyuv>
-            $<TARGET_OBJECTS:webpdecode>
-            $<TARGET_OBJECTS:webpdsp>
-            $<TARGET_OBJECTS:webpencode>
-            $<TARGET_OBJECTS:webputils>)
-if(XCODE)
-  libwebp_add_stub_file(webp)
-endif()
-target_link_libraries(webp ${WEBP_DEP_LIBRARIES})
-target_include_directories(
-  webp
-  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
-          ${CMAKE_CURRENT_BINARY_DIR}
-  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
-         $<INSTALL_INTERFACE:include>)
-set_target_properties(
-  webp
-  PROPERTIES PUBLIC_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/src/webp/decode.h;\
-${CMAKE_CURRENT_SOURCE_DIR}/src/webp/encode.h;\
-${CMAKE_CURRENT_SOURCE_DIR}/src/webp/types.h")
-
-# Make sure the OBJECT libraries are built with position independent code (it is
-# not ON by default).
-set_target_properties(sharpyuv
-                      webpdecode
-                      webpdspdecode
-                      webputilsdecode
-                      webpencode
-                      webpdsp
-                      webputils
-                      PROPERTIES POSITION_INDEPENDENT_CODE ON)
-configure_pkg_config("src/libwebp.pc")
-
-# Build the webp demux library.
-add_library(webpdemux ${WEBP_DEMUX_SRCS})
-target_link_libraries(webpdemux webp)
-target_include_directories(webpdemux
-                           PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
-                                   ${CMAKE_CURRENT_BINARY_DIR}
-                           PUBLIC $<INSTALL_INTERFACE:include>)
-set_target_properties(
-  webpdemux
-  PROPERTIES PUBLIC_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/src/webp/decode.h;\
-${CMAKE_CURRENT_SOURCE_DIR}/src/webp/demux.h;\
-${CMAKE_CURRENT_SOURCE_DIR}/src/webp/mux_types.h;\
-${CMAKE_CURRENT_SOURCE_DIR}/src/webp/types.h")
-
-configure_pkg_config("src/demux/libwebpdemux.pc")
-
 # Set the version numbers.
 macro(set_version FILE TARGET_NAME NAME_IN_MAKEFILE)
-  file(READ ${CMAKE_CURRENT_SOURCE_DIR}/src/${FILE} SOURCE_FILE)
+  file(READ ${CMAKE_CURRENT_SOURCE_DIR}/${FILE} SOURCE_FILE)
   string(REGEX MATCH
                "${NAME_IN_MAKEFILE}_la_LDFLAGS[^\n]* -version-info [0-9:]+"
                TMP
@@ -420,9 +270,169 @@ macro(set_version FILE TARGET_NAME NAME_IN_MAKEFILE)
                  ${LIBWEBP_MACHO_COMPATIBILITY_VERSION}.${LT_REVISION})
   endif()
 endmacro()
-set_version(Makefile.am webp webp)
-set_version(Makefile.am webpdecoder webpdecoder)
-set_version(demux/Makefile.am webpdemux webpdemux)
+
+# ##############################################################################
+# Build the webpdecoder library.
+
+# Creates a source file with an unused stub function in $CMAKE_BINARY_DIR and
+# adds it to the specified target. Currently used only with Xcode.
+#
+# See also:
+# https://cmake.org/cmake/help/v3.18/command/add_library.html#object-libraries
+# "Some native build systems (such as Xcode) may not like targets that have
+# only object files, so consider adding at least one real source file to any
+# target that references $<TARGET_OBJECTS:objlib>."
+function(libwebp_add_stub_file TARGET)
+  set(stub_source_dir "${CMAKE_BINARY_DIR}")
+  set(stub_source_file
+      "${stub_source_dir}/libwebp_${TARGET}_stub.c")
+  set(stub_source_code
+      "// Generated file. DO NOT EDIT!\n"
+      "// C source file created for target ${TARGET}.\n"
+      "void libwebp_${TARGET}_stub_function(void)\;\n"
+      "void libwebp_${TARGET}_stub_function(void) {}\n")
+  file(WRITE "${stub_source_file}" ${stub_source_code})
+
+  target_sources(${TARGET} PRIVATE ${stub_source_file})
+endfunction()
+
+parse_makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/sharpyuv "WEBP_SHARPYUV_SRCS"
+                  "")
+add_library(sharpyuv ${WEBP_SHARPYUV_SRCS})
+set_version(sharpyuv/Makefile.am sharpyuv sharpyuv)
+target_include_directories(sharpyuv
+                            PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
+                            ${CMAKE_CURRENT_SOURCE_DIR}
+                            ${CMAKE_CURRENT_SOURCE_DIR}/src)
+set_target_properties(
+  sharpyuv
+  PROPERTIES PUBLIC_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/sharpyuv/sharpyuv.h;\
+${CMAKE_CURRENT_SOURCE_DIR}/sharpyuv/sharpyuv_csp.h")
+install(TARGETS sharpyuv
+        EXPORT ${PROJECT_NAME}Targets
+        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/webp/sharpyuv
+        INCLUDES
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} ${CMAKE_INSTALL_INCLUDEDIR}/webp
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+if(MSVC)
+  # avoid security warnings for e.g., fopen() used in the examples.
+  add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+else()
+  add_definitions(-Wall)
+endif()
+include_directories(${WEBP_DEP_INCLUDE_DIRS})
+add_library(webpdecode OBJECT ${WEBP_DEC_SRCS})
+target_include_directories(webpdecode
+                           PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
+                                   ${CMAKE_CURRENT_SOURCE_DIR})
+add_library(webpdspdecode OBJECT ${WEBP_DSP_COMMON_SRCS} ${WEBP_DSP_DEC_SRCS})
+target_include_directories(webpdspdecode
+                           PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
+                                   ${CMAKE_CURRENT_SOURCE_DIR})
+add_library(webputilsdecode
+            OBJECT
+            ${WEBP_UTILS_COMMON_SRCS}
+            ${WEBP_UTILS_DEC_SRCS})
+target_include_directories(webputilsdecode
+                           PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
+                                   ${CMAKE_CURRENT_SOURCE_DIR})
+add_library(webpdecoder
+            $<TARGET_OBJECTS:webpdecode>
+            $<TARGET_OBJECTS:webpdspdecode>
+            $<TARGET_OBJECTS:webputilsdecode>)
+if(XCODE)
+  libwebp_add_stub_file(webpdecoder)
+endif()
+target_link_libraries(webpdecoder ${WEBP_DEP_LIBRARIES})
+target_include_directories(
+  webpdecoder
+  PRIVATE ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}
+  INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+set_target_properties(
+  webpdecoder
+  PROPERTIES PUBLIC_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/src/webp/decode.h;\
+${CMAKE_CURRENT_SOURCE_DIR}/src/webp/types.h")
+
+configure_pkg_config("src/libwebpdecoder.pc")
+
+# Build the webp library.
+add_library(webpencode OBJECT ${WEBP_ENC_SRCS})
+target_include_directories(webpencode
+                           PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
+                                   ${CMAKE_CURRENT_SOURCE_DIR}
+                                   ${CMAKE_CURRENT_SOURCE_DIR}/src)
+add_library(webpdsp
+            OBJECT
+            ${WEBP_DSP_COMMON_SRCS}
+            ${WEBP_DSP_DEC_SRCS}
+            ${WEBP_DSP_ENC_SRCS})
+target_include_directories(webpdsp
+                           PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
+                                   ${CMAKE_CURRENT_SOURCE_DIR})
+add_library(webputils
+            OBJECT
+            ${WEBP_UTILS_COMMON_SRCS}
+            ${WEBP_UTILS_DEC_SRCS}
+            ${WEBP_UTILS_ENC_SRCS})
+target_include_directories(webputils
+                           PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
+                                   ${CMAKE_CURRENT_SOURCE_DIR})
+add_library(webp
+            $<TARGET_OBJECTS:webpdecode>
+            $<TARGET_OBJECTS:webpdsp>
+            $<TARGET_OBJECTS:webpencode>
+            $<TARGET_OBJECTS:webputils>)
+target_link_libraries(webp sharpyuv)
+if(XCODE)
+  libwebp_add_stub_file(webp)
+endif()
+target_link_libraries(webp ${WEBP_DEP_LIBRARIES})
+target_include_directories(
+  webp
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+          ${CMAKE_CURRENT_BINARY_DIR}
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+         $<INSTALL_INTERFACE:include>)
+set_target_properties(
+  webp
+  PROPERTIES PUBLIC_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/src/webp/decode.h;\
+${CMAKE_CURRENT_SOURCE_DIR}/src/webp/encode.h;\
+${CMAKE_CURRENT_SOURCE_DIR}/src/webp/types.h")
+
+# Make sure the OBJECT libraries are built with position independent code (it is
+# not ON by default).
+set_target_properties(webpdecode
+                      webpdspdecode
+                      webputilsdecode
+                      webpencode
+                      webpdsp
+                      webputils
+                      PROPERTIES POSITION_INDEPENDENT_CODE ON)
+configure_pkg_config("src/libwebp.pc")
+
+# Build the webp demux library.
+add_library(webpdemux ${WEBP_DEMUX_SRCS})
+target_link_libraries(webpdemux webp)
+target_include_directories(webpdemux
+                           PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+                                   ${CMAKE_CURRENT_BINARY_DIR}
+                           PUBLIC $<INSTALL_INTERFACE:include>)
+set_target_properties(
+  webpdemux
+  PROPERTIES PUBLIC_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/src/webp/decode.h;\
+${CMAKE_CURRENT_SOURCE_DIR}/src/webp/demux.h;\
+${CMAKE_CURRENT_SOURCE_DIR}/src/webp/mux_types.h;\
+${CMAKE_CURRENT_SOURCE_DIR}/src/webp/types.h")
+
+configure_pkg_config("src/demux/libwebpdemux.pc")
+
+set_version(src/Makefile.am webp webp)
+set_version(src/Makefile.am webpdecoder webpdecoder)
+set_version(src/demux/Makefile.am webpdemux webpdemux)
 file(READ ${CMAKE_CURRENT_SOURCE_DIR}/configure.ac CONFIGURE_FILE)
 string(REGEX MATCH
              "AC_INIT\\([^\n]*\\[[0-9\\.]+\\]"
@@ -537,7 +547,7 @@ if(WEBP_BUILD_LIBWEBPMUX)
   target_include_directories(webpmux
                              PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
                                      ${CMAKE_CURRENT_SOURCE_DIR})
-  set_version(mux/Makefile.am webpmux webpmux)
+  set_version(src/mux/Makefile.am webpmux webpmux)
   set_target_properties(webpmux
                         PROPERTIES PUBLIC_HEADER
                                    "${CMAKE_CURRENT_SOURCE_DIR}/src/webp/mux.h;\
