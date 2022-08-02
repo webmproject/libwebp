@@ -35,3 +35,4 @@ libsharpyuv_la_LIBADD =
 libsharpyuv_la_LIBADD += libsharpyuv_sse2.la
 libsharpyuv_la_LIBADD += libsharpyuv_neon.la
 libsharpyuvincludedir = $(includedir)/webp/sharpyuv
+pkgconfig_DATA = libsharpyuv.pc
