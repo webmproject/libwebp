@@ -46,9 +46,10 @@ for:
   * **Animation.** An image may have multiple frames with pauses between them,
     making it an animation.
 
-The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
-"SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
-document are to be interpreted as described in [RFC 2119][].
+The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD",
+"SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "OPTIONAL" in this
+document are to be interpreted as described in BCP 14 [RFC 2119][] [RFC 8174][]
+when, and only when, they appear in all capitals, as shown here.
 
 Bit numbering in chunk diagrams starts at `0` for the most significant bit
 ('MSB 0') as described in [RFC 1166][].
@@ -83,12 +84,19 @@ _uint32_
 _FourCC_
 
 : A _FourCC_ (four-character code) is a _uint32_ created by concatenating four
-  ASCII characters in little-endian order.
+  ASCII characters in little-endian order. This means 'aaaa' (%x61.61.61.61) and
+  'AAAA' (%x41.41.41.41) are treated as different _FourCCs_.
 
 _1-based_
 
 : An unsigned integer field storing values offset by `-1`. e.g., Such a field
   would store value _25_ as _24_.
+
+_ChunkHeader('ABCD')_
+
+: This is used to describe the _FourCC_ and _Chunk Size_ header of individual
+  chunks, where 'ABCD' is the FourCC for the chunk. This element's size is 8
+  bytes.
 
 
 RIFF File Format
@@ -106,7 +114,7 @@ The basic element of a RIFF file is a _chunk_. It consists of:
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                          Chunk Size                           |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |                         Chunk Payload                         |
+    :                         Chunk Payload                         :
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 Chunk FourCC: 32 bits
@@ -121,13 +129,8 @@ Chunk Size: 32 bits (_uint32_)
 Chunk Payload: _Chunk Size_ bytes
 
 : The data payload. If _Chunk Size_ is odd, a single padding byte -- that
-  SHOULD be `0` -- is added.
-
-_ChunkHeader('ABCD')_
-
-: This is used to describe the _FourCC_ and _Chunk Size_ header of individual
-  chunks, where 'ABCD' is the FourCC for the chunk. This element's
-  size is 8 bytes.
+  SHOULD be `0` to conform with RIFF -- is added. Applications MAY use
+  another value, but readers may fail to parse the file.
 
 **Note:** RIFF has a convention that all-uppercase chunk FourCCs are standard
 chunks that apply to any RIFF file format, while FourCCs specific to a file
@@ -163,9 +166,10 @@ File Size: 32 bits (_uint32_)
 
 A WebP file MUST begin with a RIFF header with the FourCC 'WEBP'. The file size
 in the header is the total size of the chunks that follow plus `4` bytes for
-the 'WEBP' FourCC. The file SHOULD NOT contain anything after it. As the size
-of any chunk is even, the size given by the RIFF header is also even. The
-contents of individual chunks will be described in the following sections.
+the 'WEBP' FourCC. The file SHOULD NOT contain anything after it. Readers MAY
+parse such files, ignoring the trailing data. As the size of any chunk is even,
+the size given by the RIFF header is also even. The contents of individual
+chunks will be described in the following sections.
 
 
 Simple File Format (Lossy)
@@ -180,9 +184,11 @@ Simple WebP (lossy) file format:
      0                   1                   2                   3
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                                                               |
     |                    WebP file header (12 bytes)                |
+    |                                                               |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |                          VP8 chunk                            |
+    :                          VP8 chunk                            :
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 VP8 chunk:
@@ -191,20 +197,24 @@ VP8 chunk:
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                      ChunkHeader('VP8 ')                      |
+    |                                                               |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |                           VP8 data                            |
+    :                           VP8 data                            :
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 VP8 data: _Chunk Size_ bytes
 
 : VP8 bitstream data.
 
+Note the fourth character in the 'VP8 ' fourcc is an ASCII space (%x20).
+
 The VP8 bitstream format specification can be found at [VP8 Data Format and
 Decoding Guide][vp8spec]. Note that the VP8 frame header contains the VP8 frame
 width and height. That is assumed to be the width and height of the canvas.
 
-The VP8 specification describes how to decode the image into Y'CbCr
-format. To convert to RGB, Rec. 601 SHOULD be used.
+The VP8 specification describes how to decode the image into Y'CbCr format. To
+convert to RGB, Rec. 601 SHOULD be used. Applications MAY use another
+conversion method, but visual results may differ among decoders.
 
 
 Simple File Format (Lossless)
@@ -221,9 +231,11 @@ Simple WebP (lossless) file format:
      0                   1                   2                   3
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                                                               |
     |                    WebP file header (12 bytes)                |
+    |                                                               |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |                          VP8L chunk                           |
+    :                          VP8L chunk                           :
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 VP8L chunk:
@@ -232,8 +244,9 @@ VP8L chunk:
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                      ChunkHeader('VP8L')                      |
+    |                                                               |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |                           VP8L data                           |
+    :                           VP8L data                           :
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 VP8L data: _Chunk Size_ bytes
@@ -293,9 +306,12 @@ Extended WebP file header:
      0                   1                   2                   3
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                                                               |
     |                   WebP file header (12 bytes)                 |
+    |                                                               |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                      ChunkHeader('VP8X')                      |
+    |                                                               |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |Rsv|I|L|E|X|A|R|                   Reserved                    |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -368,6 +384,7 @@ animation.
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                      ChunkHeader('ANIM')                      |
+    |                                                               |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                       Background Color                        |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -409,6 +426,7 @@ If the _Animation flag_ is not set, then this chunk SHOULD NOT be present.
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                      ChunkHeader('ANMF')                      |
+    |                                                               |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                        Frame X                |             ...
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -418,7 +436,7 @@ If the _Animation flag_ is not set, then this chunk SHOULD NOT be present.
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                 Frame Duration                |  Reserved |B|D|
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |                         Frame Data                            |
+    :                         Frame Data                            :
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 Frame X: 24 bits (_uint24_)
@@ -521,6 +539,7 @@ _padded_ chunks as described by the [RIFF file format](#riff-file-format).
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                      ChunkHeader('ALPH')                      |
+    |                                                               |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |Rsv| P | F | C |     Alpha Bitstream...                        |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -531,7 +550,7 @@ Reserved (Rsv): 2 bits
 
 Pre-processing (P): 2 bits
 
-: These INFORMATIVE bits are used to signal the pre-processing that has
+: These _informative_ bits are used to signal the pre-processing that has
   been performed during compression. The decoder can use this information to
   e.g. dither the values or smooth the gradients prior to display.
 
@@ -644,8 +663,9 @@ and [Simple File Format (Lossless)](#simple-file-format-lossless) respectively.
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                      ChunkHeader('ICCP')                      |
+    |                                                               |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |                       Color Profile                           |
+    :                       Color Profile                           :
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 Color Profile: _Chunk Size_ bytes
@@ -676,8 +696,9 @@ EXIF chunk:
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                      ChunkHeader('EXIF')                      |
+    |                                                               |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |                        Exif Metadata                          |
+    :                        Exif Metadata                          :
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 Exif Metadata: _Chunk Size_ bytes
@@ -690,13 +711,16 @@ XMP chunk:
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                      ChunkHeader('XMP ')                      |
+    |                                                               |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |                        XMP Metadata                           |
+    :                        XMP Metadata                           :
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 XMP Metadata: _Chunk Size_ bytes
 
 : image metadata in XMP format.
+
+Note the fourth character in the 'XMP ' fourcc is an ASCII space (%x20).
 
 Additional guidance about handling metadata can be found in the
 Metadata Working Group's [Guidelines for Handling Metadata][metadata].
@@ -817,3 +841,4 @@ RIFF/WEBP
 [metadata]: https://web.archive.org/web/20180919181934/http://www.metadataworkinggroup.org/pdf/mwg_guidance.pdf
 [rfc 1166]: https://datatracker.ietf.org/doc/html/rfc1166
 [rfc 2119]: https://datatracker.ietf.org/doc/html/rfc2119
+[rfc 8174]: https://datatracker.ietf.org/doc/html/rfc8174
