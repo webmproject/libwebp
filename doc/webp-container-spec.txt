@@ -92,6 +92,12 @@ _1-based_
 : An unsigned integer field storing values offset by `-1`. e.g., Such a field
   would store value _25_ as _24_.
 
+_ChunkHeader('ABCD')_
+
+: This is used to describe the _FourCC_ and _Chunk Size_ header of individual
+  chunks, where 'ABCD' is the FourCC for the chunk. This element's size is 8
+  bytes.
+
 
 RIFF File Format
 ----------------
@@ -124,12 +130,6 @@ Chunk Payload: _Chunk Size_ bytes
 
 : The data payload. If _Chunk Size_ is odd, a single padding byte -- that
   SHOULD be `0` -- is added.
-
-_ChunkHeader('ABCD')_
-
-: This is used to describe the _FourCC_ and _Chunk Size_ header of individual
-  chunks, where 'ABCD' is the FourCC for the chunk. This element's
-  size is 8 bytes.
 
 **Note:** RIFF has a convention that all-uppercase chunk FourCCs are standard
 chunks that apply to any RIFF file format, while FourCCs specific to a file
