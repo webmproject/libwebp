@@ -46,9 +46,10 @@ for:
   * **Animation.** An image may have multiple frames with pauses between them,
     making it an animation.
 
-The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
-"SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
-document are to be interpreted as described in [RFC 2119][].
+The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD",
+"SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "OPTIONAL" in this
+document are to be interpreted as described in BCP 14 [RFC 2119][] [RFC 8174][]
+when, and only when, they appear in all capitals, as shown here.
 
 Bit numbering in chunk diagrams starts at `0` for the most significant bit
 ('MSB 0') as described in [RFC 1166][].
@@ -531,7 +532,7 @@ Reserved (Rsv): 2 bits
 
 Pre-processing (P): 2 bits
 
-: These INFORMATIVE bits are used to signal the pre-processing that has
+: These _informative_ bits are used to signal the pre-processing that has
   been performed during compression. The decoder can use this information to
   e.g. dither the values or smooth the gradients prior to display.
 
@@ -817,3 +818,4 @@ RIFF/WEBP
 [metadata]: https://web.archive.org/web/20180919181934/http://www.metadataworkinggroup.org/pdf/mwg_guidance.pdf
 [rfc 1166]: https://datatracker.ietf.org/doc/html/rfc1166
 [rfc 2119]: https://datatracker.ietf.org/doc/html/rfc2119
+[rfc 8174]: https://datatracker.ietf.org/doc/html/rfc8174
