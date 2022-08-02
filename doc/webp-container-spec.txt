@@ -129,7 +129,8 @@ Chunk Size: 32 bits (_uint32_)
 Chunk Payload: _Chunk Size_ bytes
 
 : The data payload. If _Chunk Size_ is odd, a single padding byte -- that
-  SHOULD be `0` -- is added.
+  SHOULD be `0` to conform with RIFF -- is added. Applications MAY use
+  another value, but readers may fail to parse the file.
 
 **Note:** RIFF has a convention that all-uppercase chunk FourCCs are standard
 chunks that apply to any RIFF file format, while FourCCs specific to a file
@@ -165,9 +166,10 @@ File Size: 32 bits (_uint32_)
 
 A WebP file MUST begin with a RIFF header with the FourCC 'WEBP'. The file size
 in the header is the total size of the chunks that follow plus `4` bytes for
-the 'WEBP' FourCC. The file SHOULD NOT contain anything after it. As the size
-of any chunk is even, the size given by the RIFF header is also even. The
-contents of individual chunks will be described in the following sections.
+the 'WEBP' FourCC. The file SHOULD NOT contain anything after it. Readers MAY
+parse such files, ignoring the trailing data. As the size of any chunk is even,
+the size given by the RIFF header is also even. The contents of individual
+chunks will be described in the following sections.
 
 
 Simple File Format (Lossy)
@@ -210,8 +212,9 @@ The VP8 bitstream format specification can be found at [VP8 Data Format and
 Decoding Guide][vp8spec]. Note that the VP8 frame header contains the VP8 frame
 width and height. That is assumed to be the width and height of the canvas.
 
-The VP8 specification describes how to decode the image into Y'CbCr
-format. To convert to RGB, Rec. 601 SHOULD be used.
+The VP8 specification describes how to decode the image into Y'CbCr format. To
+convert to RGB, Rec. 601 SHOULD be used. Applications MAY use another
+conversion method, but visual results may differ among decoders.
 
 
 Simple File Format (Lossless)
