@@ -54,8 +54,8 @@ when, and only when, they appear in all capitals, as shown here.
 Bit numbering in chunk diagrams starts at `0` for the most significant bit
 ('MSB 0') as described in [RFC 1166][].
 
-Terminology &amp; Basics
-------------------------
+Terminology & Basics
+--------------------
 
 A WebP file contains either a still image (i.e., an encoded matrix of pixels)
 or an [animation](#animation). Optionally, it can also contain transparency
