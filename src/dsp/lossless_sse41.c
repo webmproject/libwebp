@@ -29,7 +29,7 @@ static void TransformColorInverse_SSE41(const VP8LMultipliers* const m,
                                           (CST(green_to_blue_) & 0xffff));
   const __m128i mults_b2 = _mm_set1_epi32(CST(red_to_blue_));
 #undef CST
-  const __m128i mask_ag = _mm_set1_epi32(0xff00ff00);
+  const __m128i mask_ag = _mm_set1_epi32((int)0xff00ff00);
   const __m128i perm1 = _mm_setr_epi8(-1, 1, -1, 1, -1, 5, -1, 5,
                                       -1, 9, -1, 9, -1, 13, -1, 13);
   const __m128i perm2 = _mm_setr_epi8(-1, 2, -1, -1, -1, 6, -1, -1,

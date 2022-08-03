@@ -192,7 +192,7 @@ static uint32_t Predictor13_SSE2(const uint32_t* const left,
 static void PredictorAdd0_SSE2(const uint32_t* in, const uint32_t* upper,
                                int num_pixels, uint32_t* out) {
   int i;
-  const __m128i black = _mm_set1_epi32(ARGB_BLACK);
+  const __m128i black = _mm_set1_epi32((int)ARGB_BLACK);
   for (i = 0; i + 4 <= num_pixels; i += 4) {
     const __m128i src = _mm_loadu_si128((const __m128i*)&in[i]);
     const __m128i res = _mm_add_epi8(src, black);
@@ -468,7 +468,7 @@ static void TransformColorInverse_SSE2(const VP8LMultipliers* const m,
   const __m128i mults_b2 = MK_CST_16(CST(red_to_blue_), 0);
 #undef MK_CST_16
 #undef CST
-  const __m128i mask_ag = _mm_set1_epi32(0xff00ff00);  // alpha-green masks
+  const __m128i mask_ag = _mm_set1_epi32((int)0xff00ff00);  // alpha-green masks
   int i;
   for (i = 0; i + 4 <= num_pixels; i += 4) {
     const __m128i in = _mm_loadu_si128((const __m128i*)&src[i]); // argb
@@ -532,7 +532,7 @@ static void ConvertBGRAToRGB_SSE2(const uint32_t* src, int num_pixels,
 
 static void ConvertBGRAToRGBA_SSE2(const uint32_t* src,
                                    int num_pixels, uint8_t* dst) {
-  const __m128i red_blue_mask = _mm_set1_epi32(0x00ff00ffu);
+  const __m128i red_blue_mask = _mm_set1_epi32(0x00ff00ff);
   const __m128i* in = (const __m128i*)src;
   __m128i* out = (__m128i*)dst;
   while (num_pixels >= 8) {

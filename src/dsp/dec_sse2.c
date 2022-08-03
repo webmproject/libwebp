@@ -1070,7 +1070,7 @@ static void HE16_SSE2(uint8_t* dst) {     // horizontal
 
 static WEBP_INLINE void Put16_SSE2(uint8_t v, uint8_t* dst) {
   int j;
-  const __m128i values = _mm_set1_epi8(v);
+  const __m128i values = _mm_set1_epi8((char)v);
   for (j = 0; j < 16; ++j) {
     _mm_storeu_si128((__m128i*)(dst + j * BPS), values);
   }
@@ -1130,7 +1130,7 @@ static void VE8uv_SSE2(uint8_t* dst) {    // vertical
 // helper for chroma-DC predictions
 static WEBP_INLINE void Put8x8uv_SSE2(uint8_t v, uint8_t* dst) {
   int j;
-  const __m128i values = _mm_set1_epi8(v);
+  const __m128i values = _mm_set1_epi8((char)v);
   for (j = 0; j < 8; ++j) {
     _mm_storel_epi64((__m128i*)(dst + j * BPS), values);
   }

@@ -198,7 +198,7 @@ static WEBP_INLINE void ProcessRow_SSE2(const __m128i* const A0,
                                         const __m128i* const mult,
                                         uint8_t* const dst) {
   const __m128i rounder = _mm_set_epi32(0, ROUNDER, 0, ROUNDER);
-  const __m128i mask = _mm_set_epi32(0xffffffffu, 0, 0xffffffffu, 0);
+  const __m128i mask = _mm_set_epi32(~0, 0, ~0, 0);
   const __m128i B0 = _mm_mul_epu32(*A0, *mult);
   const __m128i B1 = _mm_mul_epu32(*A1, *mult);
   const __m128i B2 = _mm_mul_epu32(*A2, *mult);

@@ -481,7 +481,7 @@ static void CollectHistogram_SSE2(const uint8_t* ref, const uint8_t* pred,
 // helper for chroma-DC predictions
 static WEBP_INLINE void Put8x8uv_SSE2(uint8_t v, uint8_t* dst) {
   int j;
-  const __m128i values = _mm_set1_epi8(v);
+  const __m128i values = _mm_set1_epi8((char)v);
   for (j = 0; j < 8; ++j) {
     _mm_storel_epi64((__m128i*)(dst + j * BPS), values);
   }
@@ -489,7 +489,7 @@ static WEBP_INLINE void Put8x8uv_SSE2(uint8_t v, uint8_t* dst) {
 
 static WEBP_INLINE void Put16_SSE2(uint8_t v, uint8_t* dst) {
   int j;
-  const __m128i values = _mm_set1_epi8(v);
+  const __m128i values = _mm_set1_epi8((char)v);
   for (j = 0; j < 16; ++j) {
     _mm_store_si128((__m128i*)(dst + j * BPS), values);
   }
@@ -540,7 +540,7 @@ static WEBP_INLINE void VerticalPred_SSE2(uint8_t* dst,
 static WEBP_INLINE void HE8uv_SSE2(uint8_t* dst, const uint8_t* left) {
   int j;
   for (j = 0; j < 8; ++j) {
-    const __m128i values = _mm_set1_epi8(left[j]);
+    const __m128i values = _mm_set1_epi8((char)left[j]);
     _mm_storel_epi64((__m128i*)dst, values);
     dst += BPS;
   }
@@ -549,7 +549,7 @@ static WEBP_INLINE void HE8uv_SSE2(uint8_t* dst, const uint8_t* left) {
 static WEBP_INLINE void HE16_SSE2(uint8_t* dst, const uint8_t* left) {
   int j;
   for (j = 0; j < 16; ++j) {
-    const __m128i values = _mm_set1_epi8(left[j]);
+    const __m128i values = _mm_set1_epi8((char)left[j]);
     _mm_store_si128((__m128i*)dst, values);
     dst += BPS;
   }
