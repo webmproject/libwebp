@@ -229,7 +229,7 @@ depends on the transform type. Next we describe the transform data for
 different types.
 
 
-### Predictor Transform
+### 4.1 Predictor Transform
 
 The predictor transform can be used to reduce entropy by exploiting the
 fact that neighboring pixels are often correlated. In the predictor
@@ -376,7 +376,7 @@ the modes \[0..13\] just like pixels not on the border, but the leftmost pixel
 on the same row as the current pixel is instead used as the TR-pixel.
 
 
-### Color Transform
+### 4.2 Color Transform
 
 \[AMENDED2\]
 
@@ -488,7 +488,7 @@ void InverseTransform(uint8 red, uint8 green, uint8 blue,
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-### Subtract Green Transform
+### 4.3 Subtract Green Transform
 
 The subtract green transform subtracts green values from red and blue
 values of each pixel. When this transform is present, the decoder needs
@@ -510,7 +510,7 @@ the subtract green transform can be coded using fewer bits than a
 full-blown color transform.
 
 
-### Color Indexing Transform
+### 4.4 Color Indexing Transform
 
 If there are not many unique pixel values, it may be more efficient to
 create a color index array and replace the pixel values by the array's
@@ -1079,7 +1079,7 @@ all details. End-of-image (EOI) is only implicitly coded into the number
 of pixels (xsize * ysize).
 
 
-#### Basic Structure
+#### 7.1 Basic Structure
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <format> ::= <RIFF header><image size><image stream>
@@ -1087,7 +1087,7 @@ of pixels (xsize * ysize).
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-#### Structure of Transforms
+#### 7.2 Structure of Transforms
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <optional-transform> ::= (1-bit value 1; <transform> <optional-transform>) |
@@ -1104,7 +1104,7 @@ of pixels (xsize * ysize).
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-#### Structure of the Image Data
+#### 7.3 Structure of the Image Data
 
 \[AMENDED2\]
 
