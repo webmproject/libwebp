@@ -49,7 +49,7 @@ static WEBP_INLINE uint32_t Clip255(uint32_t a) {
 }
 
 static WEBP_INLINE int AddSubtractComponentFull(int a, int b, int c) {
-  return Clip255(a + b - c);
+  return Clip255((uint32_t)(a + b - c));
 }
 
 static WEBP_INLINE uint32_t ClampedAddSubtractFull(uint32_t c0, uint32_t c1,
@@ -66,7 +66,7 @@ static WEBP_INLINE uint32_t ClampedAddSubtractFull(uint32_t c0, uint32_t c1,
 }
 
 static WEBP_INLINE int AddSubtractComponentHalf(int a, int b) {
-  return Clip255(a + (a - b) / 2);
+  return Clip255((uint32_t)(a + (a - b) / 2));
 }
 
 static WEBP_INLINE uint32_t ClampedAddSubtractHalf(uint32_t c0, uint32_t c1,
