@@ -37,8 +37,52 @@ using today's PNG format.
 {:toc}
 
 
-Nomenclature
-------------
+1 Introduction
+--------------
+
+This document describes the compressed data representation of a WebP
+lossless image. It is intended as a detailed reference for WebP lossless
+encoder and decoder implementation.
+
+In this document, we extensively use C programming language syntax to
+describe the bitstream, and assume the existence of a function for
+reading bits, `ReadBits(n)`. The bytes are read in the natural order of
+the stream containing them, and bits of each byte are read in
+least-significant-bit-first order. When multiple bits are read at the
+same time, the integer is constructed from the original data in the
+original order. The most significant bits of the returned integer are
+also the most significant bits of the original data. Thus the statement
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+b = ReadBits(2);
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+is equivalent with the two statements below:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+b = ReadBits(1);
+b |= ReadBits(1) << 1;
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+We assume that each color component (e.g. alpha, red, blue and green) is
+represented using an 8-bit byte. We define the corresponding type as
+uint8. A whole ARGB pixel is represented by a type called uint32, an
+unsigned integer consisting of 32 bits. In the code showing the behavior
+of the transformations, alpha value is codified in bits 31..24, red in
+bits 23..16, green in bits 15..8 and blue in bits 7..0, but
+implementations of the format are free to use another representation
+internally.
+
+Broadly, a WebP lossless image contains header data, transform
+information and actual image data. Headers contain width and height of
+the image. A WebP lossless image can go through four different types of
+transformation before being entropy encoded. The transform information
+in the bitstream contains the data required to apply the respective
+inverse transforms.
+
+
+2 Nomenclature
+--------------
 
 ARGB
 : A pixel value consisting of alpha, red, green, and blue values.
@@ -95,51 +139,7 @@ scan-line order
   completed, continue from the left-hand column of the next row.
 
 
-1 Introduction
---------------
-
-This document describes the compressed data representation of a WebP
-lossless image. It is intended as a detailed reference for WebP lossless
-encoder and decoder implementation.
-
-In this document, we extensively use C programming language syntax to
-describe the bitstream, and assume the existence of a function for
-reading bits, `ReadBits(n)`. The bytes are read in the natural order of
-the stream containing them, and bits of each byte are read in
-least-significant-bit-first order. When multiple bits are read at the
-same time, the integer is constructed from the original data in the
-original order. The most significant bits of the returned integer are
-also the most significant bits of the original data. Thus the statement
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-b = ReadBits(2);
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-is equivalent with the two statements below:
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-b = ReadBits(1);
-b |= ReadBits(1) << 1;
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-We assume that each color component (e.g. alpha, red, blue and green) is
-represented using an 8-bit byte. We define the corresponding type as
-uint8. A whole ARGB pixel is represented by a type called uint32, an
-unsigned integer consisting of 32 bits. In the code showing the behavior
-of the transformations, alpha value is codified in bits 31..24, red in
-bits 23..16, green in bits 15..8 and blue in bits 7..0, but
-implementations of the format are free to use another representation
-internally.
-
-Broadly, a WebP lossless image contains header data, transform
-information and actual image data. Headers contain width and height of
-the image. A WebP lossless image can go through four different types of
-transformation before being entropy encoded. The transform information
-in the bitstream contains the data required to apply the respective
-inverse transforms.
-
-
-2 RIFF Header
+3 RIFF Header
 -------------
 
 The beginning of the header has the RIFF container. This consists of the
@@ -183,7 +183,7 @@ int version_number = ReadBits(3);
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-3 Transformations
+4 Transformations
 -----------------
 
 Transformations are reversible manipulations of the image data that can
@@ -255,7 +255,7 @@ The transform data contains the prediction mode for each block of the
 image. All the `block_width * block_height` pixels of a block use same
 prediction mode. The prediction modes are treated as pixels of an image
 and encoded using the same techniques described in
-[Chapter 4](#image-data).
+[Chapter 5](#image-data).
 
 For a pixel _x, y_, one can compute the respective filter block address
 by:
@@ -460,7 +460,7 @@ The remaining part of the color transform data contains
 `ColorTransformElement` instances corresponding to each block of the
 image. `ColorTransformElement` instances are treated as pixels of an
 image and encoded using the methods described in
-[Chapter 4](#image-data).
+[Chapter 5](#image-data).
 
 During decoding, `ColorTransformElement` instances of the blocks are
 decoded and the inverse color transform is applied on the ARGB values of
@@ -606,12 +606,12 @@ The values are packed into the green component as follows:
     the more significant bits of the green value at x / 8.
 
 
-4 Image Data
+5 Image Data
 ------------
 
 Image data is an array of pixel values in scan-line order.
 
-### 4.1 Roles of Image Data
+### 5.1 Roles of Image Data
 
 We use image data in five different roles:
 
@@ -634,7 +634,7 @@ We use image data in five different roles:
      [Color Indexing Transform](#color-indexing-transform). This is stored as an
      image of width `color_table_size` and height `1`.
 
-### 4.2 Encoding of Image Data
+### 5.2 Encoding of Image Data
 
 The encoding of image data is independent of its role.
 
@@ -660,12 +660,12 @@ Each pixel is encoded using one of the three possible methods:
 
 The following sub-sections describe each of these in detail.
 
-#### 4.2.1 Prefix Coded Literals
+#### 5.2.1 Prefix Coded Literals
 
 The pixel is stored as prefix coded values of green, red, blue and alpha (in
 that order). See [this section](#decoding-entropy-coded-image-data) for details.
 
-#### 4.2.2 LZ77 Backward Reference
+#### 5.2.2 LZ77 Backward Reference
 
 Backward references are tuples of _length_ and _distance code_:
 
@@ -781,14 +781,14 @@ where `distance_map` is the mapping noted above and `xsize` is the width of the
 image in pixels.
 
 
-#### 4.2.3 Color Cache Coding
+#### 5.2.3 Color Cache Coding
 {:#color-cache-code}
 
 Color cache stores a set of colors that have been recently used in the image.
 
 **Rationale:** This way, the recently used colors can sometimes be referred to
 more efficiently than emitting them using the other two methods (described in
-[4.2.1](#prefix-coded-literals) and [4.2.2](#lz77-backward-reference)).
+[5.2.1](#prefix-coded-literals) and [5.2.2](#lz77-backward-reference)).
 
 Color cache codes are stored as follows. First, there is a 1-bit value that
 indicates if the color cache is used. If this bit is 0, no color cache codes
@@ -818,10 +818,10 @@ by inserting every pixel, be it produced by backward referencing or as
 literals, into the cache in the order they appear in the stream.
 
 
-5 Entropy Code
+6 Entropy Code
 --------------
 
-### 5.1 Overview
+### 6.1 Overview
 
 Most of the data is coded using a [canonical prefix code][canonical_huff].
 Hence, the codes are transmitted by sending the _prefix code lengths_, as
@@ -835,7 +835,7 @@ codes.
 So, allowing them to use different entropy codes provides more flexibility and
 potentially better compression.
 
-### 5.2 Details
+### 6.2 Details
 
 The encoded image data consists of several parts:
 
@@ -843,7 +843,7 @@ The encoded image data consists of several parts:
   1. Meta prefix codes
   1. Entropy-coded image data
 
-#### 5.2.1 Decoding and Building the Prefix Codes
+#### 6.2.1 Decoding and Building the Prefix Codes
 
 There are several steps in decoding the prefix codes.
 
@@ -955,7 +955,7 @@ distance) is formed using their respective alphabet sizes:
   * other literals (A,R,B): 256
   * distance code: 40
 
-#### 5.2.2 Decoding of Meta Prefix Codes
+#### 6.2.2 Decoding of Meta Prefix Codes
 
 As noted earlier, the format allows the use of different prefix codes for
 different blocks of the image. _Meta prefix codes_ are indexes identifying
@@ -1036,7 +1036,7 @@ of `PrefixCodeGroup` (of size `num_prefix_groups`).
 The decoder then uses prefix code group `prefix_group` to decode the pixel
 (x, y) as explained in the [next section](#decoding-entropy-coded-image-data).
 
-#### 5.2.3 Decoding Entropy-coded Image Data
+#### 6.2.3 Decoding Entropy-coded Image Data
 
 \[AMENDED2\]
 
@@ -1071,7 +1071,7 @@ The interpretation of S depends on its value:
      1. Get ARGB color from the color cache at that index.
 
 
-6 Overall Structure of the Format
+7 Overall Structure of the Format
 ---------------------------------
 
 Below is a view into the format in Backus-Naur form. It does not cover
