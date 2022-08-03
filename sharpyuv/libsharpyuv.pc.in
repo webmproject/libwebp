@@ -3,10 +3,9 @@ exec_prefix=@exec_prefix@
 libdir=@libdir@
 includedir=@includedir@
 
-Name: libwebp
-Description: Library for the WebP graphics format
+Name: libsharpyuv
+Description: Library for sharp RGB to YUV conversion
 Version: @PACKAGE_VERSION@
-Requires: libsharpyuv
 Cflags: -I${includedir}
-Libs: -L${libdir} -lwebp
+Libs: -L${libdir} -lsharpyuv
 Libs.private: -lm @PTHREAD_CFLAGS@ @PTHREAD_LIBS@
