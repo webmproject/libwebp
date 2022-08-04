@@ -1062,7 +1062,7 @@ static void VE16_SSE2(uint8_t* dst) {
 static void HE16_SSE2(uint8_t* dst) {     // horizontal
   int j;
   for (j = 16; j > 0; --j) {
-    const __m128i values = _mm_set1_epi8(dst[-1]);
+    const __m128i values = _mm_set1_epi8((char)dst[-1]);
     _mm_storeu_si128((__m128i*)dst, values);
     dst += BPS;
   }

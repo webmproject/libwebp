@@ -208,7 +208,7 @@ static void PredictorAdd0_SSE2(const uint32_t* in, const uint32_t* upper,
 static void PredictorAdd1_SSE2(const uint32_t* in, const uint32_t* upper,
                                int num_pixels, uint32_t* out) {
   int i;
-  __m128i prev = _mm_set1_epi32(out[-1]);
+  __m128i prev = _mm_set1_epi32((int)out[-1]);
   for (i = 0; i + 4 <= num_pixels; i += 4) {
     // a | b | c | d
     const __m128i src = _mm_loadu_si128((const __m128i*)&in[i]);
@@ -561,7 +561,7 @@ static void ConvertBGRAToRGBA_SSE2(const uint32_t* src,
 static void ConvertBGRAToRGBA4444_SSE2(const uint32_t* src,
                                        int num_pixels, uint8_t* dst) {
   const __m128i mask_0x0f = _mm_set1_epi8(0x0f);
-  const __m128i mask_0xf0 = _mm_set1_epi8(0xf0);
+  const __m128i mask_0xf0 = _mm_set1_epi8((char)0xf0);
   const __m128i* in = (const __m128i*)src;
   __m128i* out = (__m128i*)dst;
   while (num_pixels >= 8) {
@@ -596,8 +596,8 @@ static void ConvertBGRAToRGBA4444_SSE2(const uint32_t* src,
 
 static void ConvertBGRAToRGB565_SSE2(const uint32_t* src,
                                      int num_pixels, uint8_t* dst) {
-  const __m128i mask_0xe0 = _mm_set1_epi8(0xe0);
-  const __m128i mask_0xf8 = _mm_set1_epi8(0xf8);
+  const __m128i mask_0xe0 = _mm_set1_epi8((char)0xe0);
+  const __m128i mask_0xf8 = _mm_set1_epi8((char)0xf8);
   const __m128i mask_0x07 = _mm_set1_epi8(0x07);
   const __m128i* in = (const __m128i*)src;
   __m128i* out = (__m128i*)dst;
