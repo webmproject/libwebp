@@ -990,7 +990,7 @@ static void RD4_SSE2(uint8_t* dst) {   // Down-right
   const uint32_t K = dst[-1 + 2 * BPS];
   const uint32_t L = dst[-1 + 3 * BPS];
   const __m128i LKJI_____ =
-      _mm_cvtsi32_si128(L | (K << 8) | (J << 16) | (I << 24));
+      _mm_cvtsi32_si128((int)(L | (K << 8) | (J << 16) | (I << 24)));
   const __m128i LKJIXABCD = _mm_or_si128(LKJI_____, ____XABCD);
   const __m128i KJIXABCD_ = _mm_srli_si128(LKJIXABCD, 1);
   const __m128i JIXABCD__ = _mm_srli_si128(LKJIXABCD, 2);
