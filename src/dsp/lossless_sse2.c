@@ -33,8 +33,7 @@ static WEBP_INLINE uint32_t ClampedAddSubtractFull_SSE2(uint32_t c0,
   const __m128i V1 = _mm_add_epi16(C0, C1);
   const __m128i V2 = _mm_sub_epi16(V1, C2);
   const __m128i b = _mm_packus_epi16(V2, V2);
-  const uint32_t output = _mm_cvtsi128_si32(b);
-  return output;
+  return (uint32_t)_mm_cvtsi128_si32(b);
 }
 
 static WEBP_INLINE uint32_t ClampedAddSubtractHalf_SSE2(uint32_t c0,
@@ -52,8 +51,7 @@ static WEBP_INLINE uint32_t ClampedAddSubtractHalf_SSE2(uint32_t c0,
   const __m128i A3 = _mm_srai_epi16(A2, 1);
   const __m128i A4 = _mm_add_epi16(A0, A3);
   const __m128i A5 = _mm_packus_epi16(A4, A4);
-  const uint32_t output = _mm_cvtsi128_si32(A5);
-  return output;
+  return (uint32_t)_mm_cvtsi128_si32(A5);
 }
 
 static WEBP_INLINE uint32_t Select_SSE2(uint32_t a, uint32_t b, uint32_t c) {
@@ -112,7 +110,7 @@ static WEBP_INLINE __m128i Average2_uint32_16_SSE2(uint32_t a0, uint32_t a1) {
 static WEBP_INLINE uint32_t Average2_SSE2(uint32_t a0, uint32_t a1) {
   __m128i output;
   Average2_uint32_SSE2(a0, a1, &output);
-  return _mm_cvtsi128_si32(output);
+  return (uint32_t)_mm_cvtsi128_si32(output);
 }
 
 static WEBP_INLINE uint32_t Average3_SSE2(uint32_t a0, uint32_t a1,
@@ -123,8 +121,7 @@ static WEBP_INLINE uint32_t Average3_SSE2(uint32_t a0, uint32_t a1,
   const __m128i sum = _mm_add_epi16(avg1, A1);
   const __m128i avg2 = _mm_srli_epi16(sum, 1);
   const __m128i A2 = _mm_packus_epi16(avg2, avg2);
-  const uint32_t output = _mm_cvtsi128_si32(A2);
-  return output;
+  return (uint32_t)_mm_cvtsi128_si32(A2);
 }
 
 static WEBP_INLINE uint32_t Average4_SSE2(uint32_t a0, uint32_t a1,
@@ -134,8 +131,7 @@ static WEBP_INLINE uint32_t Average4_SSE2(uint32_t a0, uint32_t a1,
   const __m128i sum = _mm_add_epi16(avg2, avg1);
   const __m128i avg3 = _mm_srli_epi16(sum, 1);
   const __m128i A0 = _mm_packus_epi16(avg3, avg3);
-  const uint32_t output = _mm_cvtsi128_si32(A0);
-  return output;
+  return (uint32_t)_mm_cvtsi128_si32(A0);
 }
 
 static uint32_t Predictor5_SSE2(const uint32_t* const left,
@@ -285,12 +281,12 @@ GENERATE_PREDICTOR_2(9, upper[i + 1])
 #undef GENERATE_PREDICTOR_2
 
 // Predictor10: average of (average of (L,TL), average of (T, TR)).
-#define DO_PRED10(OUT) do {               \
-  __m128i avgLTL, avg;                    \
-  Average2_m128i(&L, &TL, &avgLTL);       \
-  Average2_m128i(&avgTTR, &avgLTL, &avg); \
-  L = _mm_add_epi8(avg, src);             \
-  out[i + (OUT)] = _mm_cvtsi128_si32(L);  \
+#define DO_PRED10(OUT) do {                         \
+  __m128i avgLTL, avg;                              \
+  Average2_m128i(&L, &TL, &avgLTL);                 \
+  Average2_m128i(&avgTTR, &avgLTL, &avg);           \
+  L = _mm_add_epi8(avg, src);                       \
+  out[i + (OUT)] = (uint32_t)_mm_cvtsi128_si32(L);  \
 } while (0)
 
 #define DO_PRED10_SHIFT do {                                  \
@@ -336,7 +332,7 @@ static void PredictorAdd10_SSE2(const uint32_t* in, const uint32_t* upper,
   const __m128i B = _mm_andnot_si128(mask, T);                         \
   const __m128i pred = _mm_or_si128(A, B); /* pred = (pa > b)? L : T*/ \
   L = _mm_add_epi8(src, pred);                                         \
-  out[i + (OUT)] = _mm_cvtsi128_si32(L);                               \
+  out[i + (OUT)] = (uint32_t)_mm_cvtsi128_si32(L);                     \
 } while (0)
 
 #define DO_PRED11_SHIFT do {                                \
@@ -384,12 +380,12 @@ static void PredictorAdd11_SSE2(const uint32_t* in, const uint32_t* upper,
 #undef DO_PRED11_SHIFT
 
 // Predictor12: ClampedAddSubtractFull.
-#define DO_PRED12(DIFF, LANE, OUT) do {            \
-  const __m128i all = _mm_add_epi16(L, (DIFF));    \
-  const __m128i alls = _mm_packus_epi16(all, all); \
-  const __m128i res = _mm_add_epi8(src, alls);     \
-  out[i + (OUT)] = _mm_cvtsi128_si32(res);         \
-  L = _mm_unpacklo_epi8(res, zero);                \
+#define DO_PRED12(DIFF, LANE, OUT) do {              \
+  const __m128i all = _mm_add_epi16(L, (DIFF));      \
+  const __m128i alls = _mm_packus_epi16(all, all);   \
+  const __m128i res = _mm_add_epi8(src, alls);       \
+  out[i + (OUT)] = (uint32_t)_mm_cvtsi128_si32(res); \
+  L = _mm_unpacklo_epi8(res, zero);                  \
 } while (0)
 
 #define DO_PRED12_SHIFT(DIFF, LANE) do {                    \

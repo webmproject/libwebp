@@ -908,10 +908,10 @@ static void VE4_SSE2(uint8_t* dst) {    // vertical
   const __m128i lsb = _mm_and_si128(_mm_xor_si128(ABCDEFGH, CDEFGH00), one);
   const __m128i b = _mm_subs_epu8(a, lsb);
   const __m128i avg = _mm_avg_epu8(b, BCDEFGH0);
-  const uint32_t vals = _mm_cvtsi128_si32(avg);
+  const int vals = _mm_cvtsi128_si32(avg);
   int i;
   for (i = 0; i < 4; ++i) {
-    WebPUint32ToMem(dst + i * BPS, vals);
+    WebPInt32ToMem(dst + i * BPS, vals);
   }
 }
 
@@ -970,7 +970,8 @@ static void VL4_SSE2(uint8_t* dst) {   // Vertical-Left
   const __m128i abbc = _mm_or_si128(ab, bc);
   const __m128i lsb2 = _mm_and_si128(abbc, lsb1);
   const __m128i avg4 = _mm_subs_epu8(avg3, lsb2);
-  const uint32_t extra_out = _mm_cvtsi128_si32(_mm_srli_si128(avg4, 4));
+  const uint32_t extra_out =
+      (uint32_t)_mm_cvtsi128_si32(_mm_srli_si128(avg4, 4));
   WebPInt32ToMem(dst + 0 * BPS, _mm_cvtsi128_si32(               avg1    ));
   WebPInt32ToMem(dst + 1 * BPS, _mm_cvtsi128_si32(               avg4    ));
   WebPInt32ToMem(dst + 2 * BPS, _mm_cvtsi128_si32(_mm_srli_si128(avg1, 1)));
