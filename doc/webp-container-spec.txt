@@ -206,7 +206,7 @@ VP8 data: _Chunk Size_ bytes
 
 : VP8 bitstream data.
 
-Note the fourth character in the 'VP8 ' fourcc is an ASCII space (%x20).
+Note the fourth character in the 'VP8 ' FourCC is an ASCII space (%x20).
 
 The VP8 bitstream format specification can be found at [VP8 Data Format and
 Decoding Guide][vp8spec]. Note that the VP8 frame header contains the VP8 frame
@@ -720,7 +720,7 @@ XMP Metadata: _Chunk Size_ bytes
 
 : image metadata in XMP format.
 
-Note the fourth character in the 'XMP ' fourcc is an ASCII space (%x20).
+Note the fourth character in the 'XMP ' FourCC is an ASCII space (%x20).
 
 Additional guidance about handling metadata can be found in the
 Metadata Working Group's [Guidelines for Handling Metadata][metadata].
