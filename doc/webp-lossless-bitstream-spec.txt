@@ -480,7 +480,8 @@ void InverseTransform(uint8 red, uint8 green, uint8 blue,
   // color transform deltas
   tmp_red  += ColorTransformDelta(trans->green_to_red, green);
   tmp_blue += ColorTransformDelta(trans->green_to_blue, green);
-  tmp_blue += ColorTransformDelta(trans->red_to_blue, tmp_red & 0xff);
+  tmp_blue +=
+      ColorTransformDelta(trans->red_to_blue, tmp_red & 0xff);
 
   *new_red = tmp_red & 0xff;
   *new_blue = tmp_blue & 0xff;
@@ -920,7 +921,7 @@ int kCodeLengthCodes = 19;
 int kCodeLengthCodeOrder[kCodeLengthCodes] = {
   17, 18, 0, 1, 2, 3, 4, 5, 16, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
 };
-int code_length_code_lengths[kCodeLengthCodes] = { 0 };  // All zeros.
+int code_length_code_lengths[kCodeLengthCodes] = { 0 };  // All zeros
 for (i = 0; i < num_code_lengths; ++i) {
   code_length_code_lengths[kCodeLengthCodeOrder[i]] = ReadBits(3);
 }
@@ -1024,7 +1025,8 @@ Given a pixel (x, y) in the ARGB image, we can obtain the corresponding prefix
 codes to be used as follows:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-int position = (y >> prefix_bits) * prefix_xsize + (x >> prefix_bits);
+int position =
+    (y >> prefix_bits) * prefix_xsize + (x >> prefix_bits);
 int meta_prefix_code = (entropy_image[pos] >> 8) & 0xffff;
 PrefixCodeGroup prefix_group = prefix_code_groups[meta_prefix_code];
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1090,8 +1092,8 @@ of pixels (xsize * ysize).
 #### 7.2 Structure of Transforms
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-<optional-transform> ::= (1-bit value 1; <transform> <optional-transform>) |
-                         1-bit value 0
+<optional-transform> ::=
+    (1-bit value 1; <transform> <optional-transform>) | 1-bit value 0
 <transform> ::= <predictor-tx> | <color-tx> | <subtract-green-tx> |
                 <color-indexing-tx>
 <predictor-tx> ::= 2-bit value 0; <predictor image>
@@ -1111,32 +1113,33 @@ of pixels (xsize * ysize).
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <spatially-coded image> ::= <color cache info><meta prefix><data>
 <entropy-coded image> ::= <color cache info><data>
-<color cache info> ::= 1 bit value 0 |
-                       (1-bit value 1; 4-bit value for color cache size)
+<color cache info> ::=
+    1 bit value 0 | (1-bit value 1; 4-bit value for color cache size)
 <meta prefix> ::= 1-bit value 0 |
                   (1-bit value 1; <entropy image>)
 <data> ::= <prefix codes><lz77-coded image>
 <entropy image> ::= 3-bit subsample value; <entropy-coded image>
-<prefix codes> ::= <prefix code group> | <prefix code group><prefix codes>
+<prefix codes> ::= <prefix code group> |
+                   <prefix code group><prefix codes>
 <prefix code group> ::= <prefix code><prefix code><prefix code>
                         <prefix code><prefix code>
                         See "Interpretation of Meta Prefix Codes" to
-                        understand what each of these five prefix codes are
-                        for.
+                        understand what each of these five prefix
+                        codes are for.
 <prefix code> ::= <simple prefix code> | <normal prefix code>
 <simple prefix code> ::= see "Simple code length code" for details
 <normal prefix code> ::= <code length code>; encoded code lengths
 <code length code> ::= see section "Normal code length code"
-<lz77-coded image> ::= ((<argb-pixel> | <lz77-copy> | <color-cache-code>)
-                       <lz77-coded image>) | ""
+<lz77-coded image> ::= ((<argb-pixel> | <lz77-copy> |
+                         <color-cache-code>) <lz77-coded image>) | ""
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A possible example sequence:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <RIFF header><image size>1-bit value 1<subtract-green-tx>
-1-bit value 1<predictor-tx>1-bit value 0<color cache info>1-bit value 0
-<prefix codes><lz77-coded image>
+1-bit value 1<predictor-tx>1-bit value 0<color cache info>
+1-bit value 0<prefix codes><lz77-coded image>
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 [canonical_huff]: https://en.wikipedia.org/wiki/Canonical_Huffman_code

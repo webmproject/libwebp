@@ -511,8 +511,9 @@ Disposal method (D): 1 bit
     if blend.A = 0 then
       blend.RGB = 0
     else
-      blend.RGB = (src.RGB * src.A +
-                   dst.RGB * dst.A * (1 - src.A / 255)) / blend.A
+      blend.RGB =
+          (src.RGB * src.A +
+           dst.RGB * dst.A * (1 - src.A / 255)) / blend.A
 ~~~~~
 
   * Alpha-blending SHOULD be done in linear color space, by taking into account
@@ -760,33 +761,34 @@ canvas ← new image of size VP8X.canvasWidth x VP8X.canvasHeight with
 loop_count ← ANIM.loopCount
 dispose_method ← ANIM.disposeMethod
 if loop_count == 0:
-    loop_count = ∞
+  loop_count = ∞
 frame_params ← nil
 assert next chunk in image_data is ANMF
 for loop = 0..loop_count - 1
-    clear canvas to ANIM.background_color or application defined color
-    until eof or non-ANMF chunk
-        frame_params.frameX = Frame X
-        frame_params.frameY = Frame Y
-        frame_params.frameWidth = Frame Width Minus One + 1
-        frame_params.frameHeight = Frame Height Minus One + 1
-        frame_params.frameDuration = Frame Duration
-        frame_right = frame_params.frameX + frame_params.frameWidth
-        frame_bottom = frame_params.frameY + frame_params.frameHeight
-        assert VP8X.canvasWidth >= frame_right
-        assert VP8X.canvasHeight >= frame_bottom
-        for subchunk in 'Frame Data':
-            if subchunk.tag == "ALPH":
-                assert alpha subchunks not found in 'Frame Data' earlier
-                frame_params.alpha = alpha_data
-            else if subchunk.tag == "VP8 " OR subchunk.tag == "VP8L":
-                assert bitstream subchunks not found in 'Frame Data' earlier
-                frame_params.bitstream = bitstream_data
-        render frame with frame_params.alpha and frame_params.bitstream on
-            canvas with top-left corner at (frame_params.frameX,
-            frame_params.frameY), using dispose method dispose_method.
-        canvas contains the decoded image.
-        Show the contents of the canvas for frame_params.frameDuration * 1ms.
+  clear canvas to ANIM.background_color or application defined color
+  until eof or non-ANMF chunk
+    frame_params.frameX = Frame X
+    frame_params.frameY = Frame Y
+    frame_params.frameWidth = Frame Width Minus One + 1
+    frame_params.frameHeight = Frame Height Minus One + 1
+    frame_params.frameDuration = Frame Duration
+    frame_right = frame_params.frameX + frame_params.frameWidth
+    frame_bottom = frame_params.frameY + frame_params.frameHeight
+    assert VP8X.canvasWidth >= frame_right
+    assert VP8X.canvasHeight >= frame_bottom
+    for subchunk in 'Frame Data':
+      if subchunk.tag == "ALPH":
+        assert alpha subchunks not found in 'Frame Data' earlier
+        frame_params.alpha = alpha_data
+      else if subchunk.tag == "VP8 " OR subchunk.tag == "VP8L":
+        assert bitstream subchunks not found in 'Frame Data' earlier
+        frame_params.bitstream = bitstream_data
+    render frame with frame_params.alpha and frame_params.bitstream
+      on canvas with top-left corner at (frame_params.frameX,
+      frame_params.frameY), using dispose method dispose_method.
+    canvas contains the decoded image.
+    Show the contents of the canvas for
+    frame_params.frameDuration * 1ms.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
