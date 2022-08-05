@@ -1,3 +1,9 @@
+980d2488 update NEWS
+9fde8127 bump version to 1.2.4
+e626925c lossless: fix crunch mode w/WEBP_REDUCE_SIZE
+bfad7ab5 CMakeLists.txt: correct libwebpmux name in WebPConfig.cmake
+c2e3fd30 Revert "cmake: fix webpmux lib name for cmake linking"
+3c4a0fbf update ChangeLog (tag: v1.2.3)
 56a480e8 dsp/cpu.h: add missing extern "C"
 62b45bdd update ChangeLog (tag: v1.2.3-rc1)
 8764ec7a Merge changes Idb037953,Id582e395 into 1.2.3
