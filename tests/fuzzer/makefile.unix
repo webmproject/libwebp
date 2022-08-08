@@ -9,6 +9,7 @@ CXXFLAGS = $(CFLAGS)
 LDFLAGS = -fsanitize=fuzzer
 LDLIBS = ../../src/mux/libwebpmux.a ../../src/demux/libwebpdemux.a
 LDLIBS += ../../src/libwebp.a ../../imageio/libimageio_util.a
+LDLIBS += ../../sharpyuv/libsharpyuv.a
 
 FUZZERS = advanced_api_fuzzer animation_api_fuzzer animencoder_fuzzer
 FUZZERS += animdecoder_fuzzer mux_demux_api_fuzzer enc_dec_fuzzer
