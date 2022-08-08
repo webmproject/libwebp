@@ -1,3 +1,9 @@
+- 8/4/2022: version 1.2.4
+  This is a binary compatible release.
+  * restore CMake libwebpmux target name for compatibility with 1.2.2 (#575)
+  * fix lossless crunch mode encoding with WEBP_REDUCE_SIZE
+    (chromium: #1345547, #1345595, #1345772, #1345804)
+
 - 6/30/2022: version 1.2.3
   This is a binary compatible release.
   * security fix for lossless encoder (#565, chromium:1313709)
