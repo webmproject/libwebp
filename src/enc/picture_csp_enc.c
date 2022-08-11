@@ -70,9 +70,12 @@ int WebPPictureHasTransparency(const WebPPicture* picture) {
   if (picture == NULL) return 0;
   if (picture->use_argb) {
     const int alpha_offset = ALPHA_OFFSET;
-    return CheckNonOpaque((const uint8_t*)picture->argb + alpha_offset,
-                          picture->width, picture->height,
-                          4, picture->argb_stride * sizeof(*picture->argb));
+    if (picture->argb != NULL) {
+      return CheckNonOpaque((const uint8_t*)picture->argb + alpha_offset,
+                            picture->width, picture->height,
+                            4, picture->argb_stride * sizeof(*picture->argb));
+    }
+    return 0;
   }
   return CheckNonOpaque(picture->a, picture->width, picture->height,
                         1, picture->a_stride);
