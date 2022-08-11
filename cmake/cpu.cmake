@@ -58,7 +58,6 @@ else()
       "-mno-sse4.1;-mno-sse2;;-mno-dspr2;;-mno-msa")
 endif()
 
-set(WEBP_SIMD_FILES_TO_NOT_INCLUDE)
 set(WEBP_SIMD_FILES_TO_INCLUDE)
 set(WEBP_SIMD_FLAGS_TO_INCLUDE)
 
