@@ -12,9 +12,8 @@
 #ifndef WEBP_SHARPYUV_SHARPYUV_DSP_H_
 #define WEBP_SHARPYUV_SHARPYUV_DSP_H_
 
-#include <stdint.h>
-
 #include "src/dsp/cpu.h"
+#include "src/webp/types.h"
 
 extern uint64_t (*SharpYuvUpdateY)(const uint16_t* src, const uint16_t* ref,
                                    uint16_t* dst, int len, int bit_depth);
