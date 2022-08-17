@@ -119,8 +119,7 @@ LIBWEBP = $(DIRLIB)\$(LIBWEBP_BASENAME).lib
 LIBWEBPMUX = $(DIRLIB)\$(LIBWEBPMUX_BASENAME).lib
 LIBWEBPDEMUX = $(DIRLIB)\$(LIBWEBPDEMUX_BASENAME).lib
 !ELSE IF "$(DLLBUILD)" == "TRUE"
-DLLINC = webp_dll.h
-CC     = $(CC) /I$(DIROBJ) /FI$(DLLINC) $(RTLIB) /DWEBP_DLL
+CC     = $(CC) /I$(DIROBJ) $(RTLIB) /DWEBP_DLL
 LIBWEBPDECODER = $(DIRLIB)\$(LIBWEBPDECODER_BASENAME)_dll.lib
 LIBWEBP = $(DIRLIB)\$(LIBWEBP_BASENAME)_dll.lib
 LIBWEBPMUX = $(DIRLIB)\$(LIBWEBPMUX_BASENAME)_dll.lib
@@ -425,9 +424,6 @@ $(LIBWEBPDEMUX): $(LIBWEBPDEMUX_OBJS)
 $(LIBWEBP_OBJS) $(LIBWEBPMUX_OBJS) $(LIBWEBPDEMUX_OBJS): $(OUTPUT_DIRS)
 
 !IF "$(DLLBUILD)" == "TRUE"
-$(LIBWEBP_OBJS) $(LIBWEBPMUX_OBJS) $(LIBWEBPDEMUX_OBJS): \
-    $(DIROBJ)\$(DLLINC)
-
 {$(DIROBJ)}.c{$(DIROBJ)}.obj:
 	$(CC) $(CFLAGS) /Fd$(LIBWEBP_PDBNAME) /Fo$@  $<
 
@@ -446,9 +442,6 @@ $(LIBWEBPDEMUX): $(LIBWEBP) $(DIROBJ)\demux\$(LIBWEBPDEMUX_BASENAME:_debug=).res
 $(LIBWEBPDECODER) $(LIBWEBP) $(LIBWEBPMUX) $(LIBWEBPDEMUX):
 	$(LNKDLL) /out:$(DIRBIN)\$(@B:_dll=.dll) /implib:$@ $(LFLAGS) $**
 	-xcopy $(DIROBJ)\*.pdb $(DIRLIB) /y
-
-clean::
-	@-erase /s $(DIROBJ)\$(DLLINC) 2> NUL
 !ELSE
 $(LIBWEBPDECODER) $(LIBWEBP) $(LIBWEBPMUX) $(LIBWEBPDEMUX):
 	$(LNKLIB) /out:$@ $**
@@ -457,13 +450,6 @@ $(LIBWEBPDECODER) $(LIBWEBP) $(LIBWEBPMUX) $(LIBWEBPDEMUX):
 
 $(OUTPUT_DIRS):
 	@if not exist "$(@)" mkdir "$(@)"
-
-# generate a helper include to define WEBP_EXTERN suitable for the DLL build
-$(DIROBJ)\$(DLLINC):
-	@echo #ifndef WEBP_DLL_H_ > $@
-	@echo #define WEBP_DLL_H_ >> $@
-	@echo #define WEBP_EXTERN __declspec(dllexport) >> $@
-	@echo #endif  /* WEBP_DLL_H_ */ >> $@
 
 .SUFFIXES: .c .obj .res .exe
 # File-specific flag builds. Note batch rules take precedence over wildcards,

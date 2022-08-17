@@ -120,6 +120,10 @@ if(WEBP_UNICODE)
   add_definitions(-DUNICODE -D_UNICODE)
 endif()
 
+if(MSVC AND BUILD_SHARED_LIBS)
+  add_definitions(-DWEBP_DLL)
+endif()
+
 set(prefix ${CMAKE_INSTALL_PREFIX})
 set(exec_prefix "\$\{prefix\}")
 set(libdir "\$\{prefix\}/lib")
