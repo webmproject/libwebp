@@ -18,7 +18,8 @@ function(webp_check_compiler_flag WEBP_SIMD_FLAG ENABLE_SIMD)
   unset(WEBP_HAVE_FLAG_${WEBP_SIMD_FLAG} CACHE)
   cmake_push_check_state()
   set(CMAKE_REQUIRED_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR})
-  check_c_source_compiles("
+  check_c_source_compiles(
+    "
       #include \"${CMAKE_CURRENT_LIST_DIR}/../src/dsp/dsp.h\"
       int main(void) {
         #if !defined(WEBP_USE_${WEBP_SIMD_FLAG})
@@ -26,7 +27,8 @@ function(webp_check_compiler_flag WEBP_SIMD_FLAG ENABLE_SIMD)
         #endif
         return 0;
       }
-    " WEBP_HAVE_FLAG_${WEBP_SIMD_FLAG})
+    "
+    WEBP_HAVE_FLAG_${WEBP_SIMD_FLAG})
   cmake_pop_check_state()
   if(WEBP_HAVE_FLAG_${WEBP_SIMD_FLAG})
     set(WEBP_HAVE_${WEBP_SIMD_FLAG} 1 PARENT_SCOPE)
@@ -52,10 +54,8 @@ if(MSVC AND CMAKE_C_COMPILER_ID STREQUAL "MSVC")
   endif()
   set(SIMD_DISABLE_FLAGS)
 else()
-  set(SIMD_ENABLE_FLAGS
-      "-msse4.1;-msse2;-mips32;-mdspr2;-mfpu=neon;-mmsa")
-  set(SIMD_DISABLE_FLAGS
-      "-mno-sse4.1;-mno-sse2;;-mno-dspr2;;-mno-msa")
+  set(SIMD_ENABLE_FLAGS "-msse4.1;-msse2;-mips32;-mdspr2;-mfpu=neon;-mmsa")
+  set(SIMD_DISABLE_FLAGS "-mno-sse4.1;-mno-sse2;;-mno-dspr2;;-mno-msa")
 endif()
 
 set(WEBP_SIMD_FILES_TO_INCLUDE)
@@ -74,8 +74,8 @@ list(LENGTH WEBP_SIMD_FLAGS WEBP_SIMD_FLAGS_LENGTH)
 math(EXPR WEBP_SIMD_FLAGS_RANGE "${WEBP_SIMD_FLAGS_LENGTH} - 1")
 
 foreach(I_SIMD RANGE ${WEBP_SIMD_FLAGS_RANGE})
-  # With Emscripten 2.0.9 -msimd128 -mfpu=neon will enable NEON, but the
-  # source will fail to compile.
+  # With Emscripten 2.0.9 -msimd128 -mfpu=neon will enable NEON, but the source
+  # will fail to compile.
   if(EMSCRIPTEN AND ${I_SIMD} GREATER_EQUAL 2)
     break()
   endif()
@@ -107,7 +107,7 @@ foreach(I_SIMD RANGE ${WEBP_SIMD_FLAGS_RANGE})
   # Check which files we should include or not.
   list(GET WEBP_SIMD_FILE_EXTENSIONS ${I_SIMD} WEBP_SIMD_FILE_EXTENSION)
   file(GLOB SIMD_FILES "${CMAKE_CURRENT_LIST_DIR}/../"
-            "src/dsp/*${WEBP_SIMD_FILE_EXTENSION}")
+       "src/dsp/*${WEBP_SIMD_FILE_EXTENSION}")
   if(WEBP_HAVE_${WEBP_SIMD_FLAG})
     # Memorize the file and flags.
     foreach(FILE ${SIMD_FILES})
@@ -141,11 +141,9 @@ foreach(I_SIMD RANGE ${WEBP_SIMD_FLAGS_RANGE})
             set(COMMON_PATTERNS)
           endif()
           set(CMAKE_REQUIRED_DEFINITIONS ${SIMD_COMPILE_FLAG})
-          check_c_source_compiles("int main(void) {return 0;}"
-                                  FLAG_${SIMD_COMPILE_FLAG}
-                                  FAIL_REGEX
-                                  "warning: argument unused during compilation:"
-                                  ${COMMON_PATTERNS})
+          check_c_source_compiles(
+            "int main(void) {return 0;}" FLAG_${SIMD_COMPILE_FLAG} FAIL_REGEX
+            "warning: argument unused during compilation:" ${COMMON_PATTERNS})
           if(NOT FLAG_${SIMD_COMPILE_FLAG})
             unset(HAS_COMPILE_FLAG)
             unset(HAS_COMPILE_FLAG CACHE)
