@@ -159,7 +159,7 @@ endif()
 
 function(configure_pkg_config FILE)
   configure_file("${CMAKE_CURRENT_SOURCE_DIR}/${FILE}.in"
-                 "${CMAKE_CURRENT_BINARY_DIR}/${FILE}")
+                 "${CMAKE_CURRENT_BINARY_DIR}/${FILE}" @ONLY)
 
   if(HAVE_MATH_LIBRARY)
     # MSVC doesn't have libm
@@ -226,7 +226,7 @@ endforeach()
 
 # Generate the config.h file.
 configure_file(${CMAKE_CURRENT_LIST_DIR}/cmake/config.h.in
-               ${CMAKE_CURRENT_BINARY_DIR}/src/webp/config.h)
+               ${CMAKE_CURRENT_BINARY_DIR}/src/webp/config.h @ONLY)
 add_definitions(-DHAVE_CONFIG_H)
 
 # Set the version numbers.
