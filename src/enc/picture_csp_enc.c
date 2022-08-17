@@ -172,21 +172,6 @@ static const int kMinDimensionIterativeConversion = 4;
 //------------------------------------------------------------------------------
 // Main function
 
-extern void SharpYuvInit(VP8CPUInfo cpu_info_func);
-
-static void SafeInitSharpYuv(void) {
-#if defined(WEBP_USE_THREAD) && !defined(_WIN32)
-  static pthread_mutex_t initsharpyuv_lock = PTHREAD_MUTEX_INITIALIZER;
-  if (pthread_mutex_lock(&initsharpyuv_lock)) return;
-#endif
-
-  SharpYuvInit(VP8GetCPUInfo);
-
-#if defined(WEBP_USE_THREAD) && !defined(_WIN32)
-  (void)pthread_mutex_unlock(&initsharpyuv_lock);
-#endif
-}
-
 static int PreprocessARGB(const uint8_t* r_ptr,
                           const uint8_t* g_ptr,
                           const uint8_t* b_ptr,
@@ -483,6 +468,8 @@ static WEBP_INLINE void ConvertRowsToUV(const uint16_t* rgb,
   }
 }
 
+extern void SharpYuvInit(VP8CPUInfo cpu_info_func);
+
 static int ImportYUVAFromRGBA(const uint8_t* r_ptr,
                               const uint8_t* g_ptr,
                               const uint8_t* b_ptr,
@@ -518,7 +505,7 @@ static int ImportYUVAFromRGBA(const uint8_t* r_ptr,
   }
 
   if (use_iterative_conversion) {
-    SafeInitSharpYuv();
+    SharpYuvInit(VP8GetCPUInfo);
     if (!PreprocessARGB(r_ptr, g_ptr, b_ptr, step, rgb_stride, picture)) {
       return 0;
     }

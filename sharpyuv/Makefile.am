@@ -12,6 +12,7 @@ libsharpyuvinclude_HEADERS += sharpyuv.h
 libsharpyuvinclude_HEADERS += sharpyuv_csp.h
 noinst_HEADERS =
 noinst_HEADERS += ../src/dsp/cpu.h
+noinst_HEADERS += ../src/webp/types.h
 
 libsharpyuv_sse2_la_SOURCES =
 libsharpyuv_sse2_la_SOURCES += sharpyuv_sse2.c
