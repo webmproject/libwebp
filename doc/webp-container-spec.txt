@@ -366,7 +366,7 @@ Canvas Height Minus One: 24 bits
 
 The product of _Canvas Width_ and _Canvas Height_ MUST be at most `2^32 - 1`.
 
-Future specifications MAY add more fields.
+Future specifications may add more fields. Unknown fields MUST be ignored.
 
 ### Chunks
 
