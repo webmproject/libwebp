@@ -128,9 +128,8 @@ Chunk Size: 32 bits (_uint32_)
 
 Chunk Payload: _Chunk Size_ bytes
 
-: The data payload. If _Chunk Size_ is odd, a single padding byte -- that
-  SHOULD be `0` to conform with RIFF -- is added. Applications MAY use
-  another value, but readers may fail to parse the file.
+: The data payload. If _Chunk Size_ is odd, a single padding byte -- that MUST
+  be `0` to conform with RIFF -- is added.
 
 **Note:** RIFF has a convention that all-uppercase chunk FourCCs are standard
 chunks that apply to any RIFF file format, while FourCCs specific to a file
