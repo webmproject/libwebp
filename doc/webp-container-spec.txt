@@ -414,8 +414,8 @@ Loop Count: 16 bits (_uint16_)
 : The number of times to loop the animation. `0` means infinitely.
 
 This chunk MUST appear if the _Animation_ flag in the VP8X chunk is set.
-If the _Animation_ flag is not set and this chunk is present, it
-SHOULD be ignored.
+If the _Animation_ flag is not set and this chunk is present, it MUST be
+ignored.
 
 ANMF chunk:
 
