@@ -123,8 +123,8 @@ Chunk FourCC: 32 bits
 
 Chunk Size: 32 bits (_uint32_)
 
-: The size of the chunk not including this field, the chunk identifier or
-  padding.
+: The size of the chunk in bytes, not including this field, the chunk
+  identifier or padding.
 
 Chunk Payload: _Chunk Size_ bytes
 
