@@ -166,10 +166,11 @@ File Size: 32 bits (_uint32_)
 
 A WebP file MUST begin with a RIFF header with the FourCC 'WEBP'. The file size
 in the header is the total size of the chunks that follow plus `4` bytes for
-the 'WEBP' FourCC. The file SHOULD NOT contain anything after it. Readers MAY
-parse such files, ignoring the trailing data. As the size of any chunk is even,
-the size given by the RIFF header is also even. The contents of individual
-chunks will be described in the following sections.
+the 'WEBP' FourCC. The file SHOULD NOT contain any data after the data
+specified by _File Size_. Readers MAY parse such files, ignoring the trailing
+data. As the size of any chunk is even, the size given by the RIFF header is
+also even. The contents of individual chunks will be described in the following
+sections.
 
 
 Simple File Format (Lossy)
