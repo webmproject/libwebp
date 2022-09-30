@@ -686,8 +686,7 @@ If this chunk is not present, sRGB SHOULD be assumed.
 Metadata can be stored in 'EXIF' or 'XMP ' chunks.
 
 There SHOULD be at most one chunk of each type ('EXIF' and 'XMP '). If there
-are more such chunks, readers MAY ignore all except the first one. Also, a file
-may possibly contain both 'EXIF' and 'XMP ' chunks.
+are more such chunks, readers MAY ignore all except the first one.
 
 The chunks are defined as follows:
 
