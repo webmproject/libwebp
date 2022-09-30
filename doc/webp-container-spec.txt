@@ -400,8 +400,8 @@ Background Color: 32 bits (_uint32_)
 
 **Note**:
 
-  * Background color MAY contain a transparency value (alpha), even if the
-    _Alpha_ flag in [VP8X chunk](#extended_header) is unset.
+  * Background color MAY contain a non-opaque alpha value, even if the _Alpha_
+    flag in [VP8X chunk](#extended_header) is unset.
 
   * Viewer applications SHOULD treat the background color value as a hint, and
     are not required to use it.
