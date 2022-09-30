@@ -84,8 +84,8 @@ _uint32_
 _FourCC_
 
 : A _FourCC_ (four-character code) is a _uint32_ created by concatenating four
-  ASCII characters in little-endian order. This means 'aaaa' (%x61.61.61.61) and
-  'AAAA' (%x41.41.41.41) are treated as different _FourCCs_.
+  ASCII characters in little-endian order. This means 'aaaa' (0x61616161) and
+ 'AAAA' (0x41414141) are treated as different _FourCCs_.
 
 _1-based_
 
@@ -206,7 +206,7 @@ VP8 data: _Chunk Size_ bytes
 
 : VP8 bitstream data.
 
-Note the fourth character in the 'VP8 ' FourCC is an ASCII space (%x20).
+Note the fourth character in the 'VP8 ' FourCC is an ASCII space (0x20).
 
 The VP8 bitstream format specification can be found at [VP8 Data Format and
 Decoding Guide][vp8spec]. Note that the VP8 frame header contains the VP8 frame
@@ -721,7 +721,7 @@ XMP Metadata: _Chunk Size_ bytes
 
 : image metadata in XMP format.
 
-Note the fourth character in the 'XMP ' FourCC is an ASCII space (%x20).
+Note the fourth character in the 'XMP ' FourCC is an ASCII space (0x20).
 
 Additional guidance about handling metadata can be found in the
 Metadata Working Group's [Guidelines for Handling Metadata][metadata].
