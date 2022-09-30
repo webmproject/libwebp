@@ -566,7 +566,7 @@ pixels are bundled into a single pixel. The pixel bundling packs several
 respectively. Pixel bundling allows for a more efficient joint
 distribution entropy coding of neighboring pixels, and gives some
 arithmetic coding-like benefits to the entropy code, but it can only be
-used when there are a small number of unique values.
+used when there are 16 or fewer unique values.
 
 `color_table_size` specifies how many pixels are combined:
 
