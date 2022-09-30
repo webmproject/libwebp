@@ -292,7 +292,7 @@ details about frames can be found in the [Animation](#animation) section.
 
 All chunks SHOULD be placed in the same order as listed above. If a chunk
 appears in the wrong place, the file is invalid, but readers MAY parse the
-file, ignoring the chunks that come too late.
+file, ignoring the chunks that are out of order.
 
 **Rationale:** Setting the order of chunks should allow quicker file
 parsing. For example, if an 'ALPH' chunk does not appear in its required
