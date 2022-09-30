@@ -25,7 +25,7 @@ to compress image data in a lossy way, or (ii) the WebP lossless encoding
 (and possibly other encodings in the future). These encoding schemes should
 make it more efficient than currently used formats. It is optimized for fast
 image transfer over the network (e.g., for websites). The WebP format has
-feature parity (color profile, metadata, animation etc) with other formats as
+feature parity (color profile, metadata, animation, etc.) with other formats as
 well. This document describes the structure of a WebP file.
 
 The WebP container (i.e., RIFF container for WebP) allows feature support over
