@@ -312,7 +312,7 @@ if(MSVC)
   # avoid security warnings for e.g., fopen() used in the examples.
   add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 else()
-  add_definitions(-Wall)
+  add_compile_options(-Wall)
 endif()
 include_directories(${WEBP_DEP_INCLUDE_DIRS})
 add_library(webpdecode OBJECT ${WEBP_DEC_SRCS})
