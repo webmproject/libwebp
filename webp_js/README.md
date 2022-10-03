@@ -26,8 +26,8 @@ Emscripten and CMake.
 
 -   compile webp.js using 'emmake make'.
 
--   that's it! Upon completion, you should have the webp.js and webp.wasm files
-    generated.
+-   that's it! Upon completion, you should have the 'webp.js', 'webp.js.mem',
+    'webp_wasm.js' and 'webp_wasm.wasm' files generated.
 
 The callable JavaScript function is WebPToSDL(), which decodes a raw WebP
 bitstream into a canvas. See webp_js/index.html for a simple usage sample (see
@@ -35,11 +35,12 @@ below for instructions).
 
 ## Demo HTML page
 
-The HTML page webp_js/index.html requires an HTTP server to serve the WebP image
-example. It's easy to just use Python for that.
+The HTML page webp_js/index.html requires the built files 'webp.js' and
+'webp.js.mem' to be copied to webp_js/. An HTTP server to serve the WebP image
+example is also needed. With Python, just run:
 
 ```shell
-cd webp_js && python -m SimpleHTTPServer 8080
+cd webp_js && python3 -m http.server 8080
 ```
 
 and then navigate to http://localhost:8080 in your favorite browser.
@@ -48,9 +49,11 @@ and then navigate to http://localhost:8080 in your favorite browser.
 
 CMakeLists.txt is configured to build the WASM version when using the option
 WEBP_BUILD_WEBP_JS=ON. The compilation step will assemble the files
-'webp_wasm.js', 'webp_wasm.wasm' in the webp_js/ directory. See
-webp_js/index_wasm.html for a simple demo page using the WASM version of the
-library.
+'webp_wasm.js' and 'webp_wasm.wasm' that you then need to copy to the
+webp_js/ directory.
+
+See webp_js/index_wasm.html for a simple demo page using the WASM version of
+the library.
 
 You will need a fairly recent version of Emscripten (at least 2.0.18,
 latest-upstream is recommended) and of your WASM-enabled browser to run this

@@ -631,9 +631,9 @@ if(WEBP_BUILD_WEBP_JS)
     set(WEBP_HAVE_SDL 1)
     set_target_properties(
       webp_js
-      PROPERTIES LINK_FLAGS "-s WASM=0 \
-         -s EXPORTED_FUNCTIONS='[\"_WebpToSDL\"]' -s INVOKE_RUN=0 \
-         -s EXPORTED_RUNTIME_METHODS='[\"cwrap\"]'")
+      PROPERTIES LINK_FLAGS "-sWASM=0 \
+         -sEXPORTED_FUNCTIONS=_WebpToSDL -sINVOKE_RUN=0 \
+         -sEXPORTED_RUNTIME_METHODS=cwrap")
     set_target_properties(webp_js PROPERTIES OUTPUT_NAME webp)
     target_compile_definitions(webp_js PUBLIC EMSCRIPTEN WEBP_HAVE_SDL)
   endif()
@@ -644,9 +644,9 @@ if(WEBP_BUILD_WEBP_JS)
   target_include_directories(webp_wasm PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
   set_target_properties(
     webp_wasm
-    PROPERTIES LINK_FLAGS "-s WASM=1 \
-       -s EXPORTED_FUNCTIONS='[\"_WebpToSDL\"]' -s INVOKE_RUN=0 \
-       -s EXPORTED_RUNTIME_METHODS='[\"cwrap\"]'")
+    PROPERTIES LINK_FLAGS "-sWASM=1 \
+       -sEXPORTED_FUNCTIONS=_WebpToSDL -sINVOKE_RUN=0 \
+       -sEXPORTED_RUNTIME_METHODS=cwrap")
   target_compile_definitions(webp_wasm PUBLIC EMSCRIPTEN WEBP_HAVE_SDL)
 
   target_compile_definitions(webpdspdecode PUBLIC EMSCRIPTEN)
