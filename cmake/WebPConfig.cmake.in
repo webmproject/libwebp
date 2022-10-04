@@ -3,6 +3,11 @@ set(WEBP_VERSION ${WebP_VERSION})
 
 @PACKAGE_INIT@
 
+if(@WEBP_USE_THREAD@)
+  include(CMakeFindDependencyMacro)
+  find_dependency(Threads REQUIRED)
+endif()
+
 include ("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@Targets.cmake")
 
 set(WebP_INCLUDE_DIRS "@CMAKE_INSTALL_FULL_INCLUDEDIR@")
