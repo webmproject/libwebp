@@ -710,13 +710,16 @@ write_basic_package_version_file(
 include(CMakePackageConfigHelpers)
 # Fix libwebpmux reference. The target name libwebpmux is used for compatibility
 # purposes, but the library mentioned in WebPConfig.cmake should be the
-# unprefixed version.
-list(TRANSFORM INSTALLED_LIBRARIES REPLACE "libwebpmux" "webpmux")
+# unprefixed version. Note string(...) can be replaced with list(TRANSFORM ...)
+# if cmake_minimum_required is >= 3.12.
+string(REGEX REPLACE "libwebpmux" "webpmux" INSTALLED_LIBRARIES
+                     "${INSTALLED_LIBRARIES}")
+
 if(MSVC)
   # For compatibility with nmake, MSVC builds use a custom prefix (lib) that
   # needs to be included in the library name.
-  list(TRANSFORM INSTALLED_LIBRARIES
-       REPLACE "[A-Za-z0-9_]+" "${CMAKE_STATIC_LIBRARY_PREFIX}\\0")
+  string(REGEX REPLACE "[A-Za-z0-9_]+" "${CMAKE_STATIC_LIBRARY_PREFIX}\\0"
+                       INSTALLED_LIBRARIES "${INSTALLED_LIBRARIES}")
 endif()
 
 configure_package_config_file(
