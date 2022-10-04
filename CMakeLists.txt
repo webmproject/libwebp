@@ -544,7 +544,7 @@ if(WEBP_BUILD_VWEBP)
       vwebp
       ${OPENGL_LIBRARIES}
       exampleutil
-      ${GLUT_glut_LIBRARY}
+      GLUT::GLUT
       imageioutil
       webp
       webpdemux)
