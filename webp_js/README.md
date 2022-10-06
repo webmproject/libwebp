@@ -49,11 +49,11 @@ and then navigate to http://localhost:8080 in your favorite browser.
 
 CMakeLists.txt is configured to build the WASM version when using the option
 WEBP_BUILD_WEBP_JS=ON. The compilation step will assemble the files
-'webp_wasm.js' and 'webp_wasm.wasm' that you then need to copy to the
-webp_js/ directory.
+'webp_wasm.js' and 'webp_wasm.wasm' that you then need to copy to the webp_js/
+directory.
 
-See webp_js/index_wasm.html for a simple demo page using the WASM version of
-the library.
+See webp_js/index_wasm.html for a simple demo page using the WASM version of the
+library.
 
 You will need a fairly recent version of Emscripten (at least 2.0.18,
 latest-upstream is recommended) and of your WASM-enabled browser to run this
