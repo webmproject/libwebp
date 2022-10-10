@@ -322,7 +322,7 @@ Extended WebP file header:
 
 Reserved (Rsv): 2 bits
 
-: MUST be `0`.
+: MUST be `0`. Readers MUST ignore this field.
 
 ICC profile (I): 1 bit
 
@@ -348,11 +348,11 @@ Animation (A): 1 bit
 
 Reserved (R): 1 bit
 
-: MUST be `0`.
+: MUST be `0`. Readers MUST ignore this field.
 
 Reserved: 24 bits
 
-: MUST be `0`.
+: MUST be `0`. Readers MUST ignore this field.
 
 Canvas Width Minus One: 24 bits
 
@@ -466,7 +466,7 @@ Frame Duration: 24 bits (_uint24_)
 
 Reserved: 6 bits
 
-: MUST be 0.
+: MUST be `0`. Readers MUST ignore this field.
 
 Blending method (B): 1 bit
 
@@ -547,7 +547,7 @@ _padded_ chunks as described by the [RIFF file format](#riff-file-format).
 
 Reserved (Rsv): 2 bits
 
-: MUST be `0`.
+: MUST be `0`. Readers MUST ignore this field.
 
 Pre-processing (P): 2 bits
 
