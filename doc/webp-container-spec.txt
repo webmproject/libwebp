@@ -746,19 +746,40 @@ original order (unless they specifically intend to modify these chunks).
 
 ### Assembling the Canvas from frames
 
-Here we provide an overview of how a reader should assemble a canvas in the
-case of an animated image. The notation _VP8X.field_ means the field in the
-'VP8X' chunk with the same description.
+Here we provide an overview of how a reader MUST assemble a canvas in the case
+of an animated image.
 
-Displaying an _animated image_ canvas MUST be equivalent to the following
-pseudocode:
+The process begins with creating a canvas using the dimensions given in the
+'VP8X' chunk, `Canvas Width Minus One + 1` pixels wide by `Canvas Height Minus
+One + 1` pixels high. The `Loop Count` field from the 'ANIM' chunk controls how
+many times the animation process is repeated. This is `Loop Count - 1` for
+non-zero `Loop Count` values or infinitely if `Loop Count` is zero.
+
+At the beginning of each loop iteration the canvas is filled using the
+background color from the 'ANIM' chunk or an application defined color.
+
+'ANMF' chunks contain individual frames given in display order. Before rendering
+each frame, the previous frame's `Disposal method` is applied.
+
+The rendering of the decoded frame begins at the Cartesian coordinates (`2 *
+Frame X`, `2 * Frame Y`) using the top-left corner of the canvas as the origin.
+`Frame Width Minus One + 1` pixels wide by `Frame Height Minus One + 1` pixels
+high are rendered onto the canvas using the `Blending method`.
+
+The canvas is displayed for `Frame Duration` milliseconds. This continues until
+all frames given by 'ANMF' chunks have been displayed. A new loop iteration is
+then begun or the canvas is left in its final state if all iterations have been
+completed.
+
+The following pseudocode illustrates the rendering process. The notation
+_VP8X.field_ means the field in the 'VP8X' chunk with the same description.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 assert VP8X.flags.hasAnimation
 canvas ← new image of size VP8X.canvasWidth x VP8X.canvasHeight with
          background color ANIM.background_color.
 loop_count ← ANIM.loopCount
-dispose_method ← ANIM.disposeMethod
+dispose_method ← Dispose to background color
 if loop_count == 0:
   loop_count = ∞
 frame_params ← nil
@@ -784,10 +805,12 @@ for loop = 0..loop_count - 1
         frame_params.bitstream = bitstream_data
     render frame with frame_params.alpha and frame_params.bitstream
       on canvas with top-left corner at (frame_params.frameX,
-      frame_params.frameY), using dispose method dispose_method.
+      frame_params.frameY), using blending method
+      frame_params.blendingMethod.
     canvas contains the decoded image.
     Show the contents of the canvas for
     frame_params.frameDuration * 1ms.
+    dispose_method = frame_params.disposeMethod
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
