@@ -51,7 +51,7 @@ the stream containing them, and bits of each byte are read in
 least-significant-bit-first order. When multiple bits are read at the
 same time, the integer is constructed from the original data in the
 original order. The most significant bits of the returned integer are
-also the most significant bits of the original data. Thus the statement
+also the most significant bits of the original data. Thus, the statement
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 b = ReadBits(2);
@@ -196,7 +196,7 @@ once. The transformations are used only for the main level ARGB image:
 the subresolution images have no transforms, not even the 0 bit
 indicating the end-of-transforms.
 
-Typically an encoder would use these transforms to reduce the Shannon
+Typically, an encoder would use these transforms to reduce the Shannon
 entropy in the residual image. Also, the transform data can be decided
 based on entropy minimization.
 
@@ -566,9 +566,9 @@ pixels are bundled into a single pixel. The pixel bundling packs several
 respectively. Pixel bundling allows for a more efficient joint
 distribution entropy coding of neighboring pixels, and gives some
 arithmetic coding-like benefits to the entropy code, but it can only be
-used when there are a small number of unique values.
+used when there are 16 or fewer unique values.
 
-`color_table_size` specifies how many pixels are combined together:
+`color_table_size` specifies how many pixels are combined:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 int width_bits;
@@ -583,13 +583,12 @@ if (color_table_size <= 2) {
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-`width_bits` has a value of 0, 1, 2 or 3. A value of 0 indicates no
-pixel bundling to be done for the image. A value of 1 indicates that two
-pixels are combined together, and each pixel has a range of \[0..15\]. A
-value of 2 indicates that four pixels are combined together, and each
-pixel has a range of \[0..3\]. A value of 3 indicates that eight pixels
-are combined together and each pixel has a range of \[0..1\], i.e., a
-binary value.
+`width_bits` has a value of 0, 1, 2 or 3. A value of 0 indicates no pixel
+bundling to be done for the image. A value of 1 indicates that two pixels are
+combined, and each pixel has a range of \[0..15\]. A value of 2 indicates that
+four pixels are combined, and each pixel has a range of \[0..3\]. A value of 3
+indicates that eight pixels are combined and each pixel has a range of \[0..1\],
+i.e., a binary value.
 
 The values are packed into the green component as follows:
 
@@ -659,7 +658,7 @@ Each pixel is encoded using one of the three possible methods:
   3. Color cache code: using a short multiplicative hash code (color cache
      index) of a recently seen color.
 
-The following sub-sections describe each of these in detail.
+The following subsections describe each of these in detail.
 
 #### 5.2.1 Prefix Coded Literals
 
@@ -725,7 +724,7 @@ return offset + ReadBits(extra_bits) + 1;
 {:#distance-mapping}
 
 As noted previously, distance code is a number indicating the position of a
-previously seen pixel, from which the pixels are to be copied. This sub-section
+previously seen pixel, from which the pixels are to be copied. This subsection
 defines the mapping between a distance code and the position of a previous
 pixel.
 
