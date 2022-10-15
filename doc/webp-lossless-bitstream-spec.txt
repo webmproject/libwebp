@@ -1075,33 +1075,41 @@ The interpretation of S depends on its value:
 7 Overall Structure of the Format
 ---------------------------------
 
-Below is a view into the format in Backus-Naur form. It does not cover
-all details. End-of-image (EOI) is only implicitly coded into the number
-of pixels (xsize * ysize).
+Below is a view into the format in Augmented Backus-Naur Form ([ABNF]). It does
+not cover all details. End-of-image (EOI) is only implicitly coded into the
+number of pixels (xsize * ysize).
 
 
 #### 7.1 Basic Structure
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-<format> ::= <RIFF header><image size><image stream>
-<image stream> ::= <optional-transform><spatially-coded image>
+format       = RIFF-header image-size image-stream
+RIFF-header  = "RIFF" 4OCTET "WEBP" "VP8L" 4OCTET %x2F
+image-size   = 14BIT 14BIT ; width - 1, height - 1
+image-stream = optional-transform spatially-coded-image
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 #### 7.2 Structure of Transforms
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-<optional-transform> ::=
-    (1-bit value 1; <transform> <optional-transform>) | 1-bit value 0
-<transform> ::= <predictor-tx> | <color-tx> | <subtract-green-tx> |
-                <color-indexing-tx>
-<predictor-tx> ::= 2-bit value 0; <predictor image>
-<predictor image> ::= 3-bit sub-pixel code ; <entropy-coded image>
-<color-tx> ::= 2-bit value 1; <color image>
-<color image> ::= 3-bit sub-pixel code ; <entropy-coded image>
-<subtract-green-tx> ::= 2-bit value 2
-<color-indexing-tx> ::= 2-bit value 3; <color-indexing image>
-<color-indexing image> ::= 8-bit color count; <entropy-coded image>
+optional-transform   =  (%b1 transform optional-transform) / %b0
+transform            =  predictor-tx / color-tx / subtract-green-tx
+transform            =/ color-indexing-tx
+
+predictor-tx         =  %b00 predictor-image
+predictor-image      =  3BIT ; sub-pixel code
+                        entropy-coded-image
+
+color-tx             =  %b01 color-image
+color-image          =  3BIT ; sub-pixel code
+                        entropy-coded-image
+
+subtract-green-tx    =  %b10
+
+color-indexing-tx    =  %b11 color-indexing-image
+color-indexing-image =  8BIT ; color count
+                        entropy-coded-image
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -1110,35 +1118,40 @@ of pixels (xsize * ysize).
 \[AMENDED2\]
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-<spatially-coded image> ::= <color cache info><meta prefix><data>
-<entropy-coded image> ::= <color cache info><data>
-<color cache info> ::=
-    1 bit value 0 | (1-bit value 1; 4-bit value for color cache size)
-<meta prefix> ::= 1-bit value 0 |
-                  (1-bit value 1; <entropy image>)
-<data> ::= <prefix codes><lz77-coded image>
-<entropy image> ::= 3-bit subsample value; <entropy-coded image>
-<prefix codes> ::= <prefix code group> |
-                   <prefix code group><prefix codes>
-<prefix code group> ::= <prefix code><prefix code><prefix code>
-                        <prefix code><prefix code>
-                        See "Interpretation of Meta Prefix Codes" to
-                        understand what each of these five prefix
-                        codes are for.
-<prefix code> ::= <simple prefix code> | <normal prefix code>
-<simple prefix code> ::= see "Simple code length code" for details
-<normal prefix code> ::= <code length code>; encoded code lengths
-<code length code> ::= see section "Normal code length code"
-<lz77-coded image> ::= ((<argb-pixel> | <lz77-copy> |
-                         <color-cache-code>) <lz77-coded image>) | ""
+spatially-coded-image =  color-cache-info meta-prefix data
+entropy-coded-image   =  color-cache-info data
+
+color-cache-info      =  %b0
+color-cache-info      =/ (%b1 4BIT) ; 1 followed by color cache size
+
+meta-prefix           =  %b0 / (%b1 entropy-image)
+
+data                  =  prefix-codes lz77-coded-image
+entropy-image         =  3BIT ; subsample value
+                         entropy-coded-image
+
+prefix-codes          =  prefix-code-group *prefix-codes
+prefix-code-group     =
+    5prefix-code ; See "Interpretation of Meta Prefix Codes" to
+                 ; understand what each of these five prefix
+                 ; codes are for.
+
+prefix-code           =  simple-prefix-code / normal-prefix-code
+simple-prefix-code    =  ; see "Simple code length code" for details
+normal-prefix-code    =  code-length-code encoded-code-lengths
+code-length-code      =  ; see section "Normal code length code"
+
+lz77-coded-image      =
+    *((argb-pixel / lz77-copy / color-cache-code) lz77-coded-image)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A possible example sequence:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-<RIFF header><image size>1-bit value 1<subtract-green-tx>
-1-bit value 1<predictor-tx>1-bit value 0<color cache info>
-1-bit value 0<prefix codes><lz77-coded image>
+RIFF-header image-size %b1 subtract-green-tx
+%b1 predictor-tx %b0 color-cache-info
+%b0 prefix-codes lz77-coded-image
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+[ABNF]: https://www.rfc-editor.org/rfc/rfc5234
 [canonical_huff]: https://en.wikipedia.org/wiki/Canonical_Huffman_code
