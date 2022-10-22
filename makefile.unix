@@ -128,6 +128,7 @@ ANIM_UTIL_OBJS = \
 
 SHARPYUV_OBJS = \
     sharpyuv/sharpyuv.o \
+    sharpyuv/sharpyuv_cpu.o \
     sharpyuv/sharpyuv_csp.o \
     sharpyuv/sharpyuv_dsp.o \
     sharpyuv/sharpyuv_gamma.o \
@@ -308,7 +309,8 @@ HDRS_INSTALLED = \
 
 SHARPYUV_HDRS_INSTALLED = \
     sharpyuv/sharpyuv.h \
-    sharpyuv/sharpyuv_csp.h
+    sharpyuv/sharpyuv_cpu.h \
+    sharpyuv/sharpyuv_csp.h \
 
 HDRS = \
     src/dec/alphai_dec.h \
