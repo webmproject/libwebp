@@ -749,6 +749,8 @@ fi
 
 dnl =========================
 
+dnl Add an empty lib_prefix variable for use in *.pc.in.
+AC_SUBST([lib_prefix])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADERS([src/webp/config.h])
 AC_CONFIG_FILES([Makefile src/Makefile man/Makefile \
