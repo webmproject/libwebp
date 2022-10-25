@@ -25,6 +25,12 @@
 #include "sharpyuv/sharpyuv_gamma.h"
 
 //------------------------------------------------------------------------------
+
+int SharpYuvGetVersion(void) {
+  return SHARPYUV_VERSION;
+}
+
+//------------------------------------------------------------------------------
 // Sharp RGB->YUV conversion
 
 static const int kNumIterations = 4;

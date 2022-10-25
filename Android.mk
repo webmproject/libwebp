@@ -219,7 +219,7 @@ LOCAL_SRC_FILES := \
     $(utils_enc_srcs) \
 
 LOCAL_CFLAGS := $(WEBP_CFLAGS)
-LOCAL_EXPORT_C_INCLUDES += $(LOCAL_PATH)/src
+LOCAL_EXPORT_C_INCLUDES += $(LOCAL_PATH)/src $(LOCAL_PATH)
 
 # prefer arm over thumb mode for performance gains
 LOCAL_ARM_MODE := arm
