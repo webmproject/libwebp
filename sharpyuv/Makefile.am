@@ -11,6 +11,7 @@ libsharpyuvinclude_HEADERS =
 libsharpyuvinclude_HEADERS += sharpyuv.h
 libsharpyuvinclude_HEADERS += sharpyuv_csp.h
 noinst_HEADERS =
+noinst_HEADERS += ../src/dsp/cpu.c
 noinst_HEADERS += ../src/dsp/cpu.h
 noinst_HEADERS += ../src/webp/types.h
 
@@ -25,6 +26,7 @@ libsharpyuv_neon_la_CPPFLAGS = $(libsharpyuv_la_CPPFLAGS)
 libsharpyuv_neon_la_CFLAGS = $(AM_CFLAGS) $(NEON_FLAGS)
 
 libsharpyuv_la_SOURCES =
+libsharpyuv_la_SOURCES += sharpyuv_cpu.c sharpyuv_cpu.h
 libsharpyuv_la_SOURCES += sharpyuv_csp.c sharpyuv_csp.h
 libsharpyuv_la_SOURCES += sharpyuv_dsp.c sharpyuv_dsp.h
 libsharpyuv_la_SOURCES += sharpyuv_gamma.c sharpyuv_gamma.h

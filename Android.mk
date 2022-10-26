@@ -35,6 +35,7 @@ endif
 
 sharpyuv_srcs := \
     sharpyuv/sharpyuv.c \
+    sharpyuv/sharpyuv_cpu.c \
     sharpyuv/sharpyuv_csp.c \
     sharpyuv/sharpyuv_dsp.c \
     sharpyuv/sharpyuv_gamma.c \

@@ -107,6 +107,7 @@ model {
           source {
             srcDir "sharpyuv"
             include "sharpyuv.c"
+            include "sharpyuv_cpu.c"
             include "sharpyuv_csp.c"
             include "sharpyuv_dsp.c"
             include "sharpyuv_gamma.c"

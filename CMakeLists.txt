@@ -87,6 +87,7 @@ if(WEBP_BUILD_WEBP_JS)
 endif()
 
 set(SHARPYUV_DEP_LIBRARIES)
+set(SHARPYUV_DEP_INCLUDE_DIRS)
 set(WEBP_DEP_LIBRARIES)
 set(WEBP_DEP_INCLUDE_DIRS)
 
@@ -151,9 +152,12 @@ if(ANDROID)
               ${ANDROID_NDK}/sources/android/cpufeatures/cpu-features.c)
   list(APPEND INSTALLED_LIBRARIES cpufeatures-webp)
   target_link_libraries(cpufeatures-webp dl)
+  set(SHARPYUV_DEP_LIBRARIES ${SHARPYUV_DEP_LIBRARIES} cpufeatures-webp)
   set(WEBP_DEP_LIBRARIES ${WEBP_DEP_LIBRARIES} cpufeatures-webp)
-  set(WEBP_DEP_INCLUDE_DIRS ${WEBP_DEP_INCLUDE_DIRS}
-                            ${ANDROID_NDK}/sources/android/cpufeatures)
+  set(cpufeatures_include_dir ${ANDROID_NDK}/sources/android/cpufeatures)
+  set(SHARPYUV_DEP_INCLUDE_DIRS ${SHARPYUV_DEP_INCLUDE_DIRS}
+                                ${cpufeatures_include_dir})
+  set(WEBP_DEP_INCLUDE_DIRS ${WEBP_DEP_INCLUDE_DIRS} ${cpufeatures_include_dir})
   add_definitions(-DHAVE_CPU_FEATURES_H=1)
   set(HAVE_CPU_FEATURES_H 1)
 else()
