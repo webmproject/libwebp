@@ -764,14 +764,14 @@ The mapping between distance code `i` and the neighboring pixel offset
 For example, distance code `1` indicates an offset of `(0, 1)` for the
 neighboring pixel, that is, the pixel above the current pixel (0 pixel
 difference in X-direction and 1 pixel difference in Y-direction). Similarly,
-distance code `3` indicates left-top pixel.
+distance code `3` indicates the left-top pixel.
 
 The decoder can convert a distance code `i` to a scan-line order distance
 `dist` as follows:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-(xi, yi) = distance_map[i]
-dist = x + y * xsize
+(xi, yi) = distance_map[i - 1]
+dist = xi + yi * xsize
 if (dist < 1) {
   dist = 1
 }
