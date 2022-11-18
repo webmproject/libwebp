@@ -21,16 +21,15 @@ Paragraphs marked as \[AMENDED2\] were amended on 2022-05-13.
 Abstract
 --------
 
-WebP lossless is an image format for lossless compression of ARGB
-images. The lossless format stores and restores the pixel values
-exactly, including the color values for pixels whose alpha value is 0. The
-format uses subresolution images, recursively embedded into the format
-itself, for storing statistical data about the images, such as the used
-entropy codes, spatial predictors, color space conversion, and color
-table. LZ77, prefix coding, and a color cache are used for compression
-of the bulk data. Decoding speeds faster than PNG have been
-demonstrated, as well as 25% denser compression than can be achieved
-using today's PNG format.
+WebP lossless is an image format for lossless compression of ARGB images. The
+lossless format stores and restores the pixel values exactly, including the
+color values for pixels whose alpha value is 0. The format uses subresolution
+images, recursively embedded into the format itself, for storing statistical
+data about the images, such as the used entropy codes, spatial predictors,
+color space conversion, and color table. LZ77, prefix coding, and a color cache
+are used for compression of the bulk data. Decoding speeds faster than PNG have
+been demonstrated, as well as 25% denser compression than can be achieved using
+today's PNG format.
 
 
 * TOC placeholder
