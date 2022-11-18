@@ -589,8 +589,8 @@ where `clip(v)` is equal to:
   * v    otherwise
 
 The final value is derived by adding the decompressed value `X` to the
-predictor and using modulo-256 arithmetic to wrap the \[256-511\] range
-into the \[0-255\] one:
+predictor and using modulo-256 arithmetic to wrap the \[256..511\] range
+into the \[0..255\] one:
 
 `alpha = (predictor + X) % 256`
 
