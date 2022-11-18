@@ -21,16 +21,15 @@ Paragraphs marked as \[AMENDED2\] were amended on 2022-05-13.
 Abstract
 --------
 
-WebP lossless is an image format for lossless compression of ARGB
-images. The lossless format stores and restores the pixel values
-exactly, including the color values for zero alpha pixels. The
-format uses subresolution images, recursively embedded into the format
-itself, for storing statistical data about the images, such as the used
-entropy codes, spatial predictors, color space conversion, and color
-table. LZ77, prefix coding, and a color cache are used for compression
-of the bulk data. Decoding speeds faster than PNG have been
-demonstrated, as well as 25% denser compression than can be achieved
-using today's PNG format.
+WebP lossless is an image format for lossless compression of ARGB images. The
+lossless format stores and restores the pixel values exactly, including the
+color values for pixels whose alpha value is 0. The format uses subresolution
+images, recursively embedded into the format itself, for storing statistical
+data about the images, such as the used entropy codes, spatial predictors,
+color space conversion, and color table. LZ77, prefix coding, and a color cache
+are used for compression of the bulk data. Decoding speeds faster than PNG have
+been demonstrated, as well as 25% denser compression than can be achieved using
+today's PNG format.
 
 
 * TOC placeholder
@@ -436,7 +435,7 @@ int8 ColorTransformDelta(int8 t, int8 c) {
 A conversion from the 8-bit unsigned representation (uint8) to the 8-bit
 signed one (int8) is required before calling `ColorTransformDelta()`.
 It should be performed using 8-bit two's complement (that is: uint8 range
-\[128-255\] is mapped to the \[-128, -1\] range of its converted int8 value).
+\[128..255\] is mapped to the \[-128..-1\] range of its converted int8 value).
 
 The multiplication is to be done using more precision (with at least
 16-bit dynamics). The sign extension property of the shift operation
@@ -744,34 +743,37 @@ The mapping between distance code `i` and the neighboring pixel offset
 `(xi, yi)` is as follows:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-(0, 1),  (1, 0),  (1, 1),  (-1, 1), (0, 2),  (2, 0),  (1, 2),  (-1, 2),
-(2, 1),  (-2, 1), (2, 2),  (-2, 2), (0, 3),  (3, 0),  (1, 3),  (-1, 3),
-(3, 1),  (-3, 1), (2, 3),  (-2, 3), (3, 2),  (-3, 2), (0, 4),  (4, 0),
-(1, 4),  (-1, 4), (4, 1),  (-4, 1), (3, 3),  (-3, 3), (2, 4),  (-2, 4),
-(4, 2),  (-4, 2), (0, 5),  (3, 4),  (-3, 4), (4, 3),  (-4, 3), (5, 0),
-(1, 5),  (-1, 5), (5, 1),  (-5, 1), (2, 5),  (-2, 5), (5, 2),  (-5, 2),
-(4, 4),  (-4, 4), (3, 5),  (-3, 5), (5, 3),  (-5, 3), (0, 6),  (6, 0),
-(1, 6),  (-1, 6), (6, 1),  (-6, 1), (2, 6),  (-2, 6), (6, 2),  (-6, 2),
-(4, 5),  (-4, 5), (5, 4),  (-5, 4), (3, 6),  (-3, 6), (6, 3),  (-6, 3),
-(0, 7),  (7, 0),  (1, 7),  (-1, 7), (5, 5),  (-5, 5), (7, 1),  (-7, 1),
-(4, 6),  (-4, 6), (6, 4),  (-6, 4), (2, 7),  (-2, 7), (7, 2),  (-7, 2),
-(3, 7),  (-3, 7), (7, 3),  (-7, 3), (5, 6),  (-5, 6), (6, 5),  (-6, 5),
-(8, 0),  (4, 7),  (-4, 7), (7, 4),  (-7, 4), (8, 1),  (8, 2),  (6, 6),
-(-6, 6), (8, 3),  (5, 7),  (-5, 7), (7, 5),  (-7, 5), (8, 4),  (6, 7),
-(-6, 7), (7, 6),  (-7, 6), (8, 5),  (7, 7),  (-7, 7), (8, 6),  (8, 7)
+(0, 1),  (1, 0),  (1, 1),  (-1, 1), (0, 2),  (2, 0),  (1, 2),
+(-1, 2), (2, 1),  (-2, 1), (2, 2),  (-2, 2), (0, 3),  (3, 0),
+(1, 3),  (-1, 3), (3, 1),  (-3, 1), (2, 3),  (-2, 3), (3, 2),
+(-3, 2), (0, 4),  (4, 0),  (1, 4),  (-1, 4), (4, 1),  (-4, 1),
+(3, 3),  (-3, 3), (2, 4),  (-2, 4), (4, 2),  (-4, 2), (0, 5),
+(3, 4),  (-3, 4), (4, 3),  (-4, 3), (5, 0),  (1, 5),  (-1, 5),
+(5, 1),  (-5, 1), (2, 5),  (-2, 5), (5, 2),  (-5, 2), (4, 4),
+(-4, 4), (3, 5),  (-3, 5), (5, 3),  (-5, 3), (0, 6),  (6, 0),
+(1, 6),  (-1, 6), (6, 1),  (-6, 1), (2, 6),  (-2, 6), (6, 2),
+(-6, 2), (4, 5),  (-4, 5), (5, 4),  (-5, 4), (3, 6),  (-3, 6),
+(6, 3),  (-6, 3), (0, 7),  (7, 0),  (1, 7),  (-1, 7), (5, 5),
+(-5, 5), (7, 1),  (-7, 1), (4, 6),  (-4, 6), (6, 4),  (-6, 4),
+(2, 7),  (-2, 7), (7, 2),  (-7, 2), (3, 7),  (-3, 7), (7, 3),
+(-7, 3), (5, 6),  (-5, 6), (6, 5),  (-6, 5), (8, 0),  (4, 7),
+(-4, 7), (7, 4),  (-7, 4), (8, 1),  (8, 2),  (6, 6),  (-6, 6),
+(8, 3),  (5, 7),  (-5, 7), (7, 5),  (-7, 5), (8, 4),  (6, 7),
+(-6, 7), (7, 6),  (-7, 6), (8, 5),  (7, 7),  (-7, 7), (8, 6),
+(8, 7)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 For example, distance code `1` indicates an offset of `(0, 1)` for the
 neighboring pixel, that is, the pixel above the current pixel (0 pixel
 difference in X-direction and 1 pixel difference in Y-direction). Similarly,
-distance code `3` indicates left-top pixel.
+distance code `3` indicates the left-top pixel.
 
 The decoder can convert a distance code `i` to a scan-line order distance
 `dist` as follows:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-(xi, yi) = distance_map[i]
-dist = x + y * xsize
+(xi, yi) = distance_map[i - 1]
+dist = xi + yi * xsize
 if (dist < 1) {
   dist = 1
 }
