@@ -555,8 +555,8 @@ Pre-processing (P): 2 bits
   been performed during compression. The decoder can use this information to
   e.g. dither the values or smooth the gradients prior to display.
 
-    * `0`: no pre-processing
-    * `1`: level reduction
+    * `0`: No pre-processing.
+    * `1`: Level reduction.
 
 Filtering method (F): 2 bits
 
@@ -594,9 +594,9 @@ into the \[0..255\] one:
 
 `alpha = (predictor + X) % 256`
 
-There are special cases for left-most and top-most pixel positions:
+There are special cases for the left-most and top-most pixel positions:
 
-  * Top-left value at location (0,0) uses 0 as predictor value. Otherwise,
+  * The top-left value at location (0, 0) uses 0 as predictor value. Otherwise,
   * For horizontal or gradient filtering methods, the left-most pixels at
     location (0, y) are predicted using the location (0, y-1) just above.
   * For vertical or gradient filtering methods, the top-most pixels at
@@ -703,7 +703,7 @@ EXIF chunk:
 
 Exif Metadata: _Chunk Size_ bytes
 
-: image metadata in Exif format.
+: Image metadata in Exif format.
 
 XMP chunk:
 
@@ -718,7 +718,7 @@ XMP chunk:
 
 XMP Metadata: _Chunk Size_ bytes
 
-: image metadata in XMP format.
+: Image metadata in XMP format.
 
 Note the fourth character in the 'XMP ' FourCC is an ASCII space (0x20).
 
