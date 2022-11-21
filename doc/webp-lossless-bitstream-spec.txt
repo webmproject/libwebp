@@ -18,6 +18,8 @@ Paragraphs marked as \[AMENDED\] were amended on 2014-09-16.
 
 Paragraphs marked as \[AMENDED2\] were amended on 2022-05-13.
 
+Paragraphs marked as \[AMENDED3\] were amended on 2022-11-21.
+
 Abstract
 --------
 
@@ -465,7 +467,7 @@ During decoding, `ColorTransformElement` instances of the blocks are
 decoded and the inverse color transform is applied on the ARGB values of
 the pixels. As mentioned earlier, that inverse color transform is just
 adding `ColorTransformElement` values to the red and blue
-channels.
+channels. \[AMENDED3\]
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void InverseTransform(uint8 red, uint8 green, uint8 blue,
@@ -771,6 +773,8 @@ Similarly, the distance code `3` indicates the left-top pixel.
 The decoder can convert a distance code `i` to a scan-line order distance
 `dist` as follows:
 
+\[AMENDED3\]
+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 (xi, yi) = distance_map[i - 1]
 dist = xi + yi * xsize
@@ -910,7 +914,7 @@ First, `num_code_lengths` specifies the number of code lengths.
 int num_code_lengths = 4 + ReadBits(4);
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If `num_code_lengths` is > 19, the bitstream is invalid.
+If `num_code_lengths` is > 19, the bitstream is invalid. \[AMENDED3\]
 
 The code lengths are themselves encoded using prefix codes: lower level code
 lengths, `code_length_code_lengths`, first have to be read. The rest of those
