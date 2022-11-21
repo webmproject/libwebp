@@ -1355,7 +1355,7 @@ static int EncodeImageInternal(
 static void ApplySubtractGreen(VP8LEncoder* const enc, int width, int height,
                                VP8LBitWriter* const bw) {
   VP8LPutBits(bw, TRANSFORM_PRESENT, 1);
-  VP8LPutBits(bw, SUBTRACT_GREEN, 2);
+  VP8LPutBits(bw, SUBTRACT_GREEN_TRANSFORM, 2);
   VP8LSubtractGreenFromBlueAndRed(enc->argb_, width * height);
 }
 

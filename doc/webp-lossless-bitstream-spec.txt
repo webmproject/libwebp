@@ -217,7 +217,7 @@ type. There are four types of transforms.
 enum TransformType {
   PREDICTOR_TRANSFORM             = 0,
   COLOR_TRANSFORM                 = 1,
-  SUBTRACT_GREEN                  = 2,
+  SUBTRACT_GREEN_TRANSFORM        = 2,
   COLOR_INDEXING_TRANSFORM        = 3,
 };
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -395,7 +395,7 @@ void VP8LInverseTransform(const VP8LTransform* const transform,
   assert(row_start < row_end);
   assert(row_end <= transform->ysize_);
   switch (transform->type_) {
-    case SUBTRACT_GREEN:
+    case SUBTRACT_GREEN_TRANSFORM:
       VP8LAddGreenToBlueAndRed(in, (row_end - row_start) * width, out);
       break;
     case PREDICTOR_TRANSFORM:
