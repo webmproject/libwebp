@@ -910,7 +910,7 @@ First, `num_code_lengths` specifies the number of code lengths.
 int num_code_lengths = 4 + ReadBits(4);
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If `num_code_lengths` is > 18, the bitstream is invalid.
+If `num_code_lengths` is > 19, the bitstream is invalid.
 
 The code lengths are themselves encoded using prefix codes: lower level code
 lengths, `code_length_code_lengths`, first have to be read. The rest of those
