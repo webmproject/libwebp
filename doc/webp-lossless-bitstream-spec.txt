@@ -40,7 +40,7 @@ today's PNG format.
 --------------
 
 This document describes the compressed data representation of a WebP
-lossless image. It is intended as a detailed reference for WebP lossless
+lossless image. It is intended as a detailed reference for the WebP lossless
 encoder and decoder implementation.
 
 In this document, we extensively use C programming language syntax to
@@ -380,7 +380,7 @@ on the same row as the current pixel is instead used as the TR-pixel.
 \[AMENDED2\]
 
 The goal of the color transform is to decorrelate the R, G and B values
-of each pixel. Color transform keeps the green (G) value as it is,
+of each pixel. The color transform keeps the green (G) value as it is,
 transforms red (R) based on green and transforms blue (B) based on green
 and then based on red.
 
@@ -399,7 +399,7 @@ typedef struct {
 The actual color transformation is done by defining a color transform
 delta. The color transform delta depends on the `ColorTransformElement`,
 which is the same for all the pixels in a particular block. The delta is
-subtracted during color transform. The inverse color transform then is just
+subtracted during the color transform. The inverse color transform then is just
 adding those deltas.
 
 The color transform function is defined as follows:
@@ -475,7 +475,7 @@ void InverseTransform(uint8 red, uint8 green, uint8 blue,
   int tmp_red = red;
   int tmp_blue = blue;
 
-  // Applying inverse transform is just adding the
+  // Applying the inverse transform is just adding the
   // color transform deltas
   tmp_red  += ColorTransformDelta(trans->green_to_red, green);
   tmp_blue += ColorTransformDelta(trans->green_to_blue, green);
@@ -517,7 +517,7 @@ create a color index array and replace the pixel values by the array's
 indices. The color indexing transform achieves this. (In the context of
 WebP lossless, we specifically do not call this a palette transform
 because a similar but more dynamic concept exists in WebP lossless
-encoding: color cache.)
+encoding: color cache).
 
 The color indexing transform checks for the number of unique ARGB values
 in the image. If that number is below a threshold (256), it creates an
@@ -556,7 +556,7 @@ color.
 argb = color_table[GREEN(argb)];
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If the index is equal or larger than color_table_size, the argb color value
+If the index is equal or larger than `color_table_size`, the argb color value
 should be set to 0x00000000 (transparent black).  \[AMENDED\]
 
 When the color table is small (equal to or less than 16 colors), several
@@ -583,7 +583,7 @@ if (color_table_size <= 2) {
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 `width_bits` has a value of 0, 1, 2 or 3. A value of 0 indicates no pixel
-bundling to be done for the image. A value of 1 indicates that two pixels are
+bundling is to be done for the image. A value of 1 indicates that two pixels are
 combined, and each pixel has a range of \[0..15\]. A value of 2 indicates that
 four pixels are combined, and each pixel has a range of \[0..3\]. A value of 3
 indicates that eight pixels are combined and each pixel has a range of \[0..1\],
@@ -650,7 +650,7 @@ the image.
 
 Each pixel is encoded using one of the three possible methods:
 
-  1. prefix coded literal: each channel (green, red, blue and alpha) is
+  1. Prefix coded literal: each channel (green, red, blue and alpha) is
      entropy-coded independently;
   2. LZ77 backward reference: a sequence of pixels are copied from elsewhere
      in the image; or
@@ -681,7 +681,7 @@ while the extra bits are stored as they are (without an entropy code).
 
 **Rationale**: This approach reduces the storage requirement for the entropy
 code. Also, large values are usually rare, and so extra bits would be used for
-very few values in the image. Thus, this approach results in a better
+very few values in the image. Thus, this approach results in better
 compression overall.
 
 The following table denotes the prefix codes and extra bits used for storing
@@ -722,12 +722,12 @@ return offset + ReadBits(extra_bits) + 1;
 **Distance Mapping:**
 {:#distance-mapping}
 
-As noted previously, distance code is a number indicating the position of a
+As noted previously, a distance code is a number indicating the position of a
 previously seen pixel, from which the pixels are to be copied. This subsection
 defines the mapping between a distance code and the position of a previous
 pixel.
 
-The distance codes larger than 120 denote the pixel-distance in scan-line
+Distance codes larger than 120 denote the pixel-distance in scan-line
 order, offset by 120.
 
 The smallest distance codes \[1..120\] are special, and are reserved for a close
@@ -763,10 +763,10 @@ The mapping between distance code `i` and the neighboring pixel offset
 (8, 7)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-For example, distance code `1` indicates an offset of `(0, 1)` for the
+For example, the distance code `1` indicates an offset of `(0, 1)` for the
 neighboring pixel, that is, the pixel above the current pixel (0 pixel
-difference in X-direction and 1 pixel difference in Y-direction). Similarly,
-distance code `3` indicates the left-top pixel.
+difference in the X-direction and 1 pixel difference in the Y-direction).
+Similarly, the distance code `3` indicates the left-top pixel.
 
 The decoder can convert a distance code `i` to a scan-line order distance
 `dist` as follows:
@@ -897,7 +897,7 @@ if (num_symbols == 2) {
 (an empty prefix code). For example, a prefix code for distance can be empty
 if there are no backward references. Similarly, prefix codes for alpha, red,
 and blue can be empty if all pixels within the same meta prefix code are
-produced using the color cache. However, this case doesn't need a special
+produced using the color cache. However, this case doesn't need special
 handling, as empty prefix codes can be coded as those containing a single
 symbol `0`.
 
@@ -913,7 +913,7 @@ int num_code_lengths = 4 + ReadBits(4);
 If `num_code_lengths` is > 18, the bitstream is invalid.
 
 The code lengths are themselves encoded using prefix codes: lower level code
-lengths `code_length_code_lengths` first have to be read. The rest of those
+lengths, `code_length_code_lengths`, first have to be read. The rest of those
 `code_length_code_lengths` (according to the order in `kCodeLengthCodeOrder`)
 are zeros.
 
@@ -980,7 +980,7 @@ The entropy image defines which prefix codes are used in different parts of the
 image, as described below.
 
 The first 3-bits contain the `prefix_bits` value. The dimensions of the entropy
-image are derived from 'prefix_bits'.
+image are derived from `prefix_bits`.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 int prefix_bits = ReadBits(3) + 2;
@@ -998,11 +998,11 @@ The next bits contain an entropy image of width `prefix_xsize` and height
 For any given pixel (x, y), there is a set of five prefix codes associated with
 it. These codes are (in bitstream order):
 
-  * **prefix code #1**: used for green channel, backward-reference length and
-    color cache
-  * **prefix code #2, #3 and #4**: used for red, blue and alpha channels
+  * **Prefix code #1**: used for green channel, backward-reference length and
+    color cache.
+  * **Prefix code #2, #3 and #4**: used for red, blue and alpha channels
     respectively.
-  * **prefix code #5**: used for backward-reference distance.
+  * **Prefix code #5**: used for backward-reference distance.
 
 From here on, we refer to this set as a **prefix code group**.
 
@@ -1047,8 +1047,8 @@ For the current position (x, y) in the image, the decoder first identifies the
 corresponding prefix code group (as explained in the last section). Given the
 prefix code group, the pixel is read and decoded as follows:
 
-Read next symbol S from the bitstream using prefix code #1. Note that S is any
-integer in the range `0` to
+Read the next symbol S from the bitstream using prefix code #1. Note that S is
+any integer in the range `0` to
 `(256 + 24 + ` [`color_cache_size`](#color-cache-code)` - 1)`.
 
 The interpretation of S depends on its value:
@@ -1139,9 +1139,9 @@ prefix-code-group     =
                  ; codes are for.
 
 prefix-code           =  simple-prefix-code / normal-prefix-code
-simple-prefix-code    =  ; see "Simple code length code" for details
+simple-prefix-code    =  ; see "Simple Code Length Code" for details
 normal-prefix-code    =  code-length-code encoded-code-lengths
-code-length-code      =  ; see section "Normal code length code"
+code-length-code      =  ; see section "Normal Code Length Code"
 
 lz77-coded-image      =
     *((argb-pixel / lz77-copy / color-cache-code) lz77-coded-image)
