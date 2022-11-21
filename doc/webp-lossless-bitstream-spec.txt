@@ -464,7 +464,7 @@ image and encoded using the methods described in
 During decoding, `ColorTransformElement` instances of the blocks are
 decoded and the inverse color transform is applied on the ARGB values of
 the pixels. As mentioned earlier, that inverse color transform is just
-subtracting `ColorTransformElement` values from the red and blue
+adding `ColorTransformElement` values to the red and blue
 channels.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
