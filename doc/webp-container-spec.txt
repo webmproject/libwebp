@@ -658,7 +658,7 @@ The formats of VP8 and VP8L chunks are as described in sections
 [Simple File Format (Lossy)](#simple-file-format-lossy)
 and [Simple File Format (Lossless)](#simple-file-format-lossless) respectively.
 
-#### Color profile
+#### Color Profile
 
      0                   1                   2                   3
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -744,7 +744,7 @@ A file MAY contain unknown chunks:
 Readers SHOULD ignore these chunks. Writers SHOULD preserve them in their
 original order (unless they specifically intend to modify these chunks).
 
-### Assembling the Canvas from frames
+### Assembling the Canvas From Frames
 
 Here we provide an overview of how a reader MUST assemble a canvas in the case
 of an animated image.
