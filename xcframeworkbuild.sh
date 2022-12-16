@@ -15,7 +15,7 @@ set -e
 # Set these variables based on the desired minimum deployment target.
 readonly IOS_MIN_VERSION=6.0
 readonly MACOSX_MIN_VERSION=10.15
-readonly MACOSX_CATALYST_MIN_VERSION=13.0
+readonly MACOSX_CATALYST_MIN_VERSION=14.0
 
 # Extract Xcode version.
 readonly XCODE=$(xcodebuild -version | grep Xcode | cut -d " " -f2)
