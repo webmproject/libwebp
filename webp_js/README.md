@@ -1,4 +1,4 @@
-# Webp JavaScript decoder
+# WebP JavaScript decoder
 
 ```
  __   __ ____ ____ ____     __  ____

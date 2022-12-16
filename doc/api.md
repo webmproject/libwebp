@@ -233,7 +233,7 @@ WebPIDelete(idec);
 WebPFreeDecBuffer(&config.output);
 ```
 
-## Webp Mux
+## WebP Mux
 
 WebPMux is a set of two libraries 'Mux' and 'Demux' for creation, extraction and
 manipulation of an extended format WebP file, which can have features like color
