@@ -649,7 +649,7 @@ if(WEBP_BUILD_WEBP_JS)
     set_target_properties(
       webp_js
       PROPERTIES LINK_FLAGS "-sWASM=0 \
-         -sEXPORTED_FUNCTIONS=_WebpToSDL -sINVOKE_RUN=0 \
+         -sEXPORTED_FUNCTIONS=_WebPToSDL -sINVOKE_RUN=0 \
          -sEXPORTED_RUNTIME_METHODS=cwrap")
     set_target_properties(webp_js PROPERTIES OUTPUT_NAME webp)
     target_compile_definitions(webp_js PUBLIC EMSCRIPTEN WEBP_HAVE_SDL)
@@ -662,7 +662,7 @@ if(WEBP_BUILD_WEBP_JS)
   set_target_properties(
     webp_wasm
     PROPERTIES LINK_FLAGS "-sWASM=1 \
-       -sEXPORTED_FUNCTIONS=_WebpToSDL -sINVOKE_RUN=0 \
+       -sEXPORTED_FUNCTIONS=_WebPToSDL -sINVOKE_RUN=0 \
        -sEXPORTED_RUNTIME_METHODS=cwrap")
   target_compile_definitions(webp_wasm PUBLIC EMSCRIPTEN WEBP_HAVE_SDL)
 
