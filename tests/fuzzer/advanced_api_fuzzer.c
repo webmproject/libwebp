@@ -69,9 +69,14 @@ int LLVMFuzzerTestOneInput(const uint8_t* const data, size_t size) {
       // files prepended with sizeof(config.options) zeroes to allow the fuzzer
       // to modify these independently.
       const int data_offset = 50;
-      if (size > data_offset + sizeof(config.options)) {
-        memcpy(&config.options, data + data_offset, sizeof(config.options));
-      } else {
+      if (data_offset + sizeof(config.options) >= size) break;
+      memcpy(&config.options, data + data_offset, sizeof(config.options));
+
+      // Skip easily avoidable out-of-memory fuzzing errors.
+      if (config.options.use_scaling && config.options.scaled_width > 0 &&
+          config.options.scaled_height > 0 &&
+          (size_t)config.options.scaled_width * config.options.scaled_height >
+              kFuzzPxLimit) {
         break;
       }
     }
