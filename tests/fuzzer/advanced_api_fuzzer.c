@@ -14,9 +14,11 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <stdint.h>
 #include <string.h>
 
 #include "./fuzz_utils.h"
+#include "src/utils/rescaler_utils.h"
 #include "src/webp/decode.h"
 
 int LLVMFuzzerTestOneInput(const uint8_t* const data, size_t size) {
@@ -73,11 +75,15 @@ int LLVMFuzzerTestOneInput(const uint8_t* const data, size_t size) {
       memcpy(&config.options, data + data_offset, sizeof(config.options));
 
       // Skip easily avoidable out-of-memory fuzzing errors.
-      if (config.options.use_scaling && config.options.scaled_width > 0 &&
-          config.options.scaled_height > 0 &&
-          (size_t)config.options.scaled_width * config.options.scaled_height >
-              kFuzzPxLimit) {
-        break;
+      if (config.options.use_scaling) {
+        int scaled_width = config.options.scaled_width;
+        int scaled_height = config.options.scaled_height;
+        if (WebPRescalerGetScaledDimensions(config.input.width,
+                                            config.input.height, &scaled_width,
+                                            &scaled_height) &&
+            (uint64_t)scaled_width * scaled_height > kFuzzPxLimit) {
+          break;
+        }
       }
     }
     if (size % 3) {
