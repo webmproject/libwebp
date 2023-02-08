@@ -22,7 +22,6 @@
 #include "src/webp/decode.h"
 
 int LLVMFuzzerTestOneInput(const uint8_t* const data, size_t size) {
-  int i;
   WebPDecoderConfig config;
   if (!WebPInitDecoderConfig(&config)) return 0;
   if (WebPGetFeatures(data, size, &config.input) != VP8_STATUS_OK) return 0;
@@ -64,7 +63,7 @@ int LLVMFuzzerTestOneInput(const uint8_t* const data, size_t size) {
   config.output.colorspace = (WEBP_CSP_MODE)(value % MODE_LAST);
 #endif  // WEBP_REDUCE_CSP
 
-  for (i = 0; i < 2; ++i) {
+  for (int i = 0; i < 2; ++i) {
     if (i == 1) {
       // Use the bitstream data to generate extreme ranges for the options. An
       // alternative approach would be to use a custom corpus containing webp
@@ -80,9 +79,21 @@ int LLVMFuzzerTestOneInput(const uint8_t* const data, size_t size) {
         int scaled_height = config.options.scaled_height;
         if (WebPRescalerGetScaledDimensions(config.input.width,
                                             config.input.height, &scaled_width,
-                                            &scaled_height) &&
-            (uint64_t)scaled_width * scaled_height > kFuzzPxLimit) {
-          break;
+                                            &scaled_height)) {
+          size_t fuzz_px_limit = kFuzzPxLimit;
+          if (scaled_width != config.input.width ||
+              scaled_height != config.input.height) {
+            // Using the WebPRescalerImport internally can significantly slow
+            // down the execution. Avoid timeouts due to that.
+            fuzz_px_limit /= 2;
+          }
+          // A big output canvas can lead to out-of-memory and timeout issues,
+          // but a big internal working buffer can too.
+          if ((uint64_t)scaled_width * scaled_height > fuzz_px_limit ||
+              (uint64_t)config.input.width * config.input.height >
+                  fuzz_px_limit) {
+            break;
+          }
         }
       }
     }
