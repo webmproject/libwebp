@@ -308,6 +308,10 @@ File-level options (only used at the start of compression):
 -kmin <int> .......... minimum number of frame between key-frames
                         (0=disable key-frames altogether)
 -mixed ............... use mixed lossy/lossless automatic mode
+-near_lossless <int> . use near-lossless image preprocessing
+                       (0..100=off), default=100
+-sharp_yuv ........... use sharper (and slower) RGB->YUV conversion
+                       (lossy only)
 -v ................... verbose mode
 -h ................... this help
 -version ............. print version number and exit

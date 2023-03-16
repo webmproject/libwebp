@@ -92,7 +92,7 @@ webpmux_LDADD += ../src/mux/libwebpmux.la
 webpmux_LDADD += ../src/libwebp.la
 
 img2webp_SOURCES = img2webp.c
-img2webp_CPPFLAGS = $(AM_CPPFLAGS)
+img2webp_CPPFLAGS = $(AM_CPPFLAGS) -I$(top_srcdir)
 img2webp_LDADD  =
 img2webp_LDADD += libexample_util.la
 img2webp_LDADD += ../imageio/libimageio_util.la

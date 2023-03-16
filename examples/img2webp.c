@@ -28,6 +28,7 @@
 #include "../imageio/imageio_util.h"
 #include "./stopwatch.h"
 #include "./unicode.h"
+#include "sharpyuv/sharpyuv.h"
 #include "webp/encode.h"
 #include "webp/mux.h"
 
@@ -46,6 +47,11 @@ static void Help(void) {
   printf(" -kmin <int> .......... minimum number of frame between key-frames\n"
          "                        (0=disable key-frames altogether)\n");
   printf(" -mixed ............... use mixed lossy/lossless automatic mode\n");
+  printf(" -near_lossless <int> . use near-lossless image preprocessing\n"
+         "                        (0..100=off), default=100\n");
+  printf(" -sharp_yuv ........... use sharper (and slower) RGB->YUV "
+                                  "conversion\n                        "
+                                  "(lossy only)\n");
   printf(" -v ................... verbose mode\n");
   printf(" -h ................... this help\n");
   printf(" -version ............. print version number and exit\n");
@@ -184,6 +190,11 @@ int main(int argc, const char* argv[]) {
       } else if (!strcmp(argv[c], "-mixed")) {
         anim_config.allow_mixed = 1;
         config.lossless = 0;
+      } else if (!strcmp(argv[c], "-near_lossless") && c + 1 < argc) {
+        argv[c] = NULL;
+        config.near_lossless = ExUtilGetInt(argv[++c], 0, &parse_error);
+      } else if (!strcmp(argv[c], "-sharp_yuv")) {
+        config.use_sharp_yuv = 1;
       } else if (!strcmp(argv[c], "-v")) {
         verbose = 1;
       } else if (!strcmp(argv[c], "-h") || !strcmp(argv[c], "-help")) {
@@ -192,10 +203,13 @@ int main(int argc, const char* argv[]) {
       } else if (!strcmp(argv[c], "-version")) {
         const int enc_version = WebPGetEncoderVersion();
         const int mux_version = WebPGetMuxVersion();
+        const int sharpyuv_version = SharpYuvGetVersion();
         printf("WebP Encoder version: %d.%d.%d\nWebP Mux version: %d.%d.%d\n",
                (enc_version >> 16) & 0xff, (enc_version >> 8) & 0xff,
                enc_version & 0xff, (mux_version >> 16) & 0xff,
                (mux_version >> 8) & 0xff, mux_version & 0xff);
+        printf("libsharpyuv: %d.%d.%d\n", (sharpyuv_version >> 24) & 0xff,
+               (sharpyuv_version >> 16) & 0xffff, sharpyuv_version & 0xff);
         goto End;
       } else {
         continue;

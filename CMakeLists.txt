@@ -546,7 +546,8 @@ if(WEBP_BUILD_IMG2WEBP)
   add_executable(img2webp ${IMG2WEBP_SRCS})
   target_link_libraries(img2webp exampleutil imagedec imageioutil webp
                         libwebpmux)
-  target_include_directories(img2webp PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src)
+  target_include_directories(img2webp PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src
+                                              ${CMAKE_CURRENT_SOURCE_DIR})
   install(TARGETS img2webp RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
