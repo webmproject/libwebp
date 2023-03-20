@@ -82,8 +82,8 @@ Options:
                          green=0xe0 and blue=0xd0
 -noalpha ............... discard any transparency information
 -lossless .............. encode image losslessly, default=off
--near_lossless <int> ... use near-lossless image
-                         preprocessing (0..100=off), default=100
+-near_lossless <int> ... use near-lossless image preprocessing
+                         (0..100=off), default=100
 -hint <string> ......... specify image characteristics hint,
                          one of: photo, picture or graph
 
@@ -295,14 +295,13 @@ etc.
 Usage:
 
 ```shell
-img2webp [file_options] [[frame_options] frame_file]...
+img2webp [file_options] [[frame_options] frame_file]... [-o webp_file]
 ```
 
 File-level options (only used at the start of compression):
 
 ```
 -min_size ............ minimize size
--loop <int> .......... loop count (default: 0, = infinite loop)
 -kmax <int> .......... maximum number of frame between key-frames
                         (0=only keyframes)
 -kmin <int> .......... minimum number of frame between key-frames
@@ -312,6 +311,7 @@ File-level options (only used at the start of compression):
                        (0..100=off), default=100
 -sharp_yuv ........... use sharper (and slower) RGB->YUV conversion
                        (lossy only)
+-loop <int> .......... loop count (default: 0, = infinite loop)
 -v ................... verbose mode
 -h ................... this help
 -version ............. print version number and exit

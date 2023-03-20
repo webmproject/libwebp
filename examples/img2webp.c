@@ -36,12 +36,11 @@
 
 static void Help(void) {
   printf("Usage:\n\n");
-  printf("  img2webp [file_options] [[frame_options] frame_file]...\n");
-  printf("\n");
+  printf("  img2webp [file_options] [[frame_options] frame_file]...");
+  printf(" [-o webp_file]\n\n");
 
   printf("File-level options (only used at the start of compression):\n");
   printf(" -min_size ............ minimize size\n");
-  printf(" -loop <int> .......... loop count (default: 0, = infinite loop)\n");
   printf(" -kmax <int> .......... maximum number of frame between key-frames\n"
          "                        (0=only keyframes)\n");
   printf(" -kmin <int> .......... minimum number of frame between key-frames\n"
@@ -52,6 +51,7 @@ static void Help(void) {
   printf(" -sharp_yuv ........... use sharper (and slower) RGB->YUV "
                                   "conversion\n                        "
                                   "(lossy only)\n");
+  printf(" -loop <int> .......... loop count (default: 0, = infinite loop)\n");
   printf(" -v ................... verbose mode\n");
   printf(" -h ................... this help\n");
   printf(" -version ............. print version number and exit\n");

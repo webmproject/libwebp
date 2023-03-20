@@ -592,9 +592,8 @@ static void HelpLong(void) {
          "                           green=0xe0 and blue=0xd0\n");
   printf("  -noalpha ............... discard any transparency information\n");
   printf("  -lossless .............. encode image losslessly, default=off\n");
-  printf("  -near_lossless <int> ... use near-lossless image\n"
-         "                           preprocessing (0..100=off), "
-         "default=100\n");
+  printf("  -near_lossless <int> ... use near-lossless image preprocessing\n"
+         "                           (0..100=off), default=100\n");
   printf("  -hint <string> ......... specify image characteristics hint,\n");
   printf("                           one of: photo, picture or graph\n");
 
