@@ -85,7 +85,7 @@ int LLVMFuzzerTestOneInput(const uint8_t* const data, size_t size) {
               scaled_height != config.input.height) {
             // Using the WebPRescalerImport internally can significantly slow
             // down the execution. Avoid timeouts due to that.
-            fuzz_px_limit /= 2;
+            fuzz_px_limit /= 9;
           }
           // A big output canvas can lead to out-of-memory and timeout issues,
           // but a big internal working buffer can too.
