@@ -343,6 +343,8 @@ static void Intra16Preds_C(uint8_t* dst,
 //------------------------------------------------------------------------------
 // luma 4x4 prediction
 
+#if !WEBP_NEON_OMIT_C_CODE || !WEBP_AARCH64
+
 #define DST(x, y) dst[(x) + (y) * BPS]
 #define AVG3(a, b, c) ((uint8_t)(((a) + 2 * (b) + (c) + 2) >> 2))
 #define AVG2(a, b) (((a) + (b) + 1) >> 1)
@@ -528,6 +530,8 @@ static void Intra4Preds_C(uint8_t* dst, const uint8_t* top) {
   HD4(I4HD4 + dst, top);
   HU4(I4HU4 + dst, top);
 }
+
+#endif  // !WEBP_NEON_OMIT_C_CODE || !WEBP_AARCH64
 
 //------------------------------------------------------------------------------
 // Metric
@@ -762,8 +766,11 @@ WEBP_DSP_INIT_FUNC(VP8EncDspInit) {
   VP8EncQuantize2Blocks = Quantize2Blocks_C;
 #endif
 
-  VP8FTransform2 = FTransform2_C;
+#if !WEBP_NEON_OMIT_C_CODE || !WEBP_AARCH64
   VP8EncPredLuma4 = Intra4Preds_C;
+#endif
+
+  VP8FTransform2 = FTransform2_C;
   VP8EncPredLuma16 = Intra16Preds_C;
   VP8EncPredChroma8 = IntraChromaPreds_C;
   VP8Mean16x4 = Mean16x4_C;
