@@ -43,16 +43,6 @@ if(WEBP_USE_THREAD)
     if(CMAKE_USE_PTHREADS_INIT AND NOT CMAKE_SYSTEM_NAME STREQUAL "QNX")
       set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
     endif()
-    check_c_source_compiles(
-      "
-        #include <pthread.h>
-        int main (void) {
-          int attr = PTHREAD_PRIO_INHERIT;
-          return attr;
-        }
-      "
-      FLAG_HAVE_PTHREAD_PRIO_INHERIT)
-    set(HAVE_PTHREAD_PRIO_INHERIT ${FLAG_HAVE_PTHREAD_PRIO_INHERIT})
     list(APPEND WEBP_DEP_LIBRARIES Threads::Threads)
   endif()
   set(WEBP_USE_THREAD ${Threads_FOUND})
@@ -136,20 +126,10 @@ endif()
 
 # Check for specific headers.
 include(CheckIncludeFiles)
-check_include_files("stdlib.h;stdarg.h;string.h;float.h" STDC_HEADERS)
-check_include_files(dlfcn.h HAVE_DLFCN_H)
 check_include_files(GLUT/glut.h HAVE_GLUT_GLUT_H)
 check_include_files(GL/glut.h HAVE_GL_GLUT_H)
-check_include_files(inttypes.h HAVE_INTTYPES_H)
-check_include_files(memory.h HAVE_MEMORY_H)
 check_include_files(OpenGL/glut.h HAVE_OPENGL_GLUT_H)
 check_include_files(shlwapi.h HAVE_SHLWAPI_H)
-check_include_files(stdint.h HAVE_STDINT_H)
-check_include_files(stdlib.h HAVE_STDLIB_H)
-check_include_files(strings.h HAVE_STRINGS_H)
-check_include_files(string.h HAVE_STRING_H)
-check_include_files(sys/stat.h HAVE_SYS_STAT_H)
-check_include_files(sys/types.h HAVE_SYS_TYPES_H)
 check_include_files(unistd.h HAVE_UNISTD_H)
 check_include_files(wincodec.h HAVE_WINCODEC_H)
 check_include_files(windows.h HAVE_WINDOWS_H)
