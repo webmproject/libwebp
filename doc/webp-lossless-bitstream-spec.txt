@@ -241,7 +241,7 @@ two-dimensionally.
 int size_bits = ReadBits(3) + 2;
 int block_width = (1 << size_bits);
 int block_height = (1 << size_bits);
-#define DIV_ROUND_UP(num, den) ((num) + (den) - 1) / (den))
+#define DIV_ROUND_UP(num, den) (((num) + (den) - 1) / (den))
 int block_xsize = DIV_ROUND_UP(image_width, 1 << size_bits);
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1008,7 +1008,7 @@ codes to be used as follows:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 int position =
     (y >> prefix_bits) * prefix_xsize + (x >> prefix_bits);
-int meta_prefix_code = (entropy_image[pos] >> 8) & 0xffff;
+int meta_prefix_code = (entropy_image[position] >> 8) & 0xffff;
 PrefixCodeGroup prefix_group = prefix_code_groups[meta_prefix_code];
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
