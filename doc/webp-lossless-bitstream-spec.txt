@@ -1120,8 +1120,7 @@ prefix-code-group     =
 
 prefix-code           =  simple-prefix-code / normal-prefix-code
 simple-prefix-code    =  ; see "Simple Code Length Code" for details
-normal-prefix-code    =  code-length-code encoded-code-lengths
-code-length-code      =  ; see section "Normal Code Length Code"
+normal-prefix-code    =  ; see "Normal Code Length Code" for details
 
 lz77-coded-image      =
     *((argb-pixel / lz77-copy / color-cache-code) lz77-coded-image)
