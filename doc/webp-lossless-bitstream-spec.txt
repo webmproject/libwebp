@@ -1065,10 +1065,13 @@ number of pixels (xsize * ysize).
 #### 7.1 Basic Structure
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-format       = RIFF-header image-size image-stream
-RIFF-header  = "RIFF" 4OCTET "WEBP" "VP8L" 4OCTET %x2F
-image-size   = 14BIT 14BIT ; width - 1, height - 1
-image-stream = optional-transform spatially-coded-image
+format        = RIFF-header image-header image-stream
+RIFF-header   = "RIFF" 4OCTET "WEBP" "VP8L" 4OCTET %x2F
+image-header  = image-size alpha-is-used version
+image-size    = 14BIT 14BIT ; width - 1, height - 1
+alpha-is-used = 1BIT
+version       = 3BIT ; 0
+image-stream  = optional-transform spatially-coded-image
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
