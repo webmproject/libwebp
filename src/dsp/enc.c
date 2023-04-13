@@ -650,6 +650,7 @@ static int Disto16x16_C(const uint8_t* const a, const uint8_t* const b,
 // Quantization
 //
 
+#if !WEBP_NEON_OMIT_C_CODE || WEBP_NEON_WORK_AROUND_GCC
 static const uint8_t kZigzag[16] = {
   0, 1, 4, 8, 5, 2, 3, 6, 9, 12, 13, 10, 7, 11, 14, 15
 };
@@ -681,7 +682,6 @@ static int QuantizeBlock_C(int16_t in[16], int16_t out[16],
   return (last >= 0);
 }
 
-#if !WEBP_NEON_OMIT_C_CODE || WEBP_NEON_WORK_AROUND_GCC
 static int Quantize2Blocks_C(int16_t in[32], int16_t out[32],
                              const VP8Matrix* const mtx) {
   int nz;
@@ -766,6 +766,7 @@ WEBP_DSP_INIT_FUNC(VP8EncDspInit) {
 #if !WEBP_NEON_OMIT_C_CODE || WEBP_NEON_WORK_AROUND_GCC
   VP8EncQuantizeBlock = QuantizeBlock_C;
   VP8EncQuantize2Blocks = Quantize2Blocks_C;
+  VP8EncQuantizeBlockWHT = QuantizeBlock_C;
 #endif
 
 #if !WEBP_NEON_OMIT_C_CODE || !WEBP_AARCH64
@@ -776,7 +777,6 @@ WEBP_DSP_INIT_FUNC(VP8EncDspInit) {
   VP8FTransform2 = FTransform2_C;
   VP8EncPredChroma8 = IntraChromaPreds_C;
   VP8Mean16x4 = Mean16x4_C;
-  VP8EncQuantizeBlockWHT = QuantizeBlock_C;
   VP8Copy4x4 = Copy4x4_C;
   VP8Copy16x8 = Copy16x8_C;
 

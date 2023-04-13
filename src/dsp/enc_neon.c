@@ -1202,6 +1202,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitNEON(void) {
 #if !defined(WORK_AROUND_GCC)
   VP8EncQuantizeBlock = QuantizeBlock_NEON;
   VP8EncQuantize2Blocks = Quantize2Blocks_NEON;
+  VP8EncQuantizeBlockWHT = QuantizeBlock_NEON;
 #endif
 }
 
