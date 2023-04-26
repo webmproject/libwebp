@@ -74,6 +74,11 @@ static WEBP_INLINE uint32_t Extract(uint32_t max_value,
 //------------------------------------------------------------------------------
 // Some functions to override VP8GetCPUInfo and disable some optimizations.
 
+#ifdef __cplusplus
+extern "C" VP8CPUInfo VP8GetCPUInfo;
+#else
+extern VP8CPUInfo VP8GetCPUInfo;
+#endif
 static VP8CPUInfo GetCPUInfo;
 
 static WEBP_INLINE int GetCPUInfoNoSSE41(CPUFeature feature) {
