@@ -105,6 +105,12 @@
 #define WEBP_USE_INTRINSICS
 #endif
 
+#if defined(__aarch64__) || defined(_M_ARM64) || defined(_M_ARM64EC)
+#define WEBP_AARCH64 1
+#else
+#define WEBP_AARCH64 0
+#endif
+
 #if defined(WEBP_USE_NEON) && !defined(WEBP_HAVE_NEON)
 #define WEBP_HAVE_NEON
 #endif
@@ -134,8 +140,7 @@
 #define WEBP_NEON_OMIT_C_CODE 0
 #endif
 
-#if !(LOCAL_CLANG_PREREQ(3, 8) || LOCAL_GCC_PREREQ(4, 8) || \
-      defined(__aarch64__))
+#if !(LOCAL_CLANG_PREREQ(3, 8) || LOCAL_GCC_PREREQ(4, 8) || WEBP_AARCH64)
 #define WEBP_NEON_WORK_AROUND_GCC 1
 #else
 #define WEBP_NEON_WORK_AROUND_GCC 0
