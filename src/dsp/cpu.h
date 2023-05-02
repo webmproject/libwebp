@@ -43,6 +43,9 @@
 #define __has_builtin(x) 0
 #endif
 
+//------------------------------------------------------------------------------
+// x86 defines.
+
 #if !defined(HAVE_CONFIG_H)
 #if defined(_MSC_VER) && _MSC_VER > 1310 && \
     (defined(_M_X64) || defined(_M_IX86))
@@ -80,6 +83,9 @@
 #undef WEBP_MSC_SSE41
 #undef WEBP_MSC_SSE2
 
+//------------------------------------------------------------------------------
+// Arm defines.
+
 // The intrinsics currently cause compiler errors with arm-nacl-gcc and the
 // inline assembly would need to be modified for use with Native Client.
 #if ((defined(__ARM_NEON__) || defined(__aarch64__)) &&       \
@@ -115,6 +121,9 @@
 #define WEBP_HAVE_NEON
 #endif
 
+//------------------------------------------------------------------------------
+// MIPS defines.
+
 #if defined(__mips__) && !defined(__mips64) && defined(__mips_isa_rev) && \
     (__mips_isa_rev >= 1) && (__mips_isa_rev < 6)
 #define WEBP_USE_MIPS32
@@ -129,6 +138,8 @@
 #if defined(__mips_msa) && defined(__mips_isa_rev) && (__mips_isa_rev >= 5)
 #define WEBP_USE_MSA
 #endif
+
+//------------------------------------------------------------------------------
 
 #ifndef WEBP_DSP_OMIT_C_CODE
 #define WEBP_DSP_OMIT_C_CODE 1
@@ -145,6 +156,8 @@
 #else
 #define WEBP_NEON_WORK_AROUND_GCC 0
 #endif
+
+//------------------------------------------------------------------------------
 
 // This macro prevents thread_sanitizer from reporting known concurrent writes.
 #define WEBP_TSAN_IGNORE_FUNCTION
