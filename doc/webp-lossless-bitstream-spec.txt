@@ -162,8 +162,8 @@ int image_width = ReadBits(14) + 1;
 int image_height = ReadBits(14) + 1;
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The 14-bit dynamics for image size limit the maximum size of a WebP lossless
-image to 16384✕16384 pixels.
+The 14-bit precision for image width and height limits the maximum size of a
+WebP lossless image to 16384✕16384 pixels.
 
 The alpha_is_used bit is a hint only, and should not impact decoding. It should
 be set to 0 when all alpha values are 255 in the picture, and 1 otherwise.
@@ -428,7 +428,7 @@ performed using 8-bit two's complement (that is: uint8 range \[128..255\] is
 mapped to the \[-128..-1\] range of its converted int8 value).
 
 The multiplication is to be done using more precision (with at least 16-bit
-dynamics). The sign extension property of the shift operation does not matter
+precision). The sign extension property of the shift operation does not matter
 here: only the lowest 8 bits are used from the result, and there the sign
 extension shifting and unsigned shifting are consistent with each other.
 
@@ -489,9 +489,8 @@ void AddGreenToBlueAndRed(uint8 green, uint8 *red, uint8 *blue) {
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This transform is redundant as it can be modeled using the color transform, but
-it is still often useful. Since it can extend the dynamics of the color
-transform and there is no additional data here, the subtract green transform can
-be coded using fewer bits than a full-blown color transform.
+since there is no additional data here, the subtract green transform can be
+coded using fewer bits than a full-blown color transform.
 
 
 ### 4.4 Color Indexing Transform
