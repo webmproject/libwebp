@@ -88,10 +88,13 @@ int LLVMFuzzerTestOneInput(const uint8_t* const data, size_t size) {
             fuzz_px_limit /= 2;
           }
           // A big output canvas can lead to out-of-memory and timeout issues,
-          // but a big internal working buffer can too.
-          if ((uint64_t)scaled_width * scaled_height > fuzz_px_limit ||
-              (uint64_t)config.input.width * config.input.height >
-                  fuzz_px_limit) {
+          // but a big internal working buffer can too. Also, rescaling from a
+          // very wide input image to a very tall canvas can be as slow as
+          // decoding a huge number of pixels. Avoid timeouts due to these.
+          const uint64_t max_num_operations =
+              (uint64_t)Max(scaled_width, config.input.width) *
+              Max(scaled_height, config.input.height);
+          if (max_num_operations > fuzz_px_limit) {
             break;
           }
         }
