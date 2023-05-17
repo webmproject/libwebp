@@ -743,7 +743,8 @@ endif()
 configure_package_config_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/cmake/WebPConfig.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/WebPConfig.cmake
-  INSTALL_DESTINATION ${ConfigPackageLocation})
+  INSTALL_DESTINATION ${ConfigPackageLocation}
+  PATH_VARS CMAKE_INSTALL_INCLUDEDIR)
 
 # Install the generated CMake files.
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/WebPConfigVersion.cmake"
