@@ -77,7 +77,7 @@ set(WEBP_DEP_IMG_INCLUDE_DIRS)
 foreach(I_LIB PNG JPEG TIFF)
   # Disable tiff when compiling in static mode as it is failing on Ubuntu.
   if(WEBP_LINK_STATIC AND ${I_LIB} STREQUAL "TIFF")
-    message("TIFF is disabled when statically linking.")
+    message(STATUS "TIFF is disabled when statically linking.")
     continue()
   endif()
   find_package(${I_LIB})
