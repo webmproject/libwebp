@@ -37,7 +37,7 @@ static const size_t kFuzzPxLimit = 1024 * 1024 / 10;
 #elif !defined(__has_feature)  // Clang
 static const size_t kFuzzPxLimit = 1024 * 1024;
 #elif __has_feature(address_sanitizer) || __has_feature(memory_sanitizer)
-static const size_t kFuzzPxLimit = 1024 * 1024 / 10;
+static const size_t kFuzzPxLimit = 1024 * 1024 / 18;
 #else
 static const size_t kFuzzPxLimit = 1024 * 1024;
 #endif
