@@ -99,6 +99,16 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 # Include dependencies.
+if(WEBP_BUILD_ANIM_UTILS
+   OR WEBP_BUILD_CWEBP
+   OR WEBP_BUILD_DWEBP
+   OR WEBP_BUILD_EXTRAS
+   OR WEBP_BUILD_GIF2WEBP
+   OR WEBP_BUILD_IMG2WEBP)
+  set(WEBP_FIND_IMG_LIBS TRUE)
+else()
+  set(WEBP_FIND_IMG_LIBS FALSE)
+endif()
 include(cmake/deps.cmake)
 include(GNUInstallDirs)
 
