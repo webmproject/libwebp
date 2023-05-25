@@ -12,13 +12,7 @@ at the end of this file.
 Specification for WebP Lossless Bitstream
 =========================================
 
-_Jyrki Alakuijala, Ph.D., Google, Inc., 2012-06-19_
-
-Paragraphs marked as \[AMENDED\] were amended on 2014-09-16.
-
-Paragraphs marked as \[AMENDED2\] were amended on 2022-05-13.
-
-Paragraphs marked as \[AMENDED3\] were amended on 2022-11-21.
+_Jyrki Alakuijala, Ph.D., Google, Inc., 2023-03-09_
 
 Abstract
 --------
@@ -173,7 +167,7 @@ int alpha_is_used = ReadBits(1);
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The version_number is a 3 bit code that must be set to 0. Any other value should
-be treated as an error. \[AMENDED\]
+be treated as an error.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 int version_number = ReadBits(3);
@@ -325,7 +319,7 @@ uint32 Select(uint32 L, uint32 T, uint32 TL) {
            abs(pGreen - GREEN(T)) + abs(pBlue - BLUE(T));
 
   // Return either left or top, the one closer to the prediction.
-  if (pL < pT) {     // \[AMENDED\]
+  if (pL < pT) {
     return L;
   } else {
     return T;
@@ -361,15 +355,13 @@ predicted value for the left-topmost pixel of the image is 0xff000000, L-pixel
 for all pixels on the top row, and T-pixel for all pixels on the leftmost
 column.
 
-\[AMENDED2\] Addressing the TR-pixel for pixels on the rightmost column is
+Addressing the TR-pixel for pixels on the rightmost column is
 exceptional. The pixels on the rightmost column are predicted by using the modes
 \[0..13\] just like pixels not on the border, but the leftmost pixel on the same
 row as the current pixel is instead used as the TR-pixel.
 
 
 ### 4.2 Color Transform
-
-\[AMENDED2\]
 
 The goal of the color transform is to decorrelate the R, G and B values of each
 pixel. The color transform keeps the green (G) value as it is, transforms red
@@ -451,7 +443,7 @@ described in [Chapter 5](#image-data).
 During decoding, `ColorTransformElement` instances of the blocks are decoded and
 the inverse color transform is applied on the ARGB values of the pixels. As
 mentioned earlier, that inverse color transform is just adding
-`ColorTransformElement` values to the red and blue channels. \[AMENDED3\]
+`ColorTransformElement` values to the red and blue channels.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void InverseTransform(uint8 red, uint8 green, uint8 blue,
@@ -535,7 +527,7 @@ argb = color_table[GREEN(argb)];
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If the index is equal or larger than `color_table_size`, the argb color value
-should be set to 0x00000000 (transparent black). \[AMENDED\]
+should be set to 0x00000000 (transparent black).
 
 When the color table is small (equal to or less than 16 colors), several pixels
 are bundled into a single pixel. The pixel bundling packs several (2, 4, or 8)
@@ -748,8 +740,6 @@ Similarly, the distance code `3` indicates the left-top pixel.
 The decoder can convert a distance code `i` to a scan-line order distance `dist`
 as follows:
 
-\[AMENDED3\]
-
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 (xi, yi) = distance_map[i - 1]
 dist = xi + yi * xsize
@@ -820,7 +810,7 @@ potentially better compression.
 
 The encoded image data consists of several parts:
 
-  1. Decoding and building the prefix codes \[AMENDED2\]
+  1. Decoding and building the prefix codes
   1. Meta prefix codes
   1. Entropy-coded image data
 
@@ -841,10 +831,15 @@ by a 1-bit value.
 
 In both cases, there can be unused code lengths that are still part of the
 stream. This may be inefficient, but it is allowed by the format.
+The described tree must be a complete binary tree. A single leaf node is
+considered a complete binary tree and can be encoded using either the simple
+code length code or the normal code length code. When coding a single leaf
+node using the _normal code length code_, all but one code length should be
+zeros, and the single leaf node value is marked with the length of 1 -- even
+when no bits will be consumed when that single leaf node tree is used.
+
 
 **(i) Simple Code Length Code:**
-
-\[AMENDED2\]
 
 This variant is used in the special case when only 1 or 2 prefix symbols are in
 the range \[0..255\] with code length `1`. All other prefix code lengths are
@@ -889,7 +884,7 @@ First, `num_code_lengths` specifies the number of code lengths.
 int num_code_lengths = 4 + ReadBits(4);
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If `num_code_lengths` is > 19, the bitstream is invalid. \[AMENDED3\]
+If `num_code_lengths` is > 19, the bitstream is invalid.
 
 The code lengths are themselves encoded using prefix codes: lower level code
 lengths, `code_length_code_lengths`, first have to be read. The rest of those
@@ -935,6 +930,11 @@ distance) is formed using their respective alphabet sizes:
   * G channel: 256 + 24 + `color_cache_size`
   * other literals (A,R,B): 256
   * distance code: 40
+
+The Normal Code Length Code must code a full decision tree, i.e., the sum of
+`2 ^ (-length)` for all non-zero codes must be exactly one. There is however
+one exception to this rule, the single leaf node tree, where the leaf node
+value is marked with value 1 and other values are 0s.
 
 #### 6.2.2 Decoding of Meta Prefix Codes
 
@@ -1020,8 +1020,6 @@ The decoder then uses prefix code group `prefix_group` to decode the pixel
 
 #### 6.2.3 Decoding Entropy-coded Image Data
 
-\[AMENDED2\]
-
 For the current position (x, y) in the image, the decoder first identifies the
 corresponding prefix code group (as explained in the last section). Given the
 prefix code group, the pixel is read and decoded as follows:
@@ -1098,8 +1096,6 @@ color-indexing-image =  8BIT ; color count
 
 
 #### 7.3 Structure of the Image Data
-
-\[AMENDED2\]
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 spatially-coded-image =  color-cache-info meta-prefix data
