@@ -24,21 +24,21 @@ WebP is an image format that uses either (i) the VP8 key frame encoding
 to compress image data in a lossy way, or (ii) the WebP lossless encoding
 (and possibly other encodings in the future). These encoding schemes should
 make it more efficient than currently used formats. It is optimized for fast
-image transfer over the network (e.g., for websites). The WebP format has
+image transfer over the network (for example, for websites). The WebP format has
 feature parity (color profile, metadata, animation, etc.) with other formats as
 well. This document describes the structure of a WebP file.
 
-The WebP container (i.e., RIFF container for WebP) allows feature support over
-and above the basic use case of WebP (i.e., a file containing a single image
-encoded as a VP8 key frame). The WebP container provides additional support
-for:
+The WebP container (that is, the RIFF container for WebP) allows feature support
+over and above the basic use case of WebP (that is, a file containing a single
+image encoded as a VP8 key frame). The WebP container provides additional
+support for:
 
   * **Lossless compression.** An image can be losslessly compressed, using the
     WebP Lossless Format.
 
   * **Metadata.** An image may have metadata stored in Exif or XMP formats.
 
-  * **Transparency.** An image may have transparency, i.e., an alpha channel.
+  * **Transparency.** An image may have transparency, that is, an alpha channel.
 
   * **Color Profile.** An image may have an embedded ICC profile as described
     by the [International Color Consortium][iccspec].
@@ -57,7 +57,7 @@ Bit numbering in chunk diagrams starts at `0` for the most significant bit
 Terminology & Basics
 --------------------
 
-A WebP file contains either a still image (i.e., an encoded matrix of pixels)
+A WebP file contains either a still image (that is, an encoded matrix of pixels)
 or an [animation](#animation). Optionally, it can also contain transparency
 information, color profile and metadata. In case we need to refer only to the
 matrix of pixels, we will call it the _canvas_ of the image.
@@ -89,8 +89,8 @@ _FourCC_
 
 _1-based_
 
-: An unsigned integer field storing values offset by `-1`. e.g., Such a field
-  would store value _25_ as _24_.
+: An unsigned integer field storing values offset by `-1`, for example, such a
+  field would store value _25_ as _24_.
 
 _ChunkHeader('ABCD')_
 
@@ -553,7 +553,7 @@ Pre-processing (P): 2 bits
 
 : These _informative_ bits are used to signal the pre-processing that has
   been performed during compression. The decoder can use this information to
-  e.g. dither the values or smooth the gradients prior to display.
+  for example, dither the values or smooth the gradients prior to display.
 
     * `0`: No pre-processing.
     * `1`: Level reduction.
