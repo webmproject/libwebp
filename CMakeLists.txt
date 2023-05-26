@@ -82,8 +82,8 @@ if(WEBP_BUILD_WEBP_JS)
   set(WEBP_USE_THREAD OFF)
 
   if(WEBP_ENABLE_SIMD)
-    message(
-      NOTICE "wasm2js does not support SIMD, disabling webp.js generation.")
+    message(NOTICE
+            "wasm2js does not support SIMD, disabling webp.js generation.")
   endif()
 endif()
 
