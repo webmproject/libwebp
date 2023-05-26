@@ -20,13 +20,13 @@ WebP Container Specification
 Introduction
 ------------
 
-WebP is an image format that uses either (i) the VP8 key frame encoding
-to compress image data in a lossy way, or (ii) the WebP lossless encoding
-(and possibly other encodings in the future). These encoding schemes should
-make it more efficient than currently used formats. It is optimized for fast
-image transfer over the network (for example, for websites). The WebP format has
-feature parity (color profile, metadata, animation, etc.) with other formats as
-well. This document describes the structure of a WebP file.
+WebP is an image format that uses either (i) the VP8 key frame encoding to
+compress image data in a lossy way, or (ii) the WebP lossless encoding (and
+possibly other encodings in the future). These encoding schemes should make it
+more efficient than older formats such as JPEG, GIF and PNG. It is optimized for
+fast image transfer over the network (for example, for websites). The WebP
+format has feature parity (color profile, metadata, animation, etc.) with other
+formats as well. This document describes the structure of a WebP file.
 
 The WebP container (that is, the RIFF container for WebP) allows feature support
 over and above the basic use case of WebP (that is, a file containing a single
