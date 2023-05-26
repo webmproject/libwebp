@@ -59,8 +59,8 @@ Terminology & Basics
 
 A WebP file contains either a still image (that is, an encoded matrix of pixels)
 or an [animation](#animation). Optionally, it can also contain transparency
-information, color profile and metadata. In case we need to refer only to the
-matrix of pixels, we will call it the _canvas_ of the image.
+information, color profile and metadata. We refer to the matrix of pixels as the
+_canvas_ of the image.
 
 Below are additional terms used throughout this document:
 
@@ -168,7 +168,7 @@ in the header is the total size of the chunks that follow plus `4` bytes for
 the 'WEBP' FourCC. The file SHOULD NOT contain any data after the data
 specified by _File Size_. Readers MAY parse such files, ignoring the trailing
 data. As the size of any chunk is even, the size given by the RIFF header is
-also even. The contents of individual chunks will be described in the following
+also even. The contents of individual chunks are described in the following
 sections.
 
 
