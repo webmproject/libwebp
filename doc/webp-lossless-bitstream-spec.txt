@@ -59,7 +59,7 @@ b = ReadBits(1);
 b |= ReadBits(1) << 1;
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-We assume that each color component (e.g. alpha, red, blue and green) is
+We assume that each color component, that is, alpha, red, blue and green, is
 represented using an 8-bit byte. We define the corresponding type as uint8. A
 whole ARGB pixel is represented by a type called uint32, an unsigned integer
 consisting of 32 bits. In the code showing the behavior of the transformations,
@@ -101,7 +101,7 @@ distance mapping
 
 entropy image
 :   A two-dimensional subresolution image indicating which entropy coding should
-    be used in a respective square in the image, i.e., each pixel is a meta
+    be used in a respective square in the image, that is, each pixel is a meta
     prefix code.
 
 prefix code
@@ -556,7 +556,7 @@ bundling is to be done for the image. A value of 1 indicates that two pixels are
 combined, and each pixel has a range of \[0..15\]. A value of 2 indicates that
 four pixels are combined, and each pixel has a range of \[0..3\]. A value of 3
 indicates that eight pixels are combined and each pixel has a range of \[0..1\],
-i.e., a binary value.
+that is, a binary value.
 
 The values are packed into the green component as follows:
 
@@ -916,12 +916,12 @@ to `max_symbol` code lengths.
   * Code \[0..15\] indicates literal code lengths.
     * Value 0 means no symbols have been coded.
     * Values \[1..15\] indicate the bit length of the respective code.
-  * Code 16 repeats the previous non-zero value \[3..6\] times, i.e.,
+  * Code 16 repeats the previous non-zero value \[3..6\] times, that is,
     `3 + ReadBits(2)` times. If code 16 is used before a non-zero
     value has been emitted, a value of 8 is repeated.
-  * Code 17 emits a streak of zeros \[3..10\], i.e., `3 + ReadBits(3)`
+  * Code 17 emits a streak of zeros \[3..10\], that is, `3 + ReadBits(3)`
     times.
-  * Code 18 emits a streak of zeros of length \[11..138\], i.e.,
+  * Code 18 emits a streak of zeros of length \[11..138\], that is,
     `11 + ReadBits(7)` times.
 
 Once code lengths are read, a prefix code for each symbol type (A, R, G, B,
@@ -931,7 +931,7 @@ distance) is formed using their respective alphabet sizes:
   * other literals (A,R,B): 256
   * distance code: 40
 
-The Normal Code Length Code must code a full decision tree, i.e., the sum of
+The Normal Code Length Code must code a full decision tree, that is, the sum of
 `2 ^ (-length)` for all non-zero codes must be exactly one. There is however
 one exception to this rule, the single leaf node tree, where the leaf node
 value is marked with value 1 and other values are 0s.
