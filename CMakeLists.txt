@@ -98,9 +98,16 @@ if(NOT CMAKE_BUILD_TYPE)
             FORCE)
 endif()
 
-# Include dependencies.
-include(cmake/deps.cmake)
-include(GNUInstallDirs)
+set(WEBP_CONFIG_GEN ON)
+if (EXISTS ${CMAKE_CURRENT_BINARY_DIR}/src/webp/config.h)
+ set(WEBP_CONFIG_GEN OFF)
+endif()
+
+if (WEBP_CONFIG_GEN)
+  # Include dependencies.
+  include(cmake/deps.cmake)
+  include(GNUInstallDirs)
+endif()
 
 if(BUILD_SHARED_LIBS AND NOT DEFINED CMAKE_INSTALL_RPATH)
   # Set the rpath to match autoconf/libtool behavior. Note this must be set
@@ -230,9 +237,11 @@ foreach(FILE ${WEBP_SIMD_FILES_NOT_TO_INCLUDE})
   list(REMOVE_ITEM WEBP_DSP_DEC_SRCS ${FILE})
 endforeach()
 
-# Generate the config.h file.
-configure_file(${CMAKE_CURRENT_LIST_DIR}/cmake/config.h.in
-               ${CMAKE_CURRENT_BINARY_DIR}/src/webp/config.h @ONLY)
+if (WEBP_CONFIG_GEN)
+  # Generate the config.h file.
+  configure_file(${CMAKE_CURRENT_LIST_DIR}/cmake/config.h.in
+                 ${CMAKE_CURRENT_BINARY_DIR}/src/webp/config.h @ONLY)
+endif()
 add_definitions(-DHAVE_CONFIG_H)
 
 # Set the version numbers.
