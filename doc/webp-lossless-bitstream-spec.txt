@@ -631,7 +631,8 @@ The following subsections describe each of these in detail.
 #### 5.2.1 Prefix Coded Literals
 
 The pixel is stored as prefix coded values of green, red, blue and alpha (in
-that order). See [this section](#decoding-entropy-coded-image-data) for details.
+that order). See [Section 6.2.3](#decoding-entropy-coded-image-data) for
+details.
 
 #### 5.2.2 LZ77 Backward Reference
 
@@ -1017,7 +1018,7 @@ represents a set of five prefix codes. Also, `prefix_code_groups` is an array of
 The decoder then uses prefix code group `prefix_group` to decode the pixel
 (x, y) as explained in the [next section](#decoding-entropy-coded-image-data).
 
-#### 6.2.3 Decoding Entropy-coded Image Data
+#### 6.2.3 Decoding Entropy-Coded Image Data
 
 For the current position (x, y) in the image, the decoder first identifies the
 corresponding prefix code group (as explained in the last section). Given the
