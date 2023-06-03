@@ -188,10 +188,10 @@ Simple WebP (lossy) file format:
     |                    WebP file header (12 bytes)                |
     |                                                               |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    :                          VP8 chunk                            :
+    :                        'VP8 ' Chunk                           :
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-VP8 chunk:
+'VP8 ' Chunk:
 
      0                   1                   2                   3
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -235,10 +235,10 @@ Simple WebP (lossless) file format:
     |                    WebP file header (12 bytes)                |
     |                                                               |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    :                          VP8L chunk                           :
+    :                         'VP8L' Chunk                          :
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-VP8L chunk:
+'VP8L' Chunk:
 
      0                   1                   2                   3
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -266,17 +266,17 @@ Extended File Format
 
 An extended format file consists of:
 
-  * A 'VP8X' chunk with information about features used in the file.
+  * A 'VP8X' Chunk with information about features used in the file.
 
-  * An optional 'ICCP' chunk with color profile.
+  * An optional 'ICCP' Chunk with a color profile.
 
-  * An optional 'ANIM' chunk with animation control data.
+  * An optional 'ANIM' Chunk with animation control data.
 
   * Image data.
 
-  * An optional 'EXIF' chunk with Exif metadata.
+  * An optional 'EXIF' Chunk with Exif metadata.
 
-  * An optional 'XMP ' chunk with XMP metadata.
+  * An optional 'XMP ' Chunk with XMP metadata.
 
   * An optional list of [unknown chunks](#unknown-chunks).
 
@@ -295,7 +295,7 @@ appears in the wrong place, the file is invalid, but readers MAY parse the
 file, ignoring the chunks that are out of order.
 
 **Rationale:** Setting the order of chunks should allow quicker file
-parsing. For example, if an 'ALPH' chunk does not appear in its required
+parsing. For example, if an 'ALPH' Chunk does not appear in its required
 position, a decoder can choose to stop searching for it. The rule of
 ignoring late chunks should make programs that need to do a full search
 give the same results as the ones stopping early.
@@ -343,7 +343,7 @@ XMP metadata (X): 1 bit
 
 Animation (A): 1 bit
 
-: Set if this is an animated image. Data in 'ANIM' and 'ANMF' chunks should be
+: Set if this is an animated image. Data in 'ANIM' and 'ANMF' Chunks should be
   used to control the animation.
 
 Reserved (R): 1 bit
@@ -372,9 +372,9 @@ Future specifications may add more fields. Unknown fields MUST be ignored.
 
 #### Animation
 
-An animation is controlled by ANIM and ANMF chunks.
+An animation is controlled by 'ANIM' and 'ANMF' Chunks.
 
-ANIM Chunk:
+'ANIM' Chunk:
 {:#anim_chunk}
 
 For an animated image, this chunk contains the _global parameters_ of the
@@ -414,11 +414,11 @@ Loop Count: 16 bits (_uint16_)
 : The number of times to loop the animation. If it is `0`, this means
   infinitely.
 
-This chunk MUST appear if the _Animation_ flag in the VP8X chunk is set.
+This chunk MUST appear if the _Animation_ flag in the 'VP8X' Chunk is set.
 If the _Animation_ flag is not set and this chunk is present, it MUST be
 ignored.
 
-ANMF chunk:
+'ANMF' Chunk:
 
 For animated images, this chunk contains information about a _single_ frame.
 If the _Animation flag_ is not set, then this chunk SHOULD NOT be present.
@@ -619,10 +619,10 @@ Alpha bitstream: _Chunk Size_ - `1` bytes
 : Encoded alpha bitstream.
 
 This optional chunk contains encoded alpha data for this frame. A frame
-containing a 'VP8L' chunk SHOULD NOT contain this chunk.
+containing a 'VP8L' Chunk SHOULD NOT contain this chunk.
 
 **Rationale**: The transparency information is already part of the 'VP8L'
-chunk.
+Chunk.
 
 The alpha channel data is stored as uncompressed raw data (when the
 compression method is '0') or compressed using the lossless format
@@ -685,14 +685,14 @@ If this chunk is not present, sRGB SHOULD be assumed.
 
 #### Metadata
 
-Metadata can be stored in 'EXIF' or 'XMP ' chunks.
+Metadata can be stored in 'EXIF' or 'XMP ' Chunks.
 
 There SHOULD be at most one chunk of each type ('EXIF' and 'XMP '). If there
 are more such chunks, readers MAY ignore all except the first one.
 
 The chunks are defined as follows:
 
-EXIF chunk:
+'EXIF' Chunk:
 
      0                   1                   2                   3
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -707,7 +707,7 @@ Exif Metadata: _Chunk Size_ bytes
 
 : Image metadata in Exif format.
 
-XMP chunk:
+'XMP ' Chunk:
 
      0                   1                   2                   3
      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
