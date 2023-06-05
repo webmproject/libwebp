@@ -1060,6 +1060,8 @@ Below is a view into the format in Augmented Backus-Naur Form ([ABNF]). It does
 not cover all details. The end-of-image (EOI) is only implicitly coded into the
 number of pixels (xsize * ysize).
 
+Note that `*element` means `element` can be repeated 0 or more times. `5element`
+means `element` is repeated exactly 5 times. `%b` represents a binary value.
 
 #### 7.1 Basic Structure
 
