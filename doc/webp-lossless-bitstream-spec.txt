@@ -22,10 +22,10 @@ lossless format stores and restores the pixel values exactly, including the
 color values for pixels whose alpha value is 0. The format uses subresolution
 images, recursively embedded into the format itself, for storing statistical
 data about the images, such as the used entropy codes, spatial predictors, color
-space conversion, and color table. LZ77, prefix coding, and a color cache are
-used for compression of the bulk data. Decoding speeds faster than PNG have been
-demonstrated, as well as 25% denser compression than can be achieved using
-today's PNG format.
+space conversion, and color table. A universal algorithm for sequential data
+compression (LZ77), prefix coding, and a color cache are used for compression of
+the bulk data. Decoding speeds faster than PNG have been demonstrated, as well
+as 25% denser compression than can be achieved using today's PNG format.
 
 
 * TOC placeholder
@@ -40,7 +40,7 @@ image. It is intended as a detailed reference for the WebP lossless encoder and
 decoder implementation.
 
 In this document, we extensively use C programming language syntax to describe
-the bitstream, and assume the existence of a function for reading bits,
+the bitstream and assume the existence of a function for reading bits,
 `ReadBits(n)`. The bytes are read in the natural order of the stream containing
 them, and bits of each byte are read in least-significant-bit-first order. When
 multiple bits are read at the same time, the integer is constructed from the
@@ -61,14 +61,14 @@ b |= ReadBits(1) << 1;
 
 We assume that each color component, that is, alpha, red, blue and green, is
 represented using an 8-bit byte. We define the corresponding type as uint8. A
-whole ARGB pixel is represented by a type called uint32, an unsigned integer
-consisting of 32 bits. In the code showing the behavior of the transformations,
-alpha value is codified in bits 31..24, red in bits 23..16, green in bits 15..8
-and blue in bits 7..0, but implementations of the format are free to use another
-representation internally.
+whole ARGB pixel is represented by a type called uint32, which is an unsigned
+integer consisting of 32 bits. In the code showing the behavior of the
+transformations, these values are codified in the following bits: alpha in bits
+31..24, red in bits 23..16, green in bits 15..8 and blue in bits 7..0; however,
+implementations of the format are free to use another representation internally.
 
-Broadly, a WebP lossless image contains header data, transform information and
-actual image data. Headers contain width and height of the image. A WebP
+Broadly, a WebP lossless image contains header data, transform information, and
+actual image data. Headers contain the width and height of the image. A WebP
 lossless image can go through four different types of transformation before
 being entropy encoded. The transform information in the bitstream contains the
 data required to apply the respective inverse transforms.
@@ -84,7 +84,7 @@ ARGB image
 :   A two-dimensional array containing ARGB pixels.
 
 color cache
-:   A small hash-addressed array to store recently used colors, to be able to
+:   A small hash-addressed array to store recently used colors to be able to
     recall them with shorter codes.
 
 color indexing image
@@ -96,20 +96,16 @@ color transform image
     color components.
 
 distance mapping
-:   Changes LZ77 distances to have the smallest values for pixels in 2D
-    proximity.
+:   Changes LZ77 distances to have the smallest values for pixels in
+    two-dimensional proximity.
 
 entropy image
 :   A two-dimensional subresolution image indicating which entropy coding should
     be used in a respective square in the image, that is, each pixel is a meta
     prefix code.
 
-prefix code
-:   A classic way to do entropy coding where a smaller number of bits are used
-    for more frequent codes.
-
 LZ77
-:   Dictionary-based sliding window compression algorithm that either emits
+:   A dictionary-based sliding window compression algorithm that either emits
     symbols or describes them as sequences of past symbols.
 
 meta prefix code
@@ -120,16 +116,20 @@ predictor image
 :   A two-dimensional subresolution image indicating which spatial predictor is
     used for a particular square in the image.
 
+prefix code
+:   A classic way to do entropy coding where a smaller number of bits are used
+    for more frequent codes.
+
 prefix coding
-:   A way to entropy code larger integers that codes a few bits of the integer
+:   A way to entropy code larger integers, which codes a few bits of the integer
     using an entropy code and codifies the remaining bits raw. This allows for
     the descriptions of the entropy codes to remain relatively small even when
     the range of symbols is large.
 
 scan-line order
-:   A processing order of pixels, left-to-right, top-to-bottom, starting from
-    the left-hand-top pixel, proceeding to the right. Once a row is completed,
-    continue from the left-hand column of the next row.
+:   A processing order of pixels (left to right and top to bottom), starting
+    from the left-hand-top pixel. Once a row is completed, continue from the
+    left-hand column of the next row.
 
 3 RIFF Header
 -------------
@@ -137,16 +137,16 @@ scan-line order
 The beginning of the header has the RIFF container. This consists of the
 following 21 bytes:
 
-   1. String "RIFF"
-   2. A little-endian 32 bit value of the block length, the whole size
-      of the block controlled by the RIFF header. Normally this equals
+   1. String 'RIFF'.
+   2. A little-endian, 32-bit value of the block length, which is the whole size
+      of the block controlled by the RIFF header. Normally, this equals
       the payload size (file size minus 8 bytes: 4 bytes for the 'RIFF'
       identifier and 4 bytes for storing the value itself).
-   3. String "WEBP" (RIFF container name).
-   4. String "VP8L" (chunk tag for lossless encoded image data).
-   5. A little-endian 32-bit value of the number of bytes in the
+   3. String 'WEBP' (RIFF container name).
+   4. String 'VP8L' (FourCC for lossless-encoded image data).
+   5. A little-endian, 32-bit value of the number of bytes in the
       lossless stream.
-   6. One byte signature 0x2f.
+   6. 1-byte signature 0x2f.
 
 The first 28 bits of the bitstream specify the width and height of the image.
 Width and height are decoded as 14-bit integers as follows:
@@ -181,10 +181,10 @@ Transformations are reversible manipulations of the image data that can reduce
 the remaining symbolic entropy by modeling spatial and color correlations.
 Transformations can make the final compression more dense.
 
-An image can go through four types of transformation. A 1 bit indicates the
+An image can go through four types of transformations. A 1 bit indicates the
 presence of a transform. Each transform is allowed to be used only once. The
-transformations are used only for the main level ARGB image: the subresolution
-images have no transforms, not even the 0 bit indicating the end-of-transforms.
+transformations are used only for the main-level ARGB image; the subresolution
+images have no transforms, not even the 0 bit indicating the end of transforms.
 
 Typically, an encoder would use these transforms to reduce the Shannon entropy
 in the residual image. Also, the transform data can be decided based on entropy
@@ -201,7 +201,7 @@ while (ReadBits(1)) {  // Transform present.
 // Decode actual image data (Section 4).
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If a transform is present then the next two bits specify the transform type.
+If a transform is present, then the next two bits specify the transform type.
 There are four types of transforms.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -215,7 +215,7 @@ enum TransformType {
 
 The transform type is followed by the transform data. Transform data contains
 the information required to apply the inverse transform and depends on the
-transform type. Next we describe the transform data for different types.
+transform type. Next, we describe the transform data for different types.
 
 
 ### 4.1 Predictor Transform
@@ -225,11 +225,11 @@ that neighboring pixels are often correlated. In the predictor transform, the
 current pixel value is predicted from the pixels already decoded (in scan-line
 order) and only the residual value (actual - predicted) is encoded. The
 _prediction mode_ determines the type of prediction to use. We divide the image
-into squares and all the pixels in a square use the same prediction mode.
+into squares, and all the pixels in a square use the same prediction mode.
 
 The first 3 bits of prediction data define the block width and height in number
-of bits. The number of block columns, `block_xsize`, is used in indexing
-two-dimensionally.
+of bits. The number of block columns, `block_xsize`, is used in two-dimension
+indexing.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 int size_bits = ReadBits(3) + 2;
@@ -240,9 +240,9 @@ int block_xsize = DIV_ROUND_UP(image_width, 1 << size_bits);
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The transform data contains the prediction mode for each block of the image. All
-the `block_width * block_height` pixels of a block use same prediction mode. The
-prediction modes are treated as pixels of an image and encoded using the same
-techniques described in [Chapter 5](#image-data).
+the `block_width * block_height` pixels of a block use the same prediction mode.
+The prediction modes are treated as pixels of an image and encoded using the
+same techniques described in [Chapter 5](#image-data).
 
 For a pixel _x, y_, one can compute the respective filter block address by:
 
@@ -255,7 +255,7 @@ There are 14 different prediction modes. In each prediction mode, the current
 pixel value is predicted from one or more neighboring pixels whose values are
 already known.
 
-We choose the neighboring pixels (TL, T, TR, and L) of the current pixel (P) as
+We chose the neighboring pixels (TL, T, TR, and L) of the current pixel (P) as
 follows:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -267,12 +267,12 @@ X    X    X    X    X    X    X    X    X    X    X
 X    X    X    X    X    X    X    X    X    X    X
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-where TL means top-left, T top, TR top-right, L left pixel. At the time of
-predicting a value for P, all pixels O, TL, T, TR and L have already been
-processed, and pixel P and all pixels X are unknown.
+where TL means top-left, T means top, TR means top-right, and L means left. At
+the time of predicting a value for P, all O, TL, T, TR and L pixels have already
+been processed, and the P pixel and all X pixels are unknown.
 
-Given the above neighboring pixels, the different prediction modes are defined
-as follows.
+Given the preceding neighboring pixels, the different prediction modes are
+defined as follows.
 
 | Mode   | Predicted value of each channel of the current pixel    |
 | ------ | ------------------------------------------------------- |
@@ -304,7 +304,7 @@ The Select predictor is defined as follows:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 uint32 Select(uint32 L, uint32 T, uint32 TL) {
-  // L = left pixel, T = top pixel, TL = top left pixel.
+  // L = left pixel, T = top pixel, TL = top-left pixel.
 
   // ARGB component estimates for prediction.
   int pAlpha = ALPHA(L) + ALPHA(T) - ALPHA(TL);
@@ -351,25 +351,26 @@ int ClampAddSubtractHalf(int a, int b) {
 
 There are special handling rules for some border pixels. If there is a
 prediction transform, regardless of the mode \[0..13\] for these pixels, the
-predicted value for the left-topmost pixel of the image is 0xff000000, L-pixel
-for all pixels on the top row, and T-pixel for all pixels on the leftmost
-column.
+predicted value for the left-topmost pixel of the image is 0xff000000, all
+pixels on the top row are L-pixel, and all pixels on the leftmost column are
+T-pixel.
 
 Addressing the TR-pixel for pixels on the rightmost column is
 exceptional. The pixels on the rightmost column are predicted by using the modes
-\[0..13\] just like pixels not on the border, but the leftmost pixel on the same
-row as the current pixel is instead used as the TR-pixel.
+\[0..13\], just like pixels not on the border, but the leftmost pixel on the
+same row as the current pixel is instead used as the TR-pixel.
 
 
 ### 4.2 Color Transform
 
-The goal of the color transform is to decorrelate the R, G and B values of each
-pixel. The color transform keeps the green (G) value as it is, transforms red
-(R) based on green and transforms blue (B) based on green and then based on red.
+The goal of the color transform is to decorrelate the R, G, and B values of each
+pixel. The color transform keeps the green (G) value as it is, transforms the
+red (R) value based on the green value, and transforms the blue (B) value based
+on the green value and then on the red value.
 
 As is the case for the predictor transform, first the image is divided into
-blocks and the same transform mode is used for all the pixels in a block. For
-each block there are three types of color transform elements.
+blocks, and the same transform mode is used for all the pixels in a block. For
+each block, there are three types of color transform elements.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 typedef struct {
@@ -379,7 +380,7 @@ typedef struct {
 } ColorTransformElement;
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The actual color transformation is done by defining a color transform delta. The
+The actual color transform is done by defining a color transform delta. The
 color transform delta depends on the `ColorTransformElement`, which is the same
 for all the pixels in a particular block. The delta is subtracted during the
 color transform. The inverse color transform then is just adding those deltas.
@@ -405,7 +406,7 @@ void ColorTransform(uint8 red, uint8 blue, uint8 green,
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 `ColorTransformDelta` is computed using a signed 8-bit integer representing a
-3.5-fixed-point number, and a signed 8-bit RGB color channel (c) \[-128..127\]
+3.5-fixed-point number and a signed 8-bit RGB color channel (c) \[-128..127\]
 and is defined as follows:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -415,16 +416,16 @@ int8 ColorTransformDelta(int8 t, int8 c) {
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A conversion from the 8-bit unsigned representation (uint8) to the 8-bit signed
-one (int8) is required before calling `ColorTransformDelta()`. It should be
-performed using 8-bit two's complement (that is: uint8 range \[128..255\] is
-mapped to the \[-128..-1\] range of its converted int8 value).
+one (int8) is required before calling `ColorTransformDelta()`. The signed value
+should be interpreted as an 8-bit two's complement number (that is: uint8 range
+\[128..255\] is mapped to the \[-128..-1\] range of its converted int8 value).
 
 The multiplication is to be done using more precision (with at least 16-bit
 precision). The sign extension property of the shift operation does not matter
-here: only the lowest 8 bits are used from the result, and there the sign
+here; only the lowest 8 bits are used from the result, and there the sign
 extension shifting and unsigned shifting are consistent with each other.
 
-Now we describe the contents of color transform data so that decoding can apply
+Now, we describe the contents of color transform data so that decoding can apply
 the inverse color transform and recover the original red and blue values. The
 first 3 bits of the color transform data contain the width and height of the
 image block in number of bits, just like the predictor transform:
@@ -436,7 +437,7 @@ int block_height = 1 << size_bits;
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The remaining part of the color transform data contains `ColorTransformElement`
-instances corresponding to each block of the image. `ColorTransformElement`
+instances, corresponding to each block of the image. `ColorTransformElement`
 instances are treated as pixels of an image and encoded using the methods
 described in [Chapter 5](#image-data).
 
@@ -470,8 +471,8 @@ void InverseTransform(uint8 red, uint8 green, uint8 blue,
 
 The subtract green transform subtracts green values from red and blue values of
 each pixel. When this transform is present, the decoder needs to add the green
-value to both red and blue. There is no data associated with this transform. The
-decoder applies the inverse transform as follows:
+value to both the red and blue values. There is no data associated with this
+transform. The decoder applies the inverse transform as follows:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void AddGreenToBlueAndRed(uint8 green, uint8 *red, uint8 *blue) {
@@ -480,7 +481,7 @@ void AddGreenToBlueAndRed(uint8 green, uint8 *red, uint8 *blue) {
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This transform is redundant as it can be modeled using the color transform, but
+This transform is redundant, as it can be modeled using the color transform, but
 since there is no additional data here, the subtract green transform can be
 coded using fewer bits than a full-blown color transform.
 
@@ -491,30 +492,30 @@ If there are not many unique pixel values, it may be more efficient to create a
 color index array and replace the pixel values by the array's indices. The color
 indexing transform achieves this. (In the context of WebP lossless, we
 specifically do not call this a palette transform because a similar but more
-dynamic concept exists in WebP lossless encoding: color cache).
+dynamic concept exists in WebP lossless encoding: color cache.)
 
 The color indexing transform checks for the number of unique ARGB values in the
 image. If that number is below a threshold (256), it creates an array of those
 ARGB values, which is then used to replace the pixel values with the
 corresponding index: the green channel of the pixels are replaced with the
-index; all alpha values are set to 255; all red and blue values to 0.
+index, all alpha values are set to 255, and all red and blue values to 0.
 
-The transform data contains color table size and the entries in the color table.
-The decoder reads the color indexing transform data as follows:
+The transform data contains the color table size and the entries in the color
+table. The decoder reads the color indexing transform data as follows:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// 8 bit value for color table size
+// 8-bit value for the color table size
 int color_table_size = ReadBits(8) + 1;
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The color table is stored using the image storage format itself. The color table
 can be obtained by reading an image, without the RIFF header, image size, and
-transforms, assuming a height of one pixel and a width of `color_table_size`.
+transforms, assuming the height of 1 pixel and the width of `color_table_size`.
 The color table is always subtraction-coded to reduce image entropy. The deltas
 of palette colors contain typically much less entropy than the colors
 themselves, leading to significant savings for smaller images. In decoding,
 every final color in the color table can be obtained by adding the previous
-color component values by each ARGB component separately, and storing the least
+color component values by each ARGB component separately and storing the least
 significant 8 bits of the result.
 
 The inverse transform for the image is simply replacing the pixel values (which
@@ -526,14 +527,14 @@ is done based on the green component of the ARGB color.
 argb = color_table[GREEN(argb)];
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If the index is equal or larger than `color_table_size`, the argb color value
+If the index is equal to or larger than `color_table_size`, the argb color value
 should be set to 0x00000000 (transparent black).
 
 When the color table is small (equal to or less than 16 colors), several pixels
 are bundled into a single pixel. The pixel bundling packs several (2, 4, or 8)
 pixels into a single pixel, reducing the image width respectively. Pixel
 bundling allows for a more efficient joint distribution entropy coding of
-neighboring pixels, and gives some arithmetic coding-like benefits to the
+neighboring pixels and gives some arithmetic coding-like benefits to the
 entropy code, but it can only be used when there are 16 or fewer unique values.
 
 `color_table_size` specifies how many pixels are combined:
@@ -551,7 +552,7 @@ if (color_table_size <= 2) {
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-`width_bits` has a value of 0, 1, 2 or 3. A value of 0 indicates no pixel
+`width_bits` has a value of 0, 1, 2, or 3. A value of 0 indicates no pixel
 bundling is to be done for the image. A value of 1 indicates that two pixels are
 combined, and each pixel has a range of \[0..15\]. A value of 2 indicates that
 four pixels are combined, and each pixel has a range of \[0..3\]. A value of 3
@@ -560,18 +561,18 @@ that is, a binary value.
 
 The values are packed into the green component as follows:
 
-  * `width_bits` = 1: for every x value where x ≡ 0 (mod 2), a green
-    value at x is positioned into the 4 least-significant bits of the
-    green value at x / 2, a green value at x + 1 is positioned into the
-    4 most-significant bits of the green value at x / 2.
-  * `width_bits` = 2: for every x value where x ≡ 0 (mod 4), a green
+  * `width_bits` = 1: For every x value, where x ≡ 0 (mod 2), a green
+    value at x is positioned into the 4 least significant bits of the
+    green value at x / 2, and a green value at x + 1 is positioned into the
+    4 most significant bits of the green value at x / 2.
+  * `width_bits` = 2: For every x value, where x ≡ 0 (mod 4), a green
     value at x is positioned into the 2 least-significant bits of the
-    green value at x / 4, green values at x + 1 to x + 3 are positioned in order
-    to the more significant bits of the green value at x / 4.
-  * `width_bits` = 3: for every x value where x ≡ 0 (mod 8), a green
-    value at x is positioned into the least-significant bit of the green
-    value at x / 8, green values at x + 1 to x + 7 are positioned in order to
-    the more significant bits of the green value at x / 8.
+    green value at x / 4, and green values at x + 1 to x + 3 are positioned in
+    order to the more significant bits of the green value at x / 4.
+  * `width_bits` = 3: For every x value, where x ≡ 0 (mod 8), a green
+    value at x is positioned into the least significant bit of the green
+    value at x / 8, and green values at x + 1 to x + 7 are positioned in order
+    to the more significant bits of the green value at x / 8.
 
 
 5 Image Data
@@ -588,18 +589,18 @@ We use image data in five different roles:
      [meta prefix codes](#decoding-of-meta-prefix-codes). The red and green
      components of a pixel define the meta prefix code used in a particular
      block of the ARGB image.
-  1. Predictor image: Stores the metadata for
-     [Predictor Transform](#predictor-transform). The green component of a pixel
+  1. Predictor image: Stores the metadata for the
+     [predictor transform](#predictor-transform). The green component of a pixel
      defines which of the 14 predictors is used within a particular block of the
      ARGB image.
-  1. Color transform image. It is created by `ColorTransformElement` values
-     (defined in [Color Transform](#color-transform)) for different blocks of
+  1. Color transform image: Created by `ColorTransformElement` values
+     (defined in ["Color Transform"](#color-transform)) for different blocks of
      the image. Each `ColorTransformElement` `'cte'` is treated as a pixel whose
      alpha component is `255`, red component is `cte.red_to_blue`, green
-     component is `cte.green_to_blue` and blue component is `cte.green_to_red`.
+     component is `cte.green_to_blue`, and blue component is `cte.green_to_red`.
   1. Color indexing image: An array of size `color_table_size` (up to 256
      ARGB values) storing the metadata for the
-     [Color Indexing Transform](#color-indexing-transform). This is stored as an
+     [color indexing transform](#color-indexing-transform). This is stored as an
      image of width `color_table_size` and height `1`.
 
 ### 5.2 Encoding of Image Data
@@ -613,13 +614,13 @@ several blocks may share the same entropy codes.
 **Rationale:** Storing an entropy code incurs a cost. This cost can be minimized
 if statistically similar blocks share an entropy code, thereby storing that code
 only once. For example, an encoder can find similar blocks by clustering them
-using their statistical properties, or by repeatedly joining a pair of randomly
+using their statistical properties or by repeatedly joining a pair of randomly
 selected clusters when it reduces the overall amount of bits needed to encode
 the image.
 
 Each pixel is encoded using one of the three possible methods:
 
-  1. Prefix coded literal: each channel (green, red, blue and alpha) is
+  1. Prefix-coded literals: each channel (green, red, blue, and alpha) is
      entropy-coded independently;
   2. LZ77 backward reference: a sequence of pixels are copied from elsewhere
      in the image; or
@@ -628,9 +629,9 @@ Each pixel is encoded using one of the three possible methods:
 
 The following subsections describe each of these in detail.
 
-#### 5.2.1 Prefix Coded Literals
+#### 5.2.1 Prefix-Coded Literals
 
-The pixel is stored as prefix coded values of green, red, blue and alpha (in
+The pixel is stored as prefix-coded values of green, red, blue, and alpha (in
 that order). See [Section 6.2.3](#decoding-entropy-coded-image-data) for
 details.
 
@@ -646,12 +647,12 @@ Backward references are tuples of _length_ and _distance code_:
 The length and distance values are stored using **LZ77 prefix coding**.
 
 LZ77 prefix coding divides large integer values into two parts: the _prefix
-code_ and the _extra bits_: the prefix code is stored using an entropy code,
+code_ and the _extra bits_. The prefix code is stored using an entropy code,
 while the extra bits are stored as they are (without an entropy code).
 
 **Rationale**: This approach reduces the storage requirement for the entropy
-code. Also, large values are usually rare, and so extra bits would be used for
-very few values in the image. Thus, this approach results in better compression
+code. Also, large values are usually rare, so extra bits would be used for very
+few values in the image. Thus, this approach results in better compression
 overall.
 
 The following table denotes the prefix codes and extra bits used for storing
@@ -697,16 +698,16 @@ previously seen pixel, from which the pixels are to be copied. This subsection
 defines the mapping between a distance code and the position of a previous
 pixel.
 
-Distance codes larger than 120 denote the pixel-distance in scan-line order,
+Distance codes larger than 120 denote the pixel distance in scan-line order,
 offset by 120.
 
-The smallest distance codes \[1..120\] are special, and are reserved for a close
+The smallest distance codes \[1..120\] are special and are reserved for a close
 neighborhood of the current pixel. This neighborhood consists of 120 pixels:
 
-  * Pixels that are 1 to 7 rows above the current pixel, and are up to 8 columns
+  * Pixels that are 1 to 7 rows above the current pixel and are up to 8 columns
     to the left or up to 7 columns to the right of the current pixel. \[Total
     such pixels = `7 * (8 + 1 + 7) = 112`\].
-  * Pixels that are in same row as the current pixel, and are up to 8 columns to
+  * Pixels that are in same row as the current pixel and are up to 8 columns to
     the left of the current pixel. \[`8` such pixels\].
 
 The mapping between distance code `i` and the neighboring pixel offset
@@ -735,8 +736,8 @@ The mapping between distance code `i` and the neighboring pixel offset
 
 For example, the distance code `1` indicates an offset of `(0, 1)` for the
 neighboring pixel, that is, the pixel above the current pixel (0 pixel
-difference in the X-direction and 1 pixel difference in the Y-direction).
-Similarly, the distance code `3` indicates the left-top pixel.
+difference in the X direction and 1 pixel difference in the Y direction).
+Similarly, the distance code `3` indicates the top-left pixel.
 
 The decoder can convert a distance code `i` to a scan-line order distance `dist`
 as follows:
@@ -749,7 +750,7 @@ if (dist < 1) {
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-where `distance_map` is the mapping noted above and `xsize` is the width of the
+where `distance_map` is the mapping noted above, and `xsize` is the width of the
 image in pixels.
 
 
@@ -760,7 +761,7 @@ Color cache stores a set of colors that have been recently used in the image.
 
 **Rationale:** This way, the recently used colors can sometimes be referred to
 more efficiently than emitting them using the other two methods (described in
-[5.2.1](#prefix-coded-literals) and [5.2.2](#lz77-backward-reference)).
+Sections [5.2.1](#prefix-coded-literals) and [5.2.2](#lz77-backward-reference)).
 
 Color cache codes are stored as follows. First, there is a 1-bit value that
 indicates if the color cache is used. If this bit is 0, no color cache codes
@@ -773,7 +774,7 @@ int color_cache_code_bits = ReadBits(4);
 int color_cache_size = 1 << color_cache_code_bits;
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-`color_cache_code_bits` defines the size of the color_cache by (1 <<
+`color_cache_code_bits` defines the size of the color_cache (1 <<
 `color_cache_code_bits`). The range of allowed values for
 `color_cache_code_bits` is \[1..11\]. Compliant decoders must indicate a
 corrupted bitstream for other values.
@@ -799,7 +800,7 @@ Most of the data is coded using a [canonical prefix code][canonical_huff].
 Hence, the codes are transmitted by sending the _prefix code lengths_, as
 opposed to the actual _prefix codes_.
 
-In particular, the format uses **spatially-variant prefix coding**. In other
+In particular, the format uses **spatially variant prefix coding**. In other
 words, different blocks of the image can potentially use different entropy
 codes.
 
@@ -827,7 +828,7 @@ This section describes how to read the prefix code lengths from the bitstream.
 The prefix code lengths can be coded in two ways. The method used is specified
 by a 1-bit value.
 
-  * If this bit is 1, it is a _simple code length code_, and
+  * If this bit is 1, it is a _simple code length code_.
   * If this bit is 0, it is a _normal code length code_.
 
 In both cases, there can be unused code lengths that are still part of the
@@ -851,9 +852,9 @@ The first bit indicates the number of symbols:
 int num_symbols = ReadBits(1) + 1;
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Following are the symbol values.
+The following are the symbol values.
 
-This first symbol is coded using 1 or 8 bits depending on the value of
+This first symbol is coded using 1 or 8 bits, depending on the value of
 `is_first_8bits`. The range is \[0..1\] or \[0..255\], respectively. The second
 symbol, if present, is always assumed to be in the range \[0..255\] and coded
 using 8 bits.
@@ -886,7 +887,7 @@ int num_code_lengths = 4 + ReadBits(4);
 
 If `num_code_lengths` is > 19, the bitstream is invalid.
 
-The code lengths are themselves encoded using prefix codes: lower level code
+The code lengths are themselves encoded using prefix codes; lower-level code
 lengths, `code_length_code_lengths`, first have to be read. The rest of those
 `code_length_code_lengths` (according to the order in `kCodeLengthCodeOrder`)
 are zeros.
@@ -916,20 +917,20 @@ to `max_symbol` code lengths.
   * Code \[0..15\] indicates literal code lengths.
     * Value 0 means no symbols have been coded.
     * Values \[1..15\] indicate the bit length of the respective code.
-  * Code 16 repeats the previous non-zero value \[3..6\] times, that is,
-    `3 + ReadBits(2)` times. If code 16 is used before a non-zero
+  * Code 16 repeats the previous nonzero value \[3..6\] times, that is,
+    `3 + ReadBits(2)` times. If code 16 is used before a nonzero
     value has been emitted, a value of 8 is repeated.
-  * Code 17 emits a streak of zeros \[3..10\], that is, `3 + ReadBits(3)`
-    times.
+  * Code 17 emits a streak of zeros of length \[3..10\], that is, `3 +
+    ReadBits(3)` times.
   * Code 18 emits a streak of zeros of length \[11..138\], that is,
     `11 + ReadBits(7)` times.
 
-Once code lengths are read, a prefix code for each symbol type (A, R, G, B,
+Once code lengths are read, a prefix code for each symbol type (A, R, G, B, and
 distance) is formed using their respective alphabet sizes:
 
   * G channel: 256 + 24 + `color_cache_size`
-  * other literals (A,R,B): 256
-  * distance code: 40
+  * Other literals (A, R, and B): 256
+  * Distance code: 40
 
 The Normal Code Length Code must code a full decision tree, that is, the sum of
 `2 ^ (-length)` for all non-zero codes must be exactly one. There is however
@@ -958,8 +959,8 @@ value:
 The entropy image defines which prefix codes are used in different parts of the
 image, as described below.
 
-The first 3-bits contain the `prefix_bits` value. The dimensions of the entropy
-image are derived from `prefix_bits`.
+The first 3 bits contain the `prefix_bits` value. The dimensions of the entropy
+image are derived from `prefix_bits`:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 int prefix_bits = ReadBits(3) + 2;
@@ -977,9 +978,9 @@ The next bits contain an entropy image of width `prefix_xsize` and height
 For any given pixel (x, y), there is a set of five prefix codes associated with
 it. These codes are (in bitstream order):
 
-  * **Prefix code #1**: used for green channel, backward-reference length and
+  * **Prefix code #1**: used for green channel, backward-reference length, and
     color cache.
-  * **Prefix code #2, #3 and #4**: used for red, blue and alpha channels
+  * **Prefix code #2, #3, and #4**: used for red, blue, and alpha channels,
     respectively.
   * **Prefix code #5**: used for backward-reference distance.
 
@@ -1011,42 +1012,43 @@ int meta_prefix_code = (entropy_image[position] >> 8) & 0xffff;
 PrefixCodeGroup prefix_group = prefix_code_groups[meta_prefix_code];
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-where, we have assumed the existence of `PrefixCodeGroup` structure, which
+where we have assumed the existence of `PrefixCodeGroup` structure, which
 represents a set of five prefix codes. Also, `prefix_code_groups` is an array of
 `PrefixCodeGroup` (of size `num_prefix_groups`).
 
 The decoder then uses prefix code group `prefix_group` to decode the pixel
-(x, y) as explained in the [next section](#decoding-entropy-coded-image-data).
+(x, y), as explained in ["Decoding Entropy-Coded Image
+Data"](#decoding-entropy-coded-image-data).
 
 #### 6.2.3 Decoding Entropy-Coded Image Data
 
 For the current position (x, y) in the image, the decoder first identifies the
 corresponding prefix code group (as explained in the last section). Given the
-prefix code group, the pixel is read and decoded as follows:
+prefix code group, the pixel is read and decoded as follows.
 
-Read the next symbol S from the bitstream using prefix code #1. Note that S is
+Next, read the symbol S from the bitstream using prefix code #1. Note that S is
 any integer in the range `0` to
 `(256 + 24 + ` [`color_cache_size`](#color-cache-code)` - 1)`.
 
 The interpretation of S depends on its value:
 
-  1. if S < 256
+  1. If S < 256
      1. Use S as the green component.
      1. Read red from the bitstream using prefix code #2.
      1. Read blue from the bitstream using prefix code #3.
      1. Read alpha from the bitstream using prefix code #4.
-  1. if S >= 256 && S < 256 + 24
+  1. If S >= 256 & S < 256 + 24
      1. Use S - 256 as a length prefix code.
-     1. Read extra bits for length from the bitstream.
+     1. Read extra bits for the length from the bitstream.
      1. Determine backward-reference length L from length prefix code and the
         extra bits read.
-     1. Read distance prefix code from the bitstream using prefix code #5.
-     1. Read extra bits for distance from the bitstream.
-     1. Determine backward-reference distance D from distance prefix code and
-        the extra bits read.
+     1. Read the distance prefix code from the bitstream using prefix code #5.
+     1. Read extra bits for the distance from the bitstream.
+     1. Determine backward-reference distance D from the distance prefix code
+        and the extra bits read.
      1. Copy the L pixels (in scan-line order) from the sequence of pixels
         prior to them by D pixels.
-  1. if S >= 256 + 24
+  1. If S >= 256 + 24
      1. Use S - (256 + 24) as the index into the color cache.
      1. Get ARGB color from the color cache at that index.
 
@@ -1055,7 +1057,7 @@ The interpretation of S depends on its value:
 ---------------------------------
 
 Below is a view into the format in Augmented Backus-Naur Form ([ABNF]). It does
-not cover all details. End-of-image (EOI) is only implicitly coded into the
+not cover all details. The end-of-image (EOI) is only implicitly coded into the
 number of pixels (xsize * ysize).
 
 
@@ -1124,7 +1126,7 @@ lz77-coded-image      =
     *((argb-pixel / lz77-copy / color-cache-code) lz77-coded-image)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A possible example sequence:
+The following is a possible example sequence:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 RIFF-header image-size %b1 subtract-green-tx
