@@ -1046,8 +1046,8 @@ The interpretation of S depends on its value:
      1. Read extra bits for the distance from the bitstream.
      1. Determine backward-reference distance D from the distance prefix code
         and the extra bits read.
-     1. Copy the L pixels (in scan-line order) from the sequence of pixels
-        prior to them by D pixels.
+     1. Copy L pixels (in scan-line order) from the sequence of pixels starting
+        at the current position minus D pixels.
   1. If S >= 256 + 24
      1. Use S - (256 + 24) as the index into the color cache.
      1. Get ARGB color from the color cache at that index.
