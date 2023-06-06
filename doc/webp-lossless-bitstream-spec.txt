@@ -816,6 +816,17 @@ The encoded image data consists of several parts:
   1. Meta prefix codes
   1. Entropy-coded image data
 
+For any given pixel (x, y), there is a set of five prefix codes associated with
+it. These codes are (in bitstream order):
+
+  * **Prefix code #1**: used for green channel, backward-reference length, and
+    color cache.
+  * **Prefix code #2, #3, and #4**: used for red, blue, and alpha channels,
+    respectively.
+  * **Prefix code #5**: used for backward-reference distance.
+
+From here on, we refer to this set as a **prefix code group**.
+
 #### 6.2.1 Decoding and Building the Prefix Codes
 
 There are several steps in decoding the prefix codes.
@@ -974,17 +985,6 @@ The next bits contain an entropy image of width `prefix_xsize` and height
 `prefix_ysize`.
 
 **Interpretation of Meta Prefix Codes:**
-
-For any given pixel (x, y), there is a set of five prefix codes associated with
-it. These codes are (in bitstream order):
-
-  * **Prefix code #1**: used for green channel, backward-reference length, and
-    color cache.
-  * **Prefix code #2, #3, and #4**: used for red, blue, and alpha channels,
-    respectively.
-  * **Prefix code #5**: used for backward-reference distance.
-
-From here on, we refer to this set as a **prefix code group**.
 
 The number of prefix code groups in the ARGB image can be obtained by finding
 the _largest meta prefix code_ from the entropy image:
