@@ -968,7 +968,7 @@ value:
 **Entropy image:**
 
 The entropy image defines which prefix codes are used in different parts of the
-image, as described below.
+image.
 
 The first 3 bits contain the `prefix_bits` value. The dimensions of the entropy
 image are derived from `prefix_bits`:
