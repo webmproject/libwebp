@@ -198,7 +198,7 @@ while (ReadBits(1)) {  // Transform present.
   ...
 }
 
-// Decode actual image data (Section 4).
+// Decode actual image data (Section 5).
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If a transform is present, then the next two bits specify the transform type.
