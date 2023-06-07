@@ -189,6 +189,12 @@ static void GradientFilter_C(const uint8_t* data, int width, int height,
 
 //------------------------------------------------------------------------------
 
+static void NoneUnfilter_C(const uint8_t* prev, const uint8_t* in,
+                           uint8_t* out, int width) {
+  (void)prev;
+  if (out != in) memcpy(out, in, width * sizeof(*out));
+}
+
 static void HorizontalUnfilter_C(const uint8_t* prev, const uint8_t* in,
                                  uint8_t* out, int width) {
   uint8_t pred = (prev == NULL) ? 0 : prev[0];
@@ -240,7 +246,7 @@ extern void VP8FiltersInitNEON(void);
 extern void VP8FiltersInitSSE2(void);
 
 WEBP_DSP_INIT_FUNC(VP8FiltersInit) {
-  WebPUnfilters[WEBP_FILTER_NONE] = NULL;
+  WebPUnfilters[WEBP_FILTER_NONE] = NoneUnfilter_C;
 #if !WEBP_NEON_OMIT_C_CODE
   WebPUnfilters[WEBP_FILTER_HORIZONTAL] = HorizontalUnfilter_C;
   WebPUnfilters[WEBP_FILTER_VERTICAL] = VerticalUnfilter_C;
@@ -279,6 +285,7 @@ WEBP_DSP_INIT_FUNC(VP8FiltersInit) {
   }
 #endif
 
+  assert(WebPUnfilters[WEBP_FILTER_NONE] != NULL);
   assert(WebPUnfilters[WEBP_FILTER_HORIZONTAL] != NULL);
   assert(WebPUnfilters[WEBP_FILTER_VERTICAL] != NULL);
   assert(WebPUnfilters[WEBP_FILTER_GRADIENT] != NULL);
