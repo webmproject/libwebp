@@ -559,6 +559,8 @@ Preprocessing (P): 2 bits
     * `0`: No preprocessing.
     * `1`: Level reduction.
 
+Decoders are not required to use this information in any specified way.
+
 Filtering method (F): 2 bits
 
 : The filtering methods used are described as follows:
@@ -603,9 +605,6 @@ Otherwise:
     location (0, y) are predicted using the location (0, y-1) just above.
   * For vertical or gradient filtering methods, the top-most pixels at
     location (x, 0) are predicted using the location (x-1, 0) on the left.
-
-
-Decoders are not required to use this information in any specified way.
 
 Compression method (C): 2 bits
 
