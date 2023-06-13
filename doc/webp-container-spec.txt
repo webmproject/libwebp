@@ -22,8 +22,8 @@ Introduction
 
 WebP is an image format that uses either (i) the VP8 key frame encoding to
 compress image data in a lossy way or (ii) the WebP lossless encoding. These
-encoding schemes should make it more efficient than older formats such as JPEG,
-GIF and PNG. It is optimized for fast image transfer over the network (for
+encoding schemes should make it more efficient than older formats, such as JPEG,
+GIF, and PNG. It is optimized for fast image transfer over the network (for
 example, for websites). The WebP format has feature parity (color profile,
 metadata, animation, etc.) with other formats as well. This document describes
 the structure of a WebP file.
