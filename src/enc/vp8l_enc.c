@@ -1449,6 +1449,11 @@ static int WriteImage(const WebPPicture* const pic, VP8LBitWriter* const bw,
   const size_t vp8l_size = VP8L_SIGNATURE_SIZE + webpll_size;
   const size_t pad = vp8l_size & 1;
   const size_t riff_size = TAG_SIZE + CHUNK_HEADER_SIZE + vp8l_size + pad;
+  *coded_size = 0;
+
+  if (bw->error_) {
+    return WebPEncodingSetError(pic, VP8_ENC_ERROR_OUT_OF_MEMORY);
+  }
 
   if (!WriteRiffHeader(pic, riff_size, vp8l_size) ||
       !pic->writer(webpll_data, webpll_size, pic)) {
