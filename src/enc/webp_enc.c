@@ -307,7 +307,10 @@ int WebPEncodingSetError(const WebPPicture* const pic,
                          WebPEncodingError error) {
   assert((int)error < VP8_ENC_ERROR_LAST);
   assert((int)error >= VP8_ENC_OK);
-  ((WebPPicture*)pic)->error_code = error;
+  // The oldest error reported takes precedence over the new one.
+  if (pic->error_code == VP8_ENC_OK) {
+    ((WebPPicture*)pic)->error_code = error;
+  }
   return 0;
 }
 
@@ -329,7 +332,7 @@ int WebPEncode(const WebPConfig* config, WebPPicture* pic) {
   int ok = 0;
   if (pic == NULL) return 0;
 
-  WebPEncodingSetError(pic, VP8_ENC_OK);  // all ok so far
+  pic->error_code = VP8_ENC_OK;  // all ok so far
   if (config == NULL) {  // bad params
     return WebPEncodingSetError(pic, VP8_ENC_ERROR_NULL_PARAMETER);
   }

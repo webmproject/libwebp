@@ -319,11 +319,11 @@ static int EncodeAlpha(VP8Encoder* const enc,
   assert(filter >= WEBP_FILTER_NONE && filter <= WEBP_FILTER_FAST);
 
   if (quality < 0 || quality > 100) {
-    return 0;
+    return WebPEncodingSetError(pic, VP8_ENC_ERROR_INVALID_CONFIGURATION);
   }
 
   if (method < ALPHA_NO_COMPRESSION || method > ALPHA_LOSSLESS_COMPRESSION) {
-    return 0;
+    return WebPEncodingSetError(pic, VP8_ENC_ERROR_INVALID_CONFIGURATION);
   }
 
   if (method == ALPHA_NO_COMPRESSION) {
@@ -333,7 +333,7 @@ static int EncodeAlpha(VP8Encoder* const enc,
 
   quant_alpha = (uint8_t*)WebPSafeMalloc(1ULL, data_size);
   if (quant_alpha == NULL) {
-    return 0;
+    return WebPEncodingSetError(pic, VP8_ENC_ERROR_OUT_OF_MEMORY);
   }
 
   // Extract alpha data (width x height) from raw_data (stride x height).
@@ -353,6 +353,9 @@ static int EncodeAlpha(VP8Encoder* const enc,
     ok = ApplyFiltersAndEncode(quant_alpha, width, height, data_size, method,
                                filter, reduce_levels, effort_level, output,
                                output_size, pic->stats);
+    if (!ok) {
+      WebPEncodingSetError(pic, VP8_ENC_ERROR_OUT_OF_MEMORY);  // imprecise
+    }
 #if !defined(WEBP_DISABLE_STATS)
     if (pic->stats != NULL) {  // need stats?
       pic->stats->coded_size += (int)(*output_size);
@@ -412,7 +415,7 @@ int VP8EncStartAlpha(VP8Encoder* const enc) {
       WebPWorker* const worker = &enc->alpha_worker_;
       // Makes sure worker is good to go.
       if (!WebPGetWorkerInterface()->Reset(worker)) {
-        return 0;
+        return WebPEncodingSetError(enc->pic_, VP8_ENC_ERROR_OUT_OF_MEMORY);
       }
       WebPGetWorkerInterface()->Launch(worker);
       return 1;

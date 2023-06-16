@@ -1298,7 +1298,10 @@ static int EncodeImageInternal(
           }
         }
         tokens = (HuffmanTreeToken*)WebPSafeMalloc(max_tokens, sizeof(*tokens));
-        if (tokens == NULL) goto Error;
+        if (tokens == NULL) {
+          WebPEncodingSetError(pic, VP8_ENC_ERROR_OUT_OF_MEMORY);
+          goto Error;
+        }
         for (i = 0; i < 5 * histogram_image_size; ++i) {
           HuffmanTreeCode* const codes = &huffman_codes[i];
           StoreHuffmanCode(bw, huff_tree, tokens, codes);
