@@ -847,9 +847,9 @@ stream. This may be inefficient, but it is allowed by the format.
 The described tree must be a complete binary tree. A single leaf node is
 considered a complete binary tree and can be encoded using either the simple
 code length code or the normal code length code. When coding a single leaf
-node using the _normal code length code_, all but one code length should be
-zeros, and the single leaf node value is marked with the length of 1 -- even
-when no bits are consumed when that single leaf node tree is used.
+node using the _normal code length code_, all but one code length are zeros,
+and the single leaf node value is marked with the length of 1 -- even when no
+bits are consumed when that single leaf node tree is used.
 
 **(i) Simple Code Length Code:**
 
