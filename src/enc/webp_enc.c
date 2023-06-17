@@ -320,8 +320,7 @@ int WebPReportProgress(const WebPPicture* const pic,
     *percent_store = percent;
     if (pic->progress_hook && !pic->progress_hook(percent, pic)) {
       // user abort requested
-      WebPEncodingSetError(pic, VP8_ENC_ERROR_USER_ABORT);
-      return 0;
+      return WebPEncodingSetError(pic, VP8_ENC_ERROR_USER_ABORT);
     }
   }
   return 1;  // ok
