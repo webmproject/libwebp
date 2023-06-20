@@ -141,6 +141,11 @@ static int EncodeAlphaInternal(const uint8_t* const data, int width, int height,
                               !reduce_levels, &tmp_bw, &result->stats);
     if (ok) {
       output = VP8LBitWriterFinish(&tmp_bw);
+      if (tmp_bw.error_) {
+        VP8LBitWriterWipeOut(&tmp_bw);
+        memset(&result->bw, 0, sizeof(result->bw));
+        return 0;
+      }
       output_size = VP8LBitWriterNumBytes(&tmp_bw);
       if (output_size > data_size) {
         // compressed size is larger than source! Revert to uncompressed mode.
