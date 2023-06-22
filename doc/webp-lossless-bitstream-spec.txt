@@ -829,11 +829,6 @@ From here on, we refer to this set as a **prefix code group**.
 
 #### 6.2.1 Decoding and Building the Prefix Codes
 
-There are several steps in decoding the prefix codes.
-
-**Decoding the Code Lengths:**
-{:#decoding-the-code-lengths}
-
 This section describes how to read the prefix code lengths from the bitstream.
 
 The prefix code lengths can be coded in two ways. The method used is specified
