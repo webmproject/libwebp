@@ -215,7 +215,10 @@ enum TransformType {
 
 The transform type is followed by the transform data. Transform data contains
 the information required to apply the inverse transform and depends on the
-transform type. Next, we describe the transform data for different types.
+transform type. The inverse transforms are applied in the reverse order that
+they are read from the bitstream, that is, last one first.
+
+Next, we describe the transform data for different types.
 
 
 ### 4.1 Predictor Transform
