@@ -846,7 +846,7 @@ node using the _normal code length code_, all but one code length are zeros,
 and the single leaf node value is marked with the length of 1 -- even when no
 bits are consumed when that single leaf node tree is used.
 
-**(i) Simple Code Length Code:**
+##### Simple Code Length Code
 
 This variant is used in the special case when only 1 or 2 prefix symbols are in
 the range \[0..255\] with code length `1`. All other prefix code lengths are
@@ -882,7 +882,7 @@ blue can be empty if all pixels within the same meta prefix code are produced
 using the color cache. However, this case doesn't need special handling, as
 empty prefix codes can be coded as those containing a single symbol `0`.
 
-**(ii) Normal Code Length Code:**
+##### Normal Code Length Code
 
 The code lengths of the prefix code fit in 8 bits and are read as follows.
 First, `num_code_lengths` specifies the number of code lengths.
