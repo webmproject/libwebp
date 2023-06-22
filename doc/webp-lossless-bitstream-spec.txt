@@ -63,15 +63,15 @@ We assume that each color component, that is, alpha, red, blue and green, is
 represented using an 8-bit byte. We define the corresponding type as uint8. A
 whole ARGB pixel is represented by a type called uint32, which is an unsigned
 integer consisting of 32 bits. In the code showing the behavior of the
-transformations, these values are codified in the following bits: alpha in bits
+transforms, these values are codified in the following bits: alpha in bits
 31..24, red in bits 23..16, green in bits 15..8 and blue in bits 7..0; however,
 implementations of the format are free to use another representation internally.
 
 Broadly, a WebP lossless image contains header data, transform information, and
 actual image data. Headers contain the width and height of the image. A WebP
-lossless image can go through four different types of transformation before
-being entropy encoded. The transform information in the bitstream contains the
-data required to apply the respective inverse transforms.
+lossless image can go through four different types of transforms before being
+entropy encoded. The transform information in the bitstream contains the data
+required to apply the respective inverse transforms.
 
 
 2 Nomenclature
@@ -174,17 +174,17 @@ int version_number = ReadBits(3);
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-4 Transformations
------------------
+4 Transforms
+------------
 
-Transformations are reversible manipulations of the image data that can reduce
-the remaining symbolic entropy by modeling spatial and color correlations.
-Transformations can make the final compression more dense.
+The transforms are reversible manipulations of the image data that can reduce
+the remaining symbolic entropy by modeling spatial and color correlations. They
+can make the final compression more dense.
 
-An image can go through four types of transformations. A 1 bit indicates the
+An image can go through four types of transforms. A 1 bit indicates the
 presence of a transform. Each transform is allowed to be used only once. The
-transformations are used only for the main-level ARGB image; the subresolution
-images have no transforms, not even the 0 bit indicating the end of transforms.
+transforms are used only for the main-level ARGB image; the subresolution images
+have no transforms, not even the 0 bit indicating the end of transforms.
 
 Typically, an encoder would use these transforms to reduce the Shannon entropy
 in the residual image. Also, the transform data can be decided based on entropy
