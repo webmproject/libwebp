@@ -363,6 +363,20 @@ exceptional. The pixels on the rightmost column are predicted by using the modes
 \[0..13\], just like pixels not on the border, but the leftmost pixel on the
 same row as the current pixel is instead used as the TR-pixel.
 
+The final pixel value is obtained by adding each channel of the predicted value
+to the encoded residual value.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void PredictorTransformOutput(uint32 residual, uint32 pred,
+                              uint8* alpha, uint8* red,
+                              uint8* green, uint8* blue) {
+  *alpha = ALPHA(residual) + ALPHA(pred);
+  *red = RED(residual) + RED(pred);
+  *green = GREEN(residual) + GREEN(pred);
+  *blue = BLUE(residual) + BLUE(pred);
+}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 ### 4.2 Color Transform
 
