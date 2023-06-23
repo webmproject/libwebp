@@ -1064,8 +1064,8 @@ means `element` is repeated exactly 5 times. `%b` represents a binary value.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 format        = RIFF-header image-header image-stream
-RIFF-header   = "RIFF" 4OCTET "WEBP" "VP8L" 4OCTET %x2F
-image-header  = image-size alpha-is-used version
+RIFF-header   = "RIFF" 4OCTET "WEBP" "VP8L" 4OCTET
+image-header  = %x2F image-size alpha-is-used version
 image-size    = 14BIT 14BIT ; width - 1, height - 1
 alpha-is-used = 1BIT
 version       = 3BIT ; 0
