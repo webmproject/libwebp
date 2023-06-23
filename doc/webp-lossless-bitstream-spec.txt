@@ -963,7 +963,7 @@ value:
   * If this bit is one, the image uses multiple meta prefix codes. These meta
     prefix codes are stored as an _entropy image_ (described below).
 
-**Entropy image:**
+##### Entropy Image
 
 The entropy image defines which prefix codes are used in different parts of the
 image.
@@ -982,7 +982,7 @@ where `DIV_ROUND_UP` is as defined [earlier](#predictor-transform).
 The next bits contain an entropy image of width `prefix_xsize` and height
 `prefix_ysize`.
 
-**Interpretation of Meta Prefix Codes:**
+##### Interpretation of Meta Prefix Codes
 
 The number of prefix code groups in the ARGB image can be obtained by finding
 the _largest meta prefix code_ from the entropy image:
