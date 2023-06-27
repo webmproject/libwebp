@@ -63,15 +63,15 @@ We assume that each color component, that is, alpha, red, blue and green, is
 represented using an 8-bit byte. We define the corresponding type as uint8. A
 whole ARGB pixel is represented by a type called uint32, which is an unsigned
 integer consisting of 32 bits. In the code showing the behavior of the
-transformations, these values are codified in the following bits: alpha in bits
+transforms, these values are codified in the following bits: alpha in bits
 31..24, red in bits 23..16, green in bits 15..8 and blue in bits 7..0; however,
 implementations of the format are free to use another representation internally.
 
 Broadly, a WebP lossless image contains header data, transform information, and
 actual image data. Headers contain the width and height of the image. A WebP
-lossless image can go through four different types of transformation before
-being entropy encoded. The transform information in the bitstream contains the
-data required to apply the respective inverse transforms.
+lossless image can go through four different types of transforms before being
+entropy encoded. The transform information in the bitstream contains the data
+required to apply the respective inverse transforms.
 
 
 2 Nomenclature
@@ -174,17 +174,17 @@ int version_number = ReadBits(3);
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-4 Transformations
------------------
+4 Transforms
+------------
 
-Transformations are reversible manipulations of the image data that can reduce
-the remaining symbolic entropy by modeling spatial and color correlations.
-Transformations can make the final compression more dense.
+The transforms are reversible manipulations of the image data that can reduce
+the remaining symbolic entropy by modeling spatial and color correlations. They
+can make the final compression more dense.
 
-An image can go through four types of transformations. A 1 bit indicates the
+An image can go through four types of transforms. A 1 bit indicates the
 presence of a transform. Each transform is allowed to be used only once. The
-transformations are used only for the main-level ARGB image; the subresolution
-images have no transforms, not even the 0 bit indicating the end of transforms.
+transforms are used only for the main-level ARGB image; the subresolution images
+have no transforms, not even the 0 bit indicating the end of transforms.
 
 Typically, an encoder would use these transforms to reduce the Shannon entropy
 in the residual image. Also, the transform data can be decided based on entropy
@@ -215,7 +215,10 @@ enum TransformType {
 
 The transform type is followed by the transform data. Transform data contains
 the information required to apply the inverse transform and depends on the
-transform type. Next, we describe the transform data for different types.
+transform type. The inverse transforms are applied in the reverse order that
+they are read from the bitstream, that is, last one first.
+
+Next, we describe the transform data for different types.
 
 
 ### 4.1 Predictor Transform
@@ -359,6 +362,20 @@ Addressing the TR-pixel for pixels on the rightmost column is
 exceptional. The pixels on the rightmost column are predicted by using the modes
 \[0..13\], just like pixels not on the border, but the leftmost pixel on the
 same row as the current pixel is instead used as the TR-pixel.
+
+The final pixel value is obtained by adding each channel of the predicted value
+to the encoded residual value.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void PredictorTransformOutput(uint32 residual, uint32 pred,
+                              uint8* alpha, uint8* red,
+                              uint8* green, uint8* blue) {
+  *alpha = ALPHA(residual) + ALPHA(pred);
+  *red = RED(residual) + RED(pred);
+  *green = GREEN(residual) + GREEN(pred);
+  *blue = BLUE(residual) + BLUE(pred);
+}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 ### 4.2 Color Transform
@@ -690,8 +707,7 @@ int offset = (2 + (prefix_code & 1)) << extra_bits;
 return offset + ReadBits(extra_bits) + 1;
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**Distance Mapping:**
-{:#distance-mapping}
+##### Distance Mapping
 
 As noted previously, a distance code is a number indicating the position of a
 previously seen pixel, from which the pixels are to be copied. This subsection
@@ -960,7 +976,7 @@ value:
   * If this bit is one, the image uses multiple meta prefix codes. These meta
     prefix codes are stored as an _entropy image_ (described below).
 
-**Entropy image:**
+##### Entropy Image
 
 The entropy image defines which prefix codes are used in different parts of the
 image.
@@ -979,7 +995,7 @@ where `DIV_ROUND_UP` is as defined [earlier](#predictor-transform).
 The next bits contain an entropy image of width `prefix_xsize` and height
 `prefix_ysize`.
 
-**Interpretation of Meta Prefix Codes:**
+##### Interpretation of Meta Prefix Codes
 
 The number of prefix code groups in the ARGB image can be obtained by finding
 the _largest meta prefix code_ from the entropy image:
@@ -1062,8 +1078,8 @@ means `element` is repeated exactly 5 times. `%b` represents a binary value.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 format        = RIFF-header image-header image-stream
-RIFF-header   = "RIFF" 4OCTET "WEBP" "VP8L" 4OCTET %x2F
-image-header  = image-size alpha-is-used version
+RIFF-header   = "RIFF" 4OCTET "WEBP" "VP8L" 4OCTET
+image-header  = %x2F image-size alpha-is-used version
 image-size    = 14BIT 14BIT ; width - 1, height - 1
 alpha-is-used = 1BIT
 version       = 3BIT ; 0
