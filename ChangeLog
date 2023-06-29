@@ -1,3 +1,78 @@
+e1adea50 update NEWS
+43393320 enc/*: normalize WebPEncodingSetError() calls
+287fdefe enc/*: add missing WebPEncodingSetError() calls
+c3bd7cff EncodeAlphaInternal: add missing error check
+d49cfbb3 vp8l_enc,WriteImage: add missing error check
+2e5a9ec3 muxread,MuxImageParse: add missing error checks
+ebb6f949 cmake,emscripten: explicitly set stack size
+59a2b1f9 WebPDecodeYUV: check u/v/stride/uv_stride ptrs
+8e965ccb Call png_get_channels() to see if image has alpha
+7f0a3419 update ChangeLog (tag: v1.3.1-rc1)
+bab7efbe update NEWS
+7138bf8f bump version to 1.3.1
+435b4ded update AUTHORS
+47351229 update .mailmap
+ff6c7f4e CONTRIBUTING.md: add C style / cmake-format notes
+dd530437 add .cmake-format.py
+adbe2cb1 cmake,cosmetics: apply cmake-format
+15b36508 doc/webp-container-spec: rm future codec comment
+c369c4bf doc/webp-lossless-bitstream-spec: improve link text
+1de35f47 doc/webp-container-spec: don't use 'currently'
+bb06a16e doc/webp-container-spec: prefer present tense
+9f38b71e doc/webp-lossless-bitstream-spec: prefer present tense
+7acb6b82 doc/webp-container-spec: avoid i.e. & e.g.
+4967e7cd doc/webp-lossless-bitstream-spec: avoid i.e. & e.g.
+e3366659 Merge "Do not find_package image libraries if not needed." into main
+428588ef clarify single leaf node trees and use of canonical prefix coding
+709ec152 Do not find_package image libraries if not needed.
+8dd80ef8 fuzz_utils.h: lower kFuzzPxLimit w/ASan
+8f187b9f Clean message calls in CMake
+cba30078 WebPConfig.cmake.in: use calculated include path
+6cf9a76a Merge "webp-lossless-bitstream-spec: remove use of 'dynamics'" into main
+740943b2 Merge "Specialize and optimize ITransform_SSE2 using do_two" into main
+2d547e24 Compare kFuzzPxLimit to max_num_operations
+ac42dde1 Specialize and optimize ITransform_SSE2 using do_two
+17e0ef1d webp-lossless-bitstream-spec: remove use of 'dynamics'
+ed274371 neon.h,cosmetics: clear a couple lint warnings
+3fb82947 cpu.h,cosmetics: segment defines
+0c496a4f cpu.h: add WEBP_AARCH64
+8151f388 move VP8GetCPUInfo declaration to cpu.c
+916548c2 Make kFuzzPxLimit sanitizer dependent
+4070b271 advanced_api_fuzzer: reduce scaling limit
+761f49c3 Merge "webp-lossless-bitstream-spec: add missing bits to ABNF" into main
+84d04c48 webp-lossless-bitstream-spec: add missing bits to ABNF
+0696e1a7 advanced_api_fuzzer: reduce scaling limit
+93d88aa2 Merge "deps.cmake: remove unneeded header checks" into main
+118e0035 deps.cmake: remove unneeded header checks
+4c3d7018 webp-lossless-bitstream-spec: condense normal-prefix-code
+a6a09b32 webp-lossless-bitstream-spec: fix 2 code typos
+50ac4f7c Merge "cpu.h: enable NEON w/_M_ARM64EC" into main
+4b7d7b4f Add contribution instructions
+0afbd97b cpu.h: enable NEON w/_M_ARM64EC
+349f4353 Merge changes Ibd89e56b,Ic57e7f84,I89096614 into main
+8f7513b7 upsampling_neon.c: fix WEBP_SWAP_16BIT_CSP check
+cbf624b5 advanced_api_fuzzer: reduce scaling limit
+89edfdd1 Skip slow scaling in libwebp advanced_api_fuzzer
+859f19f7 Reduce libwebp advanced_api_fuzzer threshold
+a4f04835 Merge changes Ic389aaa2,I329ccd79 into main
+1275fac8 Makefile.vc: fix img2webp link w/dynamic cfg
+2fe27bb9 img2webp: normalize help output
+24bed3d9 cwebp: reflow -near_lossless help text
+0825faa4 img2webp: add -sharp_yuv/-near_lossless
+d64e6d7d Merge "PaletteSortModifiedZeng: fix leak on error" into main
+0e12a22d Merge "EncodeAlphaInternal: clear result->bw on error" into main
+0edbb6ea PaletteSortModifiedZeng: fix leak on error
+41ffe04e Merge "Update yapf style from "chromium" to "yapf"" into main
+2d9d9265 Update yapf style from "chromium" to "yapf"
+a486d800 EncodeAlphaInternal: clear result->bw on error
+1347a32d Skip big scaled advanced_api_fuzzer
+52b6f067 Fix scaling limit in advanced_api_fuzzer.c
+73618428 Limit scaling in libwebp advanced_api_fuzzer.c
+b54d21a0 Merge "CMakeLists.txt: allow CMAKE_INSTALL_RPATH to be set empty" into main
+31c28db5 libwebp{,demux,mux}.pc.in: Requires -> Requires.private
+d9a505ff CMakeLists.txt: allow CMAKE_INSTALL_RPATH to be set empty
+bdf33d03 Merge tag 'v1.3.0'
+b5577769 update ChangeLog (tag: v1.3.0-rc1, tag: v1.3.0)
 0ba77244 update NEWS
 e763eb1e bump version to 1.3.0
 2a8686fc update AUTHORS
@@ -103,7 +178,7 @@ c626e7d5 cwebp: fix WebPPictureHasTransparency call
 866e349c Merge tag 'v1.2.4'
 c170df38 Merge "Create libsharpyuv.a in makefile.unix." into main
 9d7ff74a Create libsharpyuv.a in makefile.unix.
-0d1f1254 update ChangeLog (tag: v1.2.4, origin/1.2.4)
+0d1f1254 update ChangeLog (tag: v1.2.4)
 fcbc2d78 Merge "doc/*.txt: restrict code to 69 columns" into main
 4ad0e189 Merge "webp-container-spec.txt: normalize fourcc spelling" into main
 980d2488 update NEWS
