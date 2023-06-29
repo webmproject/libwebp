@@ -34,9 +34,26 @@ extern "C" {
 #endif /* WEBP_EXTERN */
 #endif /* SHARPYUV_EXTERN */
 
+#ifndef SHARPYUV_INLINE
+#ifdef WEBP_INLINE
+#define SHARPYUV_INLINE WEBP_INLINE
+#else
+#ifndef _MSC_VER
+#if defined(__cplusplus) || !defined(__STRICT_ANSI__) || \
+    (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L)
+#define SHARPYUV_INLINE inline
+#else
+#define SHARPYUV_INLINE
+#endif
+#else
+#define SHARPYUV_INLINE __forceinline
+#endif /* _MSC_VER */
+#endif /* WEBP_INLINE */
+#endif /* SHARPYUV_INLINE */
+
 // SharpYUV API version following the convention from semver.org
 #define SHARPYUV_VERSION_MAJOR 0
-#define SHARPYUV_VERSION_MINOR 3
+#define SHARPYUV_VERSION_MINOR 4
 #define SHARPYUV_VERSION_PATCH 0
 // Version as a uint32_t. The major number is the high 8 bits.
 // The minor number is the middle 8 bits. The patch number is the low 16 bits.
@@ -113,7 +130,7 @@ typedef enum SharpYuvTransferFunctionType {
 //     should be multiples of 2.
 // width, height: width and height of the image in pixels
 // This function calls SharpYuvConvertWithOptions with a default transfer
-// function of kSharpYuvTransferFunctionSRGB.
+// function of kSharpYuvTransferFunctionSrgb.
 SHARPYUV_EXTERN int SharpYuvConvert(const void* r_ptr, const void* g_ptr,
                                     const void* b_ptr, int rgb_step,
                                     int rgb_stride, int rgb_bit_depth,
@@ -128,6 +145,18 @@ struct SharpYuvOptions {
   const SharpYuvConversionMatrix* yuv_matrix;
   SharpYuvTransferFunctionType transfer_type;
 };
+
+// Internal, version-checked, entry point
+SHARPYUV_EXTERN int SharpYuvOptionsInitInternal(const SharpYuvConversionMatrix*,
+                                                SharpYuvOptions*, int);
+
+// Should always be called, to initialize a fresh SharpYuvOptions
+// structure before modification. SharpYuvOptionsInit() must have succeeded
+// before using the 'options' object.
+static SHARPYUV_INLINE int SharpYuvOptionsInit(
+    const SharpYuvConversionMatrix* yuv_matrix, SharpYuvOptions* options) {
+  return SharpYuvOptionsInitInternal(yuv_matrix, options, SHARPYUV_VERSION);
+}
 
 SHARPYUV_EXTERN int SharpYuvConvertWithOptions(
     const void* r_ptr, const void* g_ptr, const void* b_ptr, int rgb_step,
