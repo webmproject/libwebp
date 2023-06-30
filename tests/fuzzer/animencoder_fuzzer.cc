@@ -47,6 +47,7 @@ int AddFrame(WebPAnimEncoder** const enc,
   // Read the source picture.
   if (!ExtractSourcePicture(&pic, data, size, bit_pos)) {
     const WebPEncodingError error_code = pic.error_code;
+    WebPAnimEncoderDelete(*enc);
     WebPPictureFree(&pic);
     if (error_code == VP8_ENC_ERROR_OUT_OF_MEMORY) return 0;
     fprintf(stderr, "Can't read input image. Error code: %d\n", error_code);
