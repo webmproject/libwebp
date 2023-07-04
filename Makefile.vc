@@ -336,6 +336,7 @@ UTILS_DEC_OBJS = \
     $(DIROBJ)\utils\color_cache_utils.obj \
     $(DIROBJ)\utils\filters_utils.obj \
     $(DIROBJ)\utils\huffman_utils.obj \
+    $(DIROBJ)\utils\palette.obj \
     $(DIROBJ)\utils\quant_levels_dec_utils.obj \
     $(DIROBJ)\utils\rescaler_utils.obj \
     $(DIROBJ)\utils\random_utils.obj \
