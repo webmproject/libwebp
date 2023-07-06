@@ -164,7 +164,10 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* const data, size_t size) {
   }
   WebPData webp_data;
   WebPDataInit(&webp_data);
-  if (!WebPAnimEncoderAssemble(enc, &webp_data)) {
+  // Tolerate failures when running under the nallocfuzz engine as allocations
+  // during assembly may fail.
+  if (!WebPAnimEncoderAssemble(enc, &webp_data) &&
+      getenv("NALLOC_FUZZ_VERSION") == nullptr) {
     fprintf(stderr, "WebPAnimEncoderAssemble failed: %s.\n",
             WebPAnimEncoderGetError(enc));
     WebPAnimEncoderDelete(enc);
