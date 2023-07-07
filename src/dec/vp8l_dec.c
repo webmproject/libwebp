@@ -378,7 +378,7 @@ static int ReadHuffmanCodes(VP8LDecoder* const dec, int xsize, int ysize,
     const int huffman_xsize = VP8LSubSampleSize(xsize, huffman_precision);
     const int huffman_ysize = VP8LSubSampleSize(ysize, huffman_precision);
     const int huffman_pixs = huffman_xsize * huffman_ysize;
-    if (!DecodeImageStream(huffman_xsize, huffman_ysize, 0, dec,
+    if (!DecodeImageStream(huffman_xsize, huffman_ysize, /*is_level0=*/0, dec,
                            &huffman_image)) {
       goto Error;
     }
@@ -1322,7 +1322,7 @@ static int ReadTransform(int* const xsize, int const* ysize,
                                                transform->bits_),
                              VP8LSubSampleSize(transform->ysize_,
                                                transform->bits_),
-                             0, dec, &transform->data_);
+                             /*is_level0=*/0, dec, &transform->data_);
       break;
     case COLOR_INDEXING_TRANSFORM: {
        const int num_colors = VP8LReadBits(br, 8) + 1;
@@ -1332,7 +1332,8 @@ static int ReadTransform(int* const xsize, int const* ysize,
                       : 3;
        *xsize = VP8LSubSampleSize(transform->xsize_, bits);
        transform->bits_ = bits;
-       ok = DecodeImageStream(num_colors, 1, 0, dec, &transform->data_);
+       ok = DecodeImageStream(num_colors, /*ysize=*/1, /*is_level0=*/0, dec,
+                              &transform->data_);
        ok = ok && ExpandColorMap(num_colors, transform);
       break;
     }
@@ -1588,7 +1589,8 @@ int VP8LDecodeAlphaHeader(ALPHDecoder* const alph_dec,
   dec->status_ = VP8_STATUS_OK;
   VP8LInitBitReader(&dec->br_, data, data_size);
 
-  if (!DecodeImageStream(alph_dec->width_, alph_dec->height_, 1, dec, NULL)) {
+  if (!DecodeImageStream(alph_dec->width_, alph_dec->height_, /*is_level0=*/1,
+                         dec, /*decoded_data=*/NULL)) {
     goto Err;
   }
 
@@ -1658,7 +1660,10 @@ int VP8LDecodeHeader(VP8LDecoder* const dec, VP8Io* const io) {
   io->width = width;
   io->height = height;
 
-  if (!DecodeImageStream(width, height, 1, dec, NULL)) goto Error;
+  if (!DecodeImageStream(width, height, /*is_level0=*/1, dec,
+                         /*decoded_data=*/NULL)) {
+    goto Error;
+  }
   return 1;
 
  Error:
