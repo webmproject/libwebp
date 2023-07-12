@@ -366,7 +366,8 @@ static int ReadHuffmanCodes(VP8LDecoder* const dec, int xsize, int ysize,
   HuffmanCode* huffman_table = NULL;
   int num_htree_groups = 1;
   int num_htree_groups_max = 1;
-  int max_alphabet_size = 0;
+  const int max_alphabet_size =
+      kAlphabetSize[0] + ((color_cache_bits > 0) ? 1 << color_cache_bits : 0);
   int* code_lengths = NULL;
   const int table_size = kTableSize[color_cache_bits];
   int* mapping = NULL;
@@ -420,17 +421,6 @@ static int ReadHuffmanCodes(VP8LDecoder* const dec, int xsize, int ysize,
   }
 
   if (br->eos_) goto Error;
-
-  // Find maximum alphabet size for the htree group.
-  for (j = 0; j < HUFFMAN_CODES_PER_META_CODE; ++j) {
-    int alphabet_size = kAlphabetSize[j];
-    if (j == 0 && color_cache_bits > 0) {
-      alphabet_size += 1 << color_cache_bits;
-    }
-    if (max_alphabet_size < alphabet_size) {
-      max_alphabet_size = alphabet_size;
-    }
-  }
 
   code_lengths = (int*)WebPSafeCalloc((uint64_t)max_alphabet_size,
                                       sizeof(*code_lengths));
