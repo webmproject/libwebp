@@ -925,13 +925,23 @@ for (i = 0; i < num_code_lengths; ++i) {
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Next, if `ReadBits(1) == 0`, the maximum number of different read symbols is
-`num_code_lengths`. Otherwise, it is defined as:
+Next, if `ReadBits(1) == 0`, the maximum number of different read symbols
+(`max_symbol`) for each symbol type (A, R, G, B, and distance) is set to its
+alphabet size:
+
+  * G channel: 256 + 24 + `color_cache_size`
+  * Other literals (A, R, and B): 256
+  * Distance code: 40
+
+Otherwise, it is defined as:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 int length_nbits = 2 + 2 * ReadBits(3);
 int max_symbol = 2 + ReadBits(length_nbits);
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If `max_symbol` is larger than the size of the alphabet for the symbol type, the
+bitstream is invalid.
 
 A prefix table is then built from `code_length_code_lengths` and used to read up
 to `max_symbol` code lengths.
@@ -948,11 +958,7 @@ to `max_symbol` code lengths.
     `11 + ReadBits(7)` times.
 
 Once code lengths are read, a prefix code for each symbol type (A, R, G, B, and
-distance) is formed using their respective alphabet sizes:
-
-  * G channel: 256 + 24 + `color_cache_size`
-  * Other literals (A, R, and B): 256
-  * Distance code: 40
+distance) is formed using their respective alphabet sizes.
 
 The Normal Code Length Code must code a full decision tree, that is, the sum of
 `2 ^ (-length)` for all non-zero codes must be exactly one. There is however
