@@ -1062,9 +1062,9 @@ The interpretation of S depends on its value:
 7 Overall Structure of the Format
 ---------------------------------
 
-Below is a view into the format in Augmented Backus-Naur Form ([ABNF]). It does
-not cover all details. The end-of-image (EOI) is only implicitly coded into the
-number of pixels (xsize * ysize).
+Below is a view into the format in Augmented Backus-Naur Form (ABNF)
+[RFC 5234][] [RFC 7405][]. It does not cover all details. The end-of-image (EOI)
+is only implicitly coded into the number of pixels (xsize * ysize).
 
 Note that `*element` means `element` can be repeated 0 or more times. `5element`
 means `element` is repeated exactly 5 times. `%b` represents a binary value.
@@ -1073,7 +1073,7 @@ means `element` is repeated exactly 5 times. `%b` represents a binary value.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 format        = RIFF-header image-header image-stream
-RIFF-header   = "RIFF" 4OCTET "WEBP" "VP8L" 4OCTET
+RIFF-header   = %s"RIFF" 4OCTET %s"WEBPVP8L" 4OCTET
 image-header  = %x2F image-size alpha-is-used version
 image-size    = 14BIT 14BIT ; width - 1, height - 1
 alpha-is-used = 1BIT
@@ -1140,5 +1140,6 @@ RIFF-header image-size %b1 subtract-green-tx
 %b0 prefix-codes lz77-coded-image
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-[ABNF]: https://www.rfc-editor.org/rfc/rfc5234
+[RFC 5234]: https://www.rfc-editor.org/rfc/rfc5234
+[RFC 7405]: https://www.rfc-editor.org/rfc/rfc7405
 [canonical_huff]: https://en.wikipedia.org/wiki/Canonical_Huffman_code
