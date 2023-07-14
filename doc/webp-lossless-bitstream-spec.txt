@@ -31,7 +31,6 @@ as 25% denser compression than can be achieved using today's PNG format.
 * TOC placeholder
 {:toc}
 
-
 1 Introduction
 --------------
 
@@ -72,7 +71,6 @@ actual image data. Headers contain the width and height of the image. A WebP
 lossless image can go through four different types of transforms before being
 entropy encoded. The transform information in the bitstream contains the data
 required to apply the respective inverse transforms.
-
 
 2 Nomenclature
 --------------
@@ -173,7 +171,6 @@ be treated as an error.
 int version_number = ReadBits(3);
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
 4 Transforms
 ------------
 
@@ -219,7 +216,6 @@ transform type. The inverse transforms are applied in the reverse order that
 they are read from the bitstream, that is, last one first.
 
 Next, we describe the transform data for different types.
-
 
 ### 4.1 Predictor Transform
 
@@ -377,7 +373,6 @@ void PredictorTransformOutput(uint32 residual, uint32 pred,
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
 ### 4.2 Color Transform
 
 The goal of the color transform is to decorrelate the R, G, and B values of each
@@ -483,7 +478,6 @@ void InverseTransform(uint8 red, uint8 green, uint8 blue,
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
 ### 4.3 Subtract Green Transform
 
 The subtract green transform subtracts green values from red and blue values of
@@ -501,7 +495,6 @@ void AddGreenToBlueAndRed(uint8 green, uint8 *red, uint8 *blue) {
 This transform is redundant, as it can be modeled using the color transform, but
 since there is no additional data here, the subtract green transform can be
 coded using fewer bits than a full-blown color transform.
-
 
 ### 4.4 Color Indexing Transform
 
@@ -590,7 +583,6 @@ The values are packed into the green component as follows:
     value at x is positioned into the least significant bit of the green
     value at x / 8, and green values at x + 1 to x + 7 are positioned in order
     to the more significant bits of the green value at x / 8.
-
 
 5 Image Data
 ------------
@@ -769,7 +761,6 @@ if (dist < 1) {
 where `distance_map` is the mapping noted above, and `xsize` is the width of the
 image in pixels.
 
-
 #### 5.2.3 Color Cache Coding
 {:#color-cache-code}
 
@@ -805,7 +796,6 @@ cache values are set to zero. The color cache code is converted to this color at
 decoding time. The state of the color cache is maintained by inserting every
 pixel, be it produced by backward referencing or as literals, into the cache in
 the order they appear in the stream.
-
 
 6 Entropy Code
 --------------
@@ -1069,7 +1059,6 @@ The interpretation of S depends on its value:
      1. Use S - (256 + 24) as the index into the color cache.
      1. Get ARGB color from the color cache at that index.
 
-
 7 Overall Structure of the Format
 ---------------------------------
 
@@ -1092,7 +1081,6 @@ version       = 3BIT ; 0
 image-stream  = optional-transform spatially-coded-image
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
 #### 7.2 Structure of Transforms
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1114,7 +1102,6 @@ color-indexing-tx    =  %b11 color-indexing-image
 color-indexing-image =  8BIT ; color count
                         entropy-coded-image
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 
 #### 7.3 Structure of the Image Data
 
