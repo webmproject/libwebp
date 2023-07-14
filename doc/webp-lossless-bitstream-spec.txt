@@ -408,9 +408,9 @@ void ColorTransform(uint8 red, uint8 blue, uint8 green,
   int tmp_blue = blue;
 
   // Applying the transform is just subtracting the transform deltas
-  tmp_red  -= ColorTransformDelta(trans->green_to_red_,  green);
-  tmp_blue -= ColorTransformDelta(trans->green_to_blue_, green);
-  tmp_blue -= ColorTransformDelta(trans->red_to_blue_, red);
+  tmp_red  -= ColorTransformDelta(trans->green_to_red,  green);
+  tmp_blue -= ColorTransformDelta(trans->green_to_blue, green);
+  tmp_blue -= ColorTransformDelta(trans->red_to_blue, red);
 
   *new_red = tmp_red & 0xff;
   *new_blue = tmp_blue & 0xff;
