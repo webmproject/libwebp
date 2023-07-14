@@ -181,7 +181,8 @@ can make the final compression more dense.
 An image can go through four types of transforms. A 1 bit indicates the
 presence of a transform. Each transform is allowed to be used only once. The
 transforms are used only for the main-level ARGB image; the subresolution images
-have no transforms, not even the 0 bit indicating the end of transforms.
+(color transform image, entropy image, and predictor image) have no transforms,
+not even the 0 bit indicating the end of transforms.
 
 Typically, an encoder would use these transforms to reduce the Shannon entropy
 in the residual image. Also, the transform data can be decided based on entropy
@@ -222,9 +223,11 @@ Next, we describe the transform data for different types.
 The predictor transform can be used to reduce entropy by exploiting the fact
 that neighboring pixels are often correlated. In the predictor transform, the
 current pixel value is predicted from the pixels already decoded (in scan-line
-order) and only the residual value (actual - predicted) is encoded. The
-_prediction mode_ determines the type of prediction to use. We divide the image
-into squares, and all the pixels in a square use the same prediction mode.
+order) and only the residual value (actual - predicted) is encoded. The green
+component of a pixel defines which of the 14 predictors is used within a
+particular block of the ARGB image. The _prediction mode_ determines the type of
+prediction to use. We divide the image into squares, and all the pixels in a
+square use the same prediction mode.
 
 The first 3 bits of prediction data define the block width and height in number
 of bits. The number of block columns, `block_xsize`, is used in two-dimension
@@ -238,10 +241,11 @@ int block_height = (1 << size_bits);
 int block_xsize = DIV_ROUND_UP(image_width, 1 << size_bits);
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The transform data contains the prediction mode for each block of the image. All
-the `block_width * block_height` pixels of a block use the same prediction mode.
-The prediction modes are treated as pixels of an image and encoded using the
-same techniques described in [Chapter 5](#image-data).
+The transform data contains the prediction mode for each block of the image. It
+is a subresolution image where the green component of a pixel defines which of
+the 14 predictors is used for all the `block_width * block_height` pixels within
+a particular block of the ARGB image. This subresolution image is encoded using
+the same techniques described in [Chapter 5](#image-data).
 
 For a pixel _x, y_, one can compute the respective filter block address by:
 
@@ -449,14 +453,16 @@ int block_height = 1 << size_bits;
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The remaining part of the color transform data contains `ColorTransformElement`
-instances, corresponding to each block of the image. `ColorTransformElement`
-instances are treated as pixels of an image and encoded using the methods
-described in [Chapter 5](#image-data).
+instances, corresponding to each block of the image. Each
+`ColorTransformElement` `'cte'` is treated as a pixel in a subresolution image
+whose alpha component is `255`, red component is `cte.red_to_blue`, green
+component is `cte.green_to_blue`, and blue component is `cte.green_to_red`.
 
 During decoding, `ColorTransformElement` instances of the blocks are decoded and
 the inverse color transform is applied on the ARGB values of the pixels. As
 mentioned earlier, that inverse color transform is just adding
-`ColorTransformElement` values to the red and blue channels.
+`ColorTransformElement` values to the red and blue channels. The alpha and green
+channels are left as is.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void InverseTransform(uint8 red, uint8 green, uint8 blue,
@@ -603,22 +609,15 @@ We use image data in five different roles:
 
   1. ARGB image: Stores the actual pixels of the image.
   1. Entropy image: Stores the
-     [meta prefix codes](#decoding-of-meta-prefix-codes). The red and green
-     components of a pixel define the meta prefix code used in a particular
-     block of the ARGB image.
+     [meta prefix codes](#decoding-of-meta-prefix-codes).
   1. Predictor image: Stores the metadata for the
-     [predictor transform](#predictor-transform). The green component of a pixel
-     defines which of the 14 predictors is used within a particular block of the
-     ARGB image.
+     [predictor transform](#predictor-transform).
   1. Color transform image: Created by `ColorTransformElement` values
      (defined in ["Color Transform"](#color-transform)) for different blocks of
-     the image. Each `ColorTransformElement` `'cte'` is treated as a pixel whose
-     alpha component is `255`, red component is `cte.red_to_blue`, green
-     component is `cte.green_to_blue`, and blue component is `cte.green_to_red`.
+     the image.
   1. Color indexing image: An array of size `color_table_size` (up to 256
      ARGB values) storing the metadata for the
-     [color indexing transform](#color-indexing-transform). This is stored as an
-     image of width `color_table_size` and height `1`.
+     [color indexing transform](#color-indexing-transform).
 
 ### 5.2 Encoding of Image Data
 
@@ -979,6 +978,9 @@ value:
     the image. No more data is stored.
   * If this bit is one, the image uses multiple meta prefix codes. These meta
     prefix codes are stored as an _entropy image_ (described below).
+
+The red and green components of a pixel define a 16-bit meta prefix code used in
+a particular block of the ARGB image.
 
 ##### Entropy Image
 
