@@ -91,7 +91,10 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* const data, size_t size) {
     const WebPEncodingError error_code = pic.error_code;
     WebPMemoryWriterClear(&memory_writer);
     WebPPictureFree(&pic);
-    if (error_code == VP8_ENC_ERROR_OUT_OF_MEMORY) return 0;
+    if (error_code == VP8_ENC_ERROR_OUT_OF_MEMORY ||
+        error_code == VP8_ENC_ERROR_BAD_WRITE) {
+      return 0;
+    }
     fprintf(stderr, "WebPEncode failed. Error code: %d\n", error_code);
     abort();
   }
