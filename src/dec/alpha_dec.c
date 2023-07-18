@@ -146,7 +146,8 @@ static int AllocateAlphaPlane(VP8Decoder* const dec, const VP8Io* const io) {
   dec->alpha_plane_mem_ =
       (uint8_t*)WebPSafeMalloc(alpha_size, sizeof(*dec->alpha_plane_));
   if (dec->alpha_plane_mem_ == NULL) {
-    return 0;
+    return VP8SetError(dec, VP8_STATUS_OUT_OF_MEMORY,
+                       "Alpha decoder initialization failed.");
   }
   dec->alpha_plane_ = dec->alpha_plane_mem_;
   dec->alpha_prev_line_ = NULL;
@@ -180,10 +181,19 @@ const uint8_t* VP8DecompressAlphaRows(VP8Decoder* const dec,
   if (!dec->is_alpha_decoded_) {
     if (dec->alph_dec_ == NULL) {    // Initialize decoder.
       dec->alph_dec_ = ALPHNew();
-      if (dec->alph_dec_ == NULL) return NULL;
+      if (dec->alph_dec_ == NULL) {
+        VP8SetError(dec, VP8_STATUS_OUT_OF_MEMORY,
+                    "Alpha decoder initialization failed.");
+        return NULL;
+      }
       if (!AllocateAlphaPlane(dec, io)) goto Error;
       if (!ALPHInit(dec->alph_dec_, dec->alpha_data_, dec->alpha_data_size_,
                     io, dec->alpha_plane_)) {
+        VP8LDecoder* const vp8l_dec = dec->alph_dec_->vp8l_dec_;
+        VP8SetError(dec,
+                    (vp8l_dec == NULL) ? VP8_STATUS_OUT_OF_MEMORY
+                                       : vp8l_dec->status_,
+                    "Alpha decoder initialization failed.");
         goto Error;
       }
       // if we allowed use of alpha dithering, check whether it's needed at all
