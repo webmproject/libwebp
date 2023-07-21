@@ -109,7 +109,14 @@ int AddFrame(WebPAnimEncoder** const enc,
     const WebPEncodingError error_code = pic.error_code;
     WebPAnimEncoderDelete(*enc);
     WebPPictureFree(&pic);
-    if (error_code == VP8_ENC_ERROR_OUT_OF_MEMORY) return 0;
+    // Tolerate failures when running under the nallocfuzz engine as
+    // WebPAnimEncoderAdd() may fail due to memory allocation errors outside of
+    // the encoder; in muxer functions that return booleans for instance.
+    if (error_code == VP8_ENC_ERROR_OUT_OF_MEMORY ||
+        error_code == VP8_ENC_ERROR_BAD_WRITE ||
+        getenv("NALLOC_FUZZ_VERSION") != nullptr) {
+      return 0;
+    }
     fprintf(stderr, "WebPEncode failed. Error code: %d\n", error_code);
     abort();
   }
