@@ -101,6 +101,14 @@ static const uint16_t kTableSize[12] = {
   FIXED_TABLE_SIZE + 2704
 };
 
+static int VP8LSetError(VP8LDecoder* const dec, VP8StatusCode error) {
+  // The oldest error reported takes precedence over the new one.
+  if (dec->status_ == VP8_STATUS_OK || dec->status_ == VP8_STATUS_SUSPENDED) {
+    dec->status_ = error;
+  }
+  return 0;
+}
+
 static int DecodeImageStream(int xsize, int ysize,
                              int is_level0,
                              VP8LDecoder* const dec,
@@ -300,7 +308,7 @@ static int ReadHuffmanCodeLengths(
   ok = 1;
 
  End:
-  if (!ok) dec->status_ = VP8_STATUS_BITSTREAM_ERROR;
+  if (!ok) return VP8LSetError(dec, VP8_STATUS_BITSTREAM_ERROR);
   return ok;
 }
 
@@ -332,8 +340,7 @@ static int ReadHuffmanCode(int alphabet_size, VP8LDecoder* const dec,
     int code_length_code_lengths[NUM_CODE_LENGTH_CODES] = { 0 };
     const int num_codes = VP8LReadBits(br, 4) + 4;
     if (num_codes > NUM_CODE_LENGTH_CODES) {
-      dec->status_ = VP8_STATUS_BITSTREAM_ERROR;
-      return 0;
+      return VP8LSetError(dec, VP8_STATUS_BITSTREAM_ERROR);
     }
 
     for (i = 0; i < num_codes; ++i) {
@@ -349,8 +356,7 @@ static int ReadHuffmanCode(int alphabet_size, VP8LDecoder* const dec,
                                  code_lengths, alphabet_size);
   }
   if (!ok || size == 0) {
-    dec->status_ = VP8_STATUS_BITSTREAM_ERROR;
-    return 0;
+    return VP8LSetError(dec, VP8_STATUS_BITSTREAM_ERROR);
   }
   return size;
 }
@@ -403,7 +409,7 @@ static int ReadHuffmanCodes(VP8LDecoder* const dec, int xsize, int ysize,
       // values [0, num_htree_groups)
       mapping = (int*)WebPSafeMalloc(num_htree_groups_max, sizeof(*mapping));
       if (mapping == NULL) {
-        dec->status_ = VP8_STATUS_OUT_OF_MEMORY;
+        VP8LSetError(dec, VP8_STATUS_OUT_OF_MEMORY);
         goto Error;
       }
       // -1 means a value is unmapped, and therefore unused in the Huffman
@@ -429,7 +435,7 @@ static int ReadHuffmanCodes(VP8LDecoder* const dec, int xsize, int ysize,
   htree_groups = VP8LHtreeGroupsNew(num_htree_groups);
 
   if (htree_groups == NULL || code_lengths == NULL || huffman_tables == NULL) {
-    dec->status_ = VP8_STATUS_OUT_OF_MEMORY;
+    VP8LSetError(dec, VP8_STATUS_OUT_OF_MEMORY);
     goto Error;
   }
 
@@ -537,8 +543,7 @@ static int AllocateAndInitRescaler(VP8LDecoder* const dec, VP8Io* const io) {
                                scaled_data_size * sizeof(*scaled_data);
   uint8_t* memory = (uint8_t*)WebPSafeMalloc(memory_size, sizeof(*memory));
   if (memory == NULL) {
-    dec->status_ = VP8_STATUS_OUT_OF_MEMORY;
-    return 0;
+    return VP8LSetError(dec, VP8_STATUS_OUT_OF_MEMORY);
   }
   assert(dec->rescaler_memory == NULL);
   dec->rescaler_memory = memory;
@@ -1072,12 +1077,10 @@ static int DecodeAlphaData(VP8LDecoder* const dec, uint8_t* const data,
  End:
   br->eos_ = VP8LIsEndOfStream(br);
   if (!ok || (br->eos_ && pos < end)) {
-    ok = 0;
-    dec->status_ = br->eos_ ? VP8_STATUS_SUSPENDED
-                            : VP8_STATUS_BITSTREAM_ERROR;
-  } else {
-    dec->last_pixel_ = pos;
+    return VP8LSetError(
+        dec, br->eos_ ? VP8_STATUS_SUSPENDED : VP8_STATUS_BITSTREAM_ERROR);
   }
+  dec->last_pixel_ = pos;
   return ok;
 }
 
@@ -1244,8 +1247,7 @@ static int DecodeImageData(VP8LDecoder* const dec, uint32_t* const data,
   return 1;
 
  Error:
-  dec->status_ = VP8_STATUS_BITSTREAM_ERROR;
-  return 0;
+  return VP8LSetError(dec, VP8_STATUS_BITSTREAM_ERROR);
 }
 
 // -----------------------------------------------------------------------------
@@ -1430,7 +1432,7 @@ static int DecodeImageStream(int xsize, int ysize,
     color_cache_bits = VP8LReadBits(br, 4);
     ok = (color_cache_bits >= 1 && color_cache_bits <= MAX_CACHE_BITS);
     if (!ok) {
-      dec->status_ = VP8_STATUS_BITSTREAM_ERROR;
+      VP8LSetError(dec, VP8_STATUS_BITSTREAM_ERROR);
       goto End;
     }
   }
@@ -1439,7 +1441,7 @@ static int DecodeImageStream(int xsize, int ysize,
   ok = ok && ReadHuffmanCodes(dec, transform_xsize, transform_ysize,
                               color_cache_bits, is_level0);
   if (!ok) {
-    dec->status_ = VP8_STATUS_BITSTREAM_ERROR;
+    VP8LSetError(dec, VP8_STATUS_BITSTREAM_ERROR);
     goto End;
   }
 
@@ -1447,8 +1449,7 @@ static int DecodeImageStream(int xsize, int ysize,
   if (color_cache_bits > 0) {
     hdr->color_cache_size_ = 1 << color_cache_bits;
     if (!VP8LColorCacheInit(&hdr->color_cache_, color_cache_bits)) {
-      dec->status_ = VP8_STATUS_OUT_OF_MEMORY;
-      ok = 0;
+      ok = VP8LSetError(dec, VP8_STATUS_OUT_OF_MEMORY);
       goto End;
     }
   } else {
@@ -1465,8 +1466,7 @@ static int DecodeImageStream(int xsize, int ysize,
     const uint64_t total_size = (uint64_t)transform_xsize * transform_ysize;
     data = (uint32_t*)WebPSafeMalloc(total_size, sizeof(*data));
     if (data == NULL) {
-      dec->status_ = VP8_STATUS_OUT_OF_MEMORY;
-      ok = 0;
+      ok = VP8LSetError(dec, VP8_STATUS_OUT_OF_MEMORY);
       goto End;
     }
   }
@@ -1511,8 +1511,7 @@ static int AllocateInternalBuffers32b(VP8LDecoder* const dec, int final_width) {
   dec->pixels_ = (uint32_t*)WebPSafeMalloc(total_num_pixels, sizeof(uint32_t));
   if (dec->pixels_ == NULL) {
     dec->argb_cache_ = NULL;    // for soundness
-    dec->status_ = VP8_STATUS_OUT_OF_MEMORY;
-    return 0;
+    return VP8LSetError(dec, VP8_STATUS_OUT_OF_MEMORY);
   }
   dec->argb_cache_ = dec->pixels_ + num_pixels + cache_top_pixels;
   return 1;
@@ -1523,8 +1522,7 @@ static int AllocateInternalBuffers8b(VP8LDecoder* const dec) {
   dec->argb_cache_ = NULL;    // for soundness
   dec->pixels_ = (uint32_t*)WebPSafeMalloc(total_num_pixels, sizeof(uint8_t));
   if (dec->pixels_ == NULL) {
-    dec->status_ = VP8_STATUS_OUT_OF_MEMORY;
-    return 0;
+    return VP8LSetError(dec, VP8_STATUS_OUT_OF_MEMORY);
   }
   return 1;
 }
@@ -1635,15 +1633,14 @@ int VP8LDecodeHeader(VP8LDecoder* const dec, VP8Io* const io) {
 
   if (dec == NULL) return 0;
   if (io == NULL) {
-    dec->status_ = VP8_STATUS_INVALID_PARAM;
-    return 0;
+    return VP8LSetError(dec, VP8_STATUS_INVALID_PARAM);
   }
 
   dec->io_ = io;
   dec->status_ = VP8_STATUS_OK;
   VP8LInitBitReader(&dec->br_, io->data, io->data_size);
   if (!ReadImageInfo(&dec->br_, &width, &height, &has_alpha)) {
-    dec->status_ = VP8_STATUS_BITSTREAM_ERROR;
+    VP8LSetError(dec, VP8_STATUS_BITSTREAM_ERROR);
     goto Error;
   }
   dec->state_ = READ_DIM;
@@ -1683,7 +1680,7 @@ int VP8LDecodeImage(VP8LDecoder* const dec) {
     assert(dec->output_ != NULL);
 
     if (!WebPIoInitFromOptions(params->options, io, MODE_BGRA)) {
-      dec->status_ = VP8_STATUS_INVALID_PARAM;
+      VP8LSetError(dec, VP8_STATUS_INVALID_PARAM);
       goto Err;
     }
 
@@ -1693,7 +1690,7 @@ int VP8LDecodeImage(VP8LDecoder* const dec) {
     if (io->use_scaling && !AllocateAndInitRescaler(dec, io)) goto Err;
 #else
     if (io->use_scaling) {
-      dec->status_ = VP8_STATUS_INVALID_PARAM;
+      VP8LSetError(dec, VP8_STATUS_INVALID_PARAM);
       goto Err;
     }
 #endif
@@ -1711,7 +1708,7 @@ int VP8LDecodeImage(VP8LDecoder* const dec) {
           dec->hdr_.saved_color_cache_.colors_ == NULL) {
         if (!VP8LColorCacheInit(&dec->hdr_.saved_color_cache_,
                                 dec->hdr_.color_cache_.hash_bits_)) {
-          dec->status_ = VP8_STATUS_OUT_OF_MEMORY;
+          VP8LSetError(dec, VP8_STATUS_OUT_OF_MEMORY);
           goto Err;
         }
       }
