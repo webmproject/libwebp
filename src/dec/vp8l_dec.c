@@ -1326,7 +1326,9 @@ static int ReadTransform(int* const xsize, int const* ysize,
        transform->bits_ = bits;
        ok = DecodeImageStream(num_colors, /*ysize=*/1, /*is_level0=*/0, dec,
                               &transform->data_);
-       ok = ok && ExpandColorMap(num_colors, transform);
+       if (ok && !ExpandColorMap(num_colors, transform)) {
+         return VP8LSetError(dec, VP8_STATUS_OUT_OF_MEMORY);
+       }
       break;
     }
     case SUBTRACT_GREEN_TRANSFORM:
