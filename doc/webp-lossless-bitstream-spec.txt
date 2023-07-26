@@ -136,8 +136,8 @@ The beginning of the header has the RIFF container. This consists of the
 following 21 bytes:
 
    1. String 'RIFF'.
-   2. A little-endian, 32-bit value of the block length, which is the whole size
-      of the block controlled by the RIFF header. Normally, this equals
+   2. A little-endian, 32-bit value of the chunk length, which is the whole size
+      of the chunk controlled by the RIFF header. Normally, this equals
       the payload size (file size minus 8 bytes: 4 bytes for the 'RIFF'
       identifier and 4 bytes for storing the value itself).
    3. String 'WEBP' (RIFF container name).
