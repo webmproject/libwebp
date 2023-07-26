@@ -58,12 +58,12 @@ b = ReadBits(1);
 b |= ReadBits(1) << 1;
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-We assume that each color component, that is, alpha, red, blue and green, is
+We assume that each color component, that is, alpha, red, blue, and green, is
 represented using an 8-bit byte. We define the corresponding type as uint8. A
 whole ARGB pixel is represented by a type called uint32, which is an unsigned
 integer consisting of 32 bits. In the code showing the behavior of the
 transforms, these values are codified in the following bits: alpha in bits
-31..24, red in bits 23..16, green in bits 15..8 and blue in bits 7..0; however,
+31..24, red in bits 23..16, green in bits 15..8, and blue in bits 7..0; however,
 implementations of the format are free to use another representation internally.
 
 Broadly, a WebP lossless image contains header data, transform information, and
@@ -592,7 +592,7 @@ The values are packed into the green component as follows:
 
 After reading this transform, `image_width` is subsampled by `width_bits`. This
 affects the size of subsequent transforms. The new size can be calculated using
-`DIV_ROUND_UP` as defined [earlier](#predictor-transform).
+`DIV_ROUND_UP`, as defined [earlier](#predictor-transform).
 
 ```
 image_width = DIV_ROUND_UP(image_width, 1 << width_bits);
