@@ -267,7 +267,7 @@ typedef struct {
 
 // +2 because we add a palette sorting configuration for kPalette and
 // kPaletteAndSpatial.
-#define CRUNCH_CONFIGS_MAX (kNumEntropyIx + 2)
+#define CRUNCH_CONFIGS_MAX (kNumEntropyIx + 2 * kPaletteSortingNum)
 
 static int EncoderAnalyze(VP8LEncoder* const enc,
                           CrunchConfig crunch_configs[CRUNCH_CONFIGS_MAX],
@@ -324,20 +324,28 @@ static int EncoderAnalyze(VP8LEncoder* const enc,
         // a palette.
         if ((i != kPalette && i != kPaletteAndSpatial) || use_palette) {
           assert(*crunch_configs_size < CRUNCH_CONFIGS_MAX);
-          crunch_configs[(*crunch_configs_size)].entropy_idx_ = i;
           if (use_palette && (i == kPalette || i == kPaletteAndSpatial)) {
-            crunch_configs[(*crunch_configs_size)].palette_sorting_type_ =
-                kMinimizeDelta;
-            ++*crunch_configs_size;
-            // Also add modified Zeng's method.
+            for (int sorting_method = 0; sorting_method < kPaletteSortingNum;
+                 ++sorting_method) {
+              const PaletteSorting typed_sorting_method =
+                  (PaletteSorting)sorting_method;
+              // TODO(vrabaud) kSortedDefault should be tested. It is omitted
+              // for now for backward compatibility.
+              if (typed_sorting_method == kUnusedPalette ||
+                  typed_sorting_method == kSortedDefault) {
+                continue;
+              }
+              crunch_configs[(*crunch_configs_size)].entropy_idx_ = i;
+              crunch_configs[(*crunch_configs_size)].palette_sorting_type_ =
+                  typed_sorting_method;
+              ++*crunch_configs_size;
+            }
+          } else {
             crunch_configs[(*crunch_configs_size)].entropy_idx_ = i;
             crunch_configs[(*crunch_configs_size)].palette_sorting_type_ =
-                kModifiedZeng;
-          } else {
-            crunch_configs[(*crunch_configs_size)].palette_sorting_type_ =
                 kUnusedPalette;
+            ++*crunch_configs_size;
           }
-          ++*crunch_configs_size;
         }
       }
     } else {
@@ -1544,20 +1552,11 @@ static int EncodeStreamHook(void* input, void* data2) {
 
     // Encode palette
     if (enc->use_palette_) {
-      if (crunch_configs[idx].palette_sorting_type_ == kSortedDefault) {
-        // Nothing to do, we have already sorted the palette.
-        memcpy(enc->palette_, enc->palette_sorted_,
-               enc->palette_size_ * sizeof(*enc->palette_));
-      } else if (crunch_configs[idx].palette_sorting_type_ == kMinimizeDelta) {
-        PaletteSortMinimizeDeltas(enc->palette_sorted_, enc->palette_size_,
-                                  enc->palette_);
-      } else {
-        assert(crunch_configs[idx].palette_sorting_type_ == kModifiedZeng);
-        if (!PaletteSortModifiedZeng(enc->pic_, enc->palette_sorted_,
-                                     enc->palette_size_, enc->palette_)) {
-          WebPEncodingSetError(enc->pic_, VP8_ENC_ERROR_OUT_OF_MEMORY);
-          goto Error;
-        }
+      if (!PaletteSort(crunch_configs[idx].palette_sorting_type_, enc->pic_,
+                       enc->palette_sorted_, enc->palette_size_,
+                       enc->palette_)) {
+        WebPEncodingSetError(enc->pic_, VP8_ENC_ERROR_OUT_OF_MEMORY);
+        goto Error;
       }
       percent_range = remaining_percent / 4;
       if (!EncodePalette(bw, low_effort, enc, percent_range, &percent)) {

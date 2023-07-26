@@ -21,9 +21,15 @@ struct WebPPicture;
 // The different ways a palette can be sorted.
 typedef enum PaletteSorting {
   kSortedDefault = 0,
+  // Sorts by minimizing L1 deltas between consecutive colors, giving more
+  // weight to RGB colors.
   kMinimizeDelta = 1,
+  // Implements the modified Zeng method from "A Survey on Palette Reordering
+  // Methods for Improving the Compression of Color-Indexed Images" by Armando
+  // J. Pinho and Antonio J. R. Neves.
   kModifiedZeng = 2,
-  kUnusedPalette = 3
+  kUnusedPalette = 3,
+  kPaletteSortingNum = 4
 } PaletteSorting;
 
 // Returns the index of 'color' in the sorted palette 'sorted' of size
@@ -44,19 +50,11 @@ void PrepareMapToPalette(const uint32_t palette[], uint32_t num_colors,
 int GetColorPalette(const struct WebPPicture* const pic,
                     uint32_t* const palette);
 
-// Sorts the color sorted palette in 'palette_sorted'/'num_colors' by
-// minimizing deltas between consecutive colors and stores it in 'palette'.
-void PaletteSortMinimizeDeltas(const uint32_t* const palette_sorted,
-                               int num_colors, uint32_t* const palette);
-
-// Implements the modified Zeng method from "A Survey on Palette Reordering
-// Methods for Improving the Compression of Color-Indexed Images" by Armando J.
-// Pinho and Antonio J. R. Neves. The palette defined by 'palette_in' and
-// 'num_colors' is sorted using information from 'pic' and output in
-// 'palette'.
-// Returns 0 on memory allocation error.
-int PaletteSortModifiedZeng(const struct WebPPicture* const pic,
-                            const uint32_t* const palette_in,
-                            uint32_t num_colors, uint32_t* const palette);
+// Sorts the palette according to the criterion defined by 'method'.
+// 'palette_sorted' is the input palette sorted lexicographically, as done in
+// PrepareMapToPalette. Returns 0 on memory allocation error.
+int PaletteSort(PaletteSorting method, const struct WebPPicture* pic,
+                const uint32_t* palette_sorted, uint32_t num_colors,
+                uint32_t* palette);
 
 #endif  // WEBP_UTILS_PALETTE_H_
