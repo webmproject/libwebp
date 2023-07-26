@@ -608,16 +608,16 @@ Image data is an array of pixel values in scan-line order.
 We use image data in five different roles:
 
   1. ARGB image: Stores the actual pixels of the image.
-  1. Entropy image: Stores the
-     [meta prefix codes](#decoding-of-meta-prefix-codes).
-  1. Predictor image: Stores the metadata for the
-     [predictor transform](#predictor-transform).
+  1. Entropy image: Stores the meta prefix codes (see
+     ["Decoding of Meta Prefix Codes"](#decoding-of-meta-prefix-codes)).
+  1. Predictor image: Stores the metadata for the predictor transform (see
+     ["Predictor Transform"](#predictor-transform)).
   1. Color transform image: Created by `ColorTransformElement` values
      (defined in ["Color Transform"](#color-transform)) for different blocks of
      the image.
-  1. Color indexing image: An array of size `color_table_size` (up to 256
-     ARGB values) storing the metadata for the
-     [color indexing transform](#color-indexing-transform).
+  1. Color indexing image: An array of size `color_table_size` (up to 256 ARGB
+     values) storing the metadata for the color indexing transform (see
+     ["Color Indexing Transform"](#color-indexing-transform)).
 
 ### 5.2 Encoding of Image Data
 
