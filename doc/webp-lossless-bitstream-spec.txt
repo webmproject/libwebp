@@ -58,12 +58,12 @@ b = ReadBits(1);
 b |= ReadBits(1) << 1;
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-We assume that each color component, that is, alpha, red, blue and green, is
+We assume that each color component, that is, alpha, red, blue, and green, is
 represented using an 8-bit byte. We define the corresponding type as uint8. A
 whole ARGB pixel is represented by a type called uint32, which is an unsigned
 integer consisting of 32 bits. In the code showing the behavior of the
 transforms, these values are codified in the following bits: alpha in bits
-31..24, red in bits 23..16, green in bits 15..8 and blue in bits 7..0; however,
+31..24, red in bits 23..16, green in bits 15..8, and blue in bits 7..0; however,
 implementations of the format are free to use another representation internally.
 
 Broadly, a WebP lossless image contains header data, transform information, and
@@ -136,8 +136,8 @@ The beginning of the header has the RIFF container. This consists of the
 following 21 bytes:
 
    1. String 'RIFF'.
-   2. A little-endian, 32-bit value of the block length, which is the whole size
-      of the block controlled by the RIFF header. Normally, this equals
+   2. A little-endian, 32-bit value of the chunk length, which is the whole size
+      of the chunk controlled by the RIFF header. Normally, this equals
       the payload size (file size minus 8 bytes: 4 bytes for the 'RIFF'
       identifier and 4 bytes for storing the value itself).
    3. String 'WEBP' (RIFF container name).
@@ -336,7 +336,7 @@ for each ARGB component as follows:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Clamp the input value between 0 and 255.
 int Clamp(int a) {
-  return (a < 0) ? 0 : (a > 255) ?  255 : a;
+  return (a < 0) ? 0 : (a > 255) ? 255 : a;
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -592,11 +592,11 @@ The values are packed into the green component as follows:
 
 After reading this transform, `image_width` is subsampled by `width_bits`. This
 affects the size of subsequent transforms. The new size can be calculated using
-`DIV_ROUND_UP` as defined [earlier](#predictor-transform).
+`DIV_ROUND_UP`, as defined [earlier](#predictor-transform).
 
-```
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 image_width = DIV_ROUND_UP(image_width, 1 << width_bits);
-```
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 5 Image Data
 ------------
@@ -608,16 +608,16 @@ Image data is an array of pixel values in scan-line order.
 We use image data in five different roles:
 
   1. ARGB image: Stores the actual pixels of the image.
-  1. Entropy image: Stores the
-     [meta prefix codes](#decoding-of-meta-prefix-codes).
-  1. Predictor image: Stores the metadata for the
-     [predictor transform](#predictor-transform).
+  1. Entropy image: Stores the meta prefix codes (see
+     ["Decoding of Meta Prefix Codes"](#decoding-of-meta-prefix-codes)).
+  1. Predictor image: Stores the metadata for the predictor transform (see
+     ["Predictor Transform"](#predictor-transform)).
   1. Color transform image: Created by `ColorTransformElement` values
      (defined in ["Color Transform"](#color-transform)) for different blocks of
      the image.
-  1. Color indexing image: An array of size `color_table_size` (up to 256
-     ARGB values) storing the metadata for the
-     [color indexing transform](#color-indexing-transform).
+  1. Color indexing image: An array of size `color_table_size` (up to 256 ARGB
+     values) storing the metadata for the color indexing transform (see
+     ["Color Indexing Transform"](#color-indexing-transform)).
 
 ### 5.2 Encoding of Image Data
 
@@ -788,14 +788,14 @@ int color_cache_code_bits = ReadBits(4);
 int color_cache_size = 1 << color_cache_code_bits;
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-`color_cache_code_bits` defines the size of the color_cache (1 <<
-`color_cache_code_bits`). The range of allowed values for
+`color_cache_code_bits` defines the size of the color_cache (`1 <<
+color_cache_code_bits`). The range of allowed values for
 `color_cache_code_bits` is \[1..11\]. Compliant decoders must indicate a
 corrupted bitstream for other values.
 
 A color cache is an array of size `color_cache_size`. Each entry stores one ARGB
-color. Colors are looked up by indexing them by (0x1e35a7bd * `color`) >> (32 -
-`color_cache_code_bits`). Only one lookup is done in a color cache; there is no
+color. Colors are looked up by indexing them by `(0x1e35a7bd * color) >> (32 -
+color_cache_code_bits)`. Only one lookup is done in a color cache; there is no
 conflict resolution.
 
 In the beginning of decoding or encoding of an image, all entries in all color
@@ -904,7 +904,7 @@ First, `num_code_lengths` specifies the number of code lengths.
 int num_code_lengths = 4 + ReadBits(4);
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If `num_code_lengths` is > 19, the bitstream is invalid.
+If `num_code_lengths` is greater than 19, the bitstream is invalid.
 
 The code lengths are themselves encoded using prefix codes; lower-level code
 lengths, `code_length_code_lengths`, first have to be read. The rest of those
