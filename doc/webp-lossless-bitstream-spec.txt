@@ -788,7 +788,7 @@ int color_cache_code_bits = ReadBits(4);
 int color_cache_size = 1 << color_cache_code_bits;
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-`color_cache_code_bits` defines the size of the color_cache (`1 <<
+`color_cache_code_bits` defines the size of the color cache (`1 <<
 color_cache_code_bits`). The range of allowed values for
 `color_cache_code_bits` is \[1..11\]. Compliant decoders must indicate a
 corrupted bitstream for other values.
