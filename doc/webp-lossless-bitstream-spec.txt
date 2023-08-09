@@ -636,11 +636,11 @@ the image.
 
 Each pixel is encoded using one of the three possible methods:
 
-  1. Prefix-coded literals: each channel (green, red, blue, and alpha) is
-     entropy-coded independently;
-  2. LZ77 backward reference: a sequence of pixels are copied from elsewhere
-     in the image; or
-  3. Color cache code: using a short multiplicative hash code (color cache
+  1. Prefix-coded literals: Each channel (green, red, blue, and alpha) is
+     entropy-coded independently.
+  2. LZ77 backward reference: A sequence of pixels are copied from elsewhere in
+     the image.
+  3. Color cache code: Using a short multiplicative hash code (color cache
      index) of a recently seen color.
 
 The following subsections describe each of these in detail.
