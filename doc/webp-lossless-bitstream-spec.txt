@@ -722,8 +722,8 @@ neighborhood of the current pixel. This neighborhood consists of 120 pixels:
   * Pixels that are 1 to 7 rows above the current pixel and are up to 8 columns
     to the left or up to 7 columns to the right of the current pixel. \[Total
     such pixels = `7 * (8 + 1 + 7) = 112`\].
-  * Pixels that are in same row as the current pixel and are up to 8 columns to
-    the left of the current pixel. \[`8` such pixels\].
+  * Pixels that are in the same row as the current pixel and are up to 8
+    columns to the left of the current pixel. \[`8` such pixels\].
 
 The mapping between distance code `i` and the neighboring pixel offset
 `(xi, yi)` is as follows:
