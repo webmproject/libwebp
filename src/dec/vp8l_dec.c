@@ -12,6 +12,7 @@
 // Authors: Vikas Arora (vikaas.arora@gmail.com)
 //          Jyrki Alakuijala (jyrki@google.com)
 
+#include <assert.h>
 #include <stdlib.h>
 
 #include "src/dec/alphai_dec.h"
@@ -339,9 +340,7 @@ static int ReadHuffmanCode(int alphabet_size, VP8LDecoder* const dec,
     int i;
     int code_length_code_lengths[NUM_CODE_LENGTH_CODES] = { 0 };
     const int num_codes = VP8LReadBits(br, 4) + 4;
-    if (num_codes > NUM_CODE_LENGTH_CODES) {
-      return VP8LSetError(dec, VP8_STATUS_BITSTREAM_ERROR);
-    }
+    assert(num_codes <= NUM_CODE_LENGTH_CODES);
 
     for (i = 0; i < num_codes; ++i) {
       code_length_code_lengths[kCodeLengthCodeOrder[i]] = VP8LReadBits(br, 3);
