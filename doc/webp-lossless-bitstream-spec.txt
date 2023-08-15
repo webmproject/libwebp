@@ -825,9 +825,9 @@ potentially better compression.
 
 The encoded image data consists of several parts:
 
-  1. Decoding and building the prefix codes
-  1. Meta prefix codes
-  1. Entropy-coded image data
+  1. Decoding and building the prefix codes.
+  1. Meta prefix codes.
+  1. Entropy-coded image data.
 
 For any given pixel (x, y), there is a set of five prefix codes associated with
 it. These codes are (in bitstream order):
