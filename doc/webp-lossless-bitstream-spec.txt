@@ -247,7 +247,7 @@ the 14 predictors is used for all the `block_width * block_height` pixels within
 a particular block of the ARGB image. This subresolution image is encoded using
 the same techniques described in [Chapter 5](#image-data).
 
-For a pixel _x, y_, one can compute the respective filter block address by:
+For a pixel (x, y), one can compute the respective filter block address by:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 int block_index = (y >> size_bits) * block_xsize +
