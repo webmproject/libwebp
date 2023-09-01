@@ -832,8 +832,8 @@ A lossless-encoded image may look as follows:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 RIFF/WEBP
 +- VP8X (descriptions of features used)
-+- XYZW (unknown chunk)
 +- VP8L (lossless bitstream)
++- XYZW (unknown chunk)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A lossless image with an ICC profile and XMP metadata may
