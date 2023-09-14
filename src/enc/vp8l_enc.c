@@ -1192,7 +1192,7 @@ static void ClearTransformBuffer(VP8LEncoder* const enc) {
 //  enc->use_predict_, enc->use_cross_color_
 static int AllocateTransformBuffer(VP8LEncoder* const enc, int width,
                                    int height) {
-  const uint64_t image_size = width * height;
+  const uint64_t image_size = (uint64_t)width * height;
   // VP8LResidualImage needs room for 2 scanlines of uint32 pixels with an extra
   // pixel in each, plus 2 regular scanlines of bytes.
   // TODO(skal): Clean up by using arithmetic in bytes instead of words.
@@ -1202,7 +1202,7 @@ static int AllocateTransformBuffer(VP8LEncoder* const enc, int width,
                         : 0;
   const uint64_t transform_data_size =
       (enc->use_predict_ || enc->use_cross_color_)
-          ? VP8LSubSampleSize(width, enc->transform_bits_) *
+          ? (uint64_t)VP8LSubSampleSize(width, enc->transform_bits_) *
                 VP8LSubSampleSize(height, enc->transform_bits_)
           : 0;
   const uint64_t max_alignment_in_words =
