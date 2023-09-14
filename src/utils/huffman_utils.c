@@ -267,11 +267,11 @@ int VP8LHuffmanTablesAllocate(int size, HuffmanTables* huffman_tables) {
   // Have 'segment' point to the first segment for now, 'root'.
   HuffmanTablesSegment* const root = &huffman_tables->root;
   huffman_tables->curr_segment = root;
+  root->next = NULL;
   // Allocate root.
   root->start = (HuffmanCode*)WebPSafeMalloc(size, sizeof(*root->start));
   if (root->start == NULL) return 0;
   root->curr_table = root->start;
-  root->next = NULL;
   root->size = size;
   return 1;
 }
