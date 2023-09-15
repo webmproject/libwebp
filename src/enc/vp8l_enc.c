@@ -325,7 +325,8 @@ static int EncoderAnalyze(VP8LEncoder* const enc,
         if ((i != kPalette && i != kPaletteAndSpatial) || use_palette) {
           assert(*crunch_configs_size < CRUNCH_CONFIGS_MAX);
           if (use_palette && (i == kPalette || i == kPaletteAndSpatial)) {
-            for (int sorting_method = 0; sorting_method < kPaletteSortingNum;
+            int sorting_method;
+            for (sorting_method = 0; sorting_method < kPaletteSortingNum;
                  ++sorting_method) {
               const PaletteSorting typed_sorting_method =
                   (PaletteSorting)sorting_method;
