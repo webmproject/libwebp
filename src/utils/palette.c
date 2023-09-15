@@ -97,7 +97,7 @@ int GetColorPalette(const WebPPicture* const pic, uint32_t* const palette) {
   int x, y;
   int num_colors = 0;
   uint8_t in_use[COLOR_HASH_SIZE] = {0};
-  uint32_t colors[COLOR_HASH_SIZE];
+  uint32_t colors[COLOR_HASH_SIZE] = {0};
   const uint32_t* argb = pic->argb;
   const int width = pic->width;
   const int height = pic->height;

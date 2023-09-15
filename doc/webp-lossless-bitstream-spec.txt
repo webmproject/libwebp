@@ -888,6 +888,9 @@ if (num_symbols == 2) {
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+The two symbols should be different. Duplicate symbols are allowed, but
+inefficient.
+
 **Note:** Another special case is when _all_ prefix code lengths are _zeros_ (an
 empty prefix code). For example, a prefix code for distance can be empty if
 there are no backward references. Similarly, prefix codes for alpha, red, and
