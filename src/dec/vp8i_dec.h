@@ -186,6 +186,7 @@ struct VP8Decoder {
 
   // Main data source
   VP8BitReader br_;
+  int incremental_;  // if true, incremental decoding is expected
 
   // headers
   VP8FrameHeader   frm_hdr_;
