@@ -101,11 +101,13 @@ make install
 You can download and install libwebp using the
 [vcpkg](https://github.com/Microsoft/vcpkg) dependency manager:
 
-    git clone https://github.com/Microsoft/vcpkg.git
-    cd vcpkg
-    ./bootstrap-vcpkg.sh
-    ./vcpkg integrate install
-    ./vcpkg install libwebp
+```shell
+git clone https://github.com/Microsoft/vcpkg.git
+cd vcpkg
+./bootstrap-vcpkg.sh
+./vcpkg integrate install
+./vcpkg install libwebp
+```
 
 The libwebp port in vcpkg is kept up to date by Microsoft team members and
 community contributors. If the version is out of date, please
