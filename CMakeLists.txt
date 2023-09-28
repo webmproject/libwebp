@@ -638,13 +638,13 @@ if(WEBP_BUILD_EXTRAS)
                                                   ${CMAKE_CURRENT_BINARY_DIR})
 
   # vwebp_sdl
-  find_package(SDL)
-  if(WEBP_BUILD_VWEBP AND SDL_FOUND)
+  find_package(SDL2 QUIET)
+  if(WEBP_BUILD_VWEBP AND SDL2_FOUND)
     add_executable(vwebp_sdl ${VWEBP_SDL_SRCS})
-    target_link_libraries(vwebp_sdl ${SDL_LIBRARY} imageioutil webp)
+    target_link_libraries(vwebp_sdl ${SDL2_LIBRARIES} imageioutil webp)
     target_include_directories(
       vwebp_sdl PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}
-                        ${CMAKE_CURRENT_BINARY_DIR}/src ${SDL_INCLUDE_DIR})
+                        ${CMAKE_CURRENT_BINARY_DIR}/src ${SDL2_INCLUDE_DIRS})
     set(WEBP_HAVE_SDL 1)
     target_compile_definitions(vwebp_sdl PUBLIC WEBP_HAVE_SDL)
   endif()
@@ -661,31 +661,43 @@ if(WEBP_BUILD_WEBP_JS)
   else()
     set(emscripten_stack_size "-sTOTAL_STACK=5MB")
   endif()
+  # Set SDL2 flags so that ports are downloaded by emscripten.
+  set(EMSCRIPTEN_SDL2_FLAGS "-sUSE_SDL=2 -sUSE_SDL_IMAGE=2")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EMSCRIPTEN_SDL2_FLAGS}")
   # wasm2js does not support SIMD.
   if(NOT WEBP_ENABLE_SIMD)
     # JavaScript version
+    find_package(SDL2 QUIET)
     add_executable(webp_js ${CMAKE_CURRENT_SOURCE_DIR}/extras/webp_to_sdl.c)
-    target_link_libraries(webp_js webpdecoder SDL)
+    target_link_libraries(webp_js webpdecoder SDL2)
     target_include_directories(webp_js PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
     set(WEBP_HAVE_SDL 1)
     set_target_properties(
       webp_js
-      PROPERTIES LINK_FLAGS "-sWASM=0 ${emscripten_stack_size} \
+      PROPERTIES
+        LINK_FLAGS
+        "-sWASM=0 ${emscripten_stack_size} \
          -sEXPORTED_FUNCTIONS=_WebPToSDL -sINVOKE_RUN=0 \
-         -sEXPORTED_RUNTIME_METHODS=cwrap")
+         -sEXPORTED_RUNTIME_METHODS=cwrap ${EMSCRIPTEN_SDL2_FLAGS} \
+         -sALLOW_MEMORY_GROWTH"
+    )
     set_target_properties(webp_js PROPERTIES OUTPUT_NAME webp)
     target_compile_definitions(webp_js PUBLIC EMSCRIPTEN WEBP_HAVE_SDL)
   endif()
 
   # WASM version
   add_executable(webp_wasm ${CMAKE_CURRENT_SOURCE_DIR}/extras/webp_to_sdl.c)
-  target_link_libraries(webp_wasm webpdecoder SDL)
+  target_link_libraries(webp_wasm webpdecoder SDL2)
   target_include_directories(webp_wasm PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
   set_target_properties(
     webp_wasm
-    PROPERTIES LINK_FLAGS "-sWASM=1 ${emscripten_stack_size} \
+    PROPERTIES
+      LINK_FLAGS
+      "-sWASM=1 ${emscripten_stack_size} \
        -sEXPORTED_FUNCTIONS=_WebPToSDL -sINVOKE_RUN=0 \
-       -sEXPORTED_RUNTIME_METHODS=cwrap")
+       -sEXPORTED_RUNTIME_METHODS=cwrap ${EMSCRIPTEN_SDL2_FLAGS} \
+       -sALLOW_MEMORY_GROWTH"
+  )
   target_compile_definitions(webp_wasm PUBLIC EMSCRIPTEN WEBP_HAVE_SDL)
 
   target_compile_definitions(webpdspdecode PUBLIC EMSCRIPTEN)

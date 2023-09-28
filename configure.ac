@@ -464,7 +464,7 @@ AC_ARG_ENABLE([sdl],
                               @<:@default=auto@:>@]))
 AS_IF([test "x$enable_sdl" != "xno"], [
   CLEAR_LIBVARS([SDL])
-  AC_PATH_PROGS([LIBSDL_CONFIG], [sdl-config])
+  AC_PATH_PROGS([LIBSDL_CONFIG], [sdl2-config])
   if test -n "$LIBSDL_CONFIG"; then
     SDL_INCLUDES=`$LIBSDL_CONFIG --cflags`
     SDL_LIBS="`$LIBSDL_CONFIG --libs`"
@@ -474,13 +474,12 @@ AS_IF([test "x$enable_sdl" != "xno"], [
 
   sdl_header="no"
   LIBCHECK_PROLOGUE([SDL])
-  AC_CHECK_HEADER([SDL/SDL.h], [sdl_header="SDL/SDL.h"],
-                  [AC_CHECK_HEADER([SDL.h], [sdl_header="SDL.h"],
-                  [AC_MSG_WARN(SDL library not available - no sdl.h)])])
+  AC_CHECK_HEADER([SDL2/SDL.h], [sdl_header="SDL2/SDL.h"],
+                  [AC_MSG_WARN(SDL2 library not available - no SDL.h)])
   if test x"$sdl_header" != "xno"; then
     AC_LANG_PUSH(C)
     SDL_SAVED_LIBS="$LIBS"
-    for lib in "" "-lSDL" "-lSDLmain -lSDL"; do
+    for lib in "" "-lSDL2" "-lSDL2main -lSDL2"; do
       LIBS="$SDL_SAVED_LIBS $lib"
       # Perform a full link to ensure SDL_main is resolved if needed.
       AC_LINK_IFELSE(
