@@ -29,6 +29,7 @@ endif()
 
 # Include dependencies.
 include(cmake/deps.cmake)
+include(GNUInstallDirs)
 
 ################################################################################
 # Options.
@@ -120,13 +121,32 @@ target_link_libraries(webpdecoder ${WEBP_DEP_LIBRARIES})
 
 # Build the webp library.
 add_library(webpencode OBJECT ${WEBP_ENC_SRCS})
+target_include_directories(
+  webpencode PRIVATE ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}
+                     ${CMAKE_CURRENT_SOURCE_DIR}/src)
 add_library(webpdsp OBJECT ${WEBP_DSP_COMMON_SRCS} ${WEBP_DSP_DEC_SRCS}
-  ${WEBP_DSP_ENC_SRCS})
+                           ${WEBP_DSP_ENC_SRCS})
+target_include_directories(webpdsp PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
+                                           ${CMAKE_CURRENT_SOURCE_DIR})
 add_library(webputils OBJECT ${WEBP_UTILS_COMMON_SRCS} ${WEBP_UTILS_DEC_SRCS}
-  ${WEBP_UTILS_ENC_SRCS})
+                             ${WEBP_UTILS_ENC_SRCS})
+target_include_directories(webputils PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
+                                             ${CMAKE_CURRENT_SOURCE_DIR})
 add_library(webp $<TARGET_OBJECTS:webpdecode> $<TARGET_OBJECTS:webpdsp>
-  $<TARGET_OBJECTS:webpencode> $<TARGET_OBJECTS:webputils>)
+                 $<TARGET_OBJECTS:webpencode> $<TARGET_OBJECTS:webputils>)
+if(XCODE)
+  libwebp_add_stub_file(webp)
+endif()
 target_link_libraries(webp ${WEBP_DEP_LIBRARIES})
+target_include_directories(
+  webp PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+         $<INSTALL_INTERFACE:include>)
+set_target_properties(
+  webp
+  PROPERTIES PUBLIC_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/src/webp/decode.h;\
+${CMAKE_CURRENT_SOURCE_DIR}/src/webp/encode.h;\
+${CMAKE_CURRENT_SOURCE_DIR}/src/webp/types.h")
 
 # Make sure the OBJECT libraries are built with position independent code
 # (it is not ON by default).
@@ -136,6 +156,17 @@ set_target_properties(webpdecode webpdspdecode webputilsdecode
 # Build the webp demux library.
 add_library(webpdemux ${WEBP_DEMUX_SRCS})
 target_link_libraries(webpdemux webp)
+target_include_directories(
+  webpdemux PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}
+  PUBLIC $<INSTALL_INTERFACE:include>)
+set_target_properties(
+  webpdemux
+  PROPERTIES
+    PUBLIC_HEADER
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/webp/decode.h;\
+${CMAKE_CURRENT_SOURCE_DIR}/src/webp/demux.h;\
+${CMAKE_CURRENT_SOURCE_DIR}/src/webp/mux_types.h;\
+${CMAKE_CURRENT_SOURCE_DIR}/src/webp/types.h")
 
 # Set the version numbers.
 function(parse_version FILE NAME VAR)
@@ -242,6 +273,11 @@ if(WEBP_BUILD_GIF2WEBP OR WEBP_BUILD_IMG2WEBP)
   parse_version(mux/Makefile.am webpmux WEBP_MUX_SOVERSION)
   set_target_properties(webpmux PROPERTIES VERSION ${PACKAGE_VERSION}
     SOVERSION ${WEBP_MUX_SOVERSION})
+  set_target_properties(
+    webpmux
+    PROPERTIES PUBLIC_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/src/webp/mux.h;\
+${CMAKE_CURRENT_SOURCE_DIR}/src/webp/mux_types.h;\
+${CMAKE_CURRENT_SOURCE_DIR}/src/webp/types.h;")
   list(APPEND INSTALLED_LIBRARIES webpmux)
 endif()
 
@@ -314,16 +350,18 @@ add_definitions(-DHAVE_CONFIG_H)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 # Install the different headers and libraries.
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/webp/decode.h
-              ${CMAKE_CURRENT_SOURCE_DIR}/src/webp/demux.h
-              ${CMAKE_CURRENT_SOURCE_DIR}/src/webp/encode.h
-              ${CMAKE_CURRENT_SOURCE_DIR}/src/webp/mux.h
-              ${CMAKE_CURRENT_SOURCE_DIR}/src/webp/mux_types.h
-              ${CMAKE_CURRENT_SOURCE_DIR}/src/webp/types.h
-        DESTINATION include/webp)
-install(TARGETS ${INSTALLED_LIBRARIES}
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib)
+install(
+  TARGETS ${INSTALLED_LIBRARIES}
+  EXPORT WebPTargets
+  PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/webp
+  INCLUDES
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+set(ConfigPackageLocation ${CMAKE_INSTALL_DATADIR}/WebP/cmake/)
+install(EXPORT WebPTargets NAMESPACE WebP::
+        DESTINATION ${ConfigPackageLocation})
 
 # Create the CMake version file.
 include(CMakePackageConfigHelpers)
@@ -340,7 +378,7 @@ configure_package_config_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/cmake/WebPConfig.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/WebPConfig.cmake
   INSTALL_DESTINATION ${ConfigPackageLocation}
-)
+  PATH_VARS CMAKE_INSTALL_INCLUDEDIR)
 
 # Install the generated CMake files.
 install(
