@@ -19,13 +19,11 @@ Abstract
 
 WebP lossless is an image format for lossless compression of ARGB images. The
 lossless format stores and restores the pixel values exactly, including the
-color values for pixels whose alpha value is 0. The format uses subresolution
-images, recursively embedded into the format itself, for storing statistical
-data about the images, such as the used entropy codes, spatial predictors, color
-space conversion, and color table. A universal algorithm for sequential data
-compression (LZ77), prefix coding, and a color cache are used for compression of
-the bulk data. Decoding speeds faster than PNG have been demonstrated, as well
-as 25% denser compression than can be achieved using today's PNG format.
+color values for fully transparent pixels. A universal algorithm for sequential
+data compression (LZ77), prefix coding, and a color cache are used for
+compression of the bulk data. Decoding speeds faster than PNG have been
+demonstrated, as well as 25% denser compression than can be achieved using
+today's PNG format.
 
 
 * TOC placeholder
@@ -230,15 +228,14 @@ prediction to use. We divide the image into squares, and all the pixels in a
 square use the same prediction mode.
 
 The first 3 bits of prediction data define the block width and height in number
-of bits. The number of block columns, `block_xsize`, is used in two-dimension
-indexing.
+of bits.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 int size_bits = ReadBits(3) + 2;
 int block_width = (1 << size_bits);
 int block_height = (1 << size_bits);
 #define DIV_ROUND_UP(num, den) (((num) + (den) - 1) / (den))
-int block_xsize = DIV_ROUND_UP(image_width, 1 << size_bits);
+int transform_width = DIV_ROUND_UP(image_width, 1 << size_bits);
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The transform data contains the prediction mode for each block of the image. It
@@ -247,10 +244,12 @@ the 14 predictors is used for all the `block_width * block_height` pixels within
 a particular block of the ARGB image. This subresolution image is encoded using
 the same techniques described in [Chapter 5](#image-data).
 
-For a pixel (x, y), one can compute the respective filter block address by:
+The number of block columns, `transform_width`, is used in two-dimensional
+indexing. For a pixel (x, y), one can compute the respective filter block
+address by:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-int block_index = (y >> size_bits) * block_xsize +
+int block_index = (y >> size_bits) * transform_width +
                   (x >> size_bits);
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -725,8 +724,8 @@ neighborhood of the current pixel. This neighborhood consists of 120 pixels:
   * Pixels that are in the same row as the current pixel and are up to 8
     columns to the left of the current pixel. \[`8` such pixels\].
 
-The mapping between distance code `i` and the neighboring pixel offset
-`(xi, yi)` is as follows:
+The mapping between distance code `distance_code` and the neighboring pixel
+offset `(xi, yi)` is as follows:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 (0, 1),  (1, 0),  (1, 1),  (-1, 1), (0, 2),  (2, 0),  (1, 2),
@@ -754,19 +753,19 @@ neighboring pixel, that is, the pixel above the current pixel (0 pixel
 difference in the X direction and 1 pixel difference in the Y direction).
 Similarly, the distance code `3` indicates the top-left pixel.
 
-The decoder can convert a distance code `i` to a scan-line order distance `dist`
-as follows:
+The decoder can convert a distance code `distance_code` to a scan-line order
+distance `dist` as follows:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-(xi, yi) = distance_map[i - 1]
-dist = xi + yi * xsize
+(xi, yi) = distance_map[distance_code - 1]
+dist = xi + yi * image_width
 if (dist < 1) {
   dist = 1
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-where `distance_map` is the mapping noted above, and `xsize` is the width of the
-image in pixels.
+where `distance_map` is the mapping noted above, and `image_width` is the width
+of the image in pixels.
 
 #### 5.2.3 Color Cache Coding
 {:#color-cache-code}
@@ -993,14 +992,16 @@ image are derived from `prefix_bits`:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 int prefix_bits = ReadBits(3) + 2;
-int prefix_xsize = DIV_ROUND_UP(xsize, 1 << prefix_bits);
-int prefix_ysize = DIV_ROUND_UP(ysize, 1 << prefix_bits);
+int prefix_image_width =
+    DIV_ROUND_UP(image_width, 1 << prefix_bits);
+int prefix_image_height =
+    DIV_ROUND_UP(image_height, 1 << prefix_bits);
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 where `DIV_ROUND_UP` is as defined [earlier](#predictor-transform).
 
-The next bits contain an entropy image of width `prefix_xsize` and height
-`prefix_ysize`.
+The next bits contain an entropy image of width `prefix_image_width` and height
+`prefix_image_height`.
 
 ##### Interpretation of Meta Prefix Codes
 
@@ -1025,7 +1026,7 @@ codes to be used as follows:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 int position =
-    (y >> prefix_bits) * prefix_xsize + (x >> prefix_bits);
+    (y >> prefix_bits) * prefix_image_width + (x >> prefix_bits);
 int meta_prefix_code = (entropy_image[position] >> 8) & 0xffff;
 PrefixCodeGroup prefix_group = prefix_code_groups[meta_prefix_code];
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1075,7 +1076,7 @@ The interpretation of S depends on its value:
 
 Below is a view into the format in Augmented Backus-Naur Form (ABNF)
 [RFC 5234][] [RFC 7405][]. It does not cover all details. The end-of-image (EOI)
-is only implicitly coded into the number of pixels (xsize * ysize).
+is only implicitly coded into the number of pixels (image_width * image_height).
 
 Note that `*element` means `element` can be repeated 0 or more times. `5element`
 means `element` is repeated exactly 5 times. `%b` represents a binary value.
