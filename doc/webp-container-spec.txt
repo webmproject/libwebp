@@ -776,7 +776,7 @@ The following pseudocode illustrates the rendering process. The notation
 _VP8X.field_ means the field in the 'VP8X' Chunk with the same description.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-assert VP8X.flags.hasAnimation
+VP8X.flags.hasAnimation MUST be TRUE
 canvas ← new image of size VP8X.canvasWidth x VP8X.canvasHeight with
          background color ANIM.background_color.
 loop_count ← ANIM.loopCount
@@ -784,7 +784,7 @@ dispose_method ← Dispose to background color
 if loop_count == 0:
   loop_count = ∞
 frame_params ← nil
-assert next chunk in image_data is ANMF
+next chunk in image_data is ANMF MUST be TRUE
 for loop = 0..loop_count - 1
   clear canvas to ANIM.background_color or application-defined color
   until eof or non-ANMF chunk
@@ -795,14 +795,16 @@ for loop = 0..loop_count - 1
     frame_params.frameDuration = Frame Duration
     frame_right = frame_params.frameX + frame_params.frameWidth
     frame_bottom = frame_params.frameY + frame_params.frameHeight
-    assert VP8X.canvasWidth >= frame_right
-    assert VP8X.canvasHeight >= frame_bottom
+    VP8X.canvasWidth >= frame_right MUST be TRUE
+    VP8X.canvasHeight >= frame_bottom MUST be TRUE
     for subchunk in 'Frame Data':
       if subchunk.tag == "ALPH":
-        assert alpha subchunks not found in 'Frame Data' earlier
+        alpha subchunks not found in 'Frame Data' earlier MUST be
+          TRUE
         frame_params.alpha = alpha_data
       else if subchunk.tag == "VP8 " OR subchunk.tag == "VP8L":
-        assert bitstream subchunks not found in 'Frame Data' earlier
+        bitstream subchunks not found in 'Frame Data' earlier MUST
+          be TRUE
         frame_params.bitstream = bitstream_data
     render frame with frame_params.alpha and frame_params.bitstream
       on canvas with top-left corner at (frame_params.frameX,
