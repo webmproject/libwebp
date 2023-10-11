@@ -25,7 +25,6 @@ compression of the bulk data. Decoding speeds faster than PNG have been
 demonstrated, as well as 25% denser compression than can be achieved using
 today's PNG format.
 
-
 * TOC placeholder
 {:toc}
 
