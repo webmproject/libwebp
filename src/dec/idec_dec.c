@@ -326,10 +326,10 @@ static VP8StatusCode DecodeWebPHeaders(WebPIDecoder* const idec) {
   idec->is_lossless_ = headers.is_lossless;
   if (!idec->is_lossless_) {
     VP8Decoder* const dec = VP8New();
-    dec->incremental_ = 1;
     if (dec == NULL) {
       return VP8_STATUS_OUT_OF_MEMORY;
     }
+    dec->incremental_ = 1;
     idec->dec_ = dec;
     dec->alpha_data_ = headers.alpha_data;
     dec->alpha_data_size_ = headers.alpha_data_size;
