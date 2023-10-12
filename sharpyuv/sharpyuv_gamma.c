@@ -212,8 +212,8 @@ static float ToLinearLog100Sqrt10(float gamma) {
 static float FromLinearLog100Sqrt10(float linear) {
   // The function is non-bijective so choose the middle of [0, 0.00316227766f[.
   const float mid_interval = 0.00316227766f / 2.f;
-  return (linear < 0.0f) ? mid_interval
-                         : Powf(10.0f, 2.5f * (MIN(linear, 1.f) - 1.0f));
+  return (linear <= 0.0f) ? mid_interval
+                          : Powf(10.0f, 2.5f * (MIN(linear, 1.f) - 1.0f));
 }
 
 static float ToLinearIec61966(float gamma) {
