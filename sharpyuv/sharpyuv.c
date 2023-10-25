@@ -524,7 +524,7 @@ int SharpYuvConvertWithOptions(const void* r_ptr, const void* g_ptr,
   if (yuv_bit_depth != 8 && yuv_bit_depth != 10 && yuv_bit_depth != 12) {
     return 0;
   }
-  if (rgb_bit_depth > 8 && (rgb_step % 2 != 0 || rgb_stride %2 != 0)) {
+  if (rgb_bit_depth > 8 && (rgb_step % 2 != 0 || rgb_stride % 2 != 0)) {
     // Step/stride should be even for uint16_t buffers.
     return 0;
   }
