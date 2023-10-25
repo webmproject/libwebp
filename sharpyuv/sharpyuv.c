@@ -307,6 +307,7 @@ static int DoSharpArgbToYuv(const uint8_t* r_ptr, const uint8_t* g_ptr,
   const int h = (height + 1) & ~1;
   const int uv_w = w >> 1;
   const int uv_h = h >> 1;
+  const int y_bit_depth = rgb_bit_depth + GetPrecisionShift(rgb_bit_depth);
   uint64_t prev_diff_y_sum = ~0;
   int j, iter;
 
@@ -394,8 +395,7 @@ static int DoSharpArgbToYuv(const uint8_t* r_ptr, const uint8_t* g_ptr,
 
       // update two rows of Y and one row of RGB
       diff_y_sum +=
-          SharpYuvUpdateY(target_y, best_rgb_y, best_y, 2 * w,
-                          rgb_bit_depth + GetPrecisionShift(rgb_bit_depth));
+          SharpYuvUpdateY(target_y, best_rgb_y, best_y, 2 * w, y_bit_depth);
       SharpYuvUpdateRGB(target_uv, best_rgb_uv, best_uv, 3 * uv_w);
 
       best_y += 2 * w;
