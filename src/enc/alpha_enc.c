@@ -20,6 +20,7 @@
 #include "src/utils/filters_utils.h"
 #include "src/utils/quant_levels_utils.h"
 #include "src/utils/utils.h"
+#include "src/webp/encode.h"
 #include "src/webp/format_constants.h"
 
 // -----------------------------------------------------------------------------
@@ -66,7 +67,7 @@ static int EncodeLossless(const uint8_t* const data, int width, int height,
   WebPDispatchAlphaToGreen(data, width, picture.width, picture.height,
                            picture.argb, picture.argb_stride);
 
-  WebPConfigInit(&config);
+  if (!WebPConfigInit(&config)) return 0;
   config.lossless = 1;
   // Enable exact, or it would alter RGB values of transparent alpha, which is
   // normally OK but not here since we are not encoding the input image but  an

@@ -1675,7 +1675,9 @@ int VP8LEncodeStream(const WebPConfig* const config,
   }
 
   // Avoid "garbage value" error from Clang's static analysis tool.
-  WebPPictureInit(&picture_side);
+  if (!WebPPictureInit(&picture_side)) {
+    goto Error;
+  }
 
   // Analyze image (entropy, num_palettes etc)
   if (!EncoderAnalyze(enc_main, crunch_configs, &num_crunch_configs_main,

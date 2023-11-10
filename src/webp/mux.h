@@ -16,6 +16,7 @@
 #define WEBP_WEBP_MUX_H_
 
 #include "./mux_types.h"
+#include "./types.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -70,7 +71,7 @@ typedef struct WebPMuxAnimParams WebPMuxAnimParams;
 typedef struct WebPAnimEncoderOptions WebPAnimEncoderOptions;
 
 // Error codes
-typedef enum WebPMuxError {
+typedef enum WEBP_NODISCARD WebPMuxError {
   WEBP_MUX_OK                 =  1,
   WEBP_MUX_NOT_FOUND          =  0,
   WEBP_MUX_INVALID_ARGUMENT   = -1,
@@ -104,13 +105,13 @@ WEBP_EXTERN int WebPGetMuxVersion(void);
 // Life of a Mux object
 
 // Internal, version-checked, entry point
-WEBP_EXTERN WebPMux* WebPNewInternal(int);
+WEBP_NODISCARD WEBP_EXTERN WebPMux* WebPNewInternal(int);
 
 // Creates an empty mux object.
 // Returns:
 //   A pointer to the newly created empty mux object.
 //   Or NULL in case of memory error.
-static WEBP_INLINE WebPMux* WebPMuxNew(void) {
+WEBP_NODISCARD static WEBP_INLINE WebPMux* WebPMuxNew(void) {
   return WebPNewInternal(WEBP_MUX_ABI_VERSION);
 }
 
@@ -123,7 +124,8 @@ WEBP_EXTERN void WebPMuxDelete(WebPMux* mux);
 // Mux creation.
 
 // Internal, version-checked, entry point
-WEBP_EXTERN WebPMux* WebPMuxCreateInternal(const WebPData*, int, int);
+WEBP_NODISCARD WEBP_EXTERN WebPMux* WebPMuxCreateInternal(const WebPData*, int,
+                                                          int);
 
 // Creates a mux object from raw data given in WebP RIFF format.
 // Parameters:
@@ -133,8 +135,8 @@ WEBP_EXTERN WebPMux* WebPMuxCreateInternal(const WebPData*, int, int);
 // Returns:
 //   A pointer to the mux object created from given data - on success.
 //   NULL - In case of invalid data or memory error.
-static WEBP_INLINE WebPMux* WebPMuxCreate(const WebPData* bitstream,
-                                          int copy_data) {
+WEBP_NODISCARD static WEBP_INLINE WebPMux* WebPMuxCreate(
+    const WebPData* bitstream, int copy_data) {
   return WebPMuxCreateInternal(bitstream, copy_data, WEBP_MUX_ABI_VERSION);
 }
 
@@ -449,7 +451,7 @@ WEBP_EXTERN int WebPAnimEncoderOptionsInitInternal(
 // structure before modification. Returns false in case of version mismatch.
 // WebPAnimEncoderOptionsInit() must have succeeded before using the
 // 'enc_options' object.
-static WEBP_INLINE int WebPAnimEncoderOptionsInit(
+WEBP_NODISCARD static WEBP_INLINE int WebPAnimEncoderOptionsInit(
     WebPAnimEncoderOptions* enc_options) {
   return WebPAnimEncoderOptionsInitInternal(enc_options, WEBP_MUX_ABI_VERSION);
 }
@@ -490,7 +492,7 @@ static WEBP_INLINE WebPAnimEncoder* WebPAnimEncoderNew(
 // Returns:
 //   On error, returns false and frame->error_code is set appropriately.
 //   Otherwise, returns true.
-WEBP_EXTERN int WebPAnimEncoderAdd(
+WEBP_NODISCARD WEBP_EXTERN int WebPAnimEncoderAdd(
     WebPAnimEncoder* enc, struct WebPPicture* frame, int timestamp_ms,
     const struct WebPConfig* config);
 
@@ -503,8 +505,8 @@ WEBP_EXTERN int WebPAnimEncoderAdd(
 //   webp_data - (out) generated WebP bitstream.
 // Returns:
 //   True on success.
-WEBP_EXTERN int WebPAnimEncoderAssemble(WebPAnimEncoder* enc,
-                                        WebPData* webp_data);
+WEBP_NODISCARD WEBP_EXTERN int WebPAnimEncoderAssemble(WebPAnimEncoder* enc,
+                                                       WebPData* webp_data);
 
 // Get error string corresponding to the most recent call using 'enc'. The
 // returned string is owned by 'enc' and is valid only until the next call to

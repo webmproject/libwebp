@@ -51,6 +51,8 @@ option(WEBP_ENABLE_SWAP_16BIT_CSP "Enable byte swap for 16 bit colorspaces."
        OFF)
 set(WEBP_BITTRACE "0" CACHE STRING "Bit trace mode (0=none, 1=bit, 2=bytes)")
 set_property(CACHE WEBP_BITTRACE PROPERTY STRINGS 0 1 2)
+option(WEBP_ENABLE_WUNUSED_RESULT "Add [[nodiscard]] to some functions. \
+       CMake must be at least 3.21 to force C23" OFF)
 
 if(WEBP_LINK_STATIC)
   if(WIN32)
@@ -162,6 +164,17 @@ if(MSVC)
 endif()
 
 set(CMAKE_C_VISIBILITY_PRESET hidden)
+
+if(WEBP_ENABLE_WUNUSED_RESULT)
+  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.21.0)
+    set(CMAKE_C_STANDARD 23)
+  else()
+    unset(CMAKE_C_STANDARD)
+    add_compile_options($<$<COMPILE_LANGUAGE:C>:-std=gnu2x>)
+  endif()
+  add_compile_options(-Wunused-result)
+  add_definitions(-DWEBP_ENABLE_NODISCARD=1)
+endif()
 
 # ##############################################################################
 # Android only.

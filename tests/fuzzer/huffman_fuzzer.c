@@ -52,9 +52,9 @@ int LLVMFuzzerTestOneInput(const uint8_t* const data, size_t size) {
   if (num_htree_groups == 0) goto Error;
   // This variable is only useful when mapping is not NULL.
   const int num_htree_groups_max = num_htree_groups;
-  ReadHuffmanCodesHelper(color_cache_bits, num_htree_groups,
-                         num_htree_groups_max, mapping, dec, &huffman_tables,
-                         &htree_groups);
+  (void)ReadHuffmanCodesHelper(color_cache_bits, num_htree_groups,
+                               num_htree_groups_max, mapping, dec,
+                               &huffman_tables, &htree_groups);
 
  Error:
   WebPSafeFree(mapping);
