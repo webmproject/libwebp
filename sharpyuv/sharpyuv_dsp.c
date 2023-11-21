@@ -16,7 +16,9 @@
 #include <assert.h>
 #include <stdlib.h>
 
+#include "sharpyuv/sharpyuv.h"
 #include "sharpyuv/sharpyuv_cpu.h"
+#include "src/webp/types.h"
 
 //-----------------------------------------------------------------------------
 
@@ -62,6 +64,58 @@ static void SharpYuvFilterRow_C(const int16_t* A, const int16_t* B, int len,
 }
 #endif  // !WEBP_NEON_OMIT_C_CODE
 
+#define YUV_FIX 16  // fixed-point precision for RGB->YUV
+static const int kYuvHalf = 1 << (YUV_FIX - 1);
+
+// Maps a value in [0, (256 << YUV_FIX) - 1] to [0,
+// precomputed_scores_table_sampling - 1]. It is important that the extremal
+// values are preserved and 1:1 mapped:
+//  ConvertValue(0) = 0
+//  ConvertValue((256 << 16) - 1) = rgb_sampling_size - 1
+static int SharpYuvConvertValueToSampledIdx(int v, int rgb_sampling_size) {
+  v = (v + kYuvHalf) >> YUV_FIX;
+  v = (v < 0) ? 0 : (v > 255) ? 255 : v;
+  return (v * (rgb_sampling_size - 1)) / 255;
+}
+
+#undef YUV_FIX
+
+static int SharpYuvConvertToYuvSharpnessIndex(
+    int r, int g, int b, const SharpYuvConversionMatrix* matrix,
+    int precomputed_scores_table_sampling) {
+  const int y = SharpYuvConvertValueToSampledIdx(
+      matrix->rgb_to_y[0] * r + matrix->rgb_to_y[1] * g +
+          matrix->rgb_to_y[2] * b + matrix->rgb_to_y[3],
+      precomputed_scores_table_sampling);
+  const int u = SharpYuvConvertValueToSampledIdx(
+      matrix->rgb_to_u[0] * r + matrix->rgb_to_u[1] * g +
+          matrix->rgb_to_u[2] * b + matrix->rgb_to_u[3],
+      precomputed_scores_table_sampling);
+  const int v = SharpYuvConvertValueToSampledIdx(
+      matrix->rgb_to_v[0] * r + matrix->rgb_to_v[1] * g +
+          matrix->rgb_to_v[2] * b + matrix->rgb_to_v[3],
+      precomputed_scores_table_sampling);
+  return y + u * precomputed_scores_table_sampling +
+         v * precomputed_scores_table_sampling *
+             precomputed_scores_table_sampling;
+}
+
+static void SharpYuvRowToYuvSharpnessIndex_C(
+    const uint8_t* r_ptr, const uint8_t* g_ptr, const uint8_t* b_ptr,
+    int rgb_step, int rgb_bit_depth, int width, uint16_t* dst,
+    const SharpYuvConversionMatrix* matrix,
+    int precomputed_scores_table_sampling) {
+  int i;
+  assert(rgb_bit_depth == 8);
+  (void)rgb_bit_depth;  // Unused for now.
+  for (i = 0; i < width;
+       ++i, r_ptr += rgb_step, g_ptr += rgb_step, b_ptr += rgb_step) {
+    dst[i] =
+        SharpYuvConvertToYuvSharpnessIndex(r_ptr[0], g_ptr[0], b_ptr[0], matrix,
+                                           precomputed_scores_table_sampling);
+  }
+}
+
 //-----------------------------------------------------------------------------
 
 uint64_t (*SharpYuvUpdateY)(const uint16_t* src, const uint16_t* ref,
@@ -69,8 +123,14 @@ uint64_t (*SharpYuvUpdateY)(const uint16_t* src, const uint16_t* ref,
 void (*SharpYuvUpdateRGB)(const int16_t* src, const int16_t* ref, int16_t* dst,
                           int len);
 void (*SharpYuvFilterRow)(const int16_t* A, const int16_t* B, int len,
-                          const uint16_t* best_y, uint16_t* out,
-                          int bit_depth);
+                          const uint16_t* best_y, uint16_t* out, int bit_depth);
+void (*SharpYuvRowToYuvSharpnessIndex)(const uint8_t* r_ptr,
+                                       const uint8_t* g_ptr,
+                                       const uint8_t* b_ptr, int rgb_step,
+                                       int rgb_bit_depth, int width,
+                                       uint16_t* dst,
+                                       const SharpYuvConversionMatrix* matrix,
+                                       int precomputed_scores_table_sampling);
 
 extern VP8CPUInfo SharpYuvGetCPUInfo;
 extern void InitSharpYuvSSE2(void);
@@ -82,6 +142,8 @@ void SharpYuvInitDsp(void) {
   SharpYuvUpdateRGB = SharpYuvUpdateRGB_C;
   SharpYuvFilterRow = SharpYuvFilterRow_C;
 #endif
+  // There is only a C version for now so always include it.
+  SharpYuvRowToYuvSharpnessIndex = SharpYuvRowToYuvSharpnessIndex_C;
 
   if (SharpYuvGetCPUInfo != NULL) {
 #if defined(WEBP_HAVE_SSE2)

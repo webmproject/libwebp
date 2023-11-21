@@ -112,6 +112,7 @@ model {
             include "sharpyuv_dsp.c"
             include "sharpyuv_gamma.c"
             include "sharpyuv_neon.c"
+            include "sharpyuv_risk_table.c"
             include "sharpyuv_sse2.c"
             srcDir "src/dec"
             include "alpha_dec.c"

@@ -30,6 +30,7 @@ libsharpyuv_la_SOURCES += sharpyuv_cpu.c sharpyuv_cpu.h
 libsharpyuv_la_SOURCES += sharpyuv_csp.c sharpyuv_csp.h
 libsharpyuv_la_SOURCES += sharpyuv_dsp.c sharpyuv_dsp.h
 libsharpyuv_la_SOURCES += sharpyuv_gamma.c sharpyuv_gamma.h
+libsharpyuv_la_SOURCES += sharpyuv_risk_table.c sharpyuv_risk_table.h
 libsharpyuv_la_SOURCES += sharpyuv.c sharpyuv.h
 
 libsharpyuv_la_CPPFLAGS = $(AM_CPPFLAGS)

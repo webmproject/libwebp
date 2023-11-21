@@ -12,6 +12,7 @@
 #ifndef WEBP_SHARPYUV_SHARPYUV_DSP_H_
 #define WEBP_SHARPYUV_SHARPYUV_DSP_H_
 
+#include "sharpyuv/sharpyuv.h"
 #include "sharpyuv/sharpyuv_cpu.h"
 #include "src/webp/types.h"
 
@@ -22,6 +23,15 @@ extern void (*SharpYuvUpdateRGB)(const int16_t* src, const int16_t* ref,
 extern void (*SharpYuvFilterRow)(const int16_t* A, const int16_t* B, int len,
                                  const uint16_t* best_y, uint16_t* out,
                                  int bit_depth);
+
+// For each pixel, computes the index to look up that color in a precomputed
+// risk score table where the YUV space is subsampled to a size of
+// precomputed_scores_table_sampling^3 (see sharpyuv_risk_table.h)
+extern void (*SharpYuvRowToYuvSharpnessIndex)(
+    const uint8_t* r_ptr, const uint8_t* g_ptr, const uint8_t* b_ptr,
+    int rgb_step, int rgb_bit_depth, int width, uint16_t* dst,
+    const SharpYuvConversionMatrix* matrix,
+    int precomputed_scores_table_sampling);
 
 void SharpYuvInitDsp(void);
 

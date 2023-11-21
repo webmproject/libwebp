@@ -133,6 +133,7 @@ SHARPYUV_OBJS = \
     sharpyuv/sharpyuv_dsp.o \
     sharpyuv/sharpyuv_gamma.o \
     sharpyuv/sharpyuv_neon.o \
+    sharpyuv/sharpyuv_risk_table.o \
     sharpyuv/sharpyuv_sse2.o \
 
 DEC_OBJS = \
