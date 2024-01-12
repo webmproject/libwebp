@@ -53,7 +53,7 @@ extern "C" {
 
 // SharpYUV API version following the convention from semver.org
 #define SHARPYUV_VERSION_MAJOR 0
-#define SHARPYUV_VERSION_MINOR 5
+#define SHARPYUV_VERSION_MINOR 4
 #define SHARPYUV_VERSION_PATCH 0
 // Version as a uint32_t. The major number is the high 8 bits.
 // The minor number is the middle 8 bits. The patch number is the low 16 bits.
@@ -163,36 +163,6 @@ SHARPYUV_EXTERN int SharpYuvConvertWithOptions(
     int rgb_stride, int rgb_bit_depth, void* y_ptr, int y_stride, void* u_ptr,
     int u_stride, void* v_ptr, int v_stride, int yuv_bit_depth, int width,
     int height, const SharpYuvOptions* options);
-
-// Computes a score between 0 and 100 which represents the risk of having visual
-// quality loss from converting an RGB image to YUV420.
-// A low score, typically < 40, means there is a low risk of artifacts from
-// chroma subsampling and a simple averaging algorithm can be used instead of
-// the more expensive SharpYuvConvert function.
-// A medium score, typically >= 40 and < 70, means that simple chroma
-// subsampling will produce artifacts and it may be advisable to use the more
-// costly SharpYuvConvert for YUV420 conversion.
-// A high score, typically >= 70, means there is a very high risk of artifacts
-// from chroma subsampling even with SharpYuvConvert, and best results might be
-// achieved by using YUV444.
-// If not using SharpYuvConvert, a threshold of about 50 can be used to decide
-// between (simple averaging) 420 and 444.
-// r_ptr, g_ptr, b_ptr: pointers to the source r, g and b channels. Should point
-//     to uint8_t buffers if rgb_bit_depth is 8, or uint16_t buffers otherwise.
-// rgb_step: distance in bytes between two horizontally adjacent pixels on the
-//     r, g and b channels. If rgb_bit_depth is > 8, it should be a
-//     multiple of 2.
-// rgb_stride: distance in bytes between two vertically adjacent pixels on the
-//     r, g, and b channels. If rgb_bit_depth is > 8, it should be a
-//     multiple of 2.
-// rgb_bit_depth: number of bits for each r/g/b value. Only a value of 8 is
-//     currently supported.
-// width, height: width and height of the image in pixels
-// Returns 0 on failure.
-SHARPYUV_EXTERN int SharpYuvEstimate420Risk(
-    const void* r_ptr, const void* g_ptr, const void* b_ptr, int rgb_step,
-    int rgb_stride, int rgb_bit_depth, int width, int height,
-    const SharpYuvOptions* options, float* score);
 
 // TODO(b/194336375): Add YUV444 to YUV420 conversion. Maybe also add 422
 // support (it's rarely used in practice, especially for images).

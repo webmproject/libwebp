@@ -185,7 +185,6 @@ SHARPYUV_OBJS = \
     $(DIROBJ)\sharpyuv\sharpyuv_dsp.obj \
     $(DIROBJ)\sharpyuv\sharpyuv_gamma.obj \
     $(DIROBJ)\sharpyuv\sharpyuv_neon.obj \
-    $(DIROBJ)\sharpyuv\sharpyuv_risk_table.obj \
     $(DIROBJ)\sharpyuv\sharpyuv_sse2.obj \
 
 DEC_OBJS = \
@@ -322,6 +321,7 @@ ENC_OBJS = \
 EXTRAS_OBJS = \
     $(DIROBJ)\extras\extras.obj \
     $(DIROBJ)\extras\quality_estimate.obj \
+    $(DIROBJ)\extras\sharpyuv_risk_table.obj \
 
 IMAGEIO_UTIL_OBJS = \
     $(DIROBJ)\imageio\imageio_util.obj \

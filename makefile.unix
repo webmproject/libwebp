@@ -133,7 +133,6 @@ SHARPYUV_OBJS = \
     sharpyuv/sharpyuv_dsp.o \
     sharpyuv/sharpyuv_gamma.o \
     sharpyuv/sharpyuv_neon.o \
-    sharpyuv/sharpyuv_risk_table.o \
     sharpyuv/sharpyuv_sse2.o \
 
 DEC_OBJS = \
@@ -292,6 +291,7 @@ UTILS_ENC_OBJS = \
 EXTRA_OBJS = \
     extras/extras.o \
     extras/quality_estimate.o \
+    extras/sharpyuv_risk_table.o \
 
 LIBWEBPDECODER_OBJS = $(DEC_OBJS) $(DSP_DEC_OBJS) $(UTILS_DEC_OBJS)
 LIBWEBP_OBJS = $(LIBWEBPDECODER_OBJS) $(ENC_OBJS) \

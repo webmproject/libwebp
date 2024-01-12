@@ -42,7 +42,6 @@ sharpyuv_srcs := \
     sharpyuv/sharpyuv_dsp.c \
     sharpyuv/sharpyuv_gamma.c \
     sharpyuv/sharpyuv_neon.$(NEON) \
-    sharpyuv/sharpyuv_risk_table.c \
     sharpyuv/sharpyuv_sse2.c \
 
 dec_srcs := \

@@ -23,7 +23,6 @@
 #include "sharpyuv/sharpyuv_cpu.h"
 #include "sharpyuv/sharpyuv_dsp.h"
 #include "sharpyuv/sharpyuv_gamma.h"
-#include "sharpyuv/sharpyuv_risk_table.h"
 
 //------------------------------------------------------------------------------
 
@@ -436,6 +435,8 @@ static int DoSharpArgbToYuv(const uint8_t* r_ptr, const uint8_t* g_ptr,
   return ok;
 }
 
+#undef SAFE_ALLOC
+
 #if defined(WEBP_USE_THREAD) && !defined(_WIN32)
 #include <pthread.h>  // NOLINT
 
@@ -569,107 +570,5 @@ int SharpYuvConvertWithOptions(const void* r_ptr, const void* g_ptr,
                           v_ptr, v_stride, yuv_bit_depth, width, height,
                           &scaled_matrix, transfer_type);
 }
-
-//------------------------------------------------------------------------------
-// 420 risk metric
-
-static int DoEstimateRisk(const uint8_t* r_ptr, const uint8_t* g_ptr,
-                          const uint8_t* b_ptr, int rgb_step, int rgb_stride,
-                          int rgb_bit_depth, int width, int height,
-                          const SharpYuvOptions* options,
-                          const uint8_t precomputed_scores_table[],
-                          int precomputed_scores_table_sampling,
-                          float* score_out) {
-  const int sampling3 = precomputed_scores_table_sampling *
-                        precomputed_scores_table_sampling *
-                        precomputed_scores_table_sampling;
-  const int kNoiseLevel = 4;
-  double total_score = 0;
-  double count = 0;
-  // Rows of indices in
-  uint16_t* row1 = SAFE_ALLOC(width, 1, uint16_t);
-  uint16_t* row2 = SAFE_ALLOC(width, 1, uint16_t);
-  uint16_t* tmp;
-  int i, j;
-
-  if (row1 == NULL || row2 == NULL) {
-    free(row1);
-    free(row2);
-    return 0;
-  }
-
-  // Convert the first row ahead.
-  SharpYuvRowToYuvSharpnessIndex(r_ptr, g_ptr, b_ptr, rgb_step, rgb_bit_depth,
-                                 width, row2, options->yuv_matrix,
-                                 precomputed_scores_table_sampling);
-
-  for (j = 1; j < height; ++j) {
-    r_ptr += rgb_stride;
-    g_ptr += rgb_stride;
-    b_ptr += rgb_stride;
-    // Swap row 1 and row 2.
-    tmp = row1;
-    row1 = row2;
-    row2 = tmp;
-    // Convert the row below.
-    SharpYuvRowToYuvSharpnessIndex(r_ptr, g_ptr, b_ptr, rgb_step, rgb_bit_depth,
-                                   width, row2, options->yuv_matrix,
-                                   precomputed_scores_table_sampling);
-    for (i = 0; i < width - 1; ++i) {
-      const int idx0 = row1[i + 0];
-      const int idx1 = row1[i + 1];
-      const int idx2 = row2[i + 0];
-      const int score = precomputed_scores_table[idx0 + sampling3 * idx1] +
-                        precomputed_scores_table[idx0 + sampling3 * idx2] +
-                        precomputed_scores_table[idx1 + sampling3 * idx2];
-      if (score > kNoiseLevel) {
-        total_score += score;
-        count += 1.0;
-      }
-    }
-  }
-  if (count > 0.) total_score /= count;
-
-  // If less than 1% of pixels were evaluated -> below noise level.
-  if (100. * count / (width * height) < 1.) total_score = 0.;
-
-  // Rescale to [0:100]
-  total_score = (total_score > 25.) ? 100. : total_score * 100. / 25.;
-
-  free(row1);
-  free(row2);
-
-  *score_out = (float)total_score;
-  return 1;
-}
-
-int SharpYuvEstimate420Risk(const void* r_ptr, const void* g_ptr,
-                            const void* b_ptr, int rgb_step, int rgb_stride,
-                            int rgb_bit_depth, int width, int height,
-                            const SharpYuvOptions* options, float* score) {
-  if (width < 1 || height < 1 || width == INT_MAX || height == INT_MAX ||
-      r_ptr == NULL || g_ptr == NULL || b_ptr == NULL || options == NULL ||
-      score == NULL) {
-    return 0;
-  }
-  if (rgb_bit_depth != 8) {
-    return 0;
-  }
-
-  if (width <= 4 || height <= 4) {
-    *score = 0.0f;  // too small, no real risk.
-    return 1;
-  }
-
-  // The address of the function pointer is used to avoid a read race.
-  SharpYuvInit((VP8CPUInfo)&SharpYuvGetCPUInfo);
-
-  return DoEstimateRisk(
-      (const uint8_t*)r_ptr, (const uint8_t*)g_ptr, (const uint8_t*)b_ptr,
-      rgb_step, rgb_stride, rgb_bit_depth, width, height, options,
-      kSharpYuvPrecomputedRisk, kSharpYuvPrecomputedRiskYuvSampling, score);
-}
-
-#undef SAFE_ALLOC
 
 //------------------------------------------------------------------------------

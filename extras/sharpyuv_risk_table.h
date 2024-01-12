@@ -9,8 +9,8 @@
 //
 // Precomputed data for 420 risk estimation.
 
-#ifndef WEBP_SHARPYUV_SHARPYUV_RISK_TABLE_H_
-#define WEBP_SHARPYUV_SHARPYUV_RISK_TABLE_H_
+#ifndef WEBP_EXTRAS_SHARPYUV_RISK_TABLE_H_
+#define WEBP_EXTRAS_SHARPYUV_RISK_TABLE_H_
 
 #include "src/webp/types.h"
 
@@ -24,4 +24,4 @@ extern const int kSharpYuvPrecomputedRiskYuvSampling;
 // Table size: kSharpYuvPrecomputedRiskYuvSampling^6 bytes or 114 KiB
 extern const uint8_t kSharpYuvPrecomputedRisk[];
 
-#endif  // WEBP_SHARPYUV_SHARPYUV_RISK_TABLE_H_
+#endif  // WEBP_EXTRAS_SHARPYUV_RISK_TABLE_H_
