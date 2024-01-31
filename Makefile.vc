@@ -12,6 +12,8 @@ LIBSHARPYUV_BASENAME = libsharpyuv
 ARCH = x86
 !ELSE IF ! [ cl 2>&1 | find "x64" > NUL ]
 ARCH = x64
+!ELSE IF ! [ cl 2>&1 | find "ARM64" > NUL ]
+ARCH = ARM64
 !ELSE IF ! [ cl 2>&1 | find "ARM" > NUL ]
 ARCH = ARM
 !ELSE
