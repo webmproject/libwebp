@@ -106,8 +106,9 @@ foreach(I_SIMD RANGE ${WEBP_SIMD_FLAGS_RANGE})
   endif()
   # Check which files we should include or not.
   list(GET WEBP_SIMD_FILE_EXTENSIONS ${I_SIMD} WEBP_SIMD_FILE_EXTENSION)
-  file(GLOB SIMD_FILES "${CMAKE_CURRENT_LIST_DIR}/../"
-       "src/dsp/*${WEBP_SIMD_FILE_EXTENSION}")
+  file(GLOB SIMD_FILES
+       "${CMAKE_CURRENT_LIST_DIR}/../sharpyuv/*${WEBP_SIMD_FILE_EXTENSION}"
+       "${CMAKE_CURRENT_LIST_DIR}/../src/dsp/*${WEBP_SIMD_FILE_EXTENSION}")
   if(WEBP_HAVE_${WEBP_SIMD_FLAG})
     # Memorize the file and flags.
     foreach(FILE ${SIMD_FILES})
