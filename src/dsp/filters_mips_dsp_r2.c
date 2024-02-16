@@ -24,7 +24,7 @@
 //------------------------------------------------------------------------------
 // Helpful macro.
 
-#define SANITY_CHECK(in, out)                                                  \
+#define DCHECK(in, out)                                                        \
   do {                                                                         \
     assert(in != NULL);                                                        \
     assert(out != NULL);                                                       \
@@ -202,7 +202,7 @@ static WEBP_INLINE void DoHorizontalFilter_MIPSdspR2(const uint8_t* in,
   const uint8_t* preds;
   const size_t start_offset = row * stride;
   const int last_row = row + num_rows;
-  SANITY_CHECK(in, out);
+  DCHECK(in, out);
   in += start_offset;
   out += start_offset;
   preds = in;
@@ -250,7 +250,7 @@ static WEBP_INLINE void DoVerticalFilter_MIPSdspR2(const uint8_t* in,
   const uint8_t* preds;
   const size_t start_offset = row * stride;
   const int last_row = row + num_rows;
-  SANITY_CHECK(in, out);
+  DCHECK(in, out);
   in += start_offset;
   out += start_offset;
   preds = in;
@@ -318,7 +318,7 @@ static void DoGradientFilter_MIPSdspR2(const uint8_t* in,
   const uint8_t* preds;
   const size_t start_offset = row * stride;
   const int last_row = row + num_rows;
-  SANITY_CHECK(in, out);
+  DCHECK(in, out);
   in += start_offset;
   out += start_offset;
   preds = in;
@@ -380,7 +380,7 @@ static void GradientUnfilter_MIPSdspR2(const uint8_t* prev, const uint8_t* in,
 #undef DO_PREDICT_LINE_VERTICAL
 #undef PREDICT_LINE_ONE_PASS
 #undef DO_PREDICT_LINE
-#undef SANITY_CHECK
+#undef DCHECK
 
 //------------------------------------------------------------------------------
 // Entry point
