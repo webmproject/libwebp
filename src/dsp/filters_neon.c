@@ -21,14 +21,16 @@
 //------------------------------------------------------------------------------
 // Helpful macros.
 
-# define SANITY_CHECK(in, out)                                                 \
-  assert(in != NULL);                                                          \
-  assert(out != NULL);                                                         \
-  assert(width > 0);                                                           \
-  assert(height > 0);                                                          \
-  assert(stride >= width);                                                     \
-  assert(row >= 0 && num_rows > 0 && row + num_rows <= height);                \
-  (void)height;  // Silence unused warning.
+#define SANITY_CHECK(in, out)                                                  \
+  do {                                                                         \
+    assert(in != NULL);                                                        \
+    assert(out != NULL);                                                       \
+    assert(width > 0);                                                         \
+    assert(height > 0);                                                        \
+    assert(stride >= width);                                                   \
+    assert(row >= 0 && num_rows > 0 && row + num_rows <= height);              \
+    (void)height;  /* Silence unused warning. */                               \
+  } while (0)
 
 // load eight u8 and widen to s16
 #define U8_TO_S16(A) vreinterpretq_s16_u16(vmovl_u8(A))

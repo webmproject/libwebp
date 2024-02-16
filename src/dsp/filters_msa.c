@@ -57,11 +57,13 @@ static WEBP_INLINE void PredictLineInverse0(const uint8_t* src,
 // Helpful macro.
 
 #define SANITY_CHECK(in, out)  \
-  assert(in != NULL);          \
-  assert(out != NULL);         \
-  assert(width > 0);           \
-  assert(height > 0);          \
-  assert(stride >= width);
+  do {                         \
+    assert(in != NULL);        \
+    assert(out != NULL);       \
+    assert(width > 0);         \
+    assert(height > 0);        \
+    assert(stride >= width);   \
+  } while (0)
 
 //------------------------------------------------------------------------------
 // Horrizontal filter

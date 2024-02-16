@@ -24,14 +24,16 @@
 //------------------------------------------------------------------------------
 // Helpful macro.
 
-# define SANITY_CHECK(in, out)                                                 \
-  assert(in != NULL);                                                          \
-  assert(out != NULL);                                                         \
-  assert(width > 0);                                                           \
-  assert(height > 0);                                                          \
-  assert(stride >= width);                                                     \
-  assert(row >= 0 && num_rows > 0 && row + num_rows <= height);                \
-  (void)height;  // Silence unused warning.
+#define SANITY_CHECK(in, out)                                                  \
+  do {                                                                         \
+    assert(in != NULL);                                                        \
+    assert(out != NULL);                                                       \
+    assert(width > 0);                                                         \
+    assert(height > 0);                                                        \
+    assert(stride >= width);                                                   \
+    assert(row >= 0 && num_rows > 0 && row + num_rows <= height);              \
+    (void)height;  /* Silence unused warning. */                               \
+  } while (0)
 
 #define DO_PREDICT_LINE(SRC, DST, LENGTH, INVERSE) do {                        \
     const uint8_t* psrc = (uint8_t*)(SRC);                                     \

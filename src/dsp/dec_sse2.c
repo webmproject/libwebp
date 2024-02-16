@@ -259,15 +259,15 @@ static WEBP_INLINE void SignedShift8b_SSE2(__m128i* const x) {
   *x = _mm_packs_epi16(lo_1, hi_1);
 }
 
-#define FLIP_SIGN_BIT2(a, b) {                                                 \
+#define FLIP_SIGN_BIT2(a, b) do {                                              \
   (a) = _mm_xor_si128(a, sign_bit);                                            \
   (b) = _mm_xor_si128(b, sign_bit);                                            \
-}
+} while (0)
 
-#define FLIP_SIGN_BIT4(a, b, c, d) {                                           \
+#define FLIP_SIGN_BIT4(a, b, c, d) do {                                        \
   FLIP_SIGN_BIT2(a, b);                                                        \
   FLIP_SIGN_BIT2(c, d);                                                        \
-}
+} while (0)
 
 // input/output is uint8_t
 static WEBP_INLINE void GetNotHEV_SSE2(const __m128i* const p1,
@@ -645,12 +645,12 @@ static void SimpleHFilter16i_SSE2(uint8_t* p, int stride, int thresh) {
   (m) = _mm_max_epu8(m, MM_ABS(p2, p1));                                       \
 } while (0)
 
-#define LOAD_H_EDGES4(p, stride, e1, e2, e3, e4) {                             \
+#define LOAD_H_EDGES4(p, stride, e1, e2, e3, e4) do {                          \
   (e1) = _mm_loadu_si128((__m128i*)&(p)[0 * (stride)]);                        \
   (e2) = _mm_loadu_si128((__m128i*)&(p)[1 * (stride)]);                        \
   (e3) = _mm_loadu_si128((__m128i*)&(p)[2 * (stride)]);                        \
   (e4) = _mm_loadu_si128((__m128i*)&(p)[3 * (stride)]);                        \
-}
+} while (0)
 
 #define LOADUV_H_EDGE(p, u, v, stride) do {                                    \
   const __m128i U = _mm_loadl_epi64((__m128i*)&(u)[(stride)]);                 \
@@ -658,18 +658,18 @@ static void SimpleHFilter16i_SSE2(uint8_t* p, int stride, int thresh) {
   (p) = _mm_unpacklo_epi64(U, V);                                              \
 } while (0)
 
-#define LOADUV_H_EDGES4(u, v, stride, e1, e2, e3, e4) {                        \
+#define LOADUV_H_EDGES4(u, v, stride, e1, e2, e3, e4) do {                     \
   LOADUV_H_EDGE(e1, u, v, 0 * (stride));                                       \
   LOADUV_H_EDGE(e2, u, v, 1 * (stride));                                       \
   LOADUV_H_EDGE(e3, u, v, 2 * (stride));                                       \
   LOADUV_H_EDGE(e4, u, v, 3 * (stride));                                       \
-}
+} while (0)
 
-#define STOREUV(p, u, v, stride) {                                             \
+#define STOREUV(p, u, v, stride) do {                                          \
   _mm_storel_epi64((__m128i*)&(u)[(stride)], p);                               \
   (p) = _mm_srli_si128(p, 8);                                                  \
   _mm_storel_epi64((__m128i*)&(v)[(stride)], p);                               \
-}
+} while (0)
 
 static WEBP_INLINE void ComplexMask_SSE2(const __m128i* const p1,
                                          const __m128i* const p0,

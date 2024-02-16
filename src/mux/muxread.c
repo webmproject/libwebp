@@ -21,16 +21,18 @@
 
 // Handy MACRO.
 #define SWITCH_ID_LIST(INDEX, LIST)                                           \
-  if (idx == (INDEX)) {                                                       \
-    const WebPChunk* const chunk = ChunkSearchList((LIST), nth,               \
-                                                   kChunks[(INDEX)].tag);     \
-    if (chunk) {                                                              \
-      *data = chunk->data_;                                                   \
-      return WEBP_MUX_OK;                                                     \
-    } else {                                                                  \
-      return WEBP_MUX_NOT_FOUND;                                              \
+  do {                                                                        \
+    if (idx == (INDEX)) {                                                     \
+      const WebPChunk* const chunk = ChunkSearchList((LIST), nth,             \
+                                                     kChunks[(INDEX)].tag);   \
+      if (chunk) {                                                            \
+        *data = chunk->data_;                                                 \
+        return WEBP_MUX_OK;                                                   \
+      } else {                                                                \
+        return WEBP_MUX_NOT_FOUND;                                            \
+      }                                                                       \
     }                                                                         \
-  }
+  } while (0)
 
 static WebPMuxError MuxGet(const WebPMux* const mux, CHUNK_INDEX idx,
                            uint32_t nth, WebPData* const data) {

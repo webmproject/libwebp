@@ -23,14 +23,16 @@
 //------------------------------------------------------------------------------
 // Helpful macro.
 
-# define SANITY_CHECK(in, out)                                                 \
-  assert((in) != NULL);                                                        \
-  assert((out) != NULL);                                                       \
-  assert(width > 0);                                                           \
-  assert(height > 0);                                                          \
-  assert(stride >= width);                                                     \
-  assert(row >= 0 && num_rows > 0 && row + num_rows <= height);                \
-  (void)height;  // Silence unused warning.
+#define SANITY_CHECK(in, out)                                                  \
+  do {                                                                         \
+    assert((in) != NULL);                                                      \
+    assert((out) != NULL);                                                     \
+    assert(width > 0);                                                         \
+    assert(height > 0);                                                        \
+    assert(stride >= width);                                                   \
+    assert(row >= 0 && num_rows > 0 && row + num_rows <= height);              \
+    (void)height;  /* Silence unused warning. */                               \
+  } while (0)
 
 static void PredictLineTop_SSE2(const uint8_t* src, const uint8_t* pred,
                                 uint8_t* dst, int length) {
