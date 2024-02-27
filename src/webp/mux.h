@@ -22,7 +22,7 @@
 extern "C" {
 #endif
 
-#define WEBP_MUX_ABI_VERSION 0x0108        // MAJOR(8b) + MINOR(8b)
+#define WEBP_MUX_ABI_VERSION 0x0109        // MAJOR(8b) + MINOR(8b)
 
 //------------------------------------------------------------------------------
 // Mux API
@@ -522,6 +522,55 @@ WEBP_EXTERN const char* WebPAnimEncoderGetError(WebPAnimEncoder* enc);
 // Parameters:
 //   enc - (in/out) object to be deleted
 WEBP_EXTERN void WebPAnimEncoderDelete(WebPAnimEncoder* enc);
+
+//------------------------------------------------------------------------------
+// Non-image chunks.
+
+// Note: Only non-image related chunks should be managed through chunk APIs.
+// (Image related chunks are: "ANMF", "VP8 ", "VP8L" and "ALPH").
+
+// Adds a chunk with id 'fourcc' and data 'chunk_data' in the enc object.
+// Any existing chunk(s) with the same id will be removed.
+// Parameters:
+//   enc - (in/out) object to which the chunk is to be added
+//   fourcc - (in) a character array containing the fourcc of the given chunk;
+//                 e.g., "ICCP", "XMP ", "EXIF", etc.
+//   chunk_data - (in) the chunk data to be added
+//   copy_data - (in) value 1 indicates given data WILL be copied to the enc
+//               object and value 0 indicates data will NOT be copied.
+// Returns:
+//   WEBP_MUX_INVALID_ARGUMENT - if enc, fourcc or chunk_data is NULL.
+//   WEBP_MUX_MEMORY_ERROR - on memory allocation error.
+//   WEBP_MUX_OK - on success.
+WEBP_EXTERN WebPMuxError WebPAnimEncoderSetChunk(
+    WebPAnimEncoder* enc, const char fourcc[4], const WebPData* chunk_data,
+    int copy_data);
+
+// Gets a reference to the data of the chunk with id 'fourcc' in the enc object.
+// The caller should NOT free the returned data.
+// Parameters:
+//   enc - (in) object from which the chunk data is to be fetched
+//   fourcc - (in) a character array containing the fourcc of the chunk;
+//                 e.g., "ICCP", "XMP ", "EXIF", etc.
+//   chunk_data - (out) returned chunk data
+// Returns:
+//   WEBP_MUX_INVALID_ARGUMENT - if enc, fourcc or chunk_data is NULL.
+//   WEBP_MUX_NOT_FOUND - If enc does not contain a chunk with the given id.
+//   WEBP_MUX_OK - on success.
+WEBP_EXTERN WebPMuxError WebPAnimEncoderGetChunk(
+    const WebPAnimEncoder* enc, const char fourcc[4], WebPData* chunk_data);
+
+// Deletes the chunk with the given 'fourcc' from the enc object.
+// Parameters:
+//   enc - (in/out) object from which the chunk is to be deleted
+//   fourcc - (in) a character array containing the fourcc of the chunk;
+//                 e.g., "ICCP", "XMP ", "EXIF", etc.
+// Returns:
+//   WEBP_MUX_INVALID_ARGUMENT - if enc or fourcc is NULL.
+//   WEBP_MUX_NOT_FOUND - If enc does not contain a chunk with the given fourcc.
+//   WEBP_MUX_OK - on success.
+WEBP_EXTERN WebPMuxError WebPAnimEncoderDeleteChunk(
+    WebPAnimEncoder* enc, const char fourcc[4]);
 
 //------------------------------------------------------------------------------
 

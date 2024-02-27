@@ -1589,4 +1589,23 @@ const char* WebPAnimEncoderGetError(WebPAnimEncoder* enc) {
   return enc->error_str_;
 }
 
+WebPMuxError WebPAnimEncoderSetChunk(
+    WebPAnimEncoder* enc, const char fourcc[4], const WebPData* chunk_data,
+    int copy_data) {
+  if (enc == NULL) return WEBP_MUX_INVALID_ARGUMENT;
+  return WebPMuxSetChunk(enc->mux_, fourcc, chunk_data, copy_data);
+}
+
+WebPMuxError WebPAnimEncoderGetChunk(
+    const WebPAnimEncoder* enc, const char fourcc[4], WebPData* chunk_data) {
+  if (enc == NULL) return WEBP_MUX_INVALID_ARGUMENT;
+  return WebPMuxGetChunk(enc->mux_, fourcc, chunk_data);
+}
+
+WebPMuxError WebPAnimEncoderDeleteChunk(
+    WebPAnimEncoder* enc, const char fourcc[4]) {
+  if (enc == NULL) return WEBP_MUX_INVALID_ARGUMENT;
+  return WebPMuxDeleteChunk(enc->mux_, fourcc);
+}
+
 // -----------------------------------------------------------------------------
