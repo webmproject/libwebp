@@ -131,7 +131,9 @@ WEBP_NODISCARD WEBP_EXTERN WebPMux* WebPMuxCreateInternal(const WebPData*, int,
 // Parameters:
 //   bitstream - (in) the bitstream data in WebP RIFF format
 //   copy_data - (in) value 1 indicates given data WILL be copied to the mux
-//               object and value 0 indicates data will NOT be copied.
+//               object and value 0 indicates data will NOT be copied. If the
+//               data is not copied, it must exist for the lifetime of the
+//               mux object.
 // Returns:
 //   A pointer to the mux object created from given data - on success.
 //   NULL - In case of invalid data or memory error.
@@ -156,7 +158,9 @@ WEBP_NODISCARD static WEBP_INLINE WebPMux* WebPMuxCreate(
 //                 e.g., "ICCP", "XMP ", "EXIF" etc.
 //   chunk_data - (in) the chunk data to be added
 //   copy_data - (in) value 1 indicates given data WILL be copied to the mux
-//               object and value 0 indicates data will NOT be copied.
+//               object and value 0 indicates data will NOT be copied. If the
+//               data is not copied, it must exist until a call to
+//               WebPMuxAssemble() is made.
 // Returns:
 //   WEBP_MUX_INVALID_ARGUMENT - if mux, fourcc or chunk_data is NULL
 //                               or if fourcc corresponds to an image chunk.
@@ -219,7 +223,9 @@ struct WebPMuxFrameInfo {
 //   bitstream - (in) can be a raw VP8/VP8L bitstream or a single-image
 //               WebP file (non-animated)
 //   copy_data - (in) value 1 indicates given data WILL be copied to the mux
-//               object and value 0 indicates data will NOT be copied.
+//               object and value 0 indicates data will NOT be copied. If the
+//               data is not copied, it must exist until a call to
+//               WebPMuxAssemble() is made.
 // Returns:
 //   WEBP_MUX_INVALID_ARGUMENT - if mux is NULL or bitstream is NULL.
 //   WEBP_MUX_MEMORY_ERROR - on memory allocation error.
@@ -237,7 +243,9 @@ WEBP_EXTERN WebPMuxError WebPMuxSetImage(
 //   mux - (in/out) object to which the frame is to be added
 //   frame - (in) frame data.
 //   copy_data - (in) value 1 indicates given data WILL be copied to the mux
-//               object and value 0 indicates data will NOT be copied.
+//               object and value 0 indicates data will NOT be copied. If the
+//               data is not copied, it must exist until a call to
+//               WebPMuxAssemble() is made.
 // Returns:
 //   WEBP_MUX_INVALID_ARGUMENT - if mux or frame is NULL
 //                               or if content of 'frame' is invalid.
@@ -537,7 +545,9 @@ WEBP_EXTERN void WebPAnimEncoderDelete(WebPAnimEncoder* enc);
 //                 e.g., "ICCP", "XMP ", "EXIF", etc.
 //   chunk_data - (in) the chunk data to be added
 //   copy_data - (in) value 1 indicates given data WILL be copied to the enc
-//               object and value 0 indicates data will NOT be copied.
+//               object and value 0 indicates data will NOT be copied. If the
+//               data is not copied, it must exist until a call to
+//               WebPAnimEncoderAssemble() is made.
 // Returns:
 //   WEBP_MUX_INVALID_ARGUMENT - if enc, fourcc or chunk_data is NULL.
 //   WEBP_MUX_MEMORY_ERROR - on memory allocation error.
