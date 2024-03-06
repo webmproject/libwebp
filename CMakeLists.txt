@@ -135,7 +135,7 @@ if(WEBP_UNICODE)
   add_definitions(-DUNICODE -D_UNICODE)
 endif()
 
-if(MSVC AND BUILD_SHARED_LIBS)
+if(WIN32 AND BUILD_SHARED_LIBS)
   add_definitions(-DWEBP_DLL)
 endif()
 
@@ -163,7 +163,9 @@ if(MSVC)
   set(CMAKE_STATIC_LIBRARY_PREFIX "${webp_libname_prefix}")
 endif()
 
+if(NOT WIN32)
 set(CMAKE_C_VISIBILITY_PRESET hidden)
+endif()
 
 if(WEBP_ENABLE_WUNUSED_RESULT)
   if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.21.0)

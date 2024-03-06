@@ -763,7 +763,8 @@ AC_CONFIG_FILES([Makefile src/Makefile man/Makefile \
                  src/libwebp.pc src/libwebpdecoder.pc \
                  src/demux/libwebpdemux.pc src/mux/libwebpmux.pc])
 
-
+dnl fix exports from MinGW builds
+AC_CONFIG_COMMANDS_POST([$SED -i 's/-DDLL_EXPORT/-DWEBP_DLL/' config.status])
 AC_OUTPUT
 
 AC_MSG_NOTICE([
