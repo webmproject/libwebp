@@ -196,15 +196,13 @@ static void Transform_SSE2(const int16_t* in, uint8_t* dst, int do_two) {
 }
 
 #if (USE_TRANSFORM_AC3 == 1)
-#define MUL(a, b) (((a) * (b)) >> 16)
+
 static void TransformAC3(const int16_t* in, uint8_t* dst) {
-  static const int kC1 = 20091 + (1 << 16);
-  static const int kC2 = 35468;
   const __m128i A = _mm_set1_epi16(in[0] + 4);
-  const __m128i c4 = _mm_set1_epi16(MUL(in[4], kC2));
-  const __m128i d4 = _mm_set1_epi16(MUL(in[4], kC1));
-  const int c1 = MUL(in[1], kC2);
-  const int d1 = MUL(in[1], kC1);
+  const __m128i c4 = _mm_set1_epi16(WEBP_TRANSFORM_AC3_MUL2(in[4]));
+  const __m128i d4 = _mm_set1_epi16(WEBP_TRANSFORM_AC3_MUL1(in[4]));
+  const int c1 = WEBP_TRANSFORM_AC3_MUL2(in[1]);
+  const int d1 = WEBP_TRANSFORM_AC3_MUL1(in[1]);
   const __m128i CD = _mm_set_epi16(0, 0, 0, 0, -d1, -c1, c1, d1);
   const __m128i B = _mm_adds_epi16(A, CD);
   const __m128i m0 = _mm_adds_epi16(B, d4);
@@ -238,7 +236,7 @@ static void TransformAC3(const int16_t* in, uint8_t* dst) {
   WebPInt32ToMem(dst + 2 * BPS, _mm_cvtsi128_si32(dst2));
   WebPInt32ToMem(dst + 3 * BPS, _mm_cvtsi128_si32(dst3));
 }
-#undef MUL
+
 #endif   // USE_TRANSFORM_AC3
 
 //------------------------------------------------------------------------------
