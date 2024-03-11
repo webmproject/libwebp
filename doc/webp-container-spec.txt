@@ -290,15 +290,18 @@ up of:
 For an _animated image_, the _image data_ consists of multiple frames. More
 details about frames can be found in the [Animation](#animation) section.
 
-All chunks SHOULD be placed in the same order as listed above. If a chunk
-appears in the wrong place, the file is invalid, but readers MAY parse the
-file, ignoring the chunks that are out of order.
+All chunks necessary for reconstruction and color correction, that is 'VP8X',
+'ICCP', 'ANIM', 'ANMF', 'ALPH', 'VP8' and 'VP8L', MUST appear in the order
+described above. Readers SHOULD fail when chunks necessary for reconstruction
+and color correction are out of order.
 
-**Rationale:** Setting the order of chunks should allow quicker file
-parsing. For example, if an 'ALPH' Chunk does not appear in its required
-position, a decoder can choose to stop searching for it. The rule of
-ignoring late chunks should make programs that need to do a full search
-give the same results as the ones stopping early.
+[Metadata](#metadata) and [unknown](#unknown-chunks) chunks MAY appear out of
+order.
+
+**Rationale:** The chunks necessary for reconstruction should appear first in
+the file to allow a reader to begin decoding an image before receiving all of
+the data. An application may benefit from varying the order of metadata and
+custom chunks to suit the implementation.
 
 Extended WebP file header:
 {:#extended_header}
