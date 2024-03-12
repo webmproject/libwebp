@@ -292,7 +292,7 @@ details about frames can be found in the [Animation](#animation) section.
 
 All chunks necessary for reconstruction and color correction, that is 'VP8X',
 'ICCP', 'ANIM', 'ANMF', 'ALPH', 'VP8' and 'VP8L', MUST appear in the order
-described above. Readers SHOULD fail when chunks necessary for reconstruction
+described earlier. Readers SHOULD fail when chunks necessary for reconstruction
 and color correction are out of order.
 
 [Metadata](#metadata) and [unknown](#unknown-chunks) chunks MAY appear out of
@@ -535,7 +535,7 @@ Frame Data: _Chunk Size_ - `16` bytes
 
   * An optional list of [unknown chunks](#unknown-chunks).
 
-**Note**: The 'ANMF' payload, _Frame Data_ above, consists of individual
+**Note**: The 'ANMF' payload, _Frame Data_, consists of individual
 _padded_ chunks, as described by the [RIFF file format](#riff-file-format).
 
 #### Alpha
