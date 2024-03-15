@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH CWEBP 1 "March 17, 2022"
+.TH CWEBP 1 "March 14, 2024"
 .SH NAME
 cwebp \- compress an image file to a WebP file
 .SH SYNOPSIS
@@ -135,7 +135,9 @@ are used, \fB\-size\fP value will prevail.
 Set a maximum number of passes to use during the dichotomy used by
 options \fB\-size\fP or \fB\-psnr\fP. Maximum value is 10, default is 1.
 If options \fB\-size\fP or \fB\-psnr\fP were used, but \fB\-pass\fP wasn't
-specified, a default value of '6' passes will be used.
+specified, a default value of '6' passes will be used. If \fB\-pass\fP is
+specified, but neither \fB-size\fP nor \fB-psnr\fP are, a target PSNR of 40dB
+will be used.
 .TP
 .BI \-qrange " int int
 Specifies the permissible interval for the quality factor. This is particularly
