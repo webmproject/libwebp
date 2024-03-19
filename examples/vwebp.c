@@ -18,6 +18,7 @@
 #define _POSIX_C_SOURCE 200112L  // for setenv
 #endif
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -430,10 +431,13 @@ static void HandleDisplay(void) {
 #endif
 }
 
-static void StartDisplay(void) {
+static void StartDisplay(const char* filename) {
   int width = kParams.canvas_width;
   int height = kParams.canvas_height;
   int screen_width, screen_height;
+  const char viewername[] = " - WebP viewer";
+  // max linux file len + viewername string
+  char title[4096 + sizeof(viewername)] = "";
   // TODO(webp:365) GLUT_DOUBLE results in flickering / old frames to be
   // partially displayed with animated webp + alpha.
 #if defined(__APPLE__) || defined(_WIN32)
@@ -453,8 +457,9 @@ static void StartDisplay(void) {
       height = screen_height;
     }
   }
+  snprintf(title, sizeof(title), "%s%s", filename, viewername);
   glutInitWindowSize(width, height);
-  glutCreateWindow("WebP viewer");
+  glutCreateWindow(title);
   glutDisplayFunc(HandleDisplay);
   glutReshapeFunc(HandleReshape);
   glutIdleFunc(NULL);
@@ -627,7 +632,7 @@ int main(int argc, char* argv[]) {
 #ifdef FREEGLUT
   glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION);
 #endif
-  StartDisplay();
+  StartDisplay(argv[1]);
 
   if (kParams.has_animation) glutTimerFunc(0, decode_callback, 0);
   glutMainLoop();
