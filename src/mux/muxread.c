@@ -37,6 +37,7 @@
 static WebPMuxError MuxGet(const WebPMux* const mux, CHUNK_INDEX idx,
                            uint32_t nth, WebPData* const data) {
   assert(mux != NULL);
+  assert(idx != IDX_LAST_CHUNK);
   assert(!IsWPI(kChunks[idx].id));
   WebPDataInit(data);
 
