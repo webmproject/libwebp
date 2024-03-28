@@ -665,6 +665,21 @@ if(WEBP_BUILD_EXTRAS)
                         ${CMAKE_CURRENT_BINARY_DIR}/src ${SDL2_INCLUDE_DIRS})
     set(WEBP_HAVE_SDL 1)
     target_compile_definitions(vwebp_sdl PUBLIC WEBP_HAVE_SDL)
+
+    set(CMAKE_REQUIRED_INCLUDES "${SDL2_INCLUDE_DIRS}")
+    check_c_source_compiles(
+      "
+        #define SDL_MAIN_HANDLED
+        #include \"SDL.h\"
+        int main(void) {
+          return 0;
+        }
+      "
+      HAVE_JUST_SDL_H)
+    set(CMAKE_REQUIRED_INCLUDES)
+    if(HAVE_JUST_SDL_H)
+      target_compile_definitions(vwebp_sdl PRIVATE WEBP_HAVE_JUST_SDL_H)
+    endif()
   endif()
 endif()
 
