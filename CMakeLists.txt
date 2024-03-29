@@ -694,13 +694,10 @@ if(WEBP_BUILD_WEBP_JS)
   else()
     set(emscripten_stack_size "-sTOTAL_STACK=5MB")
   endif()
-  # Set SDL2 flags so that ports are downloaded by emscripten.
-  set(EMSCRIPTEN_SDL2_FLAGS "-sUSE_SDL=2 -sUSE_SDL_IMAGE=2")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EMSCRIPTEN_SDL2_FLAGS}")
+  find_package(SDL2 REQUIRED)
   # wasm2js does not support SIMD.
   if(NOT WEBP_ENABLE_SIMD)
     # JavaScript version
-    find_package(SDL2 QUIET)
     add_executable(webp_js ${CMAKE_CURRENT_SOURCE_DIR}/extras/webp_to_sdl.c)
     target_link_libraries(webp_js webpdecoder SDL2)
     target_include_directories(webp_js PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
@@ -708,10 +705,13 @@ if(WEBP_BUILD_WEBP_JS)
     set_target_properties(
       webp_js
       PROPERTIES
+        # Emscripten puts -sUSE_SDL2=1 in this variable, though it's needed at
+        # compile time to ensure the headers are downloaded.
+        COMPILE_OPTIONS "${SDL2_LIBRARIES}"
         LINK_FLAGS
         "-sWASM=0 ${emscripten_stack_size} \
          -sEXPORTED_FUNCTIONS=_WebPToSDL -sINVOKE_RUN=0 \
-         -sEXPORTED_RUNTIME_METHODS=cwrap ${EMSCRIPTEN_SDL2_FLAGS} \
+         -sEXPORTED_RUNTIME_METHODS=cwrap ${SDL2_LIBRARIES} \
          -sALLOW_MEMORY_GROWTH")
     set_target_properties(webp_js PROPERTIES OUTPUT_NAME webp)
     target_compile_definitions(webp_js PUBLIC EMSCRIPTEN WEBP_HAVE_SDL)
@@ -724,10 +724,13 @@ if(WEBP_BUILD_WEBP_JS)
   set_target_properties(
     webp_wasm
     PROPERTIES
+      # Emscripten puts -sUSE_SDL2=1 in this variable, though it's needed at
+      # compile time to ensure the headers are downloaded.
+      COMPILE_OPTIONS "${SDL2_LIBRARIES}"
       LINK_FLAGS
       "-sWASM=1 ${emscripten_stack_size} \
        -sEXPORTED_FUNCTIONS=_WebPToSDL -sINVOKE_RUN=0 \
-       -sEXPORTED_RUNTIME_METHODS=cwrap ${EMSCRIPTEN_SDL2_FLAGS} \
+       -sEXPORTED_RUNTIME_METHODS=cwrap ${SDL2_LIBRARIES} \
        -sALLOW_MEMORY_GROWTH")
   target_compile_definitions(webp_wasm PUBLIC EMSCRIPTEN WEBP_HAVE_SDL)
 
