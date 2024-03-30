@@ -291,7 +291,7 @@ For an _animated image_, the _image data_ consists of multiple frames. More
 details about frames can be found in the [Animation](#animation) section.
 
 All chunks necessary for reconstruction and color correction, that is 'VP8X',
-'ICCP', 'ANIM', 'ANMF', 'ALPH', 'VP8' and 'VP8L', MUST appear in the order
+'ICCP', 'ANIM', 'ANMF', 'ALPH', 'VP8 ' and 'VP8L', MUST appear in the order
 described earlier. Readers SHOULD fail when chunks necessary for reconstruction
 and color correction are out of order.
 
