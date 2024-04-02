@@ -498,7 +498,7 @@ static void Help(void) {
 }
 
 int main(int argc, char* argv[]) {
-  int c;
+  int c, file_name_argv_index = 1;
   WebPDecoderConfig* const config = &kParams.config;
   WebPIterator* const curr = &kParams.curr_frame;
 
@@ -545,7 +545,10 @@ int main(int argc, char* argv[]) {
     } else if (!strcmp(argv[c], "-mt")) {
       config->options.use_threads = 1;
     } else if (!strcmp(argv[c], "--")) {
-      if (c < argc - 1) kParams.file_name = (const char*)GET_WARGV(argv, ++c);
+      if (c < argc - 1) {
+        kParams.file_name = (const char*)GET_WARGV(argv, ++c);
+        file_name_argv_index = c;
+      }
       break;
     } else if (argv[c][0] == '-') {
       printf("Unknown option '%s'\n", argv[c]);
@@ -553,6 +556,7 @@ int main(int argc, char* argv[]) {
       FREE_WARGV_AND_RETURN(-1);
     } else {
       kParams.file_name = (const char*)GET_WARGV(argv, c);
+      file_name_argv_index = c;
     }
 
     if (parse_error) {
@@ -632,7 +636,7 @@ int main(int argc, char* argv[]) {
 #ifdef FREEGLUT
   glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION);
 #endif
-  StartDisplay(argv[1]);
+  StartDisplay(argv[file_name_argv_index]);
 
   if (kParams.has_animation) glutTimerFunc(0, decode_callback, 0);
   glutMainLoop();
