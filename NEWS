@@ -1,4 +1,4 @@
-- 4/1/2023: version 1.4.0
+- 4/2/2024: version 1.4.0
   This is a binary compatible release.
   * API changes:
     - libwebpmux: WebPAnimEncoderSetChunk, WebPAnimEncoderGetChunk,
