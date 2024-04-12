@@ -1,3 +1,6 @@
+8a6a55bb update NEWS
+cf7c5a5d provide a way to opt-out/override WEBP_NODISCARD
+cc34288a update ChangeLog (tag: v1.4.0-rc1)
 f13c0886 NEWS: fix date
 74555950 Merge "vwebp: fix window title when options are given" into 1.4.0
 d781646c vwebp: fix window title when options are given
