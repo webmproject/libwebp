@@ -1,4 +1,4 @@
-- 4/2/2024: version 1.4.0
+- 4/12/2024: version 1.4.0
   This is a binary compatible release.
   * API changes:
     - libwebpmux: WebPAnimEncoderSetChunk, WebPAnimEncoderGetChunk,
@@ -7,6 +7,8 @@
     - extras: SharpYuvEstimate420Risk
   * further security related hardening in libwebp & examples
   * some minor optimizations in the lossless encoder
+  * added WEBP_NODISCARD to report unused result warnings; enable with
+    -DWEBP_ENABLE_NODISCARD=1
   * improvements and corrections in webp-container-spec.txt and
     webp-lossless-bitstream-spec.txt (#611)
   * miscellaneous warning, bug & build fixes (#615, #619, #632, #635)
