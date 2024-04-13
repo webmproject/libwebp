@@ -36,8 +36,9 @@ typedef long long int int64_t;
 #define WEBP_INLINE __forceinline
 #endif  /* _MSC_VER */
 
-#if defined(WEBP_ENABLE_NODISCARD) ||                   \
-    (defined(__cplusplus) && __cplusplus >= 201700L) || \
+#ifndef WEBP_NODISCARD
+#if defined(WEBP_ENABLE_NODISCARD) && WEBP_ENABLE_NODISCARD
+#if (defined(__cplusplus) && __cplusplus >= 201700L) || \
     (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 202311L)
 #define WEBP_NODISCARD [[nodiscard]]
 #else
@@ -47,11 +48,16 @@ typedef long long int int64_t;
 #define WEBP_NODISCARD __attribute__((warn_unused_result))
 #else
 #define WEBP_NODISCARD
-#endif
+#endif  /* __has_attribute(warn_unused_result) */
 #else
 #define WEBP_NODISCARD
-#endif
-#endif
+#endif  /* defined(__clang__) && defined(__has_attribute) */
+#endif  /* (defined(__cplusplus) && __cplusplus >= 201700L) ||
+           (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 202311L) */
+#else
+#define WEBP_NODISCARD
+#endif  /* defined(WEBP_ENABLE_NODISCARD) && WEBP_ENABLE_NODISCARD */
+#endif  /* WEBP_NODISCARD */
 
 #ifndef WEBP_EXTERN
 // This explicitly marks library functions and allows for changing the
