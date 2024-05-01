@@ -12,6 +12,7 @@
 // Author: Skal (pascal.massimino@gmail.com)
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>  // for 'strcmp'.
 
 #include "./anim_util.h"
@@ -35,6 +36,7 @@ static void Help(void) {
   printf("  -version ............ print version number and exit\n");
 }
 
+// Returns EXIT_SUCCESS on success, EXIT_FAILURE on failure.
 int main(int argc, const char* argv[]) {
   int error = 0;
   const W_CHAR* dump_folder = TO_W_CHAR(".");
@@ -47,7 +49,7 @@ int main(int argc, const char* argv[]) {
 
   if (argc < 2) {
     Help();
-    FREE_WARGV_AND_RETURN(-1);
+    FREE_WARGV_AND_RETURN(EXIT_FAILURE);
   }
 
   for (c = 1; !error && c < argc; ++c) {
@@ -73,7 +75,7 @@ int main(int argc, const char* argv[]) {
       suffix = TO_W_CHAR("pam");
     } else if (!strcmp(argv[c], "-h") || !strcmp(argv[c], "-help")) {
       Help();
-      FREE_WARGV_AND_RETURN(0);
+      FREE_WARGV_AND_RETURN(EXIT_SUCCESS);
     } else if (!strcmp(argv[c], "-version")) {
       int dec_version, demux_version;
       GetAnimatedImageVersions(&dec_version, &demux_version);
@@ -82,7 +84,7 @@ int main(int argc, const char* argv[]) {
              (dec_version >> 0) & 0xff,
              (demux_version >> 16) & 0xff, (demux_version >> 8) & 0xff,
              (demux_version >> 0) & 0xff);
-      FREE_WARGV_AND_RETURN(0);
+      FREE_WARGV_AND_RETURN(EXIT_SUCCESS);
     } else {
       uint32_t i;
       AnimatedImage image;
@@ -121,5 +123,5 @@ int main(int argc, const char* argv[]) {
       ClearAnimatedImage(&image);
     }
   }
-  FREE_WARGV_AND_RETURN(error ? 1 : 0);
+  FREE_WARGV_AND_RETURN(error ? EXIT_FAILURE : EXIT_SUCCESS);
 }

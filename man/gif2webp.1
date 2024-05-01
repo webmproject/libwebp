@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH GIF2WEBP 1 "November 17, 2021"
+.TH GIF2WEBP 1 "April 30, 2024"
 .SH NAME
 gif2webp \- Convert a GIF image to WebP
 .SH SYNOPSIS
@@ -125,6 +125,13 @@ Print extra information.
 .TP
 .B \-quiet
 Do not print anything.
+
+.SH EXIT STATUS
+If there were no problems during execution, \fBgif2webp\fP exits with the value
+of the C constant \fBEXIT_SUCCESS\fP. This is usually zero.
+.PP
+If an error occurs, \fBgif2webp\fP exits with the value of the C constant
+\fBEXIT_FAILURE\fP. This is usually one.
 
 .SH BUGS
 Please report all bugs to the issue tracker:

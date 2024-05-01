@@ -96,6 +96,7 @@ static void Help(void) {
 
 //------------------------------------------------------------------------------
 
+// Returns EXIT_SUCCESS on success, EXIT_FAILURE on failure.
 int main(int argc, const char* argv[]) {
   int verbose = 0;
   int gif_error = GIF_ERROR;
@@ -140,7 +141,7 @@ int main(int argc, const char* argv[]) {
       !WebPPictureInit(&frame) || !WebPPictureInit(&curr_canvas) ||
       !WebPPictureInit(&prev_canvas)) {
     fprintf(stderr, "Error! Version mismatch!\n");
-    FREE_WARGV_AND_RETURN(-1);
+    FREE_WARGV_AND_RETURN(EXIT_FAILURE);
   }
   config.lossless = 1;  // Use lossless compression by default.
 
@@ -150,14 +151,14 @@ int main(int argc, const char* argv[]) {
 
   if (argc == 1) {
     Help();
-    FREE_WARGV_AND_RETURN(0);
+    FREE_WARGV_AND_RETURN(EXIT_SUCCESS);
   }
 
   for (c = 1; c < argc; ++c) {
     int parse_error = 0;
     if (!strcmp(argv[c], "-h") || !strcmp(argv[c], "-help")) {
       Help();
-      FREE_WARGV_AND_RETURN(0);
+      FREE_WARGV_AND_RETURN(EXIT_SUCCESS);
     } else if (!strcmp(argv[c], "-o") && c < argc - 1) {
       out_file = GET_WARGV(argv, ++c);
     } else if (!strcmp(argv[c], "-lossy")) {
@@ -216,7 +217,7 @@ int main(int argc, const char* argv[]) {
           fprintf(stderr, "Error! Unknown metadata type '%.*s'\n",
                   (int)(token - start), start);
           Help();
-          FREE_WARGV_AND_RETURN(-1);
+          FREE_WARGV_AND_RETURN(EXIT_FAILURE);
         }
         start = token + 1;
       }
@@ -229,7 +230,7 @@ int main(int argc, const char* argv[]) {
              (enc_version >> 16) & 0xff, (enc_version >> 8) & 0xff,
              enc_version & 0xff, (mux_version >> 16) & 0xff,
              (mux_version >> 8) & 0xff, mux_version & 0xff);
-      FREE_WARGV_AND_RETURN(0);
+      FREE_WARGV_AND_RETURN(EXIT_SUCCESS);
     } else if (!strcmp(argv[c], "-quiet")) {
       quiet = 1;
       enc_options.verbose = 0;
@@ -242,14 +243,14 @@ int main(int argc, const char* argv[]) {
     } else if (argv[c][0] == '-') {
       fprintf(stderr, "Error! Unknown option '%s'\n", argv[c]);
       Help();
-      FREE_WARGV_AND_RETURN(-1);
+      FREE_WARGV_AND_RETURN(EXIT_FAILURE);
     } else {
       in_file = GET_WARGV(argv, c);
     }
 
     if (parse_error) {
       Help();
-      FREE_WARGV_AND_RETURN(-1);
+      FREE_WARGV_AND_RETURN(EXIT_FAILURE);
     }
   }
 
@@ -593,7 +594,7 @@ int main(int argc, const char* argv[]) {
 #endif
   }
 
-  FREE_WARGV_AND_RETURN(!ok);
+  FREE_WARGV_AND_RETURN(ok ? EXIT_SUCCESS : EXIT_FAILURE);
 }
 
 #else  // !WEBP_HAVE_GIF
@@ -601,7 +602,7 @@ int main(int argc, const char* argv[]) {
 int main(int argc, const char* argv[]) {
   fprintf(stderr, "GIF support not enabled in %s.\n", argv[0]);
   (void)argc;
-  return 0;
+  return EXIT_FAILURE;
 }
 
 #endif

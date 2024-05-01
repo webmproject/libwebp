@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH WEBPINFO 1 "November 17, 2021"
+.TH WEBPINFO 1 "April 30, 2024"
 .SH NAME
 webpinfo \- print out the chunk level structure of WebP files
 along with basic integrity checks.
@@ -46,6 +46,13 @@ Detailed usage instructions.
 .SH INPUT
 Input files in WebP format. Input files must come last, following
 options (if any). There can be multiple input files.
+
+.SH EXIT STATUS
+If there were no problems during execution, \fBwebpinfo\fP exits with the value
+of the C constant \fBEXIT_SUCCESS\fP. This is usually zero.
+.PP
+If an error occurs, \fBwebpinfo\fP exits with the value of the C constant
+\fBEXIT_FAILURE\fP. This is usually one.
 
 .SH BUGS
 Please report all bugs to the issue tracker:

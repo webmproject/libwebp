@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH VWEBP 1 "November 17, 2021"
+.TH VWEBP 1 "April 30, 2024"
 .SH NAME
 vwebp \- decompress a WebP file and display it in a window
 .SH SYNOPSIS
@@ -71,6 +71,13 @@ Disable blending and disposal process, for debugging purposes.
 .TP
 .B 'q' / 'Q' / ESC
 Quit.
+
+.SH EXIT STATUS
+If there were no problems during execution, \fBvwebp\fP exits with the value of
+the C constant \fBEXIT_SUCCESS\fP. This is usually zero.
+.PP
+If an error occurs, \fBvwebp\fP exits with the value of the C constant
+\fBEXIT_FAILURE\fP. This is usually one.
 
 .SH BUGS
 Please report all bugs to the issue tracker:

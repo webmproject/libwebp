@@ -59,6 +59,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "webp/decode.h"
 #include "webp/mux.h"
 #include "../examples/example_util.h"
@@ -1225,6 +1226,7 @@ static int Process(const Config* config) {
 //------------------------------------------------------------------------------
 // Main.
 
+// Returns EXIT_SUCCESS on success, EXIT_FAILURE on failure.
 int main(int argc, const char* argv[]) {
   Config config;
   int ok;
@@ -1238,7 +1240,7 @@ int main(int argc, const char* argv[]) {
     PrintHelp();
   }
   DeleteConfig(&config);
-  FREE_WARGV_AND_RETURN(!ok);
+  FREE_WARGV_AND_RETURN(ok ? EXIT_SUCCESS : EXIT_FAILURE);
 }
 
 //------------------------------------------------------------------------------

@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH CWEBP 1 "March 26, 2024"
+.TH CWEBP 1 "April 30, 2024"
 .SH NAME
 cwebp \- compress an image file to a WebP file
 .SH SYNOPSIS
@@ -298,6 +298,13 @@ Note: each input format may not support all combinations.
 .TP
 .B \-noasm
 Disable all assembly optimizations.
+
+.SH EXIT STATUS
+If there were no problems during execution, \fBcwebp\fP exits with the value of
+the C constant \fBEXIT_SUCCESS\fP. This is usually zero.
+.PP
+If an error occurs, \fBcwebp\fP exits with the value of the C constant
+\fBEXIT_FAILURE\fP. This is usually one.
 
 .SH BUGS
 Please report all bugs to the issue tracker:

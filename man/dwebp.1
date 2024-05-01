@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH DWEBP 1 "November 17, 2021"
+.TH DWEBP 1 "April 30, 2024"
 .SH NAME
 dwebp \- decompress a WebP file to an image file
 .SH SYNOPSIS
@@ -107,6 +107,13 @@ Print extra information (decoding time in particular).
 .TP
 .B \-noasm
 Disable all assembly optimizations.
+
+.SH EXIT STATUS
+If there were no problems during execution, \fBdwebp\fP exits with the value of
+the C constant \fBEXIT_SUCCESS\fP. This is usually zero.
+.PP
+If an error occurs, \fBdwebp\fP exits with the value of the C constant
+\fBEXIT_FAILURE\fP. This is usually one.
 
 .SH BUGS
 Please report all bugs to the issue tracker:
