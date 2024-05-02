@@ -206,8 +206,12 @@ struct my_error_mgr {
 
 static void my_error_exit(j_common_ptr dinfo) {
   struct my_error_mgr* myerr = (struct my_error_mgr*)dinfo->err;
+  const int msg_code = myerr->pub.msg_code;
   fprintf(stderr, "libjpeg error: ");
   dinfo->err->output_message(dinfo);
+  if (msg_code == JERR_INPUT_EOF || msg_code == JERR_FILE_READ) {
+    fprintf(stderr, "`jpegtran -copy all` MAY be able to process this file.\n");
+  }
   longjmp(myerr->setjmp_buffer, 1);
 }
 
