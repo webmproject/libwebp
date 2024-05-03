@@ -98,7 +98,7 @@ static void SubtractGreenFromBlueAndRed_SSE41(uint32_t* argb_data,
 static void CollectColorBlueTransforms_SSE41(const uint32_t* argb, int stride,
                                              int tile_width, int tile_height,
                                              int green_to_blue, int red_to_blue,
-                                             int histo[]) {
+                                             uint32_t histo[]) {
   const __m128i mult =
       MK_CST_16(CST_5b(red_to_blue) + 256,CST_5b(green_to_blue));
   const __m128i perm =
@@ -143,8 +143,8 @@ static void CollectColorBlueTransforms_SSE41(const uint32_t* argb, int stride,
 
 static void CollectColorRedTransforms_SSE41(const uint32_t* argb, int stride,
                                             int tile_width, int tile_height,
-                                            int green_to_red, int histo[]) {
-
+                                            int green_to_red,
+                                            uint32_t histo[]) {
   const __m128i mult = MK_CST_16(0, CST_5b(green_to_red));
   const __m128i mask_g = _mm_set1_epi32(0x0000ff00);
   if (tile_width >= 4) {

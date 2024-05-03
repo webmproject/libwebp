@@ -400,14 +400,15 @@ static float FastLog2Slow_C(uint32_t v) {
 // Methods to calculate Entropy (Shannon).
 
 // Compute the combined Shanon's entropy for distribution {X} and {X+Y}
-static float CombinedShannonEntropy_C(const int X[256], const int Y[256]) {
+static float CombinedShannonEntropy_C(const uint32_t X[256],
+                                      const uint32_t Y[256]) {
   int i;
   float retval = 0.f;
-  int sumX = 0, sumXY = 0;
+  uint32_t sumX = 0, sumXY = 0;
   for (i = 0; i < 256; ++i) {
-    const int x = X[i];
+    const uint32_t x = X[i];
     if (x != 0) {
-      const int xy = x + Y[i];
+      const uint32_t xy = x + Y[i];
       sumX += x;
       retval -= VP8LFastSLog2(x);
       sumXY += xy;
@@ -577,7 +578,7 @@ static WEBP_INLINE uint8_t TransformColorBlue(uint8_t green_to_blue,
 
 void VP8LCollectColorRedTransforms_C(const uint32_t* argb, int stride,
                                      int tile_width, int tile_height,
-                                     int green_to_red, int histo[]) {
+                                     int green_to_red, uint32_t histo[]) {
   while (tile_height-- > 0) {
     int x;
     for (x = 0; x < tile_width; ++x) {
@@ -590,7 +591,7 @@ void VP8LCollectColorRedTransforms_C(const uint32_t* argb, int stride,
 void VP8LCollectColorBlueTransforms_C(const uint32_t* argb, int stride,
                                       int tile_width, int tile_height,
                                       int green_to_blue, int red_to_blue,
-                                      int histo[]) {
+                                      uint32_t histo[]) {
   while (tile_height-- > 0) {
     int x;
     for (x = 0; x < tile_width; ++x) {

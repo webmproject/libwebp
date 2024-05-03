@@ -20,7 +20,7 @@
 #include "src/enc/vp8li_enc.h"
 
 #define MAX_DIFF_COST (1e30f)
-
+#define HISTO_SIZE (4 * 256)
 static const float kSpatialPredictorBias = 15.f;
 static const int kPredLowEffort = 11;
 static const uint32_t kMaskAlpha = 0xff000000;
@@ -31,8 +31,10 @@ static WEBP_INLINE int GetMin(int a, int b) { return (a > b) ? b : a; }
 //------------------------------------------------------------------------------
 // Methods to calculate Entropy (Shannon).
 
-static float PredictionCostSpatial(const int counts[256], int weight_0,
-                                   float exp_val) {
+// Compute a bias for prediction entropy using a global heuristic to favor
+// values closer to 0. Hence the final negative sign.
+static float PredictionCostBias(const uint32_t counts[256], int weight_0,
+                                float exp_val) {
   const int significant_symbols = 256 >> 4;
   const float exp_decay_factor = 0.6f;
   float bits = (float)weight_0 * counts[0];
@@ -44,23 +46,31 @@ static float PredictionCostSpatial(const int counts[256], int weight_0,
   return (float)(-0.1 * bits);
 }
 
-static float PredictionCostSpatialHistogram(const int accumulated[4][256],
-                                            const int tile[4][256]) {
+static float PredictionCostSpatialHistogram(
+    const uint32_t accumulated[HISTO_SIZE], const uint32_t tile[HISTO_SIZE],
+    int mode, int left_mode, int above_mode) {
   int i;
   float retval = 0.f;
   for (i = 0; i < 4; ++i) {
     const float kExpValue = 0.94f;
-    retval += PredictionCostSpatial(tile[i], 1, kExpValue);
-    retval += VP8LCombinedShannonEntropy(tile[i], accumulated[i]);
+    retval += PredictionCostBias(&tile[i * 256], 1, kExpValue);
+    // Compute the new cost if 'tile' is added to 'accumulate' but also add the
+    // cost of the current histogram to guide the spatial predictor selection.
+    // Basically, favor low entropy, locally and globally.
+    retval += VP8LCombinedShannonEntropy(&tile[i * 256], &accumulated[i * 256]);
   }
-  return (float)retval;
+  // Favor keeping the areas locally similar.
+  if (mode == left_mode) retval -= kSpatialPredictorBias;
+  if (mode == above_mode) retval -= kSpatialPredictorBias;
+  return retval;
 }
 
-static WEBP_INLINE void UpdateHisto(int histo_argb[4][256], uint32_t argb) {
-  ++histo_argb[0][argb >> 24];
-  ++histo_argb[1][(argb >> 16) & 0xff];
-  ++histo_argb[2][(argb >> 8) & 0xff];
-  ++histo_argb[3][argb & 0xff];
+static WEBP_INLINE void UpdateHisto(uint32_t histo_argb[HISTO_SIZE],
+                                    uint32_t argb) {
+  ++histo_argb[0 * 256 + (argb >> 24)];
+  ++histo_argb[1 * 256 + ((argb >> 16) & 0xff)];
+  ++histo_argb[2 * 256 + ((argb >> 8) & 0xff)];
+  ++histo_argb[3 * 256 + (argb & 0xff)];
 }
 
 //------------------------------------------------------------------------------
@@ -296,14 +306,11 @@ static WEBP_INLINE void GetResidual(
 // applied, quantizing residuals to multiples of quantization levels up to
 // max_quantization (the actual quantization level depends on smoothness near
 // the given pixel).
-static int GetBestPredictorForTile(int width, int height,
-                                   int tile_x, int tile_y, int bits,
-                                   int accumulated[4][256],
-                                   uint32_t* const argb_scratch,
-                                   const uint32_t* const argb,
-                                   int max_quantization,
-                                   int exact, int used_subtract_green,
-                                   const uint32_t* const modes) {
+static int GetBestPredictorForTile(
+    int width, int height, int tile_x, int tile_y, int bits,
+    uint32_t accumulated[HISTO_SIZE], uint32_t* const argb_scratch,
+    const uint32_t* const argb, int max_quantization, int exact,
+    int used_subtract_green, const uint32_t* const modes) {
   const int kNumPredModes = 14;
   const int start_x = tile_x << bits;
   const int start_y = tile_y << bits;
@@ -333,12 +340,11 @@ static int GetBestPredictorForTile(int width, int height,
   float best_diff = MAX_DIFF_COST;
   int best_mode = 0;
   int mode;
-  int histo_stack_1[4][256];
-  int histo_stack_2[4][256];
+  uint32_t histo_stack_1[HISTO_SIZE];
+  uint32_t histo_stack_2[HISTO_SIZE];
   // Need pointers to be able to swap arrays.
-  int (*histo_argb)[256] = histo_stack_1;
-  int (*best_histo)[256] = histo_stack_2;
-  int i, j;
+  uint32_t* histo_argb = histo_stack_1;
+  uint32_t* best_histo = histo_stack_2;
   uint32_t residuals[1 << MAX_TRANSFORM_BITS];
   assert(bits <= MAX_TRANSFORM_BITS);
   assert(max_x <= (1 << MAX_TRANSFORM_BITS));
@@ -383,14 +389,11 @@ static int GetBestPredictorForTile(int width, int height,
         UpdateHisto(histo_argb, residuals[relative_x]);
       }
     }
-    cur_diff = PredictionCostSpatialHistogram(
-        (const int (*)[256])accumulated, (const int (*)[256])histo_argb);
-    // Favor keeping the areas locally similar.
-    if (mode == left_mode) cur_diff -= kSpatialPredictorBias;
-    if (mode == above_mode) cur_diff -= kSpatialPredictorBias;
+    cur_diff = PredictionCostSpatialHistogram(accumulated, histo_argb, mode,
+                                              left_mode, above_mode);
 
     if (cur_diff < best_diff) {
-      int (*tmp)[256] = histo_argb;
+      uint32_t* tmp = histo_argb;
       histo_argb = best_histo;
       best_histo = tmp;
       best_diff = cur_diff;
@@ -398,12 +401,7 @@ static int GetBestPredictorForTile(int width, int height,
     }
   }
 
-  for (i = 0; i < 4; i++) {
-    for (j = 0; j < 256; j++) {
-      accumulated[i][j] += best_histo[i][j];
-    }
-  }
-
+  VP8LAddVectorEq(best_histo, accumulated, HISTO_SIZE);
   return best_mode;
 }
 
@@ -482,8 +480,6 @@ int VP8LResidualImage(int width, int height, int bits, int low_effort,
   const int tiles_per_row = VP8LSubSampleSize(width, bits);
   const int tiles_per_col = VP8LSubSampleSize(height, bits);
   int percent_start = *percent;
-  int tile_y;
-  int histo[4][256];
   const int max_quantization = 1 << VP8LNearLosslessBits(near_lossless_quality);
   if (low_effort) {
     int i;
@@ -491,7 +487,8 @@ int VP8LResidualImage(int width, int height, int bits, int low_effort,
       image[i] = ARGB_BLACK | (kPredLowEffort << 8);
     }
   } else {
-    memset(histo, 0, sizeof(histo));
+    int tile_y;
+    uint32_t histo[HISTO_SIZE] = { 0 };
     for (tile_y = 0; tile_y < tiles_per_col; ++tile_y) {
       int tile_x;
       for (tile_x = 0; tile_x < tiles_per_row; ++tile_x) {
@@ -539,20 +536,20 @@ static WEBP_INLINE uint32_t MultipliersToColorCode(
          m->green_to_red_;
 }
 
-static float PredictionCostCrossColor(const int accumulated[256],
-                                      const int counts[256]) {
+static float PredictionCostCrossColor(const uint32_t accumulated[256],
+                                      const uint32_t counts[256]) {
   // Favor low entropy, locally and globally.
   // Favor small absolute values for PredictionCostSpatial
   static const float kExpValue = 2.4f;
   return VP8LCombinedShannonEntropy(counts, accumulated) +
-         PredictionCostSpatial(counts, 3, kExpValue);
+         PredictionCostBias(counts, 3, kExpValue);
 }
 
 static float GetPredictionCostCrossColorRed(
     const uint32_t* argb, int stride, int tile_width, int tile_height,
     VP8LMultipliers prev_x, VP8LMultipliers prev_y, int green_to_red,
-    const int accumulated_red_histo[256]) {
-  int histo[256] = { 0 };
+    const uint32_t accumulated_red_histo[256]) {
+  uint32_t histo[256] = { 0 };
   float cur_diff;
 
   VP8LCollectColorRedTransforms(argb, stride, tile_width, tile_height,
@@ -571,10 +568,11 @@ static float GetPredictionCostCrossColorRed(
   return cur_diff;
 }
 
-static void GetBestGreenToRed(
-    const uint32_t* argb, int stride, int tile_width, int tile_height,
-    VP8LMultipliers prev_x, VP8LMultipliers prev_y, int quality,
-    const int accumulated_red_histo[256], VP8LMultipliers* const best_tx) {
+static void GetBestGreenToRed(const uint32_t* argb, int stride, int tile_width,
+                              int tile_height, VP8LMultipliers prev_x,
+                              VP8LMultipliers prev_y, int quality,
+                              const uint32_t accumulated_red_histo[256],
+                              VP8LMultipliers* const best_tx) {
   const int kMaxIters = 4 + ((7 * quality) >> 8);  // in range [4..6]
   int green_to_red_best = 0;
   int iter, offset;
@@ -603,9 +601,9 @@ static void GetBestGreenToRed(
 
 static float GetPredictionCostCrossColorBlue(
     const uint32_t* argb, int stride, int tile_width, int tile_height,
-    VP8LMultipliers prev_x, VP8LMultipliers prev_y,
-    int green_to_blue, int red_to_blue, const int accumulated_blue_histo[256]) {
-  int histo[256] = { 0 };
+    VP8LMultipliers prev_x, VP8LMultipliers prev_y, int green_to_blue,
+    int red_to_blue, const uint32_t accumulated_blue_histo[256]) {
+  uint32_t histo[256] = { 0 };
   float cur_diff;
 
   VP8LCollectColorBlueTransforms(argb, stride, tile_width, tile_height,
@@ -635,11 +633,12 @@ static float GetPredictionCostCrossColorBlue(
 
 #define kGreenRedToBlueNumAxis 8
 #define kGreenRedToBlueMaxIters 7
-static void GetBestGreenRedToBlue(
-    const uint32_t* argb, int stride, int tile_width, int tile_height,
-    VP8LMultipliers prev_x, VP8LMultipliers prev_y, int quality,
-    const int accumulated_blue_histo[256],
-    VP8LMultipliers* const best_tx) {
+static void GetBestGreenRedToBlue(const uint32_t* argb, int stride,
+                                  int tile_width, int tile_height,
+                                  VP8LMultipliers prev_x,
+                                  VP8LMultipliers prev_y, int quality,
+                                  const uint32_t accumulated_blue_histo[256],
+                                  VP8LMultipliers* const best_tx) {
   const int8_t offset[kGreenRedToBlueNumAxis][2] =
       {{0, -1}, {0, 1}, {-1, 0}, {1, 0}, {-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
   const int8_t delta_lut[kGreenRedToBlueMaxIters] = { 16, 16, 8, 4, 2, 2, 2 };
@@ -684,13 +683,10 @@ static void GetBestGreenRedToBlue(
 #undef kGreenRedToBlueNumAxis
 
 static VP8LMultipliers GetBestColorTransformForTile(
-    int tile_x, int tile_y, int bits,
-    VP8LMultipliers prev_x,
-    VP8LMultipliers prev_y,
-    int quality, int xsize, int ysize,
-    const int accumulated_red_histo[256],
-    const int accumulated_blue_histo[256],
-    const uint32_t* const argb) {
+    int tile_x, int tile_y, int bits, VP8LMultipliers prev_x,
+    VP8LMultipliers prev_y, int quality, int xsize, int ysize,
+    const uint32_t accumulated_red_histo[256],
+    const uint32_t accumulated_blue_histo[256], const uint32_t* const argb) {
   const int max_tile_size = 1 << bits;
   const int tile_y_offset = tile_y * max_tile_size;
   const int tile_x_offset = tile_x * max_tile_size;
@@ -733,8 +729,8 @@ int VP8LColorSpaceTransform(int width, int height, int bits, int quality,
   const int tile_xsize = VP8LSubSampleSize(width, bits);
   const int tile_ysize = VP8LSubSampleSize(height, bits);
   int percent_start = *percent;
-  int accumulated_red_histo[256] = { 0 };
-  int accumulated_blue_histo[256] = { 0 };
+  uint32_t accumulated_red_histo[256] = { 0 };
+  uint32_t accumulated_blue_histo[256] = { 0 };
   int tile_x, tile_y;
   VP8LMultipliers prev_x, prev_y;
   MultipliersClear(&prev_y);

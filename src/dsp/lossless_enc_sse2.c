@@ -82,7 +82,7 @@ static void TransformColor_SSE2(const VP8LMultipliers* const m,
 static void CollectColorBlueTransforms_SSE2(const uint32_t* argb, int stride,
                                             int tile_width, int tile_height,
                                             int green_to_blue, int red_to_blue,
-                                            int histo[]) {
+                                            uint32_t histo[]) {
   const __m128i mults_r = MK_CST_16(CST_5b(red_to_blue), 0);
   const __m128i mults_g = MK_CST_16(0, CST_5b(green_to_blue));
   const __m128i mask_g = _mm_set1_epi32(0x00ff00);  // green mask
@@ -128,7 +128,7 @@ static void CollectColorBlueTransforms_SSE2(const uint32_t* argb, int stride,
 
 static void CollectColorRedTransforms_SSE2(const uint32_t* argb, int stride,
                                            int tile_width, int tile_height,
-                                           int green_to_red, int histo[]) {
+                                           int green_to_red, uint32_t histo[]) {
   const __m128i mults_g = MK_CST_16(0, CST_5b(green_to_red));
   const __m128i mask_g = _mm_set1_epi32(0x00ff00);  // green mask
   const __m128i mask = _mm_set1_epi32(0xff);
@@ -237,10 +237,11 @@ static void AddVectorEq_SSE2(const uint32_t* a, uint32_t* out, int size) {
 // when compared to -noasm.
 #if !(defined(WEBP_HAVE_SLOW_CLZ_CTZ) || defined(__i386__) || defined(_M_IX86))
 
-static float CombinedShannonEntropy_SSE2(const int X[256], const int Y[256]) {
+static float CombinedShannonEntropy_SSE2(const uint32_t X[256],
+                                         const uint32_t Y[256]) {
   int i;
   float retval = 0.f;
-  int sumX = 0, sumXY = 0;
+  uint32_t sumX = 0, sumXY = 0;
   const __m128i zero = _mm_setzero_si128();
 
   for (i = 0; i < 256; i += 16) {
@@ -260,7 +261,7 @@ static float CombinedShannonEntropy_SSE2(const int X[256], const int Y[256]) {
     int32_t my = _mm_movemask_epi8(_mm_cmpgt_epi8(y4, zero)) | mx;
     while (my) {
       const int32_t j = BitsCtz(my);
-      int xy;
+      uint32_t xy;
       if ((mx >> j) & 1) {
         const int x = X[i + j];
         sumXY += x;

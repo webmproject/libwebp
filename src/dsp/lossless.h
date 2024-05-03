@@ -155,13 +155,13 @@ extern VP8LTransformColorFunc VP8LTransformColor;
 typedef void (*VP8LCollectColorBlueTransformsFunc)(
     const uint32_t* argb, int stride,
     int tile_width, int tile_height,
-    int green_to_blue, int red_to_blue, int histo[]);
+    int green_to_blue, int red_to_blue, uint32_t histo[]);
 extern VP8LCollectColorBlueTransformsFunc VP8LCollectColorBlueTransforms;
 
 typedef void (*VP8LCollectColorRedTransformsFunc)(
     const uint32_t* argb, int stride,
     int tile_width, int tile_height,
-    int green_to_red, int histo[]);
+    int green_to_red, uint32_t histo[]);
 extern VP8LCollectColorRedTransformsFunc VP8LCollectColorRedTransforms;
 
 // Expose some C-only fallback functions
@@ -170,11 +170,11 @@ void VP8LTransformColor_C(const VP8LMultipliers* const m,
 void VP8LSubtractGreenFromBlueAndRed_C(uint32_t* argb_data, int num_pixels);
 void VP8LCollectColorRedTransforms_C(const uint32_t* argb, int stride,
                                      int tile_width, int tile_height,
-                                     int green_to_red, int histo[]);
+                                     int green_to_red, uint32_t histo[]);
 void VP8LCollectColorBlueTransforms_C(const uint32_t* argb, int stride,
                                       int tile_width, int tile_height,
                                       int green_to_blue, int red_to_blue,
-                                      int histo[]);
+                                      uint32_t histo[]);
 
 extern VP8LPredictorAddSubFunc VP8LPredictorsSub[16];
 extern VP8LPredictorAddSubFunc VP8LPredictorsSub_C[16];
@@ -185,8 +185,8 @@ extern VP8LPredictorAddSubFunc VP8LPredictorsSub_C[16];
 typedef uint32_t (*VP8LCostFunc)(const uint32_t* population, int length);
 typedef uint32_t (*VP8LCostCombinedFunc)(const uint32_t* X, const uint32_t* Y,
                                          int length);
-typedef float (*VP8LCombinedShannonEntropyFunc)(const int X[256],
-                                                const int Y[256]);
+typedef float (*VP8LCombinedShannonEntropyFunc)(const uint32_t X[256],
+                                                const uint32_t Y[256]);
 
 extern VP8LCostFunc VP8LExtraCost;
 extern VP8LCostCombinedFunc VP8LExtraCostCombined;

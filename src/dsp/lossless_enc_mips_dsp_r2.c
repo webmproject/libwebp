@@ -171,13 +171,9 @@ static WEBP_INLINE uint8_t TransformColorBlue(uint8_t green_to_blue,
   return (new_blue & 0xff);
 }
 
-static void CollectColorBlueTransforms_MIPSdspR2(const uint32_t* argb,
-                                                 int stride,
-                                                 int tile_width,
-                                                 int tile_height,
-                                                 int green_to_blue,
-                                                 int red_to_blue,
-                                                 int histo[]) {
+static void CollectColorBlueTransforms_MIPSdspR2(
+    const uint32_t* argb, int stride, int tile_width, int tile_height,
+    int green_to_blue, int red_to_blue, uint32_t histo[]) {
   const int rtb = (red_to_blue << 16) | (red_to_blue & 0xffff);
   const int gtb = (green_to_blue << 16) | (green_to_blue & 0xffff);
   const uint32_t mask = 0xff00ffu;
@@ -226,11 +222,10 @@ static WEBP_INLINE uint8_t TransformColorRed(uint8_t green_to_red,
 }
 
 static void CollectColorRedTransforms_MIPSdspR2(const uint32_t* argb,
-                                                int stride,
-                                                int tile_width,
+                                                int stride, int tile_width,
                                                 int tile_height,
                                                 int green_to_red,
-                                                int histo[]) {
+                                                uint32_t histo[]) {
   const int gtr = (green_to_red << 16) | (green_to_red & 0xffff);
   while (tile_height-- > 0) {
     int x;
