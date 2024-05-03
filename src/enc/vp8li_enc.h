@@ -106,9 +106,10 @@ int VP8ApplyNearLossless(const WebPPicture* const picture, int quality,
 // Returns false in case of error (stored in pic->error_code).
 int VP8LResidualImage(int width, int height, int bits, int low_effort,
                       uint32_t* const argb, uint32_t* const argb_scratch,
-                      uint32_t* const image, int near_lossless, int exact,
-                      int used_subtract_green, const WebPPicture* const pic,
-                      int percent_range, int* const percent);
+                      uint32_t* const image, int near_lossless_quality,
+                      int exact, int used_subtract_green,
+                      const WebPPicture* const pic, int percent_range,
+                      int* const percent);
 
 int VP8LColorSpaceTransform(int width, int height, int bits, int quality,
                             uint32_t* const argb, uint32_t* image,

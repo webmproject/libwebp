@@ -411,12 +411,12 @@ static int GetBestPredictorForTile(int width, int height,
 // If max_quantization > 1, applies near lossless processing, quantizing
 // residuals to multiples of quantization levels up to max_quantization
 // (the actual quantization level depends on smoothness near the given pixel).
-static void CopyImageWithPrediction(int width, int height,
-                                    int bits, uint32_t* const modes,
+static void CopyImageWithPrediction(int width, int height, int bits,
+                                    const uint32_t* const modes,
                                     uint32_t* const argb_scratch,
-                                    uint32_t* const argb,
-                                    int low_effort, int max_quantization,
-                                    int exact, int used_subtract_green) {
+                                    uint32_t* const argb, int low_effort,
+                                    int max_quantization, int exact,
+                                    int used_subtract_green) {
   const int tiles_per_row = VP8LSubSampleSize(width, bits);
   // The width of upper_row and current_row is one pixel larger than image width
   // to allow the top right pixel to point to the leftmost pixel of the next row

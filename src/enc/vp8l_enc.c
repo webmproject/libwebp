@@ -1064,8 +1064,8 @@ static void ApplySubtractGreen(VP8LEncoder* const enc, int width, int height,
   VP8LSubtractGreenFromBlueAndRed(enc->argb_, width * height);
 }
 
-static int ApplyPredictFilter(const VP8LEncoder* const enc, int width,
-                              int height, int quality, int low_effort,
+static int ApplyPredictFilter(VP8LEncoder* const enc, int width, int height,
+                              int quality, int low_effort,
                               int used_subtract_green, VP8LBitWriter* const bw,
                               int percent_range, int* const percent) {
   const int pred_bits = enc->transform_bits_;
