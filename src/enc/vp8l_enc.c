@@ -30,6 +30,7 @@
 
 // Maximum number of histogram images (sub-blocks).
 #define MAX_HUFF_IMAGE_SIZE       2600
+#define MAX_HUFFMAN_BITS (MIN_HUFFMAN_BITS + (1 << NUM_HUFFMAN_BITS) - 1)
 
 // -----------------------------------------------------------------------------
 // Palette
@@ -1083,8 +1084,8 @@ static int ApplyPredictFilter(VP8LEncoder* const enc, int width, int height,
   }
   VP8LPutBits(bw, TRANSFORM_PRESENT, 1);
   VP8LPutBits(bw, PREDICTOR_TRANSFORM, 2);
-  assert(pred_bits >= 2);
-  VP8LPutBits(bw, pred_bits - 2, 3);
+  assert(pred_bits >= MIN_TRANSFORM_BITS);
+  VP8LPutBits(bw, pred_bits - MIN_TRANSFORM_BITS, NUM_TRANSFORM_BITS);
   return EncodeImageNoHuffman(
       bw, enc->transform_data_, (VP8LHashChain*)&enc->hash_chain_,
       (VP8LBackwardRefs*)&enc->refs_[0], transform_width, transform_height,
@@ -1107,8 +1108,9 @@ static int ApplyCrossColorFilter(const VP8LEncoder* const enc, int width,
   }
   VP8LPutBits(bw, TRANSFORM_PRESENT, 1);
   VP8LPutBits(bw, CROSS_COLOR_TRANSFORM, 2);
-  assert(ccolor_transform_bits >= 2);
-  VP8LPutBits(bw, ccolor_transform_bits - 2, 3);
+  assert(ccolor_transform_bits >= MIN_TRANSFORM_BITS);
+  VP8LPutBits(bw, ccolor_transform_bits - MIN_TRANSFORM_BITS,
+              NUM_TRANSFORM_BITS);
   return EncodeImageNoHuffman(
       bw, enc->transform_data_, (VP8LHashChain*)&enc->hash_chain_,
       (VP8LBackwardRefs*)&enc->refs_[0], transform_width, transform_height,
