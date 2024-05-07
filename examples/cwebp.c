@@ -178,8 +178,14 @@ static void PrintFullLosslessInfo(const WebPAuxStats* const stats,
     if (stats->lossless_features & 8) fprintf(stderr, " PALETTE");
     fprintf(stderr, "\n");
   }
-  fprintf(stderr, "  * Precision Bits: histogram=%d transform=%d cache=%d\n",
-          stats->histogram_bits, stats->transform_bits, stats->cache_bits);
+  fprintf(stderr, "  * Precision Bits: histogram=%d", stats->histogram_bits);
+  if (stats->lossless_features & 1) {
+    fprintf(stderr, " prediction=%d", stats->transform_bits);
+  }
+  if (stats->lossless_features & 2) {
+    fprintf(stderr, " cross-color=%d", stats->cross_color_transform_bits);
+  }
+  fprintf(stderr, " cache=%d\n", stats->cache_bits);
   if (stats->palette_size > 0) {
     fprintf(stderr, "  * Palette size:   %d\n", stats->palette_size);
   }
