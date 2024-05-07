@@ -1084,7 +1084,7 @@ static int ApplyPredictFilter(VP8LEncoder* const enc, int width, int height,
   }
   VP8LPutBits(bw, TRANSFORM_PRESENT, 1);
   VP8LPutBits(bw, PREDICTOR_TRANSFORM, 2);
-  assert(pred_bits >= MIN_TRANSFORM_BITS);
+  assert(pred_bits >= MIN_TRANSFORM_BITS && pred_bits <= MAX_TRANSFORM_BITS);
   VP8LPutBits(bw, pred_bits - MIN_TRANSFORM_BITS, NUM_TRANSFORM_BITS);
   return EncodeImageNoHuffman(
       bw, enc->transform_data_, (VP8LHashChain*)&enc->hash_chain_,
@@ -1108,7 +1108,8 @@ static int ApplyCrossColorFilter(const VP8LEncoder* const enc, int width,
   }
   VP8LPutBits(bw, TRANSFORM_PRESENT, 1);
   VP8LPutBits(bw, CROSS_COLOR_TRANSFORM, 2);
-  assert(ccolor_transform_bits >= MIN_TRANSFORM_BITS);
+  assert(ccolor_transform_bits >= MIN_TRANSFORM_BITS &&
+         ccolor_transform_bits <= MAX_TRANSFORM_BITS);
   VP8LPutBits(bw, ccolor_transform_bits - MIN_TRANSFORM_BITS,
               NUM_TRANSFORM_BITS);
   return EncodeImageNoHuffman(

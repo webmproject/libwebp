@@ -34,7 +34,7 @@ extern "C" {
 #endif
 
 // maximum value of transform_bits_ in VP8LEncoder.
-#define MAX_TRANSFORM_BITS 6
+#define MAX_TRANSFORM_BITS (MIN_TRANSFORM_BITS + (1 << NUM_TRANSFORM_BITS) - 1)
 
 typedef enum {
   kEncoderNone = 0,
