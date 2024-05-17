@@ -1071,26 +1071,27 @@ static int ApplyPredictFilter(VP8LEncoder* const enc, int width, int height,
                               int quality, int low_effort,
                               int used_subtract_green, VP8LBitWriter* const bw,
                               int percent_range, int* const percent) {
-  const int pred_bits = enc->predictor_transform_bits_;
-  const int transform_width = VP8LSubSampleSize(width, pred_bits);
-  const int transform_height = VP8LSubSampleSize(height, pred_bits);
+  const int min_bits = enc->predictor_transform_bits_;
+  int best_bits;
   // we disable near-lossless quantization if palette is used.
   const int near_lossless_strength =
       enc->use_palette_ ? 100 : enc->config_->near_lossless;
 
-  if (!VP8LResidualImage(
-          width, height, pred_bits, low_effort, enc->argb_, enc->argb_scratch_,
-          enc->transform_data_, near_lossless_strength, enc->config_->exact,
-          used_subtract_green, enc->pic_, percent_range / 2, percent)) {
+  if (!VP8LResidualImage(width, height, min_bits, low_effort, enc->argb_,
+                         enc->argb_scratch_, enc->transform_data_,
+                         near_lossless_strength, enc->config_->exact,
+                         used_subtract_green, enc->pic_, percent_range / 2,
+                         percent, &best_bits)) {
     return 0;
   }
   VP8LPutBits(bw, TRANSFORM_PRESENT, 1);
   VP8LPutBits(bw, PREDICTOR_TRANSFORM, 2);
-  assert(pred_bits >= MIN_TRANSFORM_BITS && pred_bits <= MAX_TRANSFORM_BITS);
-  VP8LPutBits(bw, pred_bits - MIN_TRANSFORM_BITS, NUM_TRANSFORM_BITS);
+  assert(best_bits >= MIN_TRANSFORM_BITS && best_bits <= MAX_TRANSFORM_BITS);
+  VP8LPutBits(bw, best_bits - MIN_TRANSFORM_BITS, NUM_TRANSFORM_BITS);
+  enc->predictor_transform_bits_ = best_bits;
   return EncodeImageNoHuffman(
-      bw, enc->transform_data_, (VP8LHashChain*)&enc->hash_chain_,
-      (VP8LBackwardRefs*)&enc->refs_[0], transform_width, transform_height,
+      bw, enc->transform_data_, &enc->hash_chain_, &enc->refs_[0],
+      VP8LSubSampleSize(width, best_bits), VP8LSubSampleSize(height, best_bits),
       quality, low_effort, enc->pic_, percent_range - percent_range / 2,
       percent);
 }
@@ -1099,24 +1100,22 @@ static int ApplyCrossColorFilter(VP8LEncoder* const enc, int width, int height,
                                  int quality, int low_effort,
                                  VP8LBitWriter* const bw, int percent_range,
                                  int* const percent) {
-  const int ccolor_transform_bits = enc->cross_color_transform_bits_;
-  const int transform_width = VP8LSubSampleSize(width, ccolor_transform_bits);
-  const int transform_height = VP8LSubSampleSize(height, ccolor_transform_bits);
+  const int min_bits = enc->cross_color_transform_bits_;
+  int best_bits;
 
-  if (!VP8LColorSpaceTransform(width, height, ccolor_transform_bits, quality,
-                               enc->argb_, enc->transform_data_, enc->pic_,
-                               percent_range / 2, percent)) {
+  if (!VP8LColorSpaceTransform(width, height, min_bits, quality, enc->argb_,
+                               enc->transform_data_, enc->pic_,
+                               percent_range / 2, percent, &best_bits)) {
     return 0;
   }
   VP8LPutBits(bw, TRANSFORM_PRESENT, 1);
   VP8LPutBits(bw, CROSS_COLOR_TRANSFORM, 2);
-  assert(ccolor_transform_bits >= MIN_TRANSFORM_BITS &&
-         ccolor_transform_bits <= MAX_TRANSFORM_BITS);
-  VP8LPutBits(bw, ccolor_transform_bits - MIN_TRANSFORM_BITS,
-              NUM_TRANSFORM_BITS);
+  assert(best_bits >= MIN_TRANSFORM_BITS && best_bits <= MAX_TRANSFORM_BITS);
+  VP8LPutBits(bw, best_bits - MIN_TRANSFORM_BITS, NUM_TRANSFORM_BITS);
+  enc->cross_color_transform_bits_ = best_bits;
   return EncodeImageNoHuffman(
-      bw, enc->transform_data_, (VP8LHashChain*)&enc->hash_chain_,
-      (VP8LBackwardRefs*)&enc->refs_[0], transform_width, transform_height,
+      bw, enc->transform_data_, &enc->hash_chain_, &enc->refs_[0],
+      VP8LSubSampleSize(width, best_bits), VP8LSubSampleSize(height, best_bits),
       quality, low_effort, enc->pic_, percent_range - percent_range / 2,
       percent);
 }
