@@ -14,8 +14,6 @@
 //          Urvang Joshi (urvang@google.com)
 //          Vincent Rabaud (vrabaud@google.com)
 
-#include <string.h>
-
 #include "src/dsp/lossless.h"
 #include "src/dsp/lossless_common.h"
 #include "src/enc/vp8i_enc.h"
@@ -469,72 +467,6 @@ static void CopyImageWithPrediction(int width, int height, int bits,
   }
 }
 
-// Checks whether 'image' is sub-samplable by finding the biggest power of 2
-// squares (defined by 'best_bits') of uniform value it is made out of.
-static void OptimizeSampling(uint32_t* const image, int full_width,
-                             int full_height, int bits, int* best_bits_out) {
-  int width = VP8LSubSampleSize(full_width, bits);
-  int height = VP8LSubSampleSize(full_height, bits);
-  int old_width, x, y, square_size;
-  int best_bits = bits;
-  *best_bits_out = bits;
-  // Check rows first.
-  while (best_bits < MAX_TRANSFORM_BITS) {
-    const int new_square_size = 1 << (best_bits + 1 - bits);
-    int is_good = 1;
-    square_size = 1 << (best_bits - bits);
-    for (y = 0; y + new_square_size <= height; y += new_square_size) {
-      // Check the first lines of consecutive line groups.
-      if (memcmp(&image[y * width], &image[(y + square_size) * width],
-                 width * sizeof(*image)) != 0) {
-        is_good = 0;
-        break;
-      }
-    }
-    if (is_good) {
-      ++best_bits;
-    } else {
-      break;
-    }
-  }
-  if (best_bits == bits) return;
-
-  // Check columns.
-  while (best_bits > bits) {
-    int is_good = 1;
-    square_size = 1 << (best_bits - bits);
-    for (y = 0; is_good && y < height; ++y) {
-      for (x = 0; is_good && x + square_size <= width; x += square_size) {
-        int i;
-        for (i = 1; i < square_size; ++i) {
-          if (image[y * width + x + i] != image[y * width + x]) {
-            is_good = 0;
-            break;
-          }
-        }
-      }
-    }
-    if (is_good) {
-      break;
-    } else {
-      --best_bits;
-    }
-  }
-  if (best_bits == bits) return;
-
-  // Subsample the image.
-  old_width = width;
-  square_size = 1 << (best_bits - bits);
-  width = VP8LSubSampleSize(full_width, best_bits);
-  height = VP8LSubSampleSize(full_height, best_bits);
-  for (y = 0; y < height; ++y) {
-    for (x = 0; x < width; ++x) {
-      image[y * width + x] = image[square_size * (y * old_width + x)];
-    }
-  }
-  *best_bits_out = best_bits;
-}
-
 // Finds the best predictor for each tile, and converts the image to residuals
 // with respect to predictions. If near_lossless_quality < 100, applies
 // near lossless processing, shaving off more bits of residuals for lower
@@ -544,7 +476,7 @@ int VP8LResidualImage(int width, int height, int bits, int low_effort,
                       uint32_t* const image, int near_lossless_quality,
                       int exact, int used_subtract_green,
                       const WebPPicture* const pic, int percent_range,
-                      int* const percent, int* const best_bits) {
+                      int* const percent) {
   const int tiles_per_row = VP8LSubSampleSize(width, bits);
   const int tiles_per_col = VP8LSubSampleSize(height, bits);
   int percent_start = *percent;
@@ -554,7 +486,6 @@ int VP8LResidualImage(int width, int height, int bits, int low_effort,
     for (i = 0; i < tiles_per_row * tiles_per_col; ++i) {
       image[i] = ARGB_BLACK | (kPredLowEffort << 8);
     }
-    *best_bits = bits;
   } else {
     int tile_y;
     uint32_t histo[HISTO_SIZE] = { 0 };
@@ -573,10 +504,9 @@ int VP8LResidualImage(int width, int height, int bits, int low_effort,
         return 0;
       }
     }
-    OptimizeSampling(image, width, height, bits, best_bits);
   }
 
-  CopyImageWithPrediction(width, height, *best_bits, image, argb_scratch, argb,
+  CopyImageWithPrediction(width, height, bits, image, argb_scratch, argb,
                           low_effort, max_quantization, exact,
                           used_subtract_green);
   return WebPReportProgress(pic, percent_start + percent_range, percent);
@@ -794,7 +724,7 @@ static void CopyTileWithColorTransform(int xsize, int ysize,
 int VP8LColorSpaceTransform(int width, int height, int bits, int quality,
                             uint32_t* const argb, uint32_t* image,
                             const WebPPicture* const pic, int percent_range,
-                            int* const percent, int* best_bits) {
+                            int* const percent) {
   const int max_tile_size = 1 << bits;
   const int tile_xsize = VP8LSubSampleSize(width, bits);
   const int tile_ysize = VP8LSubSampleSize(height, bits);
@@ -854,6 +784,5 @@ int VP8LColorSpaceTransform(int width, int height, int bits, int quality,
       return 0;
     }
   }
-  OptimizeSampling(image, width, height, bits, best_bits);
   return 1;
 }
