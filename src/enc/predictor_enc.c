@@ -483,7 +483,7 @@ static void OptimizeSampling(uint32_t* const image, int full_width,
     const int new_square_size = 1 << (best_bits + 1 - bits);
     int is_good = 1;
     square_size = 1 << (best_bits - bits);
-    for (y = 0; y + new_square_size <= height; y += new_square_size) {
+    for (y = 0; y + square_size < height; y += new_square_size) {
       // Check the first lines of consecutive line groups.
       if (memcmp(&image[y * width], &image[(y + square_size) * width],
                  width * sizeof(*image)) != 0) {
