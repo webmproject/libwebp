@@ -228,4 +228,4 @@ generated code, but is untested.
 ## Javascript decoder
 
 Libwebp can be compiled into a JavaScript decoder using Emscripten and CMake.
-See the [corresponding documentation](../README.md)
+See the [corresponding documentation](../webp_js/README.md)
