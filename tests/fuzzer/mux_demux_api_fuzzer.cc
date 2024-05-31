@@ -14,23 +14,30 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <cstddef>
+#include <cstdint>
+#include <string_view>
+
 #include "./fuzz_utils.h"
 #include "src/webp/demux.h"
 #include "src/webp/mux.h"
 
-int LLVMFuzzerTestOneInput(const uint8_t* const data, size_t size) {
+namespace {
+
+void MuxDemuxApiTest(std::string_view data_in, bool mux) {
+  const size_t size = data_in.size();
   WebPData webp_data;
   WebPDataInit(&webp_data);
   webp_data.size = size;
-  webp_data.bytes = data;
+  webp_data.bytes = reinterpret_cast<const uint8_t*>(data_in.data());
 
   // Extracted chunks and frames are not processed or decoded,
   // which is already covered extensively by the other fuzz targets.
 
-  if (size & 1) {
+  if (mux) {
     // Mux API
     WebPMux* mux = WebPMuxCreate(&webp_data, size & 2);
-    if (!mux) return 0;
+    if (!mux) return;
 
     WebPData chunk;
     (void)WebPMuxGetChunk(mux, "EXIF", &chunk);
@@ -45,7 +52,7 @@ int LLVMFuzzerTestOneInput(const uint8_t* const data, size_t size) {
 
     WebPMuxError status;
     WebPMuxFrameInfo info;
-    for (int i = 0; i < kFuzzFrameLimit; i++) {
+    for (int i = 0; i < fuzz_utils::kFuzzFrameLimit; i++) {
       status = WebPMuxGetFrame(mux, i + 1, &info);
       if (status == WEBP_MUX_NOT_FOUND) {
         break;
@@ -63,11 +70,11 @@ int LLVMFuzzerTestOneInput(const uint8_t* const data, size_t size) {
       demux = WebPDemuxPartial(&webp_data, &state);
       if (state < WEBP_DEMUX_PARSED_HEADER) {
         WebPDemuxDelete(demux);
-        return 0;
+        return;
       }
     } else {
       demux = WebPDemux(&webp_data);
-      if (!demux) return 0;
+      if (!demux) return;
     }
 
     WebPChunkIterator chunk_iter;
@@ -83,7 +90,7 @@ int LLVMFuzzerTestOneInput(const uint8_t* const data, size_t size) {
 
     WebPIterator iter;
     if (WebPDemuxGetFrame(demux, 1, &iter)) {
-      for (int i = 1; i < kFuzzFrameLimit; i++) {
+      for (int i = 1; i < fuzz_utils::kFuzzFrameLimit; i++) {
         if (!WebPDemuxNextFrame(&iter)) break;
       }
     }
@@ -91,6 +98,12 @@ int LLVMFuzzerTestOneInput(const uint8_t* const data, size_t size) {
     WebPDemuxReleaseIterator(&iter);
     WebPDemuxDelete(demux);
   }
-
-  return 0;
 }
+
+}  // namespace
+
+FUZZ_TEST(MuxDemuxApi, MuxDemuxApiTest)
+    .WithDomains(
+        fuzztest::String()
+            .WithMaxSize(fuzz_utils::kMaxWebPFileSize + 1),
+        /*mux=*/fuzztest::Arbitrary<bool>());

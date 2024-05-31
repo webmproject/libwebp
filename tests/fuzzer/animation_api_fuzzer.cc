@@ -14,37 +14,46 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <cstddef>
+#include <cstdint>
+#include <string_view>
+
 #include "./fuzz_utils.h"
 #include "src/webp/decode.h"
 #include "src/webp/demux.h"
 #include "src/webp/mux_types.h"
 
-int LLVMFuzzerTestOneInput(const uint8_t* const data, size_t size) {
+namespace {
+
+void AnimationApiTest(std::string_view blob, bool use_threads,
+                      WEBP_CSP_MODE color_mode) {
+  const size_t size = blob.size();
   WebPData webp_data;
   WebPDataInit(&webp_data);
   webp_data.size = size;
-  webp_data.bytes = data;
+  webp_data.bytes = reinterpret_cast<const uint8_t*>(blob.data());
 
   // WebPAnimDecoderNew uses WebPDemux internally to calloc canvas size.
   WebPDemuxer* const demux = WebPDemux(&webp_data);
-  if (!demux) return 0;
+  if (!demux) return;
   const uint32_t cw = WebPDemuxGetI(demux, WEBP_FF_CANVAS_WIDTH);
   const uint32_t ch = WebPDemuxGetI(demux, WEBP_FF_CANVAS_HEIGHT);
-  if ((size_t)cw * ch > kFuzzPxLimit) {
+  if ((size_t)cw * ch > fuzz_utils::kFuzzPxLimit) {
     WebPDemuxDelete(demux);
-    return 0;
+    return;
   }
 
   // In addition to canvas size, check each frame separately.
   WebPIterator iter;
-  for (int i = 0; i < kFuzzFrameLimit; i++) {
+  for (int i = 0; i < fuzz_utils::kFuzzFrameLimit; i++) {
     if (!WebPDemuxGetFrame(demux, i + 1, &iter)) break;
     int w, h;
     if (WebPGetInfo(iter.fragment.bytes, iter.fragment.size, &w, &h)) {
-      if ((size_t)w * h > kFuzzPxLimit) {  // image size of the frame payload
+      if ((size_t)w * h >
+          fuzz_utils::kFuzzPxLimit) {  // image size of the frame payload
         WebPDemuxReleaseIterator(&iter);
         WebPDemuxDelete(demux);
-        return 0;
+        return;
       }
     }
   }
@@ -53,26 +62,30 @@ int LLVMFuzzerTestOneInput(const uint8_t* const data, size_t size) {
   WebPDemuxDelete(demux);
 
   WebPAnimDecoderOptions dec_options;
-  if (!WebPAnimDecoderOptionsInit(&dec_options)) return 0;
+  if (!WebPAnimDecoderOptionsInit(&dec_options)) return;
 
-  dec_options.use_threads = size & 1;
-  // Animations only support 4 (of 12) modes.
-  dec_options.color_mode = (WEBP_CSP_MODE)(size % MODE_LAST);
-  if (dec_options.color_mode != MODE_BGRA &&
-      dec_options.color_mode != MODE_rgbA &&
-      dec_options.color_mode != MODE_bgrA) {
-    dec_options.color_mode = MODE_RGBA;
-  }
+  dec_options.use_threads = use_threads;
+  dec_options.color_mode = color_mode;
 
   WebPAnimDecoder* dec = WebPAnimDecoderNew(&webp_data, &dec_options);
-  if (!dec) return 0;
+  if (!dec) return;
 
-  for (int i = 0; i < kFuzzFrameLimit; i++) {
+  for (int i = 0; i < fuzz_utils::kFuzzFrameLimit; i++) {
     uint8_t* buf;
     int timestamp;
     if (!WebPAnimDecoderGetNext(dec, &buf, &timestamp)) break;
   }
 
   WebPAnimDecoderDelete(dec);
-  return 0;
 }
+
+}  // namespace
+
+FUZZ_TEST(AnimationApi, AnimationApiTest)
+    .WithDomains(
+        fuzztest::String()
+            .WithMaxSize(fuzz_utils::kMaxWebPFileSize + 1),
+        /*use_threads=*/fuzztest::Arbitrary<bool>(),
+        // Animations only support 4 (out of 12) modes.
+        fuzztest::ElementOf<WEBP_CSP_MODE>({MODE_RGBA, MODE_BGRA, MODE_rgbA,
+                                            MODE_bgrA}));

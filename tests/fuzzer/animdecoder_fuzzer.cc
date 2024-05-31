@@ -16,13 +16,20 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <string_view>
 
+#include "./fuzz_utils.h"
 #include "imageio/imageio_util.h"
 #include "src/webp/decode.h"
 #include "src/webp/demux.h"
 #include "src/webp/mux_types.h"
 
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
+namespace {
+
+void AnimDecoderTest(std::string_view blob) {
+  const uint8_t* const data = reinterpret_cast<const uint8_t*>(blob.data());
+  const size_t size = blob.size();
+
   // WebPAnimDecoderGetInfo() is too late to check the canvas size as
   // WebPAnimDecoderNew() will handle the allocations.
   const size_t kMaxNumBytes = 2684354560;  // RSS (resident set size) limit.
@@ -34,14 +41,14 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
                                              features.height) ||
         static_cast<size_t>(features.width) * features.height >
             kMaxNumPixelsSafe) {
-      return 0;
+      return;
     }
   }
 
   // decode everything as an animation
   WebPData webp_data = {data, size};
   WebPAnimDecoder* const dec = WebPAnimDecoderNew(&webp_data, nullptr);
-  if (dec == nullptr) return 0;
+  if (dec == nullptr) return;
 
   WebPAnimInfo info;
   if (!WebPAnimDecoderGetInfo(dec, &info)) goto End;
@@ -57,5 +64,11 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
   }
 End:
   WebPAnimDecoderDelete(dec);
-  return 0;
 }
+
+}  // namespace
+
+FUZZ_TEST(AnimDecoder, AnimDecoderTest)
+    .WithDomains(
+        fuzztest::String()
+            .WithMaxSize(fuzz_utils::kMaxWebPFileSize + 1));

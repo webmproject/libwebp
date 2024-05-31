@@ -14,57 +14,37 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstddef>
+#include <cstdint>
+#include <cstdio>
 
 #include "./fuzz_utils.h"
+#include "src/dsp/cpu.h"
 #include "src/webp/decode.h"
 #include "src/webp/encode.h"
 
 namespace {
 
-const VP8CPUInfo default_VP8GetCPUInfo = VP8GetCPUInfo;
+const VP8CPUInfo default_VP8GetCPUInfo = fuzz_utils::VP8GetCPUInfo;
 
-}  // namespace
-
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t* const data, size_t size) {
-  uint32_t bit_pos = 0;
-
-  ExtractAndDisableOptimizations(default_VP8GetCPUInfo, data, size, &bit_pos);
+void EncDecTest(bool use_argb, int source_image_index, WebPConfig config,
+                int optimization_index,
+                const fuzz_utils::CropOrScaleParams& crop_or_scale_params) {
+  fuzz_utils::SetOptimization(default_VP8GetCPUInfo, optimization_index);
 
   // Init the source picture.
-  WebPPicture pic;
-  if (!WebPPictureInit(&pic)) {
-    fprintf(stderr, "WebPPictureInit failed.\n");
-    abort();
-  }
-  pic.use_argb = Extract(1, data, size, &bit_pos);
-
-  // Read the source picture.
-  if (!ExtractSourcePicture(&pic, data, size, &bit_pos)) {
-    const WebPEncodingError error_code = pic.error_code;
-    WebPPictureFree(&pic);
-    if (error_code == VP8_ENC_ERROR_OUT_OF_MEMORY) return 0;
-    fprintf(stderr, "Can't read input image. Error code: %d\n", error_code);
-    abort();
-  }
+  WebPPicture pic = fuzz_utils::GetSourcePicture(source_image_index, use_argb);
 
   // Crop and scale.
-  if (!ExtractAndCropOrScale(&pic, data, size, &bit_pos)) {
+  if (!fuzz_utils::CropOrScale(&pic, crop_or_scale_params)) {
     const WebPEncodingError error_code = pic.error_code;
     WebPPictureFree(&pic);
-    if (error_code == VP8_ENC_ERROR_OUT_OF_MEMORY) return 0;
+    if (error_code == VP8_ENC_ERROR_OUT_OF_MEMORY) return;
     fprintf(stderr, "ExtractAndCropOrScale failed. Error code: %d\n",
             error_code);
     abort();
   }
 
-  // Extract a configuration from the packed bits.
-  WebPConfig config;
-  if (!ExtractWebPConfig(&config, data, size, &bit_pos)) {
-    fprintf(stderr, "ExtractWebPConfig failed.\n");
-    abort();
-  }
   // Skip slow settings on big images, it's likely to timeout.
   if (pic.width * pic.height > 32 * 32) {
     if (config.lossless) {
@@ -93,7 +73,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* const data, size_t size) {
     WebPPictureFree(&pic);
     if (error_code == VP8_ENC_ERROR_OUT_OF_MEMORY ||
         error_code == VP8_ENC_ERROR_BAD_WRITE) {
-      return 0;
+      return;
     }
     fprintf(stderr, "WebPEncode failed. Error code: %d\n", error_code);
     abort();
@@ -157,5 +137,16 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* const data, size_t size) {
   WebPFreeDecBuffer(&dec_config.output);
   WebPMemoryWriterClear(&memory_writer);
   WebPPictureFree(&pic);
-  return 0;
 }
+
+}  // namespace
+
+FUZZ_TEST(EncDec, EncDecTest)
+    .WithDomains(/*use_argb=*/fuzztest::Arbitrary<bool>(),
+                 /*source_image_index=*/
+                 fuzztest::InRange<int>(0, fuzz_utils::kNumSourceImages - 1),
+                 fuzz_utils::ArbitraryWebPConfig(),
+                 /*optimization_index=*/
+                 fuzztest::InRange<uint32_t>(0,
+                                             fuzz_utils::kMaxOptimizationIndex),
+                 fuzz_utils::ArbitraryCropOrScaleParams());

@@ -14,21 +14,48 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstddef>
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <string_view>
+#include <utility>
+#include <vector>
 
 #include "./fuzz_utils.h"
+#include "src/dsp/cpu.h"
 #include "src/webp/encode.h"
 #include "src/webp/mux.h"
+#include "src/webp/mux_types.h"
 
 namespace {
 
-const VP8CPUInfo default_VP8GetCPUInfo = VP8GetCPUInfo;
+const VP8CPUInfo default_VP8GetCPUInfo = fuzz_utils::VP8GetCPUInfo;
+
+struct FrameConfig {
+  int use_argb;
+  int timestamp;
+  WebPConfig webp_config;
+  fuzz_utils::CropOrScaleParams crop_or_scale_params;
+  int source_image_index;
+};
+
+auto ArbitraryKMinKMax() {
+  return fuzztest::FlatMap(
+      [](int kmax) {
+        const int min_kmin = (kmax > 1) ? (kmax / 2) : 0;
+        const int max_kmin = (kmax > 1) ? (kmax - 1) : 0;
+        return fuzztest::PairOf(fuzztest::InRange(min_kmin, max_kmin),
+                                fuzztest::Just(kmax));
+      },
+      fuzztest::InRange(0, 15));
+}
 
 int AddFrame(WebPAnimEncoder** const enc,
              const WebPAnimEncoderOptions& anim_config, int* const width,
-             int* const height, int timestamp_ms, const uint8_t data[],
-             size_t size, uint32_t* const bit_pos) {
+             int* const height, int timestamp_ms,
+             const FrameConfig& frame_config, const uint8_t data[], size_t size,
+             uint32_t* const bit_pos) {
   if (enc == nullptr || width == nullptr || height == nullptr) {
     fprintf(stderr, "NULL parameters.\n");
     if (enc != nullptr) WebPAnimEncoderDelete(*enc);
@@ -36,27 +63,12 @@ int AddFrame(WebPAnimEncoder** const enc,
   }
 
   // Init the source picture.
-  WebPPicture pic;
-  if (!WebPPictureInit(&pic)) {
-    fprintf(stderr, "WebPPictureInit failed.\n");
-    WebPAnimEncoderDelete(*enc);
-    abort();
-  }
-  pic.use_argb = Extract(1, data, size, bit_pos);
-
-  // Read the source picture.
-  if (!ExtractSourcePicture(&pic, data, size, bit_pos)) {
-    const WebPEncodingError error_code = pic.error_code;
-    WebPAnimEncoderDelete(*enc);
-    WebPPictureFree(&pic);
-    if (error_code == VP8_ENC_ERROR_OUT_OF_MEMORY) return 0;
-    fprintf(stderr, "Can't read input image. Error code: %d\n", error_code);
-    abort();
-  }
+  WebPPicture pic = fuzz_utils::GetSourcePicture(
+      frame_config.source_image_index, frame_config.use_argb);
 
   // Crop and scale.
   if (*enc == nullptr) {  // First frame will set canvas width and height.
-    if (!ExtractAndCropOrScale(&pic, data, size, bit_pos)) {
+    if (!fuzz_utils::CropOrScale(&pic, frame_config.crop_or_scale_params)) {
       const WebPEncodingError error_code = pic.error_code;
       WebPPictureFree(&pic);
       if (error_code == VP8_ENC_ERROR_OUT_OF_MEMORY) return 0;
@@ -89,13 +101,7 @@ int AddFrame(WebPAnimEncoder** const enc,
   }
 
   // Create frame encoding config.
-  WebPConfig config;
-  if (!ExtractWebPConfig(&config, data, size, bit_pos)) {
-    fprintf(stderr, "ExtractWebPConfig failed.\n");
-    WebPAnimEncoderDelete(*enc);
-    WebPPictureFree(&pic);
-    abort();
-  }
+  WebPConfig config = frame_config.webp_config;
   // Skip slow settings on big images, it's likely to timeout.
   if (pic.width * pic.height > 32 * 32) {
     config.method = (config.method > 4) ? 4 : config.method;
@@ -125,14 +131,17 @@ int AddFrame(WebPAnimEncoder** const enc,
   return 1;
 }
 
-}  // namespace
-
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t* const data, size_t size) {
+void AnimEncoderTest(std::string_view blob, bool minimize_size,
+                     std::pair<int, int> kmin_kmax, bool allow_mixed,
+                     const std::vector<FrameConfig>& frame_configs,
+                     int optimization_index) {
   WebPAnimEncoder* enc = nullptr;
   int width = 0, height = 0, timestamp_ms = 0;
   uint32_t bit_pos = 0;
+  const uint8_t* const data = reinterpret_cast<const uint8_t*>(blob.data());
+  const size_t size = blob.size();
 
-  ExtractAndDisableOptimizations(default_VP8GetCPUInfo, data, size, &bit_pos);
+  fuzz_utils::SetOptimization(default_VP8GetCPUInfo, optimization_index);
 
   // Extract a configuration from the packed bits.
   WebPAnimEncoderOptions anim_config;
@@ -140,26 +149,20 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* const data, size_t size) {
     fprintf(stderr, "WebPAnimEncoderOptionsInit failed.\n");
     abort();
   }
-  anim_config.minimize_size = Extract(1, data, size, &bit_pos);
-  anim_config.kmax = Extract(15, data, size, &bit_pos);
-  const int min_kmin = (anim_config.kmax > 1) ? (anim_config.kmax / 2) : 0;
-  const int max_kmin = (anim_config.kmax > 1) ? (anim_config.kmax - 1) : 0;
-  anim_config.kmin =
-      min_kmin + Extract((uint32_t)(max_kmin - min_kmin), data, size, &bit_pos);
-  anim_config.allow_mixed = Extract(1, data, size, &bit_pos);
+  anim_config.minimize_size = minimize_size;
+  anim_config.kmin = kmin_kmax.first;
+  anim_config.kmax = kmin_kmax.second;
+  anim_config.allow_mixed = allow_mixed;
   anim_config.verbose = 0;
 
-  const int nb_frames = 1 + Extract(15, data, size, &bit_pos);
-
   // For each frame.
-  for (int i = 0; i < nb_frames; ++i) {
-    if (!AddFrame(&enc, anim_config, &width, &height, timestamp_ms, data, size,
-                  &bit_pos)) {
-      return 0;
+  for (const FrameConfig& frame_config : frame_configs) {
+    if (!AddFrame(&enc, anim_config, &width, &height, timestamp_ms,
+                  frame_config, data, size, &bit_pos)) {
+      return;
     }
 
-    timestamp_ms += (1 << (2 + Extract(15, data, size, &bit_pos))) +
-                    Extract(1, data, size, &bit_pos);  // [1..131073], arbitrary
+    timestamp_ms += frame_config.timestamp;
   }
 
   // Assemble.
@@ -184,5 +187,22 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* const data, size_t size) {
 
   WebPAnimEncoderDelete(enc);
   WebPDataClear(&webp_data);
-  return 0;
 }
+
+}  // namespace
+
+FUZZ_TEST(AnimEncoder, AnimEncoderTest)
+    .WithDomains(
+        fuzztest::String(),
+        /*minimize_size=*/fuzztest::Arbitrary<bool>(), ArbitraryKMinKMax(),
+        /*allow_mixed=*/fuzztest::Arbitrary<bool>(),
+        fuzztest::VectorOf(
+            fuzztest::StructOf<FrameConfig>(
+                fuzztest::InRange<int>(0, 1), fuzztest::InRange<int>(0, 131073),
+                fuzz_utils::ArbitraryWebPConfig(),
+                fuzz_utils::ArbitraryCropOrScaleParams(),
+                fuzztest::InRange<int>(0, fuzz_utils::kNumSourceImages - 1)))
+            .WithMinSize(1)
+            .WithMaxSize(15),
+        /*optimization_index=*/
+        fuzztest::InRange<uint32_t>(0, fuzz_utils::kMaxOptimizationIndex));

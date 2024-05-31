@@ -1,4 +1,4 @@
-// Copyright 2018 Google Inc.
+// Copyright 2018-2024 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,14 +17,23 @@
 #ifndef WEBP_TESTS_FUZZER_FUZZ_UTILS_H_
 #define WEBP_TESTS_FUZZER_FUZZ_UTILS_H_
 
-#include <stdint.h>
-#include <stdlib.h>
+#include <cstddef>
+#include <cstdint>
+#include <cstdlib>
+#include <optional>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
 
 #include "./img_alpha.h"
 #include "./img_grid.h"
 #include "./img_peak.h"
-#include "src/dsp/dsp.h"
+#include "src/dsp/cpu.h"
 #include "src/webp/encode.h"
+#include "fuzztest/fuzztest.h"
+
+namespace fuzz_utils {
 
 //------------------------------------------------------------------------------
 // Arbitrary limits to prevent OOM, timeout, or slow execution.
@@ -54,170 +63,139 @@ static WEBP_INLINE uint8_t FuzzHash(const uint8_t* const data, size_t size) {
   return value;
 }
 
-//------------------------------------------------------------------------------
-// Extract an integer in [0, max_value].
-
-static WEBP_INLINE uint32_t Extract(uint32_t max_value,
-                                    const uint8_t data[], size_t size,
-                                    uint32_t* const bit_pos) {
-  uint32_t v = 0;
-  uint32_t range = 1;
-  while (*bit_pos < 8 * size && range <= max_value) {
-    const uint8_t mask = 1u << (*bit_pos & 7);
-    v = (v << 1) | !!(data[*bit_pos >> 3] & mask);
-    range <<= 1;
-    ++*bit_pos;
-  }
-  return v % (max_value + 1);
-}
-
-//------------------------------------------------------------------------------
-// Some functions to override VP8GetCPUInfo and disable some optimizations.
-
 #ifdef __cplusplus
 extern "C" VP8CPUInfo VP8GetCPUInfo;
 #else
 extern VP8CPUInfo VP8GetCPUInfo;
 #endif
-static VP8CPUInfo GetCPUInfo;
-
-static WEBP_INLINE int GetCPUInfoNoSSE41(CPUFeature feature) {
-  if (feature == kSSE4_1 || feature == kAVX) return 0;
-  return GetCPUInfo(feature);
-}
-
-static WEBP_INLINE int GetCPUInfoNoAVX(CPUFeature feature) {
-  if (feature == kAVX) return 0;
-  return GetCPUInfo(feature);
-}
-
-static WEBP_INLINE int GetCPUInfoForceSlowSSSE3(CPUFeature feature) {
-  if (feature == kSlowSSSE3 && GetCPUInfo(kSSE3)) {
-    return 1;  // we have SSE3 -> force SlowSSSE3
-  }
-  return GetCPUInfo(feature);
-}
-
-static WEBP_INLINE int GetCPUInfoOnlyC(CPUFeature feature) {
-  (void)feature;
-  return 0;
-}
-
-static WEBP_INLINE void ExtractAndDisableOptimizations(
-    VP8CPUInfo default_VP8GetCPUInfo, const uint8_t data[], size_t size,
-    uint32_t* const bit_pos) {
-  GetCPUInfo = default_VP8GetCPUInfo;
-  const VP8CPUInfo kVP8CPUInfos[5] = {GetCPUInfoOnlyC, GetCPUInfoForceSlowSSSE3,
-                                      GetCPUInfoNoSSE41, GetCPUInfoNoAVX,
-                                      GetCPUInfo};
-  int VP8GetCPUInfo_index = Extract(4, data, size, bit_pos);
-  VP8GetCPUInfo = kVP8CPUInfos[VP8GetCPUInfo_index];
-}
 
 //------------------------------------------------------------------------------
 
-static WEBP_INLINE int ExtractWebPConfig(WebPConfig* const config,
-                                         const uint8_t data[], size_t size,
-                                         uint32_t* const bit_pos) {
-  if (config == NULL || !WebPConfigInit(config)) return 0;
-  config->lossless = Extract(1, data, size, bit_pos);
-  config->quality = Extract(100, data, size, bit_pos);
-  config->method = Extract(6, data, size, bit_pos);
-  config->image_hint =
-      (WebPImageHint)Extract(WEBP_HINT_LAST - 1, data, size, bit_pos);
-  config->segments = 1 + Extract(3, data, size, bit_pos);
-  config->sns_strength = Extract(100, data, size, bit_pos);
-  config->filter_strength = Extract(100, data, size, bit_pos);
-  config->filter_sharpness = Extract(7, data, size, bit_pos);
-  config->filter_type = Extract(1, data, size, bit_pos);
-  config->autofilter = Extract(1, data, size, bit_pos);
-  config->alpha_compression = Extract(1, data, size, bit_pos);
-  config->alpha_filtering = Extract(2, data, size, bit_pos);
-  config->alpha_quality = Extract(100, data, size, bit_pos);
-  config->pass = 1 + Extract(9, data, size, bit_pos);
-  config->show_compressed = 1;
-  config->preprocessing = Extract(2, data, size, bit_pos);
-  config->partitions = Extract(3, data, size, bit_pos);
-  config->partition_limit = 10 * Extract(10, data, size, bit_pos);
-  config->emulate_jpeg_size = Extract(1, data, size, bit_pos);
-  config->thread_level = Extract(1, data, size, bit_pos);
-  config->low_memory = Extract(1, data, size, bit_pos);
-  config->near_lossless = 20 * Extract(5, data, size, bit_pos);
-  config->exact = Extract(1, data, size, bit_pos);
-  config->use_delta_palette = Extract(1, data, size, bit_pos);
-  config->use_sharp_yuv = Extract(1, data, size, bit_pos);
-  return WebPValidateConfig(config);
+constexpr const uint8_t* kImagesData[] = {kImgAlphaData, kImgGridData,
+                                          kImgPeakData};
+constexpr size_t kNumSourceImages =
+    sizeof(kImagesData) / sizeof(kImagesData[0]);
+
+WebPPicture GetSourcePicture(int image_index, bool use_argb);
+
+static inline auto ArbitraryWebPConfig() {
+  return fuzztest::Map(
+      [](int lossless, int quality, int method, int image_hint, int segments,
+         int sns_strength, int filter_strength, int filter_sharpness,
+         int filter_type, int autofilter, int alpha_compression,
+         int alpha_filtering, int alpha_quality, int pass, int preprocessing,
+         int partitions, int partition_limit, int emulate_jpeg_size,
+         int thread_level, int low_memory, int near_lossless, int exact,
+         int use_delta_palette, int use_sharp_yuv) -> WebPConfig {
+        WebPConfig config;
+        if (!WebPConfigInit(&config)) abort();
+        config.lossless = lossless;
+        config.quality = quality;
+        config.method = method;
+        config.image_hint = (WebPImageHint)image_hint;
+        config.segments = segments;
+        config.sns_strength = sns_strength;
+        config.filter_strength = filter_strength;
+        config.filter_sharpness = filter_sharpness;
+        config.filter_type = filter_type;
+        config.autofilter = autofilter;
+        config.alpha_compression = alpha_compression;
+        config.alpha_filtering = alpha_filtering;
+        config.alpha_quality = alpha_quality;
+        config.pass = pass;
+        config.show_compressed = 1;
+        config.preprocessing = preprocessing;
+        config.partitions = partitions;
+        config.partition_limit = 10 * partition_limit;
+        config.emulate_jpeg_size = emulate_jpeg_size;
+        config.thread_level = thread_level;
+        config.low_memory = low_memory;
+        config.near_lossless = 20 * near_lossless;
+        config.exact = exact;
+        config.use_delta_palette = use_delta_palette;
+        config.use_sharp_yuv = use_sharp_yuv;
+        if (!WebPValidateConfig(&config)) abort();
+        return config;
+      },
+      /*lossless=*/fuzztest::InRange<int>(0, 1),
+      /*quality=*/fuzztest::InRange<int>(0, 100),
+      /*method=*/fuzztest::InRange<int>(0, 6),
+      /*image_hint=*/fuzztest::InRange<int>(0, WEBP_HINT_LAST - 1),
+      /*segments=*/fuzztest::InRange<int>(1, 4),
+      /*sns_strength=*/fuzztest::InRange<int>(0, 100),
+      /*filter_strength=*/fuzztest::InRange<int>(0, 100),
+      /*filter_sharpness=*/fuzztest::InRange<int>(0, 7),
+      /*filter_type=*/fuzztest::InRange<int>(0, 1),
+      /*autofilter=*/fuzztest::InRange<int>(0, 1),
+      /*alpha_compression=*/fuzztest::InRange<int>(0, 1),
+      /*alpha_filtering=*/fuzztest::InRange<int>(0, 2),
+      /*alpha_quality=*/fuzztest::InRange<int>(0, 100),
+      /*pass=*/fuzztest::InRange<int>(1, 10),
+      /*preprocessing=*/fuzztest::InRange<int>(0, 2),
+      /*partitions=*/fuzztest::InRange<int>(0, 3),
+      /*partition_limit=*/fuzztest::InRange<int>(0, 10),
+      /*emulate_jpeg_size=*/fuzztest::InRange<int>(0, 1),
+      /*thread_level=*/fuzztest::InRange<int>(0, 1),
+      /*low_memory=*/fuzztest::InRange<int>(0, 1),
+      /*near_lossless=*/fuzztest::InRange<int>(0, 5),
+      /*exact=*/fuzztest::InRange<int>(0, 1),
+      /*use_delta_palette=*/fuzztest::InRange<int>(0, 1),
+      /*use_sharp_yuv=*/fuzztest::InRange<int>(0, 1));
 }
+
+struct CropOrScaleParams {
+  bool alter_input;
+  bool crop_or_scale;
+  int width_ratio;
+  int height_ratio;
+  int left_ratio;
+  int top_ratio;
+};
+
+static inline auto ArbitraryCropOrScaleParams() {
+  return fuzztest::Map(
+      [](const std::optional<std::pair<int, int>>& width_height_ratio,
+         const std::optional<std::pair<int, int>>& left_top_ratio)
+          -> CropOrScaleParams {
+        CropOrScaleParams params;
+        params.alter_input = width_height_ratio.has_value();
+        if (params.alter_input) {
+          params.width_ratio = width_height_ratio->first;
+          params.height_ratio = width_height_ratio->second;
+          params.crop_or_scale = left_top_ratio.has_value();
+          if (params.crop_or_scale) {
+            params.left_ratio = left_top_ratio->first;
+            params.top_ratio = left_top_ratio->second;
+          }
+        }
+        return params;
+      },
+      fuzztest::OptionalOf(
+          fuzztest::PairOf(fuzztest::InRange(1, 8), fuzztest::InRange(1, 8))),
+      fuzztest::OptionalOf(
+          fuzztest::PairOf(fuzztest::InRange(1, 8), fuzztest::InRange(1, 8))));
+}
+
+// Crops or scales a picture according to the given params.
+int CropOrScale(WebPPicture* pic, const CropOrScaleParams& params);
+
+// Imposes a level of optimization among one of the kMaxOptimizationIndex+1
+// possible values: OnlyC, ForceSlowSSSE3, NoSSE41, NoAVX, default.
+static constexpr uint32_t kMaxOptimizationIndex = 4;
+void SetOptimization(VP8CPUInfo default_VP8GetCPUInfo, uint32_t index);
 
 //------------------------------------------------------------------------------
 
-static WEBP_INLINE int ExtractSourcePicture(WebPPicture* const pic,
-                                            const uint8_t data[], size_t size,
-                                            uint32_t* const bit_pos) {
-  if (pic == NULL) return 0;
+// See https://developers.google.com/speed/webp/docs/riff_container.
+static constexpr size_t kMaxWebPFileSize = (1ull << 32) - 2;  // 4 GiB - 2
 
-  // Pick a source picture.
-  const uint8_t* kImagesData[] = {
-      kImgAlphaData,
-      kImgGridData,
-      kImgPeakData
-  };
-  const int kImagesWidth[] = {
-      kImgAlphaWidth,
-      kImgGridWidth,
-      kImgPeakWidth
-  };
-  const int kImagesHeight[] = {
-      kImgAlphaHeight,
-      kImgGridHeight,
-      kImgPeakHeight
-  };
-  const size_t kNbImages = sizeof(kImagesData) / sizeof(kImagesData[0]);
-  const size_t image_index = Extract(kNbImages - 1, data, size, bit_pos);
-  const uint8_t* const image_data = kImagesData[image_index];
-  pic->width = kImagesWidth[image_index];
-  pic->height = kImagesHeight[image_index];
-  pic->argb_stride = pic->width * 4 * sizeof(uint8_t);
+std::vector<std::string> GetDictionaryFromFiles(
+    const std::vector<std::string_view>& file_paths);
 
-  // Read the bytes.
-  return WebPPictureImportRGBA(pic, image_data, pic->argb_stride);
-}
+// Checks whether the binary blob containing a JPEG or WebP is too big for the
+// fuzzer.
+bool IsImageTooBig(const uint8_t* data, size_t size);
 
-//------------------------------------------------------------------------------
-
-static WEBP_INLINE int Max(int a, int b) { return ((a < b) ? b : a); }
-
-static WEBP_INLINE int ExtractAndCropOrScale(WebPPicture* const pic,
-                                             const uint8_t data[], size_t size,
-                                             uint32_t* const bit_pos) {
-  if (pic == NULL) return 0;
-#if !defined(WEBP_REDUCE_SIZE)
-  const int alter_input = Extract(1, data, size, bit_pos);
-  const int crop_or_scale = Extract(1, data, size, bit_pos);
-  const int width_ratio = 1 + Extract(7, data, size, bit_pos);
-  const int height_ratio = 1 + Extract(7, data, size, bit_pos);
-  if (alter_input) {
-    if (crop_or_scale) {
-      const uint32_t left_ratio = 1 + Extract(7, data, size, bit_pos);
-      const uint32_t top_ratio = 1 + Extract(7, data, size, bit_pos);
-      const int cropped_width = Max(1, pic->width / width_ratio);
-      const int cropped_height = Max(1, pic->height / height_ratio);
-      const int cropped_left = (pic->width - cropped_width) / left_ratio;
-      const int cropped_top = (pic->height - cropped_height) / top_ratio;
-      return WebPPictureCrop(pic, cropped_left, cropped_top, cropped_width,
-                             cropped_height);
-    } else {
-      const int scaled_width = 1 + (pic->width * width_ratio) / 8;
-      const int scaled_height = 1 + (pic->height * height_ratio) / 8;
-      return WebPPictureRescale(pic, scaled_width, scaled_height);
-    }
-  }
-#else   // defined(WEBP_REDUCE_SIZE)
-  (void)data;
-  (void)size;
-  (void)bit_pos;
-#endif  // !defined(WEBP_REDUCE_SIZE)
-  return 1;
-}
+}  // namespace fuzz_utils
 
 #endif  // WEBP_TESTS_FUZZER_FUZZ_UTILS_H_

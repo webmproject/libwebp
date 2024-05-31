@@ -14,54 +14,59 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <stdint.h>
-#include <string.h>
+#include <algorithm>
+#include <cstddef>
+#include <cstdint>
+#include <string_view>
 
 #include "./fuzz_utils.h"
 #include "src/utils/rescaler_utils.h"
 #include "src/webp/decode.h"
 
-int LLVMFuzzerTestOneInput(const uint8_t* const data, size_t size) {
+namespace {
+
+void AdvancedApiTest(std::string_view blob, uint8_t factor_u8, bool flip,
+                     bool bypass_filtering, bool no_fancy_upsampling,
+                     bool use_threads, bool use_cropping, bool use_scaling,
+                     bool use_dithering, int colorspace, bool incremental) {
   WebPDecoderConfig config;
-  if (!WebPInitDecoderConfig(&config)) return 0;
-  if (WebPGetFeatures(data, size, &config.input) != VP8_STATUS_OK) return 0;
-  if ((size_t)config.input.width * config.input.height > kFuzzPxLimit) return 0;
+  if (!WebPInitDecoderConfig(&config)) return;
+  const uint8_t* const data = reinterpret_cast<const uint8_t*>(blob.data());
+  const size_t size = blob.size();
+  if (WebPGetFeatures(data, size, &config.input) != VP8_STATUS_OK) return;
+  if ((size_t)config.input.width * config.input.height >
+      fuzz_utils::kFuzzPxLimit) {
+    return;
+  }
 
   // Using two independent criteria ensures that all combinations of options
   // can reach each path at the decoding stage, with meaningful differences.
 
-  const uint8_t value = FuzzHash(data, size);
-  const float factor = value / 255.f;  // 0-1
+  const uint8_t value = fuzz_utils::FuzzHash(data, size);
+  const float factor = factor_u8 / 255.f;  // 0-1
 
-  config.options.flip = value & 1;
-  config.options.bypass_filtering = value & 2;
-  config.options.no_fancy_upsampling = value & 4;
-  config.options.use_threads = value & 8;
-  if (size & 1) {
+  config.options.flip = flip;
+  config.options.bypass_filtering = bypass_filtering;
+  config.options.no_fancy_upsampling = no_fancy_upsampling;
+  config.options.use_threads = use_threads;
+  if (use_cropping) {
     config.options.use_cropping = 1;
     config.options.crop_width = (int)(config.input.width * (1 - factor));
     config.options.crop_height = (int)(config.input.height * (1 - factor));
     config.options.crop_left = config.input.width - config.options.crop_width;
     config.options.crop_top = config.input.height - config.options.crop_height;
   }
-  if (size & 2) {
+  if (use_dithering) {
     int strength = (int)(factor * 100);
     config.options.dithering_strength = strength;
     config.options.alpha_dithering_strength = 100 - strength;
   }
-  if (size & 4) {
+  if (use_scaling) {
     config.options.use_scaling = 1;
     config.options.scaled_width = (int)(config.input.width * factor * 2);
     config.options.scaled_height = (int)(config.input.height * factor * 2);
   }
-
-#if defined(WEBP_REDUCE_CSP)
-  config.output.colorspace = (value & 1)
-                                 ? ((value & 2) ? MODE_RGBA : MODE_BGRA)
-                                 : ((value & 2) ? MODE_rgbA : MODE_bgrA);
-#else
-  config.output.colorspace = (WEBP_CSP_MODE)(value % MODE_LAST);
-#endif  // WEBP_REDUCE_CSP
+  config.output.colorspace = static_cast<WEBP_CSP_MODE>(colorspace);
 
   for (int i = 0; i < 2; ++i) {
     if (i == 1) {
@@ -80,7 +85,7 @@ int LLVMFuzzerTestOneInput(const uint8_t* const data, size_t size) {
         if (WebPRescalerGetScaledDimensions(config.input.width,
                                             config.input.height, &scaled_width,
                                             &scaled_height)) {
-          size_t fuzz_px_limit = kFuzzPxLimit;
+          size_t fuzz_px_limit = fuzz_utils::kFuzzPxLimit;
           if (scaled_width != config.input.width ||
               scaled_height != config.input.height) {
             // Using the WebPRescalerImport internally can significantly slow
@@ -92,18 +97,18 @@ int LLVMFuzzerTestOneInput(const uint8_t* const data, size_t size) {
           // very wide input image to a very tall canvas can be as slow as
           // decoding a huge number of pixels. Avoid timeouts due to these.
           const uint64_t max_num_operations =
-              (uint64_t)Max(scaled_width, config.input.width) *
-              Max(scaled_height, config.input.height);
+              (uint64_t)std::max(scaled_width, config.input.width) *
+              std::max(scaled_height, config.input.height);
           if (max_num_operations > fuzz_px_limit) {
             break;
           }
         }
       }
     }
-    if (size % 3) {
+    if (incremental) {
       // Decodes incrementally in chunks of increasing size.
       WebPIDecoder* idec = WebPIDecode(NULL, 0, &config);
-      if (!idec) return 0;
+      if (!idec) return;
       VP8StatusCode status;
       if (size & 8) {
         size_t available_size = value + 1;
@@ -135,5 +140,28 @@ int LLVMFuzzerTestOneInput(const uint8_t* const data, size_t size) {
 
     WebPFreeDecBuffer(&config.output);
   }
-  return 0;
 }
+
+}  // namespace
+
+FUZZ_TEST(AdvancedApi, AdvancedApiTest)
+    .WithDomains(
+        fuzztest::String()
+            .WithMaxSize(fuzz_utils::kMaxWebPFileSize + 1),
+        /*factor_u8=*/fuzztest::Arbitrary<uint8_t>(),
+        /*flip=*/fuzztest::Arbitrary<bool>(),
+        /*bypass_filtering=*/fuzztest::Arbitrary<bool>(),
+        /*no_fancy_upsampling=*/fuzztest::Arbitrary<bool>(),
+        /*use_threads=*/fuzztest::Arbitrary<bool>(),
+        /*use_cropping=*/fuzztest::Arbitrary<bool>(),
+        /*use_scaling=*/fuzztest::Arbitrary<bool>(),
+        /*use_dithering=*/fuzztest::Arbitrary<bool>(),
+#if defined(WEBP_REDUCE_CSP)
+        fuzztest::ElementOf<int>({static_cast<int>(MODE_RGBA),
+                                  static_cast<int>(MODE_BGRA),
+                                  static_cast<int>(MODE_rgbA),
+                                  static_cast<int>(MODE_bgrA)}),
+#else
+        fuzztest::InRange<int>(0, static_cast<int>(MODE_LAST) - 1),
+#endif
+        /*incremental=*/fuzztest::Arbitrary<bool>());

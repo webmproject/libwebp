@@ -15,61 +15,69 @@
 #
 ################################################################################
 
+# This script is meant to be run by the oss-fuzz infrastructure from the script
+# https://github.com/google/oss-fuzz/blob/master/projects/libwebp/build.sh
+# It builds the different fuzz targets.
+
+# To test changes to this file:
+# - make changes and commit to your REPO
+# - run:
+#     git clone --depth=1 git@github.com:google/oss-fuzz.git
+#     cd oss-fuzz
+# - modify projects/libwebp/Dockerfile to point to your REPO
+# - run:
+#     python3 infra/helper.py build_image libwebp
+#     # enter 'y' and wait for everything to be downloaded
+# - run:
+#     python3 infra/helper.py build_fuzzers --sanitizer address libwebp
+#     # wait for the tests to be built
+# And then run the fuzzer locally, for example:
+#     python3 infra/helper.py run_fuzzer libwebp \
+#     --sanitizer address \
+#     animencoder_fuzzer__AnimEncoder.AnimEncoderTest
+
 set -eu
 
 # limit allocation size to reduce spurious OOMs
 WEBP_CFLAGS="$CFLAGS -DWEBP_MAX_IMAGE_SIZE=838860800" # 800MiB
 
-./autogen.sh
-CFLAGS="$WEBP_CFLAGS" ./configure \
-  --enable-asserts \
-  --enable-libwebpdemux \
-  --enable-libwebpmux \
-  --disable-shared \
-  --disable-jpeg \
-  --disable-tiff \
-  --disable-gif \
-  --disable-wic
-make clean
-make -j$(nproc)
+export CFLAGS="$WEBP_CFLAGS"
+cmake -S . -B build -DWEBP_BUILD_FUZZTEST=ON
+cd build && make -j$(nproc) && cd ..
 
 find $SRC/libwebp-test-data -type f -size -32k -iname "*.webp" \
   -exec zip -qju fuzz_seed_corpus.zip "{}" \;
 
-webp_libs=(
-  src/demux/.libs/libwebpdemux.a
-  src/mux/.libs/libwebpmux.a
-  src/.libs/libwebp.a
-  imageio/.libs/libimageio_util.a
-  sharpyuv/.libs/libsharpyuv.a
-)
-webp_c_fuzzers=(
-  advanced_api_fuzzer
-  animation_api_fuzzer
-  huffman_fuzzer
-  mux_demux_api_fuzzer
-  simple_api_fuzzer
-)
-webp_cxx_fuzzers=(
-  animdecoder_fuzzer
-  animencoder_fuzzer
-  enc_dec_fuzzer
-)
-
-for fuzzer in "${webp_c_fuzzers[@]}"; do
-  $CC $CFLAGS -Isrc -I. tests/fuzzer/${fuzzer}.c -c -o tests/fuzzer/${fuzzer}.o
-  $CXX $CXXFLAGS $LIB_FUZZING_ENGINE \
-    tests/fuzzer/${fuzzer}.o -o $OUT/${fuzzer} \
-    "${webp_libs[@]}"
-done
-
-for fuzzer in "${webp_cxx_fuzzers[@]}"; do
-  $CXX $CXXFLAGS -Isrc -I. $LIB_FUZZING_ENGINE \
-    tests/fuzzer/${fuzzer}.cc -o $OUT/${fuzzer} \
-    "${webp_libs[@]}"
-done
-
-for fuzzer in "${webp_c_fuzzers[@]}" "${webp_cxx_fuzzers[@]}"; do
-  cp fuzz_seed_corpus.zip $OUT/${fuzzer}_seed_corpus.zip
-  cp tests/fuzzer/fuzz.dict $OUT/${fuzzer}.dict
-done
+# Restrict fuzztest tests to the only compatible fuzz engine: libfuzzer.
+if [[ "$FUZZING_ENGINE" == "libfuzzer" ]]; then
+  # build fuzztests
+  # The following is taken from https://github.com/google/oss-fuzz/blob/31ac7244748ea7390015455fb034b1f4eda039d9/infra/base-images/base-builder/compile_fuzztests.sh#L59
+  # Iterate the fuzz binaries and list each fuzz entrypoint in the binary. For
+  # each entrypoint create a wrapper script that calls into the binaries the
+  # given entrypoint as argument.
+  # The scripts will be named:
+  # {binary_name}@{fuzztest_entrypoint}
+  FUZZ_TEST_BINARIES_OUT_PATHS=$(find ./build/tests/fuzzer/ -executable -type f)
+  echo "Fuzz binaries: $FUZZ_TEST_BINARIES_OUT_PATHS"
+  for fuzz_main_file in $FUZZ_TEST_BINARIES_OUT_PATHS; do
+    FUZZ_TESTS=$($fuzz_main_file --list_fuzz_tests | cut -d ' ' -f 4)
+    cp -f ${fuzz_main_file} $OUT/
+    fuzz_basename=$(basename $fuzz_main_file)
+    chmod -x $OUT/$fuzz_basename
+    for fuzz_entrypoint in $FUZZ_TESTS; do
+      TARGET_FUZZER="${fuzz_basename}@$fuzz_entrypoint"
+      # Write executer script
+      echo "#!/bin/sh
+# LLVMFuzzerTestOneInput for fuzzer detection.
+this_dir=\$(dirname \"\$0\")
+export TEST_DATA_DIRS=\$this_dir/corpus
+chmod +x \$this_dir/$fuzz_basename
+\$this_dir/$fuzz_basename --fuzz=$fuzz_entrypoint -- \$@
+chmod -x \$this_dir/$fuzz_basename" > $OUT/$TARGET_FUZZER
+      chmod +x $OUT/$TARGET_FUZZER
+    done
+  # Copy data.
+  cp fuzz_seed_corpus.zip $OUT/${fuzz_basename}_seed_corpus.zip
+  cp tests/fuzzer/fuzz.dict $OUT/${fuzz_basename}.dict
+  done
+fi

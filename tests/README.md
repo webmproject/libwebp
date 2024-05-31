@@ -11,8 +11,9 @@ https://chromium.googlesource.com/webm/libwebp-test-data
 Follow the [build instructions](../doc/building.md) for libwebp, optionally
 adding build flags for various sanitizers (e.g., -fsanitize=address).
 
-`fuzzer/makefile.unix` can then be used to compile the fuzzer targets:
+`-DWEBP_BUILD_FUZZTEST=ON` can then be used to compile the fuzzer targets:
 
 ```shell
-$ make -C fuzzer -f makefile.unix
+$ cmake -B ./build -S . -DWEBP_BUILD_FUZZTEST=ON
+$ make -C build
 ```
