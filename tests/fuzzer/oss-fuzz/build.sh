@@ -79,7 +79,7 @@ chmod +x \$this_dir/$fuzz_basename
 chmod -x \$this_dir/$fuzz_basename" > $OUT/$TARGET_FUZZER
     chmod +x $OUT/$TARGET_FUZZER
   done
-# Copy data.
-cp fuzz_seed_corpus.zip $OUT/${fuzz_basename}_seed_corpus.zip
-cp tests/fuzzer/fuzz.dict $OUT/${fuzz_basename}.dict
+  # Copy data.
+  cp fuzz_seed_corpus.zip $OUT/${fuzz_basename}_seed_corpus.zip
+  cp tests/fuzzer/fuzz.dict $OUT/${fuzz_basename}.dict
 done
