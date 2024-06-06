@@ -70,13 +70,15 @@ for fuzz_main_file in $FUZZ_TEST_BINARIES_OUT_PATHS; do
   for fuzz_entrypoint in $FUZZ_TESTS; do
     TARGET_FUZZER="${fuzz_basename}@$fuzz_entrypoint"
     # Write executer script
-    echo "#!/bin/sh
+    cat << EOF > $OUT/$TARGET_FUZZER
+#!/bin/sh
 # LLVMFuzzerTestOneInput for fuzzer detection.
 this_dir=\$(dirname \"\$0\")
 export TEST_DATA_DIRS=\$this_dir/corpus
 chmod +x \$this_dir/$fuzz_basename
 \$this_dir/$fuzz_basename --fuzz=$fuzz_entrypoint -- \$@
-chmod -x \$this_dir/$fuzz_basename" > $OUT/$TARGET_FUZZER
+chmod -x \$this_dir/$fuzz_basename
+EOF
     chmod +x $OUT/$TARGET_FUZZER
   done
   # Copy data.
