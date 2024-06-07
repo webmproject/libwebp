@@ -78,7 +78,6 @@ typedef enum {   // Rate-distortion optimization levels
 extern const uint16_t VP8Scan[16];
 extern const uint16_t VP8UVModeOffsets[4];
 extern const uint16_t VP8I16ModeOffsets[4];
-extern const uint16_t VP8I4ModeOffsets[NUM_BMODES];
 
 // Layout of prediction blocks
 // intra 16x16
@@ -444,9 +443,6 @@ extern const uint8_t VP8Cat6[];
 void VP8MakeLuma16Preds(const VP8EncIterator* const it);
 // Form all the four Chroma8x8 predictions in the yuv_p_ cache
 void VP8MakeChroma8Preds(const VP8EncIterator* const it);
-// Form all the ten Intra4x4 predictions in the yuv_p_ cache
-// for the 4x4 block it->i4_
-void VP8MakeIntra4Preds(const VP8EncIterator* const it);
 // Rate calculation
 int VP8GetCostLuma16(VP8EncIterator* const it, const VP8ModeScore* const rd);
 int VP8GetCostLuma4(VP8EncIterator* const it, const int16_t levels[16]);
