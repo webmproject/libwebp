@@ -39,7 +39,7 @@
 set -eu
 
 # Avoid fuzz engines that do not compile.
-if [[ "$FUZZING_ENGINE" != "libfuzzer" ]]; then
+if [[ "$FUZZING_ENGINE" != "libfuzzer" && "$FUZZING_ENGINE" != "centipede" ]]; then
   exit
 fi
 
