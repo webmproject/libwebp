@@ -73,7 +73,7 @@ for fuzz_main_file in $FUZZ_TEST_BINARIES_OUT_PATHS; do
     cat << EOF > $OUT/$TARGET_FUZZER
 #!/bin/sh
 # LLVMFuzzerTestOneInput for fuzzer detection.
-this_dir=\$(dirname \"\$0\")
+this_dir=\$(dirname "\$0")
 export TEST_DATA_DIRS=\$this_dir/corpus
 chmod +x \$this_dir/$fuzz_basename
 \$this_dir/$fuzz_basename --fuzz=$fuzz_entrypoint -- \$@
