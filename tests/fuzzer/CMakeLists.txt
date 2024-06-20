@@ -35,7 +35,7 @@ set(fuzztest_SOURCE_DIR ${CMAKE_BINARY_DIR}/_deps/fuzztest-src)
 FetchContent_Declare(
   fuzztest
   GIT_REPOSITORY https://github.com/google/fuzztest.git
-  GIT_TAG a40caf40aaf621dd0e04f9d8b47d1153fd2682d2
+  GIT_TAG ce454aced15f7dc2cc96aeae969a6204b563b4c9
   GIT_PROGRESS TRUE
   PATCH_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/patch.sh)
 
