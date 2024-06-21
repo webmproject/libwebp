@@ -18,6 +18,7 @@
 # This script is meant to be run by the oss-fuzz infrastructure from the script
 # https://github.com/google/oss-fuzz/blob/master/projects/libwebp/build.sh
 # It builds the different fuzz targets.
+# Only the libfuzzer engine is supported.
 
 # To test changes to this file:
 # - make changes and commit to your REPO
@@ -38,17 +39,9 @@
 
 set -eu
 
-# Avoid fuzz engines that do not compile.
-if [[ "$FUZZING_ENGINE" != "libfuzzer" ]]; then
-  exit
-fi
-
 EXTRA_CMAKE_FLAGS=""
-if [ "$FUZZING_ENGINE" == "libfuzzer" ]
-then
-  export CXXFLAGS="${CXXFLAGS} -DFUZZTEST_COMPATIBILITY_MODE"
-  EXTRA_CMAKE_FLAGS="-DFUZZTEST_COMPATIBILITY_MODE=libfuzzer"
-fi
+export CXXFLAGS="${CXXFLAGS} -DFUZZTEST_COMPATIBILITY_MODE"
+EXTRA_CMAKE_FLAGS="-DFUZZTEST_COMPATIBILITY_MODE=libfuzzer"
 
 # limit allocation size to reduce spurious OOMs
 WEBP_CFLAGS="$CFLAGS -DWEBP_MAX_IMAGE_SIZE=838860800" # 800MiB
