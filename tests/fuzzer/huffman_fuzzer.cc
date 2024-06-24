@@ -58,7 +58,7 @@ void HuffmanTest(std::string_view blob) {
 
   num_htree_groups = VP8LReadBits(br, kNumHtreeGroupsBits);
   // 'num_htree_groups' cannot be 0 as it is built from a non-empty image.
-  if (num_htree_groups == 0) return;
+  if (num_htree_groups == 0) goto Error;
   // This variable is only useful when mapping is not NULL.
   num_htree_groups_max = num_htree_groups;
   (void)ReadHuffmanCodesHelper(color_cache_bits, num_htree_groups,
