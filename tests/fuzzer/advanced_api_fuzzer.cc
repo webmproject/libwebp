@@ -20,6 +20,7 @@
 #include <string_view>
 
 #include "./fuzz_utils.h"
+#include "src/dec/webpi_dec.h"
 #include "src/utils/rescaler_utils.h"
 #include "src/webp/decode.h"
 
@@ -80,11 +81,24 @@ void AdvancedApiTest(std::string_view blob, uint8_t factor_u8, bool flip,
 
       // Skip easily avoidable out-of-memory fuzzing errors.
       if (config.options.use_scaling) {
+        int input_width = config.input.width;
+        int input_height = config.input.height;
+        if (config.options.use_cropping) {
+          const int cw = config.options.crop_width;
+          const int ch = config.options.crop_height;
+          const int x = config.options.crop_left & ~1;
+          const int y = config.options.crop_top & ~1;
+          if (WebPCheckCropDimensions(input_width, input_height, x, y, cw,
+                                      ch)) {
+            input_width = cw;
+            input_height = ch;
+          }
+        }
+
         int scaled_width = config.options.scaled_width;
         int scaled_height = config.options.scaled_height;
-        if (WebPRescalerGetScaledDimensions(config.input.width,
-                                            config.input.height, &scaled_width,
-                                            &scaled_height)) {
+        if (WebPRescalerGetScaledDimensions(input_width, input_height,
+                                            &scaled_width, &scaled_height)) {
           size_t fuzz_px_limit = fuzz_utils::kFuzzPxLimit;
           if (scaled_width != config.input.width ||
               scaled_height != config.input.height) {
