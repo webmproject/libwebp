@@ -1383,13 +1383,11 @@ static int ApplyPalette(const uint32_t* src, uint32_t src_stride, uint32_t* dst,
 #undef APPLY_PALETTE_GREEDY_MAX
 
 // Note: Expects "enc->palette_" to be set properly.
-static int MapImageFromPalette(VP8LEncoder* const enc, int in_place) {
+static int MapImageFromPalette(VP8LEncoder* const enc) {
   const WebPPicture* const pic = enc->pic_;
   const int width = pic->width;
   const int height = pic->height;
   const uint32_t* const palette = enc->palette_;
-  const uint32_t* src = in_place ? enc->argb_ : pic->argb;
-  const int src_stride = in_place ? enc->current_width_ : pic->argb_stride;
   const int palette_size = enc->palette_size_;
   int xbits;
 
@@ -1404,9 +1402,9 @@ static int MapImageFromPalette(VP8LEncoder* const enc, int in_place) {
   if (!AllocateTransformBuffer(enc, VP8LSubSampleSize(width, xbits), height)) {
     return 0;
   }
-  if (!ApplyPalette(src, src_stride,
-                     enc->argb_, enc->current_width_,
-                     palette, palette_size, width, height, xbits, pic)) {
+  if (!ApplyPalette(pic->argb, pic->argb_stride, enc->argb_,
+                    enc->current_width_, palette, palette_size, width, height,
+                    xbits, pic)) {
     return 0;
   }
   enc->argb_content_ = kEncoderPalette;
@@ -1502,7 +1500,6 @@ static int EncodeStreamHook(void* input, void* data2) {
 #endif
   int hdr_size = 0;
   int data_size = 0;
-  int use_delta_palette = 0;
   int idx;
   size_t best_size = ~(size_t)0;
   VP8LBitWriter bw_init = *bw, bw_best;
@@ -1567,45 +1564,43 @@ static int EncodeStreamHook(void* input, void* data2) {
         goto Error;
       }
       remaining_percent -= percent_range;
-      if (!MapImageFromPalette(enc, use_delta_palette)) goto Error;
+      if (!MapImageFromPalette(enc)) goto Error;
       // If using a color cache, do not have it bigger than the number of
       // colors.
       if (enc->palette_size_ < (1 << MAX_COLOR_CACHE_BITS)) {
         enc->cache_bits_ = BitsLog2Floor(enc->palette_size_) + 1;
       }
     }
-    if (!use_delta_palette) {
-      // In case image is not packed.
-      if (enc->argb_content_ != kEncoderNearLossless &&
-          enc->argb_content_ != kEncoderPalette) {
-        if (!MakeInputImageCopy(enc)) goto Error;
-      }
+    // In case image is not packed.
+    if (enc->argb_content_ != kEncoderNearLossless &&
+        enc->argb_content_ != kEncoderPalette) {
+      if (!MakeInputImageCopy(enc)) goto Error;
+    }
 
-      // -----------------------------------------------------------------------
-      // Apply transforms and write transform data.
+    // -------------------------------------------------------------------------
+    // Apply transforms and write transform data.
 
-      if (enc->use_subtract_green_) {
-        ApplySubtractGreen(enc, enc->current_width_, height, bw);
-      }
+    if (enc->use_subtract_green_) {
+      ApplySubtractGreen(enc, enc->current_width_, height, bw);
+    }
 
-      if (enc->use_predict_) {
-        percent_range = remaining_percent / 3;
-        if (!ApplyPredictFilter(enc, enc->current_width_, height, quality,
-                                low_effort, enc->use_subtract_green_, bw,
-                                percent_range, &percent)) {
-          goto Error;
-        }
-        remaining_percent -= percent_range;
+    if (enc->use_predict_) {
+      percent_range = remaining_percent / 3;
+      if (!ApplyPredictFilter(enc, enc->current_width_, height, quality,
+                              low_effort, enc->use_subtract_green_, bw,
+                              percent_range, &percent)) {
+        goto Error;
       }
+      remaining_percent -= percent_range;
+    }
 
-      if (enc->use_cross_color_) {
-        percent_range = remaining_percent / 2;
-        if (!ApplyCrossColorFilter(enc, enc->current_width_, height, quality,
-                                   low_effort, bw, percent_range, &percent)) {
-          goto Error;
-        }
-        remaining_percent -= percent_range;
+    if (enc->use_cross_color_) {
+      percent_range = remaining_percent / 2;
+      if (!ApplyCrossColorFilter(enc, enc->current_width_, height, quality,
+                                 low_effort, bw, percent_range, &percent)) {
+        goto Error;
       }
+      remaining_percent -= percent_range;
     }
 
     VP8LPutBits(bw, !TRANSFORM_PRESENT, 1);  // No more transforms.

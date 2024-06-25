@@ -145,7 +145,7 @@ struct WebPConfig {
                           // RGB information for better compression. The default
                           // value is 0.
 
-  int use_delta_palette;  // reserved for future lossless feature
+  int use_delta_palette;  // reserved
   int use_sharp_yuv;      // if needed, use sharp (and slow) RGB->YUV conversion
 
   int qmin;               // minimum permissible quality factor
