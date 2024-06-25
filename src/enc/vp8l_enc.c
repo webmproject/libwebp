@@ -1419,17 +1419,24 @@ static WebPEncodingError EncodePalette(VP8LBitWriter* const bw, int low_effort,
   uint32_t tmp_palette[MAX_PALETTE_SIZE];
   const int palette_size = enc->palette_size_;
   const uint32_t* const palette = enc->palette_;
+  // If the last element is 0, do not store it and count on automatic palette
+  // 0-filling. This can only happen if there is no pixel packing, hence if
+  // there are strictly more than 16 colors (after 0 is removed).
+  const uint32_t encoded_palette_size =
+      (enc->palette_[palette_size - 1] == 0 && palette_size > 17)
+          ? palette_size - 1
+          : palette_size;
   VP8LPutBits(bw, TRANSFORM_PRESENT, 1);
   VP8LPutBits(bw, COLOR_INDEXING_TRANSFORM, 2);
   assert(palette_size >= 1 && palette_size <= MAX_PALETTE_SIZE);
-  VP8LPutBits(bw, palette_size - 1, 8);
-  for (i = palette_size - 1; i >= 1; --i) {
+  VP8LPutBits(bw, encoded_palette_size - 1, 8);
+  for (i = encoded_palette_size - 1; i >= 1; --i) {
     tmp_palette[i] = VP8LSubPixels(palette[i], palette[i - 1]);
   }
   tmp_palette[0] = palette[0];
-  return EncodeImageNoHuffman(bw, tmp_palette, &enc->hash_chain_,
-                              &enc->refs_[0], palette_size, 1, /*quality=*/20,
-                              low_effort, enc->pic_, percent_range, percent);
+  return EncodeImageNoHuffman(
+      bw, tmp_palette, &enc->hash_chain_, &enc->refs_[0], encoded_palette_size,
+      1, /*quality=*/20, low_effort, enc->pic_, percent_range, percent);
 }
 
 // -----------------------------------------------------------------------------
