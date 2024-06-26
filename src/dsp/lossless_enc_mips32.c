@@ -53,18 +53,18 @@ static float FastSLog2Slow_MIPS32(uint32_t v) {
 
     // (v % y) = (v % 2^log_cnt) = v & (2^log_cnt - 1)
     correction = (23 * (v & (y - 1))) >> 4;
-    return v_f * (kLog2Table[temp] + log_cnt) + correction;
+    return v_f * (kLog2fTable[temp] + log_cnt) + correction;
   } else {
     return (float)(LOG_2_RECIPROCAL * v * log((double)v));
   }
 }
 
-static float FastLog2Slow_MIPS32(uint32_t v) {
+static uint32_t FastLog2Slow_MIPS32(uint32_t v) {
   assert(v >= LOG_LOOKUP_IDX_MAX);
   if (v < APPROX_LOG_WITH_CORRECTION_MAX) {
     uint32_t log_cnt, y;
     const int c24 = 24;
-    double log_2;
+    uint32_t log_2;
     uint32_t temp;
 
     __asm__ volatile(
@@ -78,17 +78,17 @@ static float FastLog2Slow_MIPS32(uint32_t v) {
       : [c24]"r"(c24), [v]"r"(v)
     );
 
-    log_2 = kLog2Table[temp] + log_cnt;
+    log_2 = kLog2Table[temp] + (log_cnt << LOG_2_PRECISION_BITS);
     if (v >= APPROX_LOG_MAX) {
       // Since the division is still expensive, add this correction factor only
       // for large values of 'v'.
-
-      const uint32_t correction = (23 * (v & (y - 1))) >> 4;
-      log_2 += (double)correction / v;
+      const uint64_t correction =
+          (uint64_t)LOG_2_RECIPROCAL_FIXED * (v & (y - 1));
+      log_2 += (uint32_t)DivRound(correction, v);
     }
-    return (float)log_2;
+    return log_2;
   } else {
-    return (float)(LOG_2_RECIPROCAL * log((double)v));
+    return (uint32_t)(LOG_2_RECIPROCAL_FIXED_DOUBLE * log((double)v) + .5);
   }
 }
 

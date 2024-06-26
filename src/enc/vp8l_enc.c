@@ -180,14 +180,16 @@ static int AnalyzeEntropy(const uint32_t* argb,
       // When including transforms, there is an overhead in bits from
       // storing them. This overhead is small but matters for small images.
       // For spatial, there are 14 transformations.
-      entropy[kSpatial] += VP8LSubSampleSize(width, transform_bits) *
-                           VP8LSubSampleSize(height, transform_bits) *
-                           VP8LFastLog2(14);
+      entropy[kSpatial] += RightShiftRound(
+          (uint64_t)VP8LSubSampleSize(width, transform_bits) *
+              VP8LSubSampleSize(height, transform_bits) * VP8LFastLog2(14),
+          LOG_2_PRECISION_BITS);
       // For color transforms: 24 as only 3 channels are considered in a
       // ColorTransformElement.
-      entropy[kSpatialSubGreen] += VP8LSubSampleSize(width, transform_bits) *
-                                   VP8LSubSampleSize(height, transform_bits) *
-                                   VP8LFastLog2(24);
+      entropy[kSpatialSubGreen] += RightShiftRound(
+          (uint64_t)VP8LSubSampleSize(width, transform_bits) *
+              VP8LSubSampleSize(height, transform_bits) * VP8LFastLog2(24),
+          LOG_2_PRECISION_BITS);
       // For palettes, add the cost of storing the palette.
       // We empirically estimate the cost of a compressed entry as 8 bits.
       // The palette is differential-coded when compressed hence a much

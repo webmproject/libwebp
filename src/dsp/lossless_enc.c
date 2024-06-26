@@ -25,7 +25,7 @@
 #include "src/dsp/yuv.h"
 
 // lookup table for small values of log2(int)
-const float kLog2Table[LOG_LOOKUP_IDX_MAX] = {
+const float kLog2fTable[LOG_LOOKUP_IDX_MAX] = {
   0.0000000000000000f, 0.0000000000000000f,
   1.0000000000000000f, 1.5849625007211560f,
   2.0000000000000000f, 2.3219280948873621f,
@@ -154,6 +154,51 @@ const float kLog2Table[LOG_LOOKUP_IDX_MAX] = {
   7.9657842846620869f, 7.9715435539507719f,
   7.9772799234999167f, 7.9829935746943103f,
   7.9886846867721654f, 7.9943534368588577f
+};
+
+// lookup table for small values of log2(int) * (1 << LOG_2_PRECISION_BITS).
+// Obtained in Python with:
+// a = [ str(round((1<<23)*math.log2(i))) if i else "0" for i in range(256)]
+// print(',\n'.join(['  '+','.join(v)
+//       for v in batched([i.rjust(9) for i in a],7)]))
+const uint32_t kLog2Table[LOG_LOOKUP_IDX_MAX] = {
+         0,        0,  8388608, 13295629, 16777216, 19477745, 21684237,
+  23549800, 25165824, 26591258, 27866353, 29019816, 30072845, 31041538,
+  31938408, 32773374, 33554432, 34288123, 34979866, 35634199, 36254961,
+  36845429, 37408424, 37946388, 38461453, 38955489, 39430146, 39886887,
+  40327016, 40751698, 41161982, 41558811, 41943040, 42315445, 42676731,
+  43027545, 43368474, 43700062, 44022807, 44337167, 44643569, 44942404,
+  45234037, 45518808, 45797032, 46069003, 46334996, 46595268, 46850061,
+  47099600, 47344097, 47583753, 47818754, 48049279, 48275495, 48497560,
+  48715624, 48929828, 49140306, 49347187, 49550590, 49750631, 49947419,
+  50141058, 50331648, 50519283, 50704053, 50886044, 51065339, 51242017,
+  51416153, 51587818, 51757082, 51924012, 52088670, 52251118, 52411415,
+  52569616, 52725775, 52879946, 53032177, 53182516, 53331012, 53477707,
+  53622645, 53765868, 53907416, 54047327, 54185640, 54322389, 54457611,
+  54591338, 54723604, 54854440, 54983876, 55111943, 55238669, 55364082,
+  55488208, 55611074, 55732705, 55853126, 55972361, 56090432, 56207362,
+  56323174, 56437887, 56551524, 56664103, 56775645, 56886168, 56995691,
+  57104232, 57211808, 57318436, 57424133, 57528914, 57632796, 57735795,
+  57837923, 57939198, 58039632, 58139239, 58238033, 58336027, 58433234,
+  58529666, 58625336, 58720256, 58814437, 58907891, 59000628, 59092661,
+  59183999, 59274652, 59364632, 59453947, 59542609, 59630625, 59718006,
+  59804761, 59890898, 59976426, 60061354, 60145690, 60229443, 60312620,
+  60395229, 60477278, 60558775, 60639726, 60720140, 60800023, 60879382,
+  60958224, 61036555, 61114383, 61191714, 61268554, 61344908, 61420785,
+  61496188, 61571124, 61645600, 61719620, 61793189, 61866315, 61939001,
+  62011253, 62083076, 62154476, 62225457, 62296024, 62366182, 62435935,
+  62505289, 62574248, 62642816, 62710997, 62778797, 62846219, 62913267,
+  62979946, 63046260, 63112212, 63177807, 63243048, 63307939, 63372484,
+  63436687, 63500551, 63564080, 63627277, 63690146, 63752690, 63814912,
+  63876816, 63938405, 63999682, 64060650, 64121313, 64181673, 64241734,
+  64301498, 64360969, 64420148, 64479040, 64537646, 64595970, 64654014,
+  64711782, 64769274, 64826495, 64883447, 64940132, 64996553, 65052711,
+  65108611, 65164253, 65219641, 65274776, 65329662, 65384299, 65438691,
+  65492840, 65546747, 65600416, 65653847, 65707044, 65760008, 65812741,
+  65865245, 65917522, 65969575, 66021404, 66073013, 66124403, 66175575,
+  66226531, 66277275, 66327806, 66378127, 66428240, 66478146, 66527847,
+  66577345, 66626641, 66675737, 66724635, 66773336, 66821842, 66870154,
+  66918274, 66966204, 67013944, 67061497
 };
 
 const float kSLog2Table[LOG_LOOKUP_IDX_MAX] = {
@@ -356,43 +401,42 @@ static float FastSLog2Slow_C(uint32_t v) {
     // log2(1 + (v % y) / v) ~ LOG_2_RECIPROCAL * (v % y)/v
     // LOG_2_RECIPROCAL ~ 23/16
     correction = (23 * (orig_v & (y - 1))) >> 4;
-    return v_f * (kLog2Table[v] + log_cnt) + correction;
+    return v_f * (kLog2fTable[v] + log_cnt) + correction;
   } else {
     return (float)(LOG_2_RECIPROCAL * v * log((double)v));
   }
 }
 
-static float FastLog2Slow_C(uint32_t v) {
+static uint32_t FastLog2Slow_C(uint32_t v) {
   assert(v >= LOG_LOOKUP_IDX_MAX);
   if (v < APPROX_LOG_WITH_CORRECTION_MAX) {
+    const uint32_t orig_v = v;
+    uint32_t log_2;
 #if !defined(WEBP_HAVE_SLOW_CLZ_CTZ)
     // use clz if available
-    const int log_cnt = BitsLog2Floor(v) - 7;
+    const uint32_t log_cnt = BitsLog2Floor(v) - 7;
     const uint32_t y = 1 << log_cnt;
-    const uint32_t orig_v = v;
-    double log_2;
     v >>= log_cnt;
 #else
-    int log_cnt = 0;
+    uint32_t log_cnt = 0;
     uint32_t y = 1;
-    const uint32_t orig_v = v;
-    double log_2;
     do {
       ++log_cnt;
       v = v >> 1;
       y = y << 1;
     } while (v >= LOG_LOOKUP_IDX_MAX);
 #endif
-    log_2 = kLog2Table[v] + log_cnt;
+    log_2 = kLog2Table[v] + (log_cnt << LOG_2_PRECISION_BITS);
     if (orig_v >= APPROX_LOG_MAX) {
       // Since the division is still expensive, add this correction factor only
       // for large values of 'v'.
-      const int correction = (23 * (orig_v & (y - 1))) >> 4;
-      log_2 += (double)correction / orig_v;
+      const uint64_t correction =
+          (uint64_t)LOG_2_RECIPROCAL_FIXED * (orig_v & (y - 1));
+      log_2 += (uint32_t)DivRound(correction, orig_v);
     }
-    return (float)log_2;
+    return log_2;
   } else {
-    return (float)(LOG_2_RECIPROCAL * log((double)v));
+    return (uint32_t)(LOG_2_RECIPROCAL_FIXED_DOUBLE * log((double)v) + .5);
   }
 }
 
@@ -779,7 +823,7 @@ VP8LCollectColorBlueTransformsFunc VP8LCollectColorBlueTransforms;
 VP8LCollectColorRedTransformsFunc VP8LCollectColorRedTransforms;
 
 VP8LFastLog2SlowFunc VP8LFastLog2Slow;
-VP8LFastLog2SlowFunc VP8LFastSLog2Slow;
+VP8LFastSLog2SlowFunc VP8LFastSLog2Slow;
 
 VP8LCostFunc VP8LExtraCost;
 VP8LCostCombinedFunc VP8LExtraCostCombined;
