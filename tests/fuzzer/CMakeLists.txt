@@ -17,6 +17,7 @@ macro(add_webp_fuzztest TEST_NAME)
   add_executable(${TEST_NAME} ${TEST_NAME}.cc)
   # FuzzTest bundles GoogleTest so no need to link to gtest libraries.
   target_link_libraries(${TEST_NAME} PRIVATE fuzz_utils webp ${ARGN})
+  target_include_directories(${TEST_NAME} PRIVATE ${CMAKE_BINARY_DIR}/src)
   link_fuzztest(${TEST_NAME})
   add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
   set_property(
@@ -49,8 +50,11 @@ target_link_libraries(fuzz_utils PUBLIC webpdecoder)
 link_fuzztest(fuzz_utils)
 
 add_webp_fuzztest(advanced_api_fuzzer)
+add_webp_fuzztest(dec_fuzzer)
 add_webp_fuzztest(enc_dec_fuzzer)
+add_webp_fuzztest(enc_fuzzer imagedec)
 add_webp_fuzztest(huffman_fuzzer)
+add_webp_fuzztest(imageio_fuzzer imagedec tiff)
 add_webp_fuzztest(simple_api_fuzzer)
 
 if(WEBP_BUILD_LIBWEBPMUX)
@@ -58,4 +62,8 @@ if(WEBP_BUILD_LIBWEBPMUX)
   add_webp_fuzztest(animdecoder_fuzzer imageioutil webpdemux)
   add_webp_fuzztest(animencoder_fuzzer libwebpmux)
   add_webp_fuzztest(mux_demux_api_fuzzer libwebpmux webpdemux)
+endif()
+
+if(WEBP_BUILD_WEBPINFO)
+  add_webp_fuzztest(webp_info_fuzzer imageioutil)
 endif()
