@@ -73,21 +73,42 @@ static WEBP_INLINE int VP8LNearLosslessBits(int near_lossless_quality) {
 // Keeping a high threshold for now.
 #define APPROX_LOG_WITH_CORRECTION_MAX  65536
 #define APPROX_LOG_MAX                   4096
+// VP8LFastLog2 and VP8LFastSLog2 are used on elements from image histograms.
+// The histogram values cannot exceed the maximum number of pixels, which
+// is (1 << 14) * (1 << 14). Therefore S * log(S) < (1 << 33).
+// No more than 32 bits of precision should be chosen.
+// To match the original float implementation, 23 bits of precision are used.
+#define LOG_2_PRECISION_BITS 23
 #define LOG_2_RECIPROCAL 1.44269504088896338700465094007086
+// LOG_2_RECIPROCAL * (1 << LOG_2_PRECISION_BITS)
+#define LOG_2_RECIPROCAL_FIXED_DOUBLE 12102203.161561485379934310913085937500
+#define LOG_2_RECIPROCAL_FIXED 12102203
 #define LOG_LOOKUP_IDX_MAX 256
-extern const float kLog2Table[LOG_LOOKUP_IDX_MAX];
+extern const uint32_t kLog2Table[LOG_LOOKUP_IDX_MAX];
 extern const float kSLog2Table[LOG_LOOKUP_IDX_MAX];
-typedef float (*VP8LFastLog2SlowFunc)(uint32_t v);
+// TODO(vrabaud) remove this table once VP8LFastSLog2 is switched to fixed
+// point.
+extern const float kLog2fTable[LOG_LOOKUP_IDX_MAX];
+typedef uint32_t (*VP8LFastLog2SlowFunc)(uint32_t v);
+typedef float (*VP8LFastSLog2SlowFunc)(uint32_t v);
 
 extern VP8LFastLog2SlowFunc VP8LFastLog2Slow;
-extern VP8LFastLog2SlowFunc VP8LFastSLog2Slow;
+extern VP8LFastSLog2SlowFunc VP8LFastSLog2Slow;
 
-static WEBP_INLINE float VP8LFastLog2(uint32_t v) {
+static WEBP_INLINE uint32_t VP8LFastLog2(uint32_t v) {
   return (v < LOG_LOOKUP_IDX_MAX) ? kLog2Table[v] : VP8LFastLog2Slow(v);
 }
 // Fast calculation of v * log2(v) for integer input.
 static WEBP_INLINE float VP8LFastSLog2(uint32_t v) {
   return (v < LOG_LOOKUP_IDX_MAX) ? kSLog2Table[v] : VP8LFastSLog2Slow(v);
+}
+
+static WEBP_INLINE uint64_t RightShiftRound(uint64_t v, uint32_t shift) {
+  return (v + (1ull << shift >> 1)) >> shift;
+}
+
+static WEBP_INLINE int64_t DivRound(int64_t a, int64_t b) {
+  return ((a < 0) == (b < 0)) ? ((a + b / 2) / b) : ((a - b / 2) / b);
 }
 
 // -----------------------------------------------------------------------------
