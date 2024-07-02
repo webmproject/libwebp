@@ -320,9 +320,7 @@ static int CostManagerInit(CostManager* const manager,
   }
   // Set the initial costs_ to INT64_MAX for every pixel as we will keep the
   // minimum.
-  for (i = 0; i < pix_count; ++i) {
-    manager->costs_[i] = (int64_t)((1ull << 63) - 1);
-  }
+  for (i = 0; i < pix_count; ++i) manager->costs_[i] = WEBP_INT64_MAX;
 
   return 1;
 }

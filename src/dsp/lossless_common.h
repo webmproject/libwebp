@@ -111,6 +111,9 @@ static WEBP_INLINE int64_t DivRound(int64_t a, int64_t b) {
   return ((a < 0) == (b < 0)) ? ((a + b / 2) / b) : ((a - b / 2) / b);
 }
 
+#define WEBP_INT64_MAX ((int64_t)((1ull << 63) - 1))
+#define WEBP_UINT64_MAX (~0ull)
+
 // -----------------------------------------------------------------------------
 // PrefixEncode()
 
