@@ -332,6 +332,7 @@ static void IntraChromaPreds_C(uint8_t* dst, const uint8_t* left,
 //------------------------------------------------------------------------------
 // luma 16x16 prediction (paragraph 12.3)
 
+#if !WEBP_NEON_OMIT_C_CODE || !WEBP_AARCH64
 static void Intra16Preds_C(uint8_t* dst,
                            const uint8_t* left, const uint8_t* top) {
   DCMode(I16DC16 + dst, left, top, 16, 16, 5);
@@ -339,6 +340,7 @@ static void Intra16Preds_C(uint8_t* dst,
   HorizontalPred(I16HE16 + dst, left, 16);
   TrueMotion(I16TM16 + dst, left, top, 16);
 }
+#endif  // !WEBP_NEON_OMIT_C_CODE || !WEBP_AARCH64
 
 //------------------------------------------------------------------------------
 // luma 4x4 prediction
@@ -768,10 +770,10 @@ WEBP_DSP_INIT_FUNC(VP8EncDspInit) {
 
 #if !WEBP_NEON_OMIT_C_CODE || !WEBP_AARCH64
   VP8EncPredLuma4 = Intra4Preds_C;
+  VP8EncPredLuma16 = Intra16Preds_C;
 #endif
 
   VP8FTransform2 = FTransform2_C;
-  VP8EncPredLuma16 = Intra16Preds_C;
   VP8EncPredChroma8 = IntraChromaPreds_C;
   VP8Mean16x4 = Mean16x4_C;
   VP8EncQuantizeBlockWHT = QuantizeBlock_C;

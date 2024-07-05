@@ -1024,6 +1024,152 @@ static void Intra4Preds_NEON(uint8_t* dst, const uint8_t* top) {
   vst1_u8(dst + I4HD4 + BPS * 3, vget_high_u8(result1));
 }
 
+static WEBP_INLINE void Fill_NEON(uint8_t* dst, const uint8_t value) {
+  uint8x16_t a = vdupq_n_u8(value);
+  int i;
+  for (i = 0; i < 16; i++) {
+    vst1q_u8(dst + BPS * i, a);
+  }
+}
+
+static WEBP_INLINE void Fill16_NEON(uint8_t* dst, const uint8_t* src) {
+  uint8x16_t a = vld1q_u8(src);
+  int i;
+  for (i = 0; i < 16; i++) {
+    vst1q_u8(dst + BPS * i, a);
+  }
+}
+
+static WEBP_INLINE void HorizontalPred16_NEON(uint8_t* dst,
+                                              const uint8_t* left) {
+  uint8x16_t a;
+
+  if (left == NULL) {
+    Fill_NEON(dst, 129);
+    return;
+  }
+
+  a = vld1q_u8(left + 0);
+  vst1q_u8(dst + BPS * 0, vdupq_laneq_u8(a, 0));
+  vst1q_u8(dst + BPS * 1, vdupq_laneq_u8(a, 1));
+  vst1q_u8(dst + BPS * 2, vdupq_laneq_u8(a, 2));
+  vst1q_u8(dst + BPS * 3, vdupq_laneq_u8(a, 3));
+  vst1q_u8(dst + BPS * 4, vdupq_laneq_u8(a, 4));
+  vst1q_u8(dst + BPS * 5, vdupq_laneq_u8(a, 5));
+  vst1q_u8(dst + BPS * 6, vdupq_laneq_u8(a, 6));
+  vst1q_u8(dst + BPS * 7, vdupq_laneq_u8(a, 7));
+  vst1q_u8(dst + BPS * 8, vdupq_laneq_u8(a, 8));
+  vst1q_u8(dst + BPS * 9, vdupq_laneq_u8(a, 9));
+  vst1q_u8(dst + BPS * 10, vdupq_laneq_u8(a, 10));
+  vst1q_u8(dst + BPS * 11, vdupq_laneq_u8(a, 11));
+  vst1q_u8(dst + BPS * 12, vdupq_laneq_u8(a, 12));
+  vst1q_u8(dst + BPS * 13, vdupq_laneq_u8(a, 13));
+  vst1q_u8(dst + BPS * 14, vdupq_laneq_u8(a, 14));
+  vst1q_u8(dst + BPS * 15, vdupq_laneq_u8(a, 15));
+}
+
+static WEBP_INLINE void VerticalPred16_NEON(uint8_t* dst, const uint8_t* top) {
+  if (top != NULL) {
+    Fill16_NEON(dst, top);
+  } else {
+    Fill_NEON(dst, 127);
+  }
+}
+
+static WEBP_INLINE void DCMode_NEON(uint8_t* dst, const uint8_t* left,
+                                    const uint8_t* top) {
+  uint8_t s;
+
+  if (top != NULL) {
+    uint16_t dc;
+    dc = vaddlvq_u8(vld1q_u8(top));
+    if (left != NULL) {
+      // top and left present.
+      dc += vaddlvq_u8(vld1q_u8(left));
+      s = vqrshrnh_n_u16(dc, 5);
+    } else {
+      // top but no left.
+      s = vqrshrnh_n_u16(dc, 4);
+    }
+  } else {
+    if (left != NULL) {
+      uint16_t dc;
+      // left but no top.
+      dc = vaddlvq_u8(vld1q_u8(left));
+      s = vqrshrnh_n_u16(dc, 4);
+    } else {
+      // No top, no left, nothing.
+      s = 0x80;
+    }
+  }
+  Fill_NEON(dst, s);
+}
+
+static WEBP_INLINE void TrueMotionHelper_NEON(uint8_t* dst,
+                                              const uint8x8_t outer,
+                                              const uint8x8x2_t inner,
+                                              const uint16x8_t a, int i,
+                                              const int n) {
+  uint8x8_t d1, d2;
+  uint16x8_t r1, r2;
+
+  r1 = vaddl_u8(outer, inner.val[0]);
+  r1 = vqsubq_u16(r1, a);
+  d1 = vqmovn_u16(r1);
+  r2 = vaddl_u8(outer, inner.val[1]);
+  r2 = vqsubq_u16(r2, a);
+  d2 = vqmovn_u16(r2);
+  vst1_u8(dst + BPS * (i * 4 + n), d1);
+  vst1_u8(dst + BPS * (i * 4 + n) + 8, d2);
+}
+
+static WEBP_INLINE void TrueMotion_NEON(uint8_t* dst, const uint8_t* left,
+                                        const uint8_t* top) {
+  int i;
+  uint16x8_t a;
+  uint8x8x2_t inner;
+
+  if (left == NULL) {
+    // True motion without left samples (hence: with default 129 value) is
+    // equivalent to VE prediction where you just copy the top samples.
+    // Note that if top samples are not available, the default value is then
+    // 129, and not 127 as in the VerticalPred case.
+    if (top != NULL) {
+      VerticalPred16_NEON(dst, top);
+    } else {
+      Fill_NEON(dst, 129);
+    }
+    return;
+  }
+
+  // left is not NULL.
+  if (top == NULL) {
+    HorizontalPred16_NEON(dst, left);
+    return;
+  }
+
+  // Neither left nor top are NULL.
+  a = vdupq_n_u16(left[-1]);
+  inner = vld1_u8_x2(top);
+
+  for (i = 0; i < 4; i++) {
+    const uint8x8x4_t outer = vld4_dup_u8(&left[i * 4]);
+
+    TrueMotionHelper_NEON(dst, outer.val[0], inner, a, i, 0);
+    TrueMotionHelper_NEON(dst, outer.val[1], inner, a, i, 1);
+    TrueMotionHelper_NEON(dst, outer.val[2], inner, a, i, 2);
+    TrueMotionHelper_NEON(dst, outer.val[3], inner, a, i, 3);
+  }
+}
+
+static void Intra16Preds_NEON(uint8_t* dst, const uint8_t* left,
+                              const uint8_t* top) {
+  DCMode_NEON(I16DC16 + dst, left, top);
+  VerticalPred16_NEON(I16VE16 + dst, top);
+  HorizontalPred16_NEON(I16HE16 + dst, left);
+  TrueMotion_NEON(I16TM16 + dst, left, top);
+}
+
 #endif // WEBP_AARCH64
 
 //------------------------------------------------------------------------------
@@ -1046,8 +1192,11 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitNEON(void) {
   VP8SSE8x8 = SSE8x8_NEON;
   VP8SSE4x4 = SSE4x4_NEON;
 
-#if WEBP_AARCH64 && (BPS == 32)
+#if WEBP_AARCH64
+#if BPS == 32
   VP8EncPredLuma4 = Intra4Preds_NEON;
+#endif
+  VP8EncPredLuma16 = Intra16Preds_NEON;
 #endif
 
 #if !defined(WORK_AROUND_GCC)
