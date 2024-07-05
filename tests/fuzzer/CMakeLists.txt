@@ -54,7 +54,7 @@ add_webp_fuzztest(dec_fuzzer)
 add_webp_fuzztest(enc_dec_fuzzer)
 add_webp_fuzztest(enc_fuzzer imagedec)
 add_webp_fuzztest(huffman_fuzzer)
-add_webp_fuzztest(imageio_fuzzer imagedec tiff)
+add_webp_fuzztest(imageio_fuzzer imagedec)
 add_webp_fuzztest(simple_api_fuzzer)
 
 if(WEBP_BUILD_LIBWEBPMUX)
