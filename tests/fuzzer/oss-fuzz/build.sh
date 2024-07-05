@@ -47,7 +47,7 @@ EXTRA_CMAKE_FLAGS="-DFUZZTEST_COMPATIBILITY_MODE=libfuzzer"
 WEBP_CFLAGS="$CFLAGS -DWEBP_MAX_IMAGE_SIZE=838860800" # 800MiB
 
 export CFLAGS="$WEBP_CFLAGS"
-cmake -S . -B build -DWEBP_BUILD_FUZZTEST=ON -DWEBP_LINK_STATIC=OFF ${EXTRA_CMAKE_FLAGS}
+cmake -S . -B build -DWEBP_BUILD_FUZZTEST=ON ${EXTRA_CMAKE_FLAGS}
 cd build && make -j$(nproc) && cd ..
 
 find $SRC/libwebp-test-data -type f -size -32k -iname "*.webp" \

@@ -20,7 +20,6 @@
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>
-#include <tiffio.h>
 
 #include "imageio/image_dec.h"
 #include "imageio/metadata.h"
@@ -51,11 +50,6 @@ constexpr WebPInputFileFormat kUnknown = WEBP_UNSUPPORTED_FORMAT;
 
 void Decode(std::string_view arbitrary_bytes, WebPInputFileFormat format,
             bool keep_alpha, bool use_argb) {
-  if (format == kUnknown || format == WEBP_TIFF_FORMAT) {
-    TIFFSetErrorHandler(NULL);    // libtiff can be verbose about errors.
-    TIFFSetWarningHandler(NULL);  // Silence it to avoid timeouts.
-  }
-
   const uint8_t *data =
       reinterpret_cast<const uint8_t *>(arbitrary_bytes.data());
   const size_t size = arbitrary_bytes.size();
