@@ -229,8 +229,6 @@ void VP8LHistogramAddSinglePixOrCopy(VP8LHistogram* const histo,
 
 static WEBP_INLINE uint64_t BitsEntropyRefine(const VP8LBitEntropy* entropy) {
   uint64_t mix;
-  const uint64_t fixed_point_entropy =
-      (uint64_t)(entropy->entropy * (1ll << LOG_2_PRECISION_BITS) + .5);
   if (entropy->nonzeros < 5) {
     if (entropy->nonzeros <= 1) {
       return 0;
@@ -240,7 +238,7 @@ static WEBP_INLINE uint64_t BitsEntropyRefine(const VP8LBitEntropy* entropy) {
     // distributions of these are combined.
     if (entropy->nonzeros == 2) {
       return DivRound(99 * ((uint64_t)entropy->sum << LOG_2_PRECISION_BITS) +
-                          fixed_point_entropy,
+                          entropy->entropy,
                       100);
     }
     // No matter what the entropy says, we cannot be better than min_limit
@@ -260,8 +258,8 @@ static WEBP_INLINE uint64_t BitsEntropyRefine(const VP8LBitEntropy* entropy) {
     uint64_t min_limit = (uint64_t)(2 * entropy->sum - entropy->max_val)
                          << LOG_2_PRECISION_BITS;
     min_limit =
-        DivRound(mix * min_limit + (1000 - mix) * fixed_point_entropy, 1000);
-    return (fixed_point_entropy < min_limit) ? min_limit : fixed_point_entropy;
+        DivRound(mix * min_limit + (1000 - mix) * entropy->entropy, 1000);
+    return (entropy->entropy < min_limit) ? min_limit : entropy->entropy;
   }
 }
 

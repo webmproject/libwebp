@@ -185,8 +185,8 @@ extern VP8LPredictorAddSubFunc VP8LPredictorsSub_C[16];
 typedef uint32_t (*VP8LCostFunc)(const uint32_t* population, int length);
 typedef uint32_t (*VP8LCostCombinedFunc)(const uint32_t* X, const uint32_t* Y,
                                          int length);
-typedef float (*VP8LCombinedShannonEntropyFunc)(const uint32_t X[256],
-                                                const uint32_t Y[256]);
+typedef uint64_t (*VP8LCombinedShannonEntropyFunc)(const uint32_t X[256],
+                                                   const uint32_t Y[256]);
 
 extern VP8LCostFunc VP8LExtraCost;
 extern VP8LCostCombinedFunc VP8LExtraCostCombined;
@@ -198,7 +198,7 @@ typedef struct {        // small struct to hold counters
 } VP8LStreaks;
 
 typedef struct {            // small struct to hold bit entropy results
-  float entropy;            // entropy
+  uint64_t entropy;         // entropy
   uint32_t sum;             // sum of the population
   int nonzeros;             // number of non-zero elements in the population
   uint32_t max_val;         // maximum value in the population

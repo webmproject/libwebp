@@ -57,7 +57,9 @@ static float PredictionCostSpatialHistogram(
     // Compute the new cost if 'tile' is added to 'accumulate' but also add the
     // cost of the current histogram to guide the spatial predictor selection.
     // Basically, favor low entropy, locally and globally.
-    retval += VP8LCombinedShannonEntropy(&tile[i * 256], &accumulated[i * 256]);
+    retval += (float)VP8LCombinedShannonEntropy(&tile[i * 256],
+                                                &accumulated[i * 256]) /
+              (1ll << LOG_2_PRECISION_BITS);
   }
   // Favor keeping the areas locally similar.
   if (mode == left_mode) retval -= kSpatialPredictorBias;
@@ -541,7 +543,8 @@ static float PredictionCostCrossColor(const uint32_t accumulated[256],
   // Favor low entropy, locally and globally.
   // Favor small absolute values for PredictionCostSpatial
   static const float kExpValue = 2.4f;
-  return VP8LCombinedShannonEntropy(counts, accumulated) +
+  return (float)VP8LCombinedShannonEntropy(counts, accumulated) /
+             (1ll << LOG_2_PRECISION_BITS) +
          PredictionCostBias(counts, 3, kExpValue);
 }
 
