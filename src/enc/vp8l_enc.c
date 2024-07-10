@@ -1412,9 +1412,9 @@ static int MapImageFromPalette(VP8LEncoder* const enc) {
 }
 
 // Save palette_[] to bitstream.
-static WebPEncodingError EncodePalette(VP8LBitWriter* const bw, int low_effort,
-                                       VP8LEncoder* const enc,
-                                       int percent_range, int* const percent) {
+static int EncodePalette(VP8LBitWriter* const bw, int low_effort,
+                         VP8LEncoder* const enc, int percent_range,
+                         int* const percent) {
   int i;
   uint32_t tmp_palette[MAX_PALETTE_SIZE];
   const int palette_size = enc->palette_size_;
