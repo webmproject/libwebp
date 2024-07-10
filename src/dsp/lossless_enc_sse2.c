@@ -237,10 +237,10 @@ static void AddVectorEq_SSE2(const uint32_t* a, uint32_t* out, int size) {
 // when compared to -noasm.
 #if !(defined(WEBP_HAVE_SLOW_CLZ_CTZ) || defined(__i386__) || defined(_M_IX86))
 
-static float CombinedShannonEntropy_SSE2(const uint32_t X[256],
-                                         const uint32_t Y[256]) {
+static uint64_t CombinedShannonEntropy_SSE2(const uint32_t X[256],
+                                            const uint32_t Y[256]) {
   int i;
-  float retval = 0.f;
+  uint64_t retval = 0;
   uint32_t sumX = 0, sumXY = 0;
   const __m128i zero = _mm_setzero_si128();
 
@@ -265,15 +265,15 @@ static float CombinedShannonEntropy_SSE2(const uint32_t X[256],
       if ((mx >> j) & 1) {
         const int x = X[i + j];
         sumXY += x;
-        retval -= VP8LFastSLog2(x);
+        retval += VP8LFastSLog2(x);
       }
       xy = X[i + j] + Y[i + j];
       sumX += xy;
-      retval -= VP8LFastSLog2(xy);
+      retval += VP8LFastSLog2(xy);
       my &= my - 1;
     }
   }
-  retval += VP8LFastSLog2(sumX) + VP8LFastSLog2(sumXY);
+  retval = VP8LFastSLog2(sumX) + VP8LFastSLog2(sumXY) - retval;
   return retval;
 }
 
