@@ -232,10 +232,7 @@ static void AddVectorEq_SSE2(const uint32_t* a, uint32_t* out, int size) {
 //------------------------------------------------------------------------------
 // Entropy
 
-// TODO(https://crbug.com/webp/499): this function produces different results
-// from the C code due to use of double/float resulting in output differences
-// when compared to -noasm.
-#if !(defined(WEBP_HAVE_SLOW_CLZ_CTZ) || defined(__i386__) || defined(_M_IX86))
+#if !defined(WEBP_HAVE_SLOW_CLZ_CTZ)
 
 static uint64_t CombinedShannonEntropy_SSE2(const uint32_t X[256],
                                             const uint32_t Y[256]) {
