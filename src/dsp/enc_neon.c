@@ -1115,10 +1115,10 @@ static WEBP_INLINE void TrueMotionHelper_NEON(uint8_t* dst,
 
   r1 = vaddl_u8(outer, inner.val[0]);
   r1 = vqsubq_u16(r1, a);
-  d1 = vqmovn_u16(r1);
+  d1 = vqmovun_s16(vreinterpretq_s16_u16(r1));
   r2 = vaddl_u8(outer, inner.val[1]);
   r2 = vqsubq_u16(r2, a);
-  d2 = vqmovn_u16(r2);
+  d2 = vqmovun_s16(vreinterpretq_s16_u16(r2));
   vst1_u8(dst + BPS * (i * 4 + n), d1);
   vst1_u8(dst + BPS * (i * 4 + n) + 8, d2);
 }
