@@ -911,6 +911,267 @@ static int Quantize2Blocks_NEON(int16_t in[32], int16_t out[32],
 
 #endif   // !WORK_AROUND_GCC
 
+#if WEBP_AARCH64
+
+#define DC4_VE4_HE4_TM4_NEON(dst, tbl, res, lane)                              \
+  do {                                                                         \
+    uint8x16_t r;                                                              \
+    r = vqtbl2q_u8(qcombined, tbl);                                            \
+    r = vreinterpretq_u8_u32(                                                  \
+        vsetq_lane_u32(vget_lane_u32(vreinterpret_u32_u8(res), lane),          \
+                       vreinterpretq_u32_u8(r), 1));                           \
+    vst1q_u8(dst, r);                                                          \
+  } while (0)
+
+#define RD4_VR4_LD4_VL4_NEON(dst, tbl)                                         \
+  do {                                                                         \
+    uint8x16_t r;                                                              \
+    r = vqtbl2q_u8(qcombined, tbl);                                            \
+    vst1q_u8(dst, r);                                                          \
+  } while (0)
+
+static void Intra4Preds_NEON(uint8_t* dst, const uint8_t* top) {
+  // 0   1   2   3   4   5   6   7   8   9  10  11  12  13
+  //     L   K   J   I   X   A   B   C   D   E   F   G   H
+  //    -5  -4  -3  -2  -1   0   1   2   3   4   5   6   7
+  static const uint8_t kLookupTbl1[64] = {
+    0,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 12, 12,
+    3,  3,  3,  3,  2,  2,  2,  2,  1,  1,  1,  1,  0,  0,  0,  0,
+    4, 20, 21, 22,  3, 18,  2, 17,  3, 19,  4, 20,  2, 17,  1, 16,
+    2, 18,  3, 19,  1, 16, 31, 31,  1, 17,  2, 18, 31, 31, 31, 31
+  };
+
+  static const uint8_t kLookupTbl2[64] = {
+    20, 21, 22, 23,  5,  6,  7,  8, 22, 23, 24, 25,  6,  7,  8,  9,
+    19, 20, 21, 22, 20, 21, 22, 23, 23, 24, 25, 26, 22, 23, 24, 25,
+    18, 19, 20, 21, 19,  5,  6,  7, 24, 25, 26, 27,  7,  8,  9, 26,
+    17, 18, 19, 20, 18, 20, 21, 22, 25, 26, 27, 28, 23, 24, 25, 27
+  };
+
+  static const uint8_t kLookupTbl3[64] = {
+    30, 30, 30, 30,  0,  0,  0,  0, 21, 22, 23, 24, 19, 19, 19, 19,
+    30, 30, 30, 30,  0,  0,  0,  0, 21, 22, 23, 24, 18, 18, 18, 18,
+    30, 30, 30, 30,  0,  0,  0,  0, 21, 22, 23, 24, 17, 17, 17, 17,
+    30, 30, 30, 30,  0,  0,  0,  0, 21, 22, 23, 24, 16, 16, 16, 16
+  };
+
+  const uint8x16x4_t lookup_avgs1 = vld1q_u8_x4(kLookupTbl1);
+  const uint8x16x4_t lookup_avgs2 = vld1q_u8_x4(kLookupTbl2);
+  const uint8x16x4_t lookup_avgs3 = vld1q_u8_x4(kLookupTbl3);
+
+  const uint8x16_t preload = vld1q_u8(top - 5);
+  uint8x16x2_t qcombined;
+  uint8x16_t result0, result1;
+
+  uint8x16_t a = vqtbl1q_u8(preload, lookup_avgs1.val[0]);
+  uint8x16_t b = preload;
+  uint8x16_t c = vextq_u8(a, a, 2);
+
+  uint8x16_t avg3_all = vrhaddq_u8(vhaddq_u8(a, c), b);
+  uint8x16_t avg2_all = vrhaddq_u8(a, b);
+
+  uint8x8_t preload_x8, sub_a, sub_c;
+  uint8_t result_u8;
+  uint8x8_t res_lo, res_hi;
+  uint8x16_t full_b;
+  uint16x8_t sub, sum_lo, sum_hi;
+
+  preload_x8 = vget_low_u8(c);
+  preload_x8 = vset_lane_u8(vgetq_lane_u8(preload, 0), preload_x8, 3);
+
+  result_u8 = (vaddlv_u8(preload_x8) + 4) >> 3;
+
+  avg3_all = vsetq_lane_u8(vgetq_lane_u8(preload, 0), avg3_all, 15);
+  avg3_all = vsetq_lane_u8(result_u8, avg3_all, 14);
+
+  qcombined.val[0] = avg2_all;
+  qcombined.val[1] = avg3_all;
+
+  sub_a = vdup_laneq_u8(preload, 4);
+
+  // preload = {a,b,c,d,...} => full_b = {d,d,d,d,c,c,c,c,b,b,b,b,a,a,a,a}
+  full_b = vqtbl1q_u8(preload, lookup_avgs1.val[1]);
+  // preload = {a,b,c,d,...} => sub_c = {a,b,c,d,a,b,c,d,a,b,c,d,a,b,c,d}
+  sub_c = vreinterpret_u8_u32(vdup_n_u32(
+      vgetq_lane_u32(vreinterpretq_u32_u8(vextq_u8(preload, preload, 5)), 0)));
+
+  sub = vsubl_u8(sub_c, sub_a);
+  sum_lo = vaddw_u8(sub, vget_low_u8(full_b));
+  res_lo = vqmovn_u16(sum_lo);
+
+  sum_hi = vaddw_u8(sub, vget_high_u8(full_b));
+  res_hi = vqmovn_u16(sum_hi);
+
+  // DC4, VE4, HE4, TM4
+  DC4_VE4_HE4_TM4_NEON(dst + I4DC4 + BPS * 0, lookup_avgs3.val[0], res_lo, 0);
+  DC4_VE4_HE4_TM4_NEON(dst + I4DC4 + BPS * 1, lookup_avgs3.val[1], res_lo, 1);
+  DC4_VE4_HE4_TM4_NEON(dst + I4DC4 + BPS * 2, lookup_avgs3.val[2], res_hi, 0);
+  DC4_VE4_HE4_TM4_NEON(dst + I4DC4 + BPS * 3, lookup_avgs3.val[3], res_hi, 1);
+
+  // RD4, VR4, LD4, VL4
+  RD4_VR4_LD4_VL4_NEON(dst + I4RD4 + BPS * 0, lookup_avgs2.val[0]);
+  RD4_VR4_LD4_VL4_NEON(dst + I4RD4 + BPS * 1, lookup_avgs2.val[1]);
+  RD4_VR4_LD4_VL4_NEON(dst + I4RD4 + BPS * 2, lookup_avgs2.val[2]);
+  RD4_VR4_LD4_VL4_NEON(dst + I4RD4 + BPS * 3, lookup_avgs2.val[3]);
+
+  // HD4, HU4
+  result0 = vqtbl2q_u8(qcombined, lookup_avgs1.val[2]);
+  result1 = vqtbl2q_u8(qcombined, lookup_avgs1.val[3]);
+
+  vst1_u8(dst + I4HD4 + BPS * 0, vget_low_u8(result0));
+  vst1_u8(dst + I4HD4 + BPS * 1, vget_high_u8(result0));
+  vst1_u8(dst + I4HD4 + BPS * 2, vget_low_u8(result1));
+  vst1_u8(dst + I4HD4 + BPS * 3, vget_high_u8(result1));
+}
+
+static WEBP_INLINE void Fill_NEON(uint8_t* dst, const uint8_t value) {
+  uint8x16_t a = vdupq_n_u8(value);
+  int i;
+  for (i = 0; i < 16; i++) {
+    vst1q_u8(dst + BPS * i, a);
+  }
+}
+
+static WEBP_INLINE void Fill16_NEON(uint8_t* dst, const uint8_t* src) {
+  uint8x16_t a = vld1q_u8(src);
+  int i;
+  for (i = 0; i < 16; i++) {
+    vst1q_u8(dst + BPS * i, a);
+  }
+}
+
+static WEBP_INLINE void HorizontalPred16_NEON(uint8_t* dst,
+                                              const uint8_t* left) {
+  uint8x16_t a;
+
+  if (left == NULL) {
+    Fill_NEON(dst, 129);
+    return;
+  }
+
+  a = vld1q_u8(left + 0);
+  vst1q_u8(dst + BPS * 0, vdupq_laneq_u8(a, 0));
+  vst1q_u8(dst + BPS * 1, vdupq_laneq_u8(a, 1));
+  vst1q_u8(dst + BPS * 2, vdupq_laneq_u8(a, 2));
+  vst1q_u8(dst + BPS * 3, vdupq_laneq_u8(a, 3));
+  vst1q_u8(dst + BPS * 4, vdupq_laneq_u8(a, 4));
+  vst1q_u8(dst + BPS * 5, vdupq_laneq_u8(a, 5));
+  vst1q_u8(dst + BPS * 6, vdupq_laneq_u8(a, 6));
+  vst1q_u8(dst + BPS * 7, vdupq_laneq_u8(a, 7));
+  vst1q_u8(dst + BPS * 8, vdupq_laneq_u8(a, 8));
+  vst1q_u8(dst + BPS * 9, vdupq_laneq_u8(a, 9));
+  vst1q_u8(dst + BPS * 10, vdupq_laneq_u8(a, 10));
+  vst1q_u8(dst + BPS * 11, vdupq_laneq_u8(a, 11));
+  vst1q_u8(dst + BPS * 12, vdupq_laneq_u8(a, 12));
+  vst1q_u8(dst + BPS * 13, vdupq_laneq_u8(a, 13));
+  vst1q_u8(dst + BPS * 14, vdupq_laneq_u8(a, 14));
+  vst1q_u8(dst + BPS * 15, vdupq_laneq_u8(a, 15));
+}
+
+static WEBP_INLINE void VerticalPred16_NEON(uint8_t* dst, const uint8_t* top) {
+  if (top != NULL) {
+    Fill16_NEON(dst, top);
+  } else {
+    Fill_NEON(dst, 127);
+  }
+}
+
+static WEBP_INLINE void DCMode_NEON(uint8_t* dst, const uint8_t* left,
+                                    const uint8_t* top) {
+  uint8_t s;
+
+  if (top != NULL) {
+    uint16_t dc;
+    dc = vaddlvq_u8(vld1q_u8(top));
+    if (left != NULL) {
+      // top and left present.
+      dc += vaddlvq_u8(vld1q_u8(left));
+      s = vqrshrnh_n_u16(dc, 5);
+    } else {
+      // top but no left.
+      s = vqrshrnh_n_u16(dc, 4);
+    }
+  } else {
+    if (left != NULL) {
+      uint16_t dc;
+      // left but no top.
+      dc = vaddlvq_u8(vld1q_u8(left));
+      s = vqrshrnh_n_u16(dc, 4);
+    } else {
+      // No top, no left, nothing.
+      s = 0x80;
+    }
+  }
+  Fill_NEON(dst, s);
+}
+
+static WEBP_INLINE void TrueMotionHelper_NEON(uint8_t* dst,
+                                              const uint8x8_t outer,
+                                              const uint8x8x2_t inner,
+                                              const uint16x8_t a, int i,
+                                              const int n) {
+  uint8x8_t d1, d2;
+  uint16x8_t r1, r2;
+
+  r1 = vaddl_u8(outer, inner.val[0]);
+  r1 = vqsubq_u16(r1, a);
+  d1 = vqmovn_u16(r1);
+  r2 = vaddl_u8(outer, inner.val[1]);
+  r2 = vqsubq_u16(r2, a);
+  d2 = vqmovn_u16(r2);
+  vst1_u8(dst + BPS * (i * 4 + n), d1);
+  vst1_u8(dst + BPS * (i * 4 + n) + 8, d2);
+}
+
+static WEBP_INLINE void TrueMotion_NEON(uint8_t* dst, const uint8_t* left,
+                                        const uint8_t* top) {
+  int i;
+  uint16x8_t a;
+  uint8x8x2_t inner;
+
+  if (left == NULL) {
+    // True motion without left samples (hence: with default 129 value) is
+    // equivalent to VE prediction where you just copy the top samples.
+    // Note that if top samples are not available, the default value is then
+    // 129, and not 127 as in the VerticalPred case.
+    if (top != NULL) {
+      VerticalPred16_NEON(dst, top);
+    } else {
+      Fill_NEON(dst, 129);
+    }
+    return;
+  }
+
+  // left is not NULL.
+  if (top == NULL) {
+    HorizontalPred16_NEON(dst, left);
+    return;
+  }
+
+  // Neither left nor top are NULL.
+  a = vdupq_n_u16(left[-1]);
+  inner = vld1_u8_x2(top);
+
+  for (i = 0; i < 4; i++) {
+    const uint8x8x4_t outer = vld4_dup_u8(&left[i * 4]);
+
+    TrueMotionHelper_NEON(dst, outer.val[0], inner, a, i, 0);
+    TrueMotionHelper_NEON(dst, outer.val[1], inner, a, i, 1);
+    TrueMotionHelper_NEON(dst, outer.val[2], inner, a, i, 2);
+    TrueMotionHelper_NEON(dst, outer.val[3], inner, a, i, 3);
+  }
+}
+
+static void Intra16Preds_NEON(uint8_t* dst, const uint8_t* left,
+                              const uint8_t* top) {
+  DCMode_NEON(I16DC16 + dst, left, top);
+  VerticalPred16_NEON(I16VE16 + dst, top);
+  HorizontalPred16_NEON(I16HE16 + dst, left);
+  TrueMotion_NEON(I16TM16 + dst, left, top);
+}
+
+#endif // WEBP_AARCH64
+
 //------------------------------------------------------------------------------
 // Entry point
 
@@ -931,9 +1192,17 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitNEON(void) {
   VP8SSE8x8 = SSE8x8_NEON;
   VP8SSE4x4 = SSE4x4_NEON;
 
+#if WEBP_AARCH64
+#if BPS == 32
+  VP8EncPredLuma4 = Intra4Preds_NEON;
+#endif
+  VP8EncPredLuma16 = Intra16Preds_NEON;
+#endif
+
 #if !defined(WORK_AROUND_GCC)
   VP8EncQuantizeBlock = QuantizeBlock_NEON;
   VP8EncQuantize2Blocks = Quantize2Blocks_NEON;
+  VP8EncQuantizeBlockWHT = QuantizeBlock_NEON;
 #endif
 }
 
