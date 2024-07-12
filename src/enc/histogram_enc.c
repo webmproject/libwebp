@@ -30,10 +30,18 @@
 // Maximum number of histograms allowed in greedy combining algorithm.
 #define MAX_HISTO_GREEDY 100
 
+// Return the size of the histogram for a given cache_bits.
+static int GetHistogramSize(int cache_bits) {
+  const int literal_size = VP8LHistogramNumCodes(cache_bits);
+  const size_t total_size = sizeof(VP8LHistogram) + sizeof(int) * literal_size;
+  assert(total_size <= (size_t)0x7fffffff);
+  return (int)total_size;
+}
+
 static void HistogramClear(VP8LHistogram* const p) {
   uint32_t* const literal = p->literal_;
   const int cache_bits = p->palette_code_bits_;
-  const int histo_size = VP8LGetHistogramSize(cache_bits);
+  const int histo_size = GetHistogramSize(cache_bits);
   memset(p, 0, histo_size);
   p->palette_code_bits_ = cache_bits;
   p->literal_ = literal;
@@ -51,18 +59,11 @@ static void HistogramCopy(const VP8LHistogram* const src,
   uint32_t* const dst_literal = dst->literal_;
   const int dst_cache_bits = dst->palette_code_bits_;
   const int literal_size = VP8LHistogramNumCodes(dst_cache_bits);
-  const int histo_size = VP8LGetHistogramSize(dst_cache_bits);
+  const int histo_size = GetHistogramSize(dst_cache_bits);
   assert(src->palette_code_bits_ == dst_cache_bits);
   memcpy(dst, src, histo_size);
   dst->literal_ = dst_literal;
   memcpy(dst->literal_, src->literal_, literal_size * sizeof(*dst->literal_));
-}
-
-int VP8LGetHistogramSize(int cache_bits) {
-  const int literal_size = VP8LHistogramNumCodes(cache_bits);
-  const size_t total_size = sizeof(VP8LHistogram) + sizeof(int) * literal_size;
-  assert(total_size <= (size_t)0x7fffffff);
-  return (int)total_size;
 }
 
 void VP8LFreeHistogram(VP8LHistogram* const histo) {
@@ -109,7 +110,7 @@ void VP8LHistogramInit(VP8LHistogram* const p, int palette_code_bits,
 
 VP8LHistogram* VP8LAllocateHistogram(int cache_bits) {
   VP8LHistogram* histo = NULL;
-  const int total_size = VP8LGetHistogramSize(cache_bits);
+  const int total_size = GetHistogramSize(cache_bits);
   uint8_t* const memory = (uint8_t*)WebPSafeMalloc(total_size, sizeof(*memory));
   if (memory == NULL) return NULL;
   histo = (VP8LHistogram*)memory;
@@ -123,7 +124,7 @@ VP8LHistogram* VP8LAllocateHistogram(int cache_bits) {
 static void HistogramSetResetPointers(VP8LHistogramSet* const set,
                                       int cache_bits) {
   int i;
-  const int histo_size = VP8LGetHistogramSize(cache_bits);
+  const int histo_size = GetHistogramSize(cache_bits);
   uint8_t* memory = (uint8_t*) (set->histograms);
   memory += set->max_size * sizeof(*set->histograms);
   for (i = 0; i < set->max_size; ++i) {
@@ -137,7 +138,7 @@ static void HistogramSetResetPointers(VP8LHistogramSet* const set,
 
 // Returns the total size of the VP8LHistogramSet.
 static size_t HistogramSetTotalSize(int size, int cache_bits) {
-  const int histo_size = VP8LGetHistogramSize(cache_bits);
+  const int histo_size = GetHistogramSize(cache_bits);
   return (sizeof(VP8LHistogramSet) + size * (sizeof(VP8LHistogram*) +
           histo_size + WEBP_ALIGN_CST));
 }
