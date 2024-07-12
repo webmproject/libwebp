@@ -1417,7 +1417,9 @@ VP8LDecoder* VP8LNew(void) {
   return dec;
 }
 
-void VP8LClear(VP8LDecoder* const dec) {
+// Resets the decoder in its initial state, reclaiming memory.
+// Preserves the dec->status_ value.
+static void VP8LClear(VP8LDecoder* const dec) {
   int i;
   if (dec == NULL) return;
   ClearMetadata(&dec->hdr_);
