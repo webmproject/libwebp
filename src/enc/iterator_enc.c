@@ -54,7 +54,8 @@ void VP8IteratorSetRow(VP8EncIterator* const it, int y) {
   InitLeft(it);
 }
 
-void VP8IteratorReset(VP8EncIterator* const it) {
+// restart a scan
+static void VP8IteratorReset(VP8EncIterator* const it) {
   VP8Encoder* const enc = it->enc_;
   VP8IteratorSetRow(it, 0);
   VP8IteratorSetCountDown(it, enc->mb_w_ * enc->mb_h_);  // default

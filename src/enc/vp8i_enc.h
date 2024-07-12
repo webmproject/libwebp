@@ -266,8 +266,6 @@ typedef struct {
   // in iterator.c
 // must be called first
 void VP8IteratorInit(VP8Encoder* const enc, VP8EncIterator* const it);
-// restart a scan
-void VP8IteratorReset(VP8EncIterator* const it);
 // reset iterator position to row 'y'
 void VP8IteratorSetRow(VP8EncIterator* const it, int y);
 // set count down (=number of iterations to go)
