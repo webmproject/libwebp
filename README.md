@@ -42,7 +42,7 @@ See the [APIs documentation](doc/api.md), and API usage examples in the
 
 ## Bugs
 
-Please report all bugs to the issue tracker: https://bugs.chromium.org/p/webp
+Please report all bugs to the issue tracker: https://issues.webmproject.org
 
 Patches welcome! See [how to contribute](CONTRIBUTING.md).
 

@@ -1,5 +1,5 @@
 AC_INIT([libwebp], [1.4.0],
-        [https://bugs.chromium.org/p/webp],,
+        [https://issues.webmproject.org],,
         [https://developers.google.com/speed/webp])
 AC_CANONICAL_HOST
 AC_PREREQ([2.60])
