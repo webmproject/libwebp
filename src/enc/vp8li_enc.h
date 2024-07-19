@@ -110,12 +110,12 @@ int VP8LResidualImage(int width, int height, int bits, int low_effort,
                       uint32_t* const image, int near_lossless_quality,
                       int exact, int used_subtract_green,
                       const WebPPicture* const pic, int percent_range,
-                      int* const percent);
+                      int* const percent, int* const best_bits);
 
 int VP8LColorSpaceTransform(int width, int height, int bits, int quality,
                             uint32_t* const argb, uint32_t* image,
                             const WebPPicture* const pic, int percent_range,
-                            int* const percent);
+                            int* const percent, int* const best_bits);
 
 //------------------------------------------------------------------------------
 
