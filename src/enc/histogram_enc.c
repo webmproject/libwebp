@@ -379,20 +379,33 @@ uint64_t VP8LHistogramEstimateBits(VP8LHistogram* const p) {
 // -----------------------------------------------------------------------------
 // Various histogram combine/cost-eval functions
 
-static int GetCombinedHistogramEntropy(const VP8LHistogram* const a,
-                                       const VP8LHistogram* const b,
-                                       int64_t cost_threshold, int64_t* cost) {
+// Set a + b in b, saturating at WEBP_INT64_MAX.
+static WEBP_INLINE void SaturateAdd(uint64_t a, int64_t* b) {
+  if (*b < 0 || (int64_t)a <= WEBP_INT64_MAX - *b) {
+    *b += (int64_t)a;
+  } else {
+    *b = WEBP_INT64_MAX;
+  }
+}
+
+// Returns 1 if the cost of the combined histogram is less than the threshold.
+// Otherwise returns 0 and the cost is invalid due to early bail-out.
+WEBP_NODISCARD static int GetCombinedHistogramEntropy(
+    const VP8LHistogram* const a, const VP8LHistogram* const b,
+    int64_t cost_threshold_in, uint64_t* cost) {
   const int palette_code_bits = a->palette_code_bits_;
   int trivial_at_end = 0;
+  const uint64_t cost_threshold = (uint64_t)cost_threshold_in;
   assert(a->palette_code_bits_ == b->palette_code_bits_);
-  *cost += GetCombinedEntropy(a->literal_, b->literal_,
-                              VP8LHistogramNumCodes(palette_code_bits),
-                              a->is_used_[0], b->is_used_[0], 0);
-  *cost += (int64_t)VP8LExtraCostCombined(a->literal_ + NUM_LITERAL_CODES,
-                                          b->literal_ + NUM_LITERAL_CODES,
-                                          NUM_LENGTH_CODES)
+  if (cost_threshold_in <= 0) return 0;
+  *cost = GetCombinedEntropy(a->literal_, b->literal_,
+                             VP8LHistogramNumCodes(palette_code_bits),
+                             a->is_used_[0], b->is_used_[0], 0);
+  *cost += (uint64_t)VP8LExtraCostCombined(a->literal_ + NUM_LITERAL_CODES,
+                                           b->literal_ + NUM_LITERAL_CODES,
+                                           NUM_LENGTH_CODES)
            << LOG_2_PRECISION_BITS;
-  if (*cost > cost_threshold) return 0;
+  if (*cost >= cost_threshold) return 0;
 
   if (a->trivial_symbol_ != VP8L_NON_TRIVIAL_SYM &&
       a->trivial_symbol_ == b->trivial_symbol_) {
@@ -407,28 +420,24 @@ static int GetCombinedHistogramEntropy(const VP8LHistogram* const a,
     }
   }
 
-  *cost +=
-      GetCombinedEntropy(a->red_, b->red_, NUM_LITERAL_CODES, a->is_used_[1],
-                         b->is_used_[1], trivial_at_end);
-  if (*cost > cost_threshold) return 0;
+  *cost += GetCombinedEntropy(a->red_, b->red_, NUM_LITERAL_CODES,
+                              a->is_used_[1], b->is_used_[1], trivial_at_end);
+  if (*cost >= cost_threshold) return 0;
 
-  *cost +=
-      GetCombinedEntropy(a->blue_, b->blue_, NUM_LITERAL_CODES, a->is_used_[2],
-                         b->is_used_[2], trivial_at_end);
-  if (*cost > cost_threshold) return 0;
+  *cost += GetCombinedEntropy(a->blue_, b->blue_, NUM_LITERAL_CODES,
+                              a->is_used_[2], b->is_used_[2], trivial_at_end);
+  if (*cost >= cost_threshold) return 0;
 
-  *cost +=
-      GetCombinedEntropy(a->alpha_, b->alpha_, NUM_LITERAL_CODES,
-                         a->is_used_[3], b->is_used_[3], trivial_at_end);
-  if (*cost > cost_threshold) return 0;
+  *cost += GetCombinedEntropy(a->alpha_, b->alpha_, NUM_LITERAL_CODES,
+                              a->is_used_[3], b->is_used_[3], trivial_at_end);
+  if (*cost >= cost_threshold) return 0;
 
-  *cost +=
-      GetCombinedEntropy(a->distance_, b->distance_, NUM_DISTANCE_CODES,
-                         a->is_used_[4], b->is_used_[4], 0);
-  *cost += (int64_t)VP8LExtraCostCombined(a->distance_, b->distance_,
-                                          NUM_DISTANCE_CODES)
+  *cost += GetCombinedEntropy(a->distance_, b->distance_, NUM_DISTANCE_CODES,
+                              a->is_used_[4], b->is_used_[4], 0);
+  *cost += (uint64_t)VP8LExtraCostCombined(a->distance_, b->distance_,
+                                           NUM_DISTANCE_CODES)
            << LOG_2_PRECISION_BITS;
-  if (*cost > cost_threshold) return 0;
+  if (*cost >= cost_threshold) return 0;
 
   return 1;
 }
@@ -448,34 +457,39 @@ static WEBP_INLINE void HistogramAdd(const VP8LHistogram* const a,
 // Since the previous score passed is 'cost_threshold', we only need to compare
 // the partial cost against 'cost_threshold + C(a) + C(b)' to possibly bail-out
 // early.
-static int64_t HistogramAddEval(const VP8LHistogram* const a,
-                                const VP8LHistogram* const b,
-                                VP8LHistogram* const out,
-                                int64_t cost_threshold) {
-  int64_t cost = 0;
-  const int64_t sum_cost = a->bit_cost_ + b->bit_cost_;
-  cost_threshold += sum_cost;
+// Returns 1 if the cost is less than the threshold.
+// Otherwise returns 0 and the cost is invalid due to early bail-out.
+WEBP_NODISCARD static int HistogramAddEval(const VP8LHistogram* const a,
+                                           const VP8LHistogram* const b,
+                                           VP8LHistogram* const out,
+                                           int64_t cost_threshold) {
+  uint64_t cost;
+  const uint64_t sum_cost = a->bit_cost_ + b->bit_cost_;
+  SaturateAdd(sum_cost, &cost_threshold);
+  if (!GetCombinedHistogramEntropy(a, b, cost_threshold, &cost)) return 0;
 
-  if (GetCombinedHistogramEntropy(a, b, cost_threshold, &cost)) {
-    HistogramAdd(a, b, out);
-    out->bit_cost_ = cost;
-    out->palette_code_bits_ = a->palette_code_bits_;
-  }
-
-  return cost - sum_cost;
+  HistogramAdd(a, b, out);
+  out->bit_cost_ = cost;
+  out->palette_code_bits_ = a->palette_code_bits_;
+  return 1;
 }
 
 // Same as HistogramAddEval(), except that the resulting histogram
 // is not stored. Only the cost C(a+b) - C(a) is evaluated. We omit
 // the term C(b) which is constant over all the evaluations.
-static int64_t HistogramAddThresh(const VP8LHistogram* const a,
-                                  const VP8LHistogram* const b,
-                                  int64_t cost_threshold) {
-  int64_t cost;
+// Returns 1 if the cost is less than the threshold.
+// Otherwise returns 0 and the cost is invalid due to early bail-out.
+WEBP_NODISCARD static int HistogramAddThresh(const VP8LHistogram* const a,
+                                             const VP8LHistogram* const b,
+                                             int64_t cost_threshold,
+                                             int64_t* cost_out) {
+  uint64_t cost;
   assert(a != NULL && b != NULL);
-  cost = -a->bit_cost_;
-  GetCombinedHistogramEntropy(a, b, cost_threshold, &cost);
-  return cost;
+  SaturateAdd(a->bit_cost_, &cost_threshold);
+  if (!GetCombinedHistogramEntropy(a, b, cost_threshold, &cost)) return 0;
+
+  *cost_out = (int64_t)cost - (int64_t)a->bit_cost_;
+  return 1;
 }
 
 // -----------------------------------------------------------------------------
@@ -685,12 +699,11 @@ static void HistogramCombineEntropyBin(
       cluster_mappings[clusters[idx]] = clusters[first];
     } else {
       // try to merge #idx into #first (both share the same bin_id)
-      const int64_t bit_cost = histograms[idx]->bit_cost_;
+      const uint64_t bit_cost = histograms[idx]->bit_cost_;
       const int64_t bit_cost_thresh =
-          -DivRound(bit_cost * combine_cost_factor, 100);
-      const int64_t curr_cost_diff = HistogramAddEval(
-          histograms[first], histograms[idx], cur_combo, bit_cost_thresh);
-      if (curr_cost_diff < bit_cost_thresh) {
+          -DivRound((int64_t)bit_cost * combine_cost_factor, 100);
+      if (HistogramAddEval(histograms[first], histograms[idx], cur_combo,
+                           bit_cost_thresh)) {
         // Try to merge two histograms only if the combo is a trivial one or
         // the two candidate histograms are already non-trivial.
         // For some images, 'try_combine' turns out to be false for a lot of
@@ -738,7 +751,7 @@ typedef struct {
   int idx1;
   int idx2;
   int64_t cost_diff;
-  int64_t cost_combo;
+  uint64_t cost_combo;
 } HistogramPair;
 
 typedef struct {
@@ -792,13 +805,19 @@ static void HistoQueueUpdateHead(HistoQueue* const histo_queue,
 
 // Update the cost diff and combo of a pair of histograms. This needs to be
 // called when the histograms have been merged with a third one.
-static void HistoQueueUpdatePair(const VP8LHistogram* const h1,
-                                 const VP8LHistogram* const h2,
-                                 int64_t threshold, HistogramPair* const pair) {
+// Returns 1 if the cost diff is less than the threshold.
+// Otherwise returns 0 and the cost is invalid due to early bail-out.
+WEBP_NODISCARD static int HistoQueueUpdatePair(const VP8LHistogram* const h1,
+                                               const VP8LHistogram* const h2,
+                                               int64_t cost_threshold,
+                                               HistogramPair* const pair) {
   const int64_t sum_cost = h1->bit_cost_ + h2->bit_cost_;
-  pair->cost_combo = 0;
-  GetCombinedHistogramEntropy(h1, h2, sum_cost + threshold, &pair->cost_combo);
-  pair->cost_diff = pair->cost_combo - sum_cost;
+  SaturateAdd(sum_cost, &cost_threshold);
+  if (!GetCombinedHistogramEntropy(h1, h2, cost_threshold, &pair->cost_combo)) {
+    return 0;
+  }
+  pair->cost_diff = (int64_t)pair->cost_combo - sum_cost;
+  return 1;
 }
 
 // Create a pair from indices "idx1" and "idx2" provided its cost
@@ -824,10 +843,8 @@ static int64_t HistoQueuePush(HistoQueue* const histo_queue,
   h1 = histograms[idx1];
   h2 = histograms[idx2];
 
-  HistoQueueUpdatePair(h1, h2, threshold, &pair);
-
   // Do not even consider the pair if it does not improve the entropy.
-  if (pair.cost_diff >= threshold) return 0;
+  if (!HistoQueueUpdatePair(h1, h2, threshold, &pair)) return 0;
 
   histo_queue->queue[histo_queue->size++] = pair;
   HistoQueueUpdateHead(histo_queue, &histo_queue->queue[histo_queue->size - 1]);
@@ -1025,8 +1042,8 @@ static int HistogramCombineStochastic(VP8LHistogramSet* const image_histo,
       }
       if (do_eval) {
         // Re-evaluate the cost of an updated pair.
-        HistoQueueUpdatePair(histograms[p->idx1], histograms[p->idx2], 0, p);
-        if (p->cost_diff >= 0) {
+        if (!HistoQueueUpdatePair(histograms[p->idx1], histograms[p->idx2], 0,
+                                  p)) {
           HistoQueuePopPair(&histo_queue, p);
           continue;
         }
@@ -1071,8 +1088,8 @@ static void HistogramRemap(const VP8LHistogramSet* const in,
       }
       for (k = 0; k < out_size; ++k) {
         int64_t cur_bits;
-        cur_bits = HistogramAddThresh(out_histo[k], in_histo[i], best_bits);
-        if (k == 0 || cur_bits < best_bits) {
+        if (HistogramAddThresh(out_histo[k], in_histo[i], best_bits,
+                               &cur_bits)) {
           best_bits = cur_bits;
           best_out = k;
         }

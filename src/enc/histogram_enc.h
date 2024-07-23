@@ -40,7 +40,7 @@ typedef struct {
   int palette_code_bits_;
   uint32_t trivial_symbol_;  // True, if histograms for Red, Blue & Alpha
                              // literal symbols are single valued.
-  int64_t bit_cost_;         // cached value of bit cost.
+  uint64_t bit_cost_;        // cached value of bit cost.
   uint64_t literal_cost_;    // Cached values of dominant entropy costs:
   uint64_t red_cost_;        // literal, red & blue.
   uint64_t blue_cost_;
