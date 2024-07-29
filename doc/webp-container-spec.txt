@@ -781,7 +781,8 @@ _VP8X.field_ means the field in the 'VP8X' Chunk with the same description.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 VP8X.flags.hasAnimation MUST be TRUE
 canvas ← new image of size VP8X.canvasWidth x VP8X.canvasHeight with
-         background color ANIM.background_color.
+         background color ANIM.background_color or
+         application-defined color.
 loop_count ← ANIM.loopCount
 dispose_method ← Dispose to background color
 if loop_count == 0:
@@ -809,6 +810,7 @@ for loop = 0..loop_count - 1
         bitstream subchunks not found in 'Frame Data' earlier MUST
           be TRUE
         frame_params.bitstream = bitstream_data
+    apply dispose_method.
     render frame with frame_params.alpha and frame_params.bitstream
       on canvas with top-left corner at (frame_params.frameX,
       frame_params.frameY), using Blending method
