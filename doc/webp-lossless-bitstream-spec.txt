@@ -351,7 +351,7 @@ int ClampAddSubtractHalf(int a, int b) {
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 There are special handling rules for some border pixels. If there is a
-prediction transform, regardless of the mode \[0..13\] for these pixels, the
+predictor transform, regardless of the mode \[0..13\] for these pixels, the
 predicted value for the left-topmost pixel of the image is 0xff000000, all
 pixels on the top row are L-pixel, and all pixels on the leftmost column are
 T-pixel.
