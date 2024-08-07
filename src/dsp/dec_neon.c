@@ -1300,18 +1300,19 @@ static void DC4_NEON(uint8_t* dst) {    // DC
 static WEBP_INLINE void TrueMotion_NEON(uint8_t* dst, int size) {
   const uint8x8_t TL = vld1_dup_u8(dst - BPS - 1);  // top-left pixel 'A[-1]'
   const uint8x8_t T = vld1_u8(dst - BPS);  // top row 'A[0..3]'
-  const int16x8_t d = vreinterpretq_s16_u16(vsubl_u8(T, TL));  // A[c] - A[-1]
+  const uint16x8_t d = vsubl_u8(T, TL);  // A[c] - A[-1]
   int y;
   for (y = 0; y < size; y += 4) {
     // left edge
-    const int16x8_t L0 = ConvertU8ToS16_NEON(vld1_dup_u8(dst + 0 * BPS - 1));
-    const int16x8_t L1 = ConvertU8ToS16_NEON(vld1_dup_u8(dst + 1 * BPS - 1));
-    const int16x8_t L2 = ConvertU8ToS16_NEON(vld1_dup_u8(dst + 2 * BPS - 1));
-    const int16x8_t L3 = ConvertU8ToS16_NEON(vld1_dup_u8(dst + 3 * BPS - 1));
-    const int16x8_t r0 = vaddq_s16(L0, d);  // L[r] + A[c] - A[-1]
-    const int16x8_t r1 = vaddq_s16(L1, d);
-    const int16x8_t r2 = vaddq_s16(L2, d);
-    const int16x8_t r3 = vaddq_s16(L3, d);
+    const uint8x8_t L0 = vld1_dup_u8(dst + 0 * BPS - 1);
+    const uint8x8_t L1 = vld1_dup_u8(dst + 1 * BPS - 1);
+    const uint8x8_t L2 = vld1_dup_u8(dst + 2 * BPS - 1);
+    const uint8x8_t L3 = vld1_dup_u8(dst + 3 * BPS - 1);
+    // L[r] + A[c] - A[-1]
+    const int16x8_t r0 = vreinterpretq_s16_u16(vaddw_u8(d, L0));
+    const int16x8_t r1 = vreinterpretq_s16_u16(vaddw_u8(d, L1));
+    const int16x8_t r2 = vreinterpretq_s16_u16(vaddw_u8(d, L2));
+    const int16x8_t r3 = vreinterpretq_s16_u16(vaddw_u8(d, L3));
     // Saturate and store the result.
     const uint32x2_t r0_u32 = vreinterpret_u32_u8(vqmovun_s16(r0));
     const uint32x2_t r1_u32 = vreinterpret_u32_u8(vqmovun_s16(r1));
@@ -1572,23 +1573,24 @@ static void TM16_NEON(uint8_t* dst) {
   const uint8x8_t TL = vld1_dup_u8(dst - BPS - 1);  // top-left pixel 'A[-1]'
   const uint8x16_t T = vld1q_u8(dst - BPS);  // top row 'A[0..15]'
   // A[c] - A[-1]
-  const int16x8_t d_lo = vreinterpretq_s16_u16(vsubl_u8(vget_low_u8(T), TL));
-  const int16x8_t d_hi = vreinterpretq_s16_u16(vsubl_u8(vget_high_u8(T), TL));
+  const uint16x8_t d_lo = vsubl_u8(vget_low_u8(T), TL);
+  const uint16x8_t d_hi = vsubl_u8(vget_high_u8(T), TL);
   int y;
   for (y = 0; y < 16; y += 4) {
     // left edge
-    const int16x8_t L0 = ConvertU8ToS16_NEON(vld1_dup_u8(dst + 0 * BPS - 1));
-    const int16x8_t L1 = ConvertU8ToS16_NEON(vld1_dup_u8(dst + 1 * BPS - 1));
-    const int16x8_t L2 = ConvertU8ToS16_NEON(vld1_dup_u8(dst + 2 * BPS - 1));
-    const int16x8_t L3 = ConvertU8ToS16_NEON(vld1_dup_u8(dst + 3 * BPS - 1));
-    const int16x8_t r0_lo = vaddq_s16(L0, d_lo);  // L[r] + A[c] - A[-1]
-    const int16x8_t r1_lo = vaddq_s16(L1, d_lo);
-    const int16x8_t r2_lo = vaddq_s16(L2, d_lo);
-    const int16x8_t r3_lo = vaddq_s16(L3, d_lo);
-    const int16x8_t r0_hi = vaddq_s16(L0, d_hi);
-    const int16x8_t r1_hi = vaddq_s16(L1, d_hi);
-    const int16x8_t r2_hi = vaddq_s16(L2, d_hi);
-    const int16x8_t r3_hi = vaddq_s16(L3, d_hi);
+    const uint8x8_t L0 = vld1_dup_u8(dst + 0 * BPS - 1);
+    const uint8x8_t L1 = vld1_dup_u8(dst + 1 * BPS - 1);
+    const uint8x8_t L2 = vld1_dup_u8(dst + 2 * BPS - 1);
+    const uint8x8_t L3 = vld1_dup_u8(dst + 3 * BPS - 1);
+    // L[r] + A[c] - A[-1]
+    const int16x8_t r0_lo = vreinterpretq_s16_u16(vaddw_u8(d_lo, L0));
+    const int16x8_t r1_lo = vreinterpretq_s16_u16(vaddw_u8(d_lo, L1));
+    const int16x8_t r2_lo = vreinterpretq_s16_u16(vaddw_u8(d_lo, L2));
+    const int16x8_t r3_lo = vreinterpretq_s16_u16(vaddw_u8(d_lo, L3));
+    const int16x8_t r0_hi = vreinterpretq_s16_u16(vaddw_u8(d_hi, L0));
+    const int16x8_t r1_hi = vreinterpretq_s16_u16(vaddw_u8(d_hi, L1));
+    const int16x8_t r2_hi = vreinterpretq_s16_u16(vaddw_u8(d_hi, L2));
+    const int16x8_t r3_hi = vreinterpretq_s16_u16(vaddw_u8(d_hi, L3));
     // Saturate and store the result.
     const uint8x16_t row0 = vcombine_u8(vqmovun_s16(r0_lo), vqmovun_s16(r0_hi));
     const uint8x16_t row1 = vcombine_u8(vqmovun_s16(r1_lo), vqmovun_s16(r1_hi));
