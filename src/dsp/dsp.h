@@ -366,8 +366,9 @@ struct WebPRescaler;
 // Import a row of data and save its contribution in the rescaler.
 // 'channel' denotes the channel number to be imported. 'Expand' corresponds to
 // the wrk->x_expand case. Otherwise, 'Shrink' is to be used.
-typedef void (*WebPRescalerImportRowFunc)(struct WebPRescaler* const wrk,
-                                          const uint8_t* src);
+typedef void (*WebPRescalerImportRowFunc)(
+    struct WebPRescaler* WEBP_RESTRICT const wrk,
+    const uint8_t* WEBP_RESTRICT src);
 
 extern WebPRescalerImportRowFunc WebPRescalerImportRowExpand;
 extern WebPRescalerImportRowFunc WebPRescalerImportRowShrink;
@@ -380,16 +381,19 @@ extern WebPRescalerExportRowFunc WebPRescalerExportRowExpand;
 extern WebPRescalerExportRowFunc WebPRescalerExportRowShrink;
 
 // Plain-C implementation, as fall-back.
-extern void WebPRescalerImportRowExpand_C(struct WebPRescaler* const wrk,
-                                          const uint8_t* src);
-extern void WebPRescalerImportRowShrink_C(struct WebPRescaler* const wrk,
-                                          const uint8_t* src);
+extern void WebPRescalerImportRowExpand_C(
+    struct WebPRescaler* WEBP_RESTRICT const wrk,
+    const uint8_t* WEBP_RESTRICT src);
+extern void WebPRescalerImportRowShrink_C(
+    struct WebPRescaler* WEBP_RESTRICT const wrk,
+    const uint8_t* WEBP_RESTRICT src);
 extern void WebPRescalerExportRowExpand_C(struct WebPRescaler* const wrk);
 extern void WebPRescalerExportRowShrink_C(struct WebPRescaler* const wrk);
 
 // Main entry calls:
-extern void WebPRescalerImportRow(struct WebPRescaler* const wrk,
-                                  const uint8_t* src);
+extern void WebPRescalerImportRow(
+    struct WebPRescaler* WEBP_RESTRICT const wrk,
+    const uint8_t* WEBP_RESTRICT src);
 // Export one row (starting at x_out position) from rescaler.
 extern void WebPRescalerExportRow(struct WebPRescaler* const wrk);
 
