@@ -194,15 +194,15 @@ uint32_t VP8LSubPixels(uint32_t a, uint32_t b) {
 
 // The predictor is added to the output pixel (which
 // is therefore considered as a residual) to get the final prediction.
-#define GENERATE_PREDICTOR_ADD(PREDICTOR, PREDICTOR_ADD)             \
-static void PREDICTOR_ADD(const uint32_t* in, const uint32_t* upper, \
-                          int num_pixels, uint32_t* out) {           \
-  int x;                                                             \
-  assert(upper != NULL);                                             \
-  for (x = 0; x < num_pixels; ++x) {                                 \
-    const uint32_t pred = (PREDICTOR)(&out[x - 1], upper + x);       \
-    out[x] = VP8LAddPixels(in[x], pred);                             \
-  }                                                                  \
+#define GENERATE_PREDICTOR_ADD(PREDICTOR, PREDICTOR_ADD)                 \
+static void PREDICTOR_ADD(const uint32_t* in, const uint32_t* upper,     \
+                          int num_pixels, uint32_t* WEBP_RESTRICT out) { \
+  int x;                                                                 \
+  assert(upper != NULL);                                                 \
+  for (x = 0; x < num_pixels; ++x) {                                     \
+    const uint32_t pred = (PREDICTOR)(&out[x - 1], upper + x);           \
+    out[x] = VP8LAddPixels(in[x], pred);                                 \
+  }                                                                      \
 }
 
 #ifdef __cplusplus

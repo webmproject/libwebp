@@ -131,9 +131,10 @@ typedef struct {
   int max_value;
   int last_non_zero;
 } VP8Histogram;
-typedef void (*VP8CHisto)(const uint8_t* ref, const uint8_t* pred,
+typedef void (*VP8CHisto)(const uint8_t* WEBP_RESTRICT ref,
+                          const uint8_t* WEBP_RESTRICT pred,
                           int start_block, int end_block,
-                          VP8Histogram* const histo);
+                          VP8Histogram* WEBP_RESTRICT const histo);
 extern VP8CHisto VP8CollectHistogram;
 // General-purpose util function to help VP8CollectHistogram().
 void VP8SetHistogramData(const int distribution[MAX_COEFF_THRESH + 1],

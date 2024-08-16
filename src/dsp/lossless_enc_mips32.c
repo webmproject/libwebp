@@ -149,8 +149,9 @@ static uint32_t ExtraCost_MIPS32(const uint32_t* const population, int length) {
 //     pY += 2;
 //   }
 //   return cost;
-static uint32_t ExtraCostCombined_MIPS32(const uint32_t* const X,
-                                         const uint32_t* const Y, int length) {
+static uint32_t ExtraCostCombined_MIPS32(const uint32_t* WEBP_RESTRICT const X,
+                                         const uint32_t* WEBP_RESTRICT const Y,
+                                         int length) {
   int i, temp0, temp1, temp2, temp3;
   const uint32_t* pX = &X[4];
   const uint32_t* pY = &Y[4];
@@ -215,8 +216,10 @@ static uint32_t ExtraCostCombined_MIPS32(const uint32_t* const X,
 
 // Returns the various RLE counts
 static WEBP_INLINE void GetEntropyUnrefinedHelper(
-    uint32_t val, int i, uint32_t* const val_prev, int* const i_prev,
-    VP8LBitEntropy* const bit_entropy, VP8LStreaks* const stats) {
+    uint32_t val, int i, uint32_t* WEBP_RESTRICT const val_prev,
+    int* WEBP_RESTRICT const i_prev,
+    VP8LBitEntropy* WEBP_RESTRICT const bit_entropy,
+    VP8LStreaks* WEBP_RESTRICT const stats) {
   int* const pstreaks = &stats->streaks[0][0];
   int* const pcnts = &stats->counts[0];
   int temp0, temp1, temp2, temp3;
@@ -241,9 +244,10 @@ static WEBP_INLINE void GetEntropyUnrefinedHelper(
   *i_prev = i;
 }
 
-static void GetEntropyUnrefined_MIPS32(const uint32_t X[], int length,
-                                       VP8LBitEntropy* const bit_entropy,
-                                       VP8LStreaks* const stats) {
+static void GetEntropyUnrefined_MIPS32(
+    const uint32_t X[], int length,
+    VP8LBitEntropy* WEBP_RESTRICT const bit_entropy,
+    VP8LStreaks* WEBP_RESTRICT const stats) {
   int i;
   int i_prev = 0;
   uint32_t x_prev = X[0];
@@ -262,11 +266,10 @@ static void GetEntropyUnrefined_MIPS32(const uint32_t X[], int length,
   bit_entropy->entropy = VP8LFastSLog2(bit_entropy->sum) - bit_entropy->entropy;
 }
 
-static void GetCombinedEntropyUnrefined_MIPS32(const uint32_t X[],
-                                               const uint32_t Y[],
-                                               int length,
-                                               VP8LBitEntropy* const entropy,
-                                               VP8LStreaks* const stats) {
+static void GetCombinedEntropyUnrefined_MIPS32(
+    const uint32_t X[], const uint32_t Y[], int length,
+    VP8LBitEntropy* WEBP_RESTRICT const entropy,
+    VP8LStreaks* WEBP_RESTRICT const stats) {
   int i = 1;
   int i_prev = 0;
   uint32_t xy_prev = X[0] + Y[0];
@@ -344,8 +347,9 @@ static void GetCombinedEntropyUnrefined_MIPS32(const uint32_t X[],
     ASM_END_COMMON_0                                    \
     ASM_END_COMMON_1
 
-static void AddVector_MIPS32(const uint32_t* pa, const uint32_t* pb,
-                             uint32_t* pout, int size) {
+static void AddVector_MIPS32(const uint32_t* WEBP_RESTRICT pa,
+                             const uint32_t* WEBP_RESTRICT pb,
+                             uint32_t* WEBP_RESTRICT pout, int size) {
   uint32_t temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7;
   const int end = ((size) / 4) * 4;
   const uint32_t* const LoopEnd = pa + end;
@@ -356,7 +360,8 @@ static void AddVector_MIPS32(const uint32_t* pa, const uint32_t* pb,
   for (i = 0; i < size - end; ++i) pout[i] = pa[i] + pb[i];
 }
 
-static void AddVectorEq_MIPS32(const uint32_t* pa, uint32_t* pout, int size) {
+static void AddVectorEq_MIPS32(const uint32_t* WEBP_RESTRICT pa,
+                               uint32_t* WEBP_RESTRICT pout, int size) {
   uint32_t temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7;
   const int end = ((size) / 4) * 4;
   const uint32_t* const LoopEnd = pa + end;
