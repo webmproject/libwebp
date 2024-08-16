@@ -27,13 +27,15 @@
   do {                                                                         \
     assert((in) != NULL);                                                      \
     assert((out) != NULL);                                                     \
+    assert((in) != (out));                                                     \
     assert(width > 0);                                                         \
     assert(height > 0);                                                        \
     assert(stride >= width);                                                   \
   } while (0)
 
-static void PredictLineTop_SSE2(const uint8_t* src, const uint8_t* pred,
-                                uint8_t* dst, int length) {
+static void PredictLineTop_SSE2(const uint8_t* WEBP_RESTRICT src,
+                                const uint8_t* WEBP_RESTRICT pred,
+                                uint8_t* WEBP_RESTRICT dst, int length) {
   int i;
   const int max_pos = length & ~31;
   assert(length >= 0);
@@ -51,7 +53,8 @@ static void PredictLineTop_SSE2(const uint8_t* src, const uint8_t* pred,
 }
 
 // Special case for left-based prediction (when preds==dst-1 or preds==src-1).
-static void PredictLineLeft_SSE2(const uint8_t* src, uint8_t* dst, int length) {
+static void PredictLineLeft_SSE2(const uint8_t* WEBP_RESTRICT src,
+                                 uint8_t* WEBP_RESTRICT dst, int length) {
   int i;
   const int max_pos = length & ~31;
   assert(length >= 0);
@@ -71,9 +74,9 @@ static void PredictLineLeft_SSE2(const uint8_t* src, uint8_t* dst, int length) {
 //------------------------------------------------------------------------------
 // Horizontal filter.
 
-static WEBP_INLINE void DoHorizontalFilter_SSE2(const uint8_t* in,
-                                                int width, int height,
-                                                int stride, uint8_t* out) {
+static WEBP_INLINE void DoHorizontalFilter_SSE2(
+    const uint8_t* WEBP_RESTRICT in, int width, int height, int stride,
+    uint8_t* WEBP_RESTRICT out) {
   int row;
   DCHECK(in, out);
 
@@ -96,9 +99,9 @@ static WEBP_INLINE void DoHorizontalFilter_SSE2(const uint8_t* in,
 //------------------------------------------------------------------------------
 // Vertical filter.
 
-static WEBP_INLINE void DoVerticalFilter_SSE2(const uint8_t* in,
+static WEBP_INLINE void DoVerticalFilter_SSE2(const uint8_t* WEBP_RESTRICT in,
                                               int width, int height, int stride,
-                                              uint8_t* out) {
+                                              uint8_t* WEBP_RESTRICT out) {
   int row;
   DCHECK(in, out);
 
@@ -127,7 +130,8 @@ static WEBP_INLINE int GradientPredictor_SSE2(uint8_t a, uint8_t b, uint8_t c) {
 
 static void GradientPredictDirect_SSE2(const uint8_t* const row,
                                        const uint8_t* const top,
-                                       uint8_t* const out, int length) {
+                                       uint8_t* WEBP_RESTRICT const out,
+                                       int length) {
   const int max_pos = length & ~7;
   int i;
   const __m128i zero = _mm_setzero_si128();
@@ -151,9 +155,9 @@ static void GradientPredictDirect_SSE2(const uint8_t* const row,
   }
 }
 
-static WEBP_INLINE void DoGradientFilter_SSE2(const uint8_t* in,
+static WEBP_INLINE void DoGradientFilter_SSE2(const uint8_t* WEBP_RESTRICT in,
                                               int width, int height, int stride,
-                                              uint8_t* out) {
+                                              uint8_t* WEBP_RESTRICT out) {
   int row;
   DCHECK(in, out);
 
@@ -176,18 +180,21 @@ static WEBP_INLINE void DoGradientFilter_SSE2(const uint8_t* in,
 
 //------------------------------------------------------------------------------
 
-static void HorizontalFilter_SSE2(const uint8_t* data, int width, int height,
-                                  int stride, uint8_t* filtered_data) {
+static void HorizontalFilter_SSE2(const uint8_t* WEBP_RESTRICT data,
+                                  int width, int height, int stride,
+                                  uint8_t* WEBP_RESTRICT filtered_data) {
   DoHorizontalFilter_SSE2(data, width, height, stride, filtered_data);
 }
 
-static void VerticalFilter_SSE2(const uint8_t* data, int width, int height,
-                                int stride, uint8_t* filtered_data) {
+static void VerticalFilter_SSE2(const uint8_t* WEBP_RESTRICT data,
+                                int width, int height, int stride,
+                                uint8_t* WEBP_RESTRICT filtered_data) {
   DoVerticalFilter_SSE2(data, width, height, stride, filtered_data);
 }
 
-static void GradientFilter_SSE2(const uint8_t* data, int width, int height,
-                                int stride, uint8_t* filtered_data) {
+static void GradientFilter_SSE2(const uint8_t* WEBP_RESTRICT data,
+                                int width, int height, int stride,
+                                uint8_t* WEBP_RESTRICT filtered_data) {
   DoGradientFilter_SSE2(data, width, height, stride, filtered_data);
 }
 

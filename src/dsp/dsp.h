@@ -497,8 +497,9 @@ typedef enum {     // Filter types.
   WEBP_FILTER_FAST
 } WEBP_FILTER_TYPE;
 
-typedef void (*WebPFilterFunc)(const uint8_t* in, int width, int height,
-                               int stride, uint8_t* out);
+typedef void (*WebPFilterFunc)(const uint8_t* WEBP_RESTRICT in,
+                               int width, int height, int stride,
+                               uint8_t* WEBP_RESTRICT out);
 // In-place un-filtering.
 // Warning! 'prev_line' pointer can be equal to 'cur_line' or 'preds'.
 typedef void (*WebPUnfilterFunc)(const uint8_t* prev_line, const uint8_t* preds,
