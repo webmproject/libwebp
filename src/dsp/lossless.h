@@ -32,10 +32,6 @@ typedef uint32_t (*VP8LPredictorFunc)(const uint32_t* const left,
                                       const uint32_t* const top);
 extern VP8LPredictorFunc VP8LPredictors[16];
 
-uint32_t VP8LPredictor0_C(const uint32_t* const left,
-                          const uint32_t* const top);
-uint32_t VP8LPredictor1_C(const uint32_t* const left,
-                          const uint32_t* const top);
 uint32_t VP8LPredictor2_C(const uint32_t* const left,
                           const uint32_t* const top);
 uint32_t VP8LPredictor3_C(const uint32_t* const left,
