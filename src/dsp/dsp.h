@@ -337,26 +337,35 @@ void WebPInitYUV444Converters(void);
 // ARGB -> YUV converters
 
 // Convert ARGB samples to luma Y.
-extern void (*WebPConvertARGBToY)(const uint32_t* argb, uint8_t* y, int width);
+extern void (*WebPConvertARGBToY)(const uint32_t* WEBP_RESTRICT argb,
+                                  uint8_t* WEBP_RESTRICT y, int width);
 // Convert ARGB samples to U/V with downsampling. do_store should be '1' for
 // even lines and '0' for odd ones. 'src_width' is the original width, not
 // the U/V one.
-extern void (*WebPConvertARGBToUV)(const uint32_t* argb, uint8_t* u, uint8_t* v,
+extern void (*WebPConvertARGBToUV)(const uint32_t* WEBP_RESTRICT argb,
+                                   uint8_t* WEBP_RESTRICT u,
+                                   uint8_t* WEBP_RESTRICT v,
                                    int src_width, int do_store);
 
 // Convert a row of accumulated (four-values) of rgba32 toward U/V
-extern void (*WebPConvertRGBA32ToUV)(const uint16_t* rgb,
-                                     uint8_t* u, uint8_t* v, int width);
+extern void (*WebPConvertRGBA32ToUV)(const uint16_t* WEBP_RESTRICT rgb,
+                                     uint8_t* WEBP_RESTRICT u,
+                                     uint8_t* WEBP_RESTRICT v, int width);
 
 // Convert RGB or BGR to Y
-extern void (*WebPConvertRGB24ToY)(const uint8_t* rgb, uint8_t* y, int width);
-extern void (*WebPConvertBGR24ToY)(const uint8_t* bgr, uint8_t* y, int width);
+extern void (*WebPConvertRGB24ToY)(const uint8_t* WEBP_RESTRICT rgb,
+                                   uint8_t* WEBP_RESTRICT y, int width);
+extern void (*WebPConvertBGR24ToY)(const uint8_t* WEBP_RESTRICT bgr,
+                                   uint8_t* WEBP_RESTRICT y, int width);
 
 // used for plain-C fallback.
-extern void WebPConvertARGBToUV_C(const uint32_t* argb, uint8_t* u, uint8_t* v,
+extern void WebPConvertARGBToUV_C(const uint32_t* WEBP_RESTRICT argb,
+                                  uint8_t* WEBP_RESTRICT u,
+                                  uint8_t* WEBP_RESTRICT v,
                                   int src_width, int do_store);
-extern void WebPConvertRGBA32ToUV_C(const uint16_t* rgb,
-                                    uint8_t* u, uint8_t* v, int width);
+extern void WebPConvertRGBA32ToUV_C(const uint16_t* WEBP_RESTRICT rgb,
+                                    uint8_t* WEBP_RESTRICT u,
+                                    uint8_t* WEBP_RESTRICT v, int width);
 
 // Must be called before using the above.
 void WebPInitConvertARGBToYUV(void);
