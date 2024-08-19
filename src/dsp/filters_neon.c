@@ -28,8 +28,6 @@
     assert(width > 0);                                                         \
     assert(height > 0);                                                        \
     assert(stride >= width);                                                   \
-    assert(row >= 0 && num_rows > 0 && row + num_rows <= height);              \
-    (void)height;  /* Silence unused warning. */                               \
   } while (0)
 
 // load eight u8 and widen to s16
@@ -68,30 +66,21 @@ static void PredictLineLeft_NEON(const uint8_t* src, uint8_t* dst, int length) {
 
 static WEBP_INLINE void DoHorizontalFilter_NEON(const uint8_t* in,
                                                 int width, int height,
-                                                int stride,
-                                                int row, int num_rows,
-                                                uint8_t* out) {
-  const size_t start_offset = row * stride;
-  const int last_row = row + num_rows;
+                                                int stride, uint8_t* out) {
+  int row;
   DCHECK(in, out);
-  in += start_offset;
-  out += start_offset;
 
-  if (row == 0) {
-    // Leftmost pixel is the same as input for topmost scanline.
-    out[0] = in[0];
-    PredictLineLeft_NEON(in + 1, out + 1, width - 1);
-    row = 1;
-    in += stride;
-    out += stride;
-  }
+  // Leftmost pixel is the same as input for topmost scanline.
+  out[0] = in[0];
+  PredictLineLeft_NEON(in + 1, out + 1, width - 1);
+  in += stride;
+  out += stride;
 
   // Filter line-by-line.
-  while (row < last_row) {
+  for (row = 1; row < height; ++row) {
     // Leftmost pixel is predicted from above.
     out[0] = in[0] - in[-stride];
     PredictLineLeft_NEON(in + 1, out + 1, width - 1);
-    ++row;
     in += stride;
     out += stride;
   }
@@ -99,8 +88,7 @@ static WEBP_INLINE void DoHorizontalFilter_NEON(const uint8_t* in,
 
 static void HorizontalFilter_NEON(const uint8_t* data, int width, int height,
                                   int stride, uint8_t* filtered_data) {
-  DoHorizontalFilter_NEON(data, width, height, stride, 0, height,
-                          filtered_data);
+  DoHorizontalFilter_NEON(data, width, height, stride, filtered_data);
 }
 
 //------------------------------------------------------------------------------
@@ -108,28 +96,20 @@ static void HorizontalFilter_NEON(const uint8_t* data, int width, int height,
 
 static WEBP_INLINE void DoVerticalFilter_NEON(const uint8_t* in,
                                               int width, int height, int stride,
-                                              int row, int num_rows,
                                               uint8_t* out) {
-  const size_t start_offset = row * stride;
-  const int last_row = row + num_rows;
+  int row;
   DCHECK(in, out);
-  in += start_offset;
-  out += start_offset;
 
-  if (row == 0) {
-    // Very first top-left pixel is copied.
-    out[0] = in[0];
-    // Rest of top scan-line is left-predicted.
-    PredictLineLeft_NEON(in + 1, out + 1, width - 1);
-    row = 1;
-    in += stride;
-    out += stride;
-  }
+  // Very first top-left pixel is copied.
+  out[0] = in[0];
+  // Rest of top scan-line is left-predicted.
+  PredictLineLeft_NEON(in + 1, out + 1, width - 1);
+  in += stride;
+  out += stride;
 
   // Filter line-by-line.
-  while (row < last_row) {
+  for (row = 1; row < height; ++row) {
     PredictLine_NEON(in, in - stride, out, width);
-    ++row;
     in += stride;
     out += stride;
   }
@@ -137,8 +117,7 @@ static WEBP_INLINE void DoVerticalFilter_NEON(const uint8_t* in,
 
 static void VerticalFilter_NEON(const uint8_t* data, int width, int height,
                                 int stride, uint8_t* filtered_data) {
-  DoVerticalFilter_NEON(data, width, height, stride, 0, height,
-                        filtered_data);
+  DoVerticalFilter_NEON(data, width, height, stride, filtered_data);
 }
 
 //------------------------------------------------------------------------------
@@ -168,30 +147,21 @@ static void GradientPredictDirect_NEON(const uint8_t* const row,
 }
 
 static WEBP_INLINE void DoGradientFilter_NEON(const uint8_t* in,
-                                              int width, int height,
-                                              int stride,
-                                              int row, int num_rows,
+                                              int width, int height, int stride,
                                               uint8_t* out) {
-  const size_t start_offset = row * stride;
-  const int last_row = row + num_rows;
+  int row;
   DCHECK(in, out);
-  in += start_offset;
-  out += start_offset;
 
   // left prediction for top scan-line
-  if (row == 0) {
-    out[0] = in[0];
-    PredictLineLeft_NEON(in + 1, out + 1, width - 1);
-    row = 1;
-    in += stride;
-    out += stride;
-  }
+  out[0] = in[0];
+  PredictLineLeft_NEON(in + 1, out + 1, width - 1);
+  in += stride;
+  out += stride;
 
   // Filter line-by-line.
-  while (row < last_row) {
+  for (row = 1; row < height; ++row) {
     out[0] = in[0] - in[-stride];
     GradientPredictDirect_NEON(in + 1, in + 1 - stride, out + 1, width - 1);
-    ++row;
     in += stride;
     out += stride;
   }
@@ -199,8 +169,7 @@ static WEBP_INLINE void DoGradientFilter_NEON(const uint8_t* in,
 
 static void GradientFilter_NEON(const uint8_t* data, int width, int height,
                                 int stride, uint8_t* filtered_data) {
-  DoGradientFilter_NEON(data, width, height, stride, 0, height,
-                        filtered_data);
+  DoGradientFilter_NEON(data, width, height, stride, filtered_data);
 }
 
 #undef DCHECK
