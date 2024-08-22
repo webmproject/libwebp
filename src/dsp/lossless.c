@@ -107,14 +107,14 @@ static WEBP_INLINE uint32_t Select(uint32_t a, uint32_t b, uint32_t c) {
 //------------------------------------------------------------------------------
 // Predictors
 
-uint32_t VP8LPredictor0_C(const uint32_t* const left,
-                          const uint32_t* const top) {
+static uint32_t VP8LPredictor0_C(const uint32_t* const left,
+                                 const uint32_t* const top) {
   (void)top;
   (void)left;
   return ARGB_BLACK;
 }
-uint32_t VP8LPredictor1_C(const uint32_t* const left,
-                          const uint32_t* const top) {
+static uint32_t VP8LPredictor1_C(const uint32_t* const left,
+                                 const uint32_t* const top) {
   (void)top;
   return *left;
 }
