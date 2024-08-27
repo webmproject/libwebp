@@ -287,7 +287,7 @@ static uint64_t FinalHuffmanCost(const VP8LStreaks* const stats) {
   uint64_t retval = InitialHuffmanCost();
   // Second coefficient: Many zeros in the histogram are covered efficiently
   // by a run-length encode. Originally 2/8.
-  uint64_t retval_extra = stats->counts[0] * 1600 + 240 * stats->streaks[0][1];
+  uint32_t retval_extra = stats->counts[0] * 1600 + 240 * stats->streaks[0][1];
   // Second coefficient: Constant values are encoded less efficiently, but still
   // RLE'ed. Originally 6/8.
   retval_extra += stats->counts[1] * 2640 + 720 * stats->streaks[1][1];
@@ -296,7 +296,7 @@ static uint64_t FinalHuffmanCost(const VP8LStreaks* const stats) {
   retval_extra += 1840 * stats->streaks[0][0];
   // Originally 26/8.
   retval_extra += 3360 * stats->streaks[1][0];
-  return retval + (retval_extra << (LOG_2_PRECISION_BITS - 10));
+  return retval + ((uint64_t)retval_extra << (LOG_2_PRECISION_BITS - 10));
 }
 
 // Get the symbol entropy for the distribution 'population'.
