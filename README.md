@@ -42,7 +42,8 @@ See the [APIs documentation](doc/api.md), and API usage examples in the
 
 ## Bugs
 
-Please report all bugs to the issue tracker: https://issues.webmproject.org
+Please report all bugs to the [issue tracker](https://issues.webmproject.org).
+For security reports, select 'Security report' from the Template dropdown.
 
 Patches welcome! See [how to contribute](CONTRIBUTING.md).
 
