@@ -325,6 +325,9 @@ Per-frame options (only used for subsequent images input):
 -lossy ............... use lossy mode
 -q <float> ........... quality
 -m <int> ............. method to use
+-exact, -noexact ..... preserve or alter RGB values in transparent area
+                       (default: -noexact, may cause artifacts
+                                 with lossy animations)
 ```
 
 example: `img2webp -loop 2 in0.png -lossy in1.jpg -d 80 in2.tiff -o out.webp`

@@ -63,6 +63,10 @@ static void Help(void) {
   printf(" -lossy ............... use lossy mode\n");
   printf(" -q <float> ........... quality\n");
   printf(" -m <int> ............. method to use\n");
+  printf(" -exact, -noexact ..... preserve or alter RGB values in transparent "
+                                  "area\n"
+         "                        (default: -noexact, may cause artifacts\n"
+         "                                  with lossy animations)\n");
 
   printf("\n");
   printf("example: img2webp -loop 2 in0.png -lossy in1.jpg\n"
@@ -248,6 +252,10 @@ int main(int argc, const char* argv[]) {
           fprintf(stderr, "Invalid negative duration (%d)\n", duration);
           parse_error = 1;
         }
+      } else if (!strcmp(argv[c], "-exact")) {
+        config.exact = 1;
+      } else if (!strcmp(argv[c], "-noexact")) {
+        config.exact = 0;
       } else {
         parse_error = 1;   // shouldn't be here.
         fprintf(stderr, "Unknown option [%s]\n", argv[c]);

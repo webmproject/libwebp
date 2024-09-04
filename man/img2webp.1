@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH IMG2WEBP 1 "July 18, 2024"
+.TH IMG2WEBP 1 "September 3, 2024"
 .SH NAME
 img2webp \- create animated WebP file from a sequence of input images.
 .SH SYNOPSIS
@@ -88,6 +88,11 @@ Specify the compression factor between 0 and 100. The default is 75.
 Specify the compression method to use. This parameter controls the
 trade off between encoding speed and the compressed file size and quality.
 Possible values range from 0 to 6. Default value is 4.
+.TP
+.B \-exact, \-noexact
+Preserve or alter RGB values in transparent area. The default is
+\fB-noexact\fP, to help compressibility. Note \fB\-noexact\fP may cause
+artifacts in frames compressed with \fB\-lossy\fP.
 
 .SH EXIT STATUS
 If there were no problems during execution, \fBimg2webp\fP exits with the value
