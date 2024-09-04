@@ -59,8 +59,8 @@ static void Help(void) {
 
   printf("Per-frame options (only used for subsequent images input):\n");
   printf(" -d <int> ............. frame duration in ms (default: 100)\n");
-  printf(" -lossless  ........... use lossless mode (default)\n");
-  printf(" -lossy ... ........... use lossy mode\n");
+  printf(" -lossless ............ use lossless mode (default)\n");
+  printf(" -lossy ............... use lossy mode\n");
   printf(" -q <float> ........... quality\n");
   printf(" -m <int> ............. method to use\n");
 

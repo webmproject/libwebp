@@ -321,8 +321,8 @@ Per-frame options (only used for subsequent images input):
 
 ```
 -d <int> ............. frame duration in ms (default: 100)
--lossless  ........... use lossless mode (default)
--lossy ... ........... use lossy mode
+-lossless ............ use lossless mode (default)
+-lossy ............... use lossy mode
 -q <float> ........... quality
 -m <int> ............. method to use
 ```
