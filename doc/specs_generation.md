@@ -17,10 +17,11 @@ rubygems will install automatically. The following will apply inline CSS
 styling; an external stylesheet is not needed.
 
 ```shell
-$ kramdown doc/webp-lossless-bitstream-spec.txt --template \
-  doc/template.html --coderay-css style --coderay-line-numbers ' ' \
-  --coderay-default-lang c > \
-  doc/output/webp-lossless-bitstream-spec.html
+$ kramdown doc/webp-lossless-bitstream-spec.txt \
+  --template doc/template.html \
+  -x syntax-coderay --syntax-highlighter coderay \
+  --syntax-highlighter-opts "{default_lang: c, line_numbers: , css: style}" \
+  > doc/output/webp-lossless-bitstream-spec.html
 ```
 
 Optimally, use kramdown 0.13.7 or newer if syntax highlighting desired.
