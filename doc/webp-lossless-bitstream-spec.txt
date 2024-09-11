@@ -436,8 +436,8 @@ should be interpreted as an 8-bit two's complement number (that is: uint8 range
 
 The multiplication is to be done using more precision (with at least 16-bit
 precision). The sign extension property of the shift operation does not matter
-here; only the lowest 8 bits are used from the result, and there the sign
-extension shifting and unsigned shifting are consistent with each other.
+here; only the lowest 8 bits are used from the result, and in these bits, the
+sign extension shifting and unsigned shifting are consistent with each other.
 
 Now, we describe the contents of color transform data so that decoding can apply
 the inverse color transform and recover the original red and blue values. The
@@ -613,8 +613,8 @@ We use image data in five different roles:
   1. Color transform image: Created by `ColorTransformElement` values
      (defined in ["Color Transform"](#color-transform)) for different blocks of
      the image.
-  1. Color indexing image: An array of size `color_table_size` (up to 256 ARGB
-     values) storing the metadata for the color indexing transform (see
+  1. Color indexing image: An array of the size of `color_table_size` (up to
+     256 ARGB values) that stores metadata for the color indexing transform (see
      ["Color Indexing Transform"](#color-indexing-transform)).
 
 ### 5.2 Encoding of Image Data
