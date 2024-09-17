@@ -14,17 +14,24 @@
 //          Urvang Joshi (urvang@google.com)
 //          Vincent Rabaud (vrabaud@google.com)
 
+#include <assert.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "src/dsp/lossless.h"
 #include "src/dsp/lossless_common.h"
 #include "src/enc/vp8i_enc.h"
 #include "src/enc/vp8li_enc.h"
+#include "src/utils/utils.h"
+#include "src/webp/encode.h"
+#include "src/webp/format_constants.h"
+#include "src/webp/types.h"
 
 #define HISTO_SIZE (4 * 256)
 static const int64_t kSpatialPredictorBias = 15ll << LOG_2_PRECISION_BITS;
 static const int kPredLowEffort = 11;
 static const uint32_t kMaskAlpha = 0xff000000;
+static const int kNumPredModes = 14;
 
 // Mostly used to reduce code size + readability
 static WEBP_INLINE int GetMin(int a, int b) { return (a > b) ? b : a; }
@@ -305,17 +312,61 @@ static WEBP_INLINE void GetResidual(
   }
 }
 
-// Returns best predictor and updates the accumulated histogram.
+// Accessors to residual histograms.
+static WEBP_INLINE uint32_t* GetHistoArgb(uint32_t* const all_histos,
+                                          int mode) {
+  return &all_histos[mode * HISTO_SIZE];
+}
+
+static WEBP_INLINE const uint32_t* GetHistoArgbConst(
+    const uint32_t* const all_histos, int mode) {
+  return &all_histos[mode * HISTO_SIZE];
+}
+
+// Find and store the best predictor.
+static void GetBestPredictorForTile(const uint32_t* const all_argb, int tile_x,
+                                    int tile_y, int tiles_per_row,
+                                    uint32_t* accumulated_argb,
+                                    uint32_t* const modes) {
+  // Prediction modes of the left and above neighbor tiles.
+  const int left_mode =
+      (tile_x > 0) ? (modes[tile_y * tiles_per_row + tile_x - 1] >> 8) & 0xff
+                   : 0xff;
+  const int above_mode =
+      (tile_y > 0) ? (modes[(tile_y - 1) * tiles_per_row + tile_x] >> 8) & 0xff
+                   : 0xff;
+  int mode;
+  int64_t best_diff = WEBP_INT64_MAX;
+  uint32_t best_mode = 0;
+  const uint32_t* best_histo = GetHistoArgbConst(all_argb, best_mode);
+  for (mode = 0; mode < kNumPredModes; ++mode) {
+    const uint32_t* const histo_argb = GetHistoArgbConst(all_argb, mode);
+    const int64_t cur_diff = PredictionCostSpatialHistogram(
+        accumulated_argb, histo_argb, mode, left_mode, above_mode);
+
+    if (cur_diff < best_diff) {
+      best_histo = histo_argb;
+      best_diff = cur_diff;
+      best_mode = mode;
+    }
+  }
+  // Update the accumulated histogram.
+  VP8LAddVectorEq(best_histo, accumulated_argb, HISTO_SIZE);
+  modes[tile_y * tiles_per_row + tile_x] = ARGB_BLACK | (best_mode << 8);
+}
+
+// Computes the residuals for the different predictors.
 // If max_quantization > 1, assumes that near lossless processing will be
 // applied, quantizing residuals to multiples of quantization levels up to
 // max_quantization (the actual quantization level depends on smoothness near
 // the given pixel).
-static int GetBestPredictorForTile(
-    int width, int height, int tile_x, int tile_y, int bits,
-    uint32_t accumulated[HISTO_SIZE], uint32_t* const argb_scratch,
-    const uint32_t* const argb, int max_quantization, int exact,
-    int used_subtract_green, const uint32_t* const modes) {
-  const int kNumPredModes = 14;
+static void ComputeResidualsForTile(int width, int height, int tile_x,
+                                    int tile_y, int bits,
+                                    uint32_t* const all_argb,
+                                    uint32_t* const argb_scratch,
+                                    const uint32_t* const argb,
+                                    int max_quantization, int exact,
+                                    int used_subtract_green) {
   const int start_x = tile_x << bits;
   const int start_y = tile_y << bits;
   const int tile_size = 1 << bits;
@@ -329,34 +380,19 @@ static int GetBestPredictorForTile(
 #if (WEBP_NEAR_LOSSLESS == 1)
   const int context_width = max_x + have_left + (max_x < width - start_x);
 #endif
-  const int tiles_per_row = VP8LSubSampleSize(width, bits);
-  // Prediction modes of the left and above neighbor tiles.
-  const int left_mode = (tile_x > 0) ?
-      (modes[tile_y * tiles_per_row + tile_x - 1] >> 8) & 0xff : 0xff;
-  const int above_mode = (tile_y > 0) ?
-      (modes[(tile_y - 1) * tiles_per_row + tile_x] >> 8) & 0xff : 0xff;
   // The width of upper_row and current_row is one pixel larger than image width
   // to allow the top right pixel to point to the leftmost pixel of the next row
   // when at the right edge.
   uint32_t* upper_row = argb_scratch;
   uint32_t* current_row = upper_row + width + 1;
   uint8_t* const max_diffs = (uint8_t*)(current_row + width + 1);
-  int64_t best_diff = WEBP_INT64_MAX;
-  int best_mode = 0;
   int mode;
-  uint32_t histo_stack_1[HISTO_SIZE];
-  uint32_t histo_stack_2[HISTO_SIZE];
   // Need pointers to be able to swap arrays.
-  uint32_t* histo_argb = histo_stack_1;
-  uint32_t* best_histo = histo_stack_2;
   uint32_t residuals[1 << MAX_TRANSFORM_BITS];
-  assert(bits <= MAX_TRANSFORM_BITS);
   assert(max_x <= (1 << MAX_TRANSFORM_BITS));
-
   for (mode = 0; mode < kNumPredModes; ++mode) {
-    int64_t cur_diff;
     int relative_y;
-    memset(histo_argb, 0, sizeof(histo_stack_1));
+    uint32_t* const histo_argb = GetHistoArgb(all_argb, mode);
     if (start_y > 0) {
       // Read the row above the tile which will become the first upper_row.
       // Include a pixel to the left if it exists; include a pixel to the right
@@ -393,20 +429,7 @@ static int GetBestPredictorForTile(
         UpdateHisto(histo_argb, residuals[relative_x]);
       }
     }
-    cur_diff = PredictionCostSpatialHistogram(accumulated, histo_argb, mode,
-                                              left_mode, above_mode);
-
-    if (cur_diff < best_diff) {
-      uint32_t* tmp = histo_argb;
-      histo_argb = best_histo;
-      best_histo = tmp;
-      best_diff = cur_diff;
-      best_mode = mode;
-    }
   }
-
-  VP8LAddVectorEq(best_histo, accumulated, HISTO_SIZE);
-  return best_mode;
 }
 
 // Converts pixels of the image to residuals with respect to predictions.
@@ -536,6 +559,59 @@ static void OptimizeSampling(uint32_t* const image, int full_width,
   *best_bits_out = best_bits;
 }
 
+// Computes the best predictor image.
+// Finds the best predictors per tile. Once done, finds the best predictor image
+// sampling.
+// best_bits is set to 0 in case of error.
+static void GetBestPredictorsAndSampling(
+    int width, int height, const int bits, uint32_t* const argb_scratch,
+    const uint32_t* const argb, int max_quantization, int exact,
+    int used_subtract_green, const WebPPicture* const pic, int percent_range,
+    int* const percent, uint32_t* const all_modes, int* best_bits) {
+  const int tiles_per_row = VP8LSubSampleSize(width, bits);
+  const int tiles_per_col = VP8LSubSampleSize(height, bits);
+  // Compute the needed memory size for residual histograms and accumulated
+  // residual histograms.
+  const int num_argb = kNumPredModes * HISTO_SIZE;
+  const int num_accumulated_argb = HISTO_SIZE;
+  uint32_t* const raw_data = (uint32_t*)WebPSafeCalloc(
+      num_argb + num_accumulated_argb, sizeof(*raw_data));
+  uint32_t* const all_argb = raw_data;
+  uint32_t* const all_accumulated_argb = all_argb + num_argb;
+  const int percent_start = *percent;
+  int tile_x = 0, tile_y = 0;
+
+  *best_bits = 0;
+  if (raw_data == NULL) return;
+
+  while (tile_y < tiles_per_col) {
+    ComputeResidualsForTile(width, height, tile_x, tile_y, bits, all_argb,
+                            argb_scratch, argb, max_quantization, exact,
+                            used_subtract_green);
+    GetBestPredictorForTile(all_argb, tile_x, tile_y, tiles_per_row,
+                            all_accumulated_argb, all_modes);
+    // Reset the residuals.
+    memset(all_argb, 0, HISTO_SIZE * kNumPredModes * sizeof(*all_argb));
+
+    if (tile_x == (tiles_per_row - 1)) {
+      tile_x = 0;
+      ++tile_y;
+    } else {
+      ++tile_x;
+    }
+    if (tile_x == 0 &&
+        !WebPReportProgress(
+            pic, percent_start + percent_range * tile_y / tiles_per_col,
+            percent)) {
+      WebPSafeFree(raw_data);
+      return;
+    }
+  }
+  WebPSafeFree(raw_data);
+
+  OptimizeSampling(all_modes, width, height, bits, best_bits);
+}
+
 // Finds the best predictor for each tile, and converts the image to residuals
 // with respect to predictions. If near_lossless_quality < 100, applies
 // near lossless processing, shaving off more bits of residuals for lower
@@ -557,24 +633,10 @@ int VP8LResidualImage(int width, int height, int bits, int low_effort,
     }
     *best_bits = bits;
   } else {
-    int tile_y;
-    uint32_t histo[HISTO_SIZE] = { 0 };
-    for (tile_y = 0; tile_y < tiles_per_col; ++tile_y) {
-      int tile_x;
-      for (tile_x = 0; tile_x < tiles_per_row; ++tile_x) {
-        const int pred = GetBestPredictorForTile(
-            width, height, tile_x, tile_y, bits, histo, argb_scratch, argb,
-            max_quantization, exact, used_subtract_green, image);
-        image[tile_y * tiles_per_row + tile_x] = ARGB_BLACK | (pred << 8);
-      }
-
-      if (!WebPReportProgress(
-              pic, percent_start + percent_range * tile_y / tiles_per_col,
-              percent)) {
-        return 0;
-      }
-    }
-    OptimizeSampling(image, width, height, bits, best_bits);
+    GetBestPredictorsAndSampling(width, height, bits, argb_scratch, argb,
+                                 max_quantization, exact, used_subtract_green,
+                                 pic, percent_range, percent, image, best_bits);
+    if (*best_bits == 0) return 0;
   }
 
   CopyImageWithPrediction(width, height, *best_bits, image, argb_scratch, argb,
