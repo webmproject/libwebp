@@ -601,11 +601,11 @@ static void HistogramBuild(
 }
 
 // Copies the histograms and computes its bit_cost.
-static const uint16_t kInvalidHistogramSymbol = (uint16_t)(-1);
+static const uint32_t kInvalidHistogramSymbol = (uint32_t)(-1);
 static void HistogramCopyAndAnalyze(VP8LHistogramSet* const orig_histo,
                                     VP8LHistogramSet* const image_histo,
                                     int* const num_used,
-                                    uint16_t* const histogram_symbols) {
+                                    uint32_t* const histogram_symbols) {
   int i, cluster_id;
   int num_used_orig = *num_used;
   VP8LHistogram** const orig_histograms = orig_histo->histograms;
@@ -667,7 +667,7 @@ static void HistogramAnalyzeEntropyBin(VP8LHistogramSet* const image_histo,
 // 'combine_cost_factor' has to be divided by 100.
 static void HistogramCombineEntropyBin(
     VP8LHistogramSet* const image_histo, int* num_used,
-    const uint16_t* const clusters, uint16_t* const cluster_mappings,
+    const uint32_t* const clusters, uint16_t* const cluster_mappings,
     VP8LHistogram* cur_combo, const uint16_t* const bin_map, int num_bins,
     int32_t combine_cost_factor, int low_effort) {
   VP8LHistogram** const histograms = image_histo->histograms;
@@ -1070,7 +1070,7 @@ static int HistogramCombineStochastic(VP8LHistogramSet* const image_histo,
 // Note: we assume that out[]->bit_cost_ is already up-to-date.
 static void HistogramRemap(const VP8LHistogramSet* const in,
                            VP8LHistogramSet* const out,
-                           uint16_t* const symbols) {
+                           uint32_t* const symbols) {
   int i;
   VP8LHistogram** const in_histo = in->histograms;
   VP8LHistogram** const out_histo = out->histograms;
@@ -1131,10 +1131,10 @@ static int32_t GetCombineCostFactor(int histo_size, int quality) {
 // assign the smallest possible clusters values.
 static void OptimizeHistogramSymbols(const VP8LHistogramSet* const set,
                                      uint16_t* const cluster_mappings,
-                                     int num_clusters,
+                                     uint32_t num_clusters,
                                      uint16_t* const cluster_mappings_tmp,
-                                     uint16_t* const symbols) {
-  int i, cluster_max;
+                                     uint32_t* const symbols) {
+  uint32_t i, cluster_max;
   int do_continue = 1;
   // First, assign the lowest cluster to each pixel.
   while (do_continue) {
@@ -1158,7 +1158,7 @@ static void OptimizeHistogramSymbols(const VP8LHistogramSet* const set,
          set->max_size * sizeof(*cluster_mappings_tmp));
   assert(cluster_mappings[0] == 0);
   // Re-map the ids.
-  for (i = 0; i < set->max_size; ++i) {
+  for (i = 0; i < (uint32_t)set->max_size; ++i) {
     int cluster;
     if (symbols[i] == kInvalidHistogramSymbol) continue;
     cluster = cluster_mappings[symbols[i]];
@@ -1172,7 +1172,7 @@ static void OptimizeHistogramSymbols(const VP8LHistogramSet* const set,
 
   // Make sure all cluster values are used.
   cluster_max = 0;
-  for (i = 0; i < set->max_size; ++i) {
+  for (i = 0; i < (uint32_t)set->max_size; ++i) {
     if (symbols[i] == kInvalidHistogramSymbol) continue;
     if (symbols[i] <= cluster_max) continue;
     ++cluster_max;
@@ -1195,7 +1195,7 @@ int VP8LGetHistoImageSymbols(int xsize, int ysize,
                              int low_effort, int histogram_bits, int cache_bits,
                              VP8LHistogramSet* const image_histo,
                              VP8LHistogram* const tmp_histo,
-                             uint16_t* const histogram_symbols,
+                             uint32_t* const histogram_symbols,
                              const WebPPicture* const pic, int percent_range,
                              int* const percent) {
   const int histo_xsize =

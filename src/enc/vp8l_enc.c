@@ -664,11 +664,12 @@ static WEBP_INLINE void WriteHuffmanCodeWithExtraBits(
   VP8LPutBits(bw, (bits << depth) | symbol, depth + n_bits);
 }
 
-static int StoreImageToBitMask(
-    VP8LBitWriter* const bw, int width, int histo_bits,
-    const VP8LBackwardRefs* const refs,
-    const uint16_t* histogram_symbols,
-    const HuffmanTreeCode* const huffman_codes, const WebPPicture* const pic) {
+static int StoreImageToBitMask(VP8LBitWriter* const bw, int width,
+                               int histo_bits,
+                               const VP8LBackwardRefs* const refs,
+                               const uint32_t* histogram_symbols,
+                               const HuffmanTreeCode* const huffman_codes,
+                               const WebPPicture* const pic) {
   const int histo_xsize = histo_bits ? VP8LSubSampleSize(width, histo_bits) : 1;
   const int tile_mask = (histo_bits == 0) ? 0 : -(1 << histo_bits);
   // x and y trace the position in the image.
@@ -676,7 +677,7 @@ static int StoreImageToBitMask(
   int y = 0;
   int tile_x = x & tile_mask;
   int tile_y = y & tile_mask;
-  int histogram_ix = histogram_symbols[0];
+  int histogram_ix = (histogram_symbols[0] >> 8) & 0xffff;
   const HuffmanTreeCode* codes = huffman_codes + 5 * histogram_ix;
   VP8LRefsCursor c = VP8LRefsCursorInit(refs);
   while (VP8LRefsCursorOk(&c)) {
@@ -684,8 +685,10 @@ static int StoreImageToBitMask(
     if ((tile_x != (x & tile_mask)) || (tile_y != (y & tile_mask))) {
       tile_x = x & tile_mask;
       tile_y = y & tile_mask;
-      histogram_ix = histogram_symbols[(y >> histo_bits) * histo_xsize +
-                                       (x >> histo_bits)];
+      histogram_ix = (histogram_symbols[(y >> histo_bits) * histo_xsize +
+                                        (x >> histo_bits)] >>
+                      8) &
+                     0xffff;
       codes = huffman_codes + 5 * histogram_ix;
     }
     if (PixOrCopyIsLiteral(v)) {
@@ -741,7 +744,7 @@ static int EncodeImageNoHuffman(VP8LBitWriter* const bw,
   VP8LBackwardRefs* refs;
   HuffmanTreeToken* tokens = NULL;
   HuffmanTreeCode huffman_codes[5] = {{0, NULL, NULL}};
-  const uint16_t histogram_symbols[1] = {0};  // only one tree, one symbol
+  const uint32_t histogram_symbols[1] = {0};  // only one tree, one symbol
   int cache_bits = 0;
   VP8LHistogramSet* histogram_image = NULL;
   HuffmanTree* const huff_tree = (HuffmanTree*)WebPSafeMalloc(
@@ -834,14 +837,14 @@ static int EncodeImageInternal(
   int percent_start = *percent;
   VP8LHistogramSet* histogram_image = NULL;
   VP8LHistogram* tmp_histo = NULL;
-  int histogram_image_size = 0;
+  uint32_t i, histogram_image_size = 0;
   size_t bit_array_size = 0;
   HuffmanTree* const huff_tree = (HuffmanTree*)WebPSafeMalloc(
       3ULL * CODE_LENGTH_CODES, sizeof(*huff_tree));
   HuffmanTreeToken* tokens = NULL;
   HuffmanTreeCode* huffman_codes = NULL;
-  uint16_t* const histogram_symbols = (uint16_t*)WebPSafeMalloc(
-      histogram_image_xysize, sizeof(*histogram_symbols));
+  uint32_t* const histogram_argb = (uint32_t*)WebPSafeMalloc(
+      histogram_image_xysize, sizeof(*histogram_argb));
   int sub_configs_idx;
   int cache_bits_init, write_histogram_image;
   VP8LBitWriter bw_init = *bw, bw_best;
@@ -860,7 +863,7 @@ static int EncodeImageInternal(
   }
 
   // Make sure we can allocate the different objects.
-  if (huff_tree == NULL || histogram_symbols == NULL ||
+  if (huff_tree == NULL || histogram_argb == NULL ||
       !VP8LHashChainInit(&hash_chain_histogram, histogram_image_xysize)) {
     WebPEncodingSetError(pic, VP8_ENC_ERROR_OUT_OF_MEMORY);
     goto Error;
@@ -923,7 +926,7 @@ static int EncodeImageInternal(
       if (!VP8LGetHistoImageSymbols(
               width, height, &refs_array[i_cache], quality, low_effort,
               histogram_bits, cache_bits_tmp, histogram_image, tmp_histo,
-              histogram_symbols, pic, i_percent_range, percent)) {
+              histogram_argb, pic, i_percent_range, percent)) {
         goto Error;
       }
       // Create Huffman bit lengths and codes for each histogram image.
@@ -956,26 +959,17 @@ static int EncodeImageInternal(
       }
 
       // Huffman image + meta huffman.
+      histogram_image_size = 0;
+      for (i = 0; i < histogram_image_xysize; ++i) {
+        if (histogram_argb[i] >= histogram_image_size) {
+          histogram_image_size = histogram_argb[i] + 1;
+        }
+        histogram_argb[i] <<= 8;
+      }
+
       write_histogram_image = (histogram_image_size > 1);
       VP8LPutBits(bw, write_histogram_image, 1);
       if (write_histogram_image) {
-        uint32_t* const histogram_argb = (uint32_t*)WebPSafeMalloc(
-            histogram_image_xysize, sizeof(*histogram_argb));
-        int max_index = 0;
-        uint32_t i;
-        if (histogram_argb == NULL) {
-          WebPEncodingSetError(pic, VP8_ENC_ERROR_OUT_OF_MEMORY);
-          goto Error;
-        }
-        for (i = 0; i < histogram_image_xysize; ++i) {
-          const int symbol_index = histogram_symbols[i] & 0xffff;
-          histogram_argb[i] = (symbol_index << 8);
-          if (symbol_index >= max_index) {
-            max_index = symbol_index + 1;
-          }
-        }
-        histogram_image_size = max_index;
-
         VP8LPutBits(bw, histogram_bits - 2, 3);
         i_percent_range = i_remaining_percent / 2;
         i_remaining_percent -= i_percent_range;
@@ -984,15 +978,12 @@ static int EncodeImageInternal(
                 VP8LSubSampleSize(width, histogram_bits),
                 VP8LSubSampleSize(height, histogram_bits), quality, low_effort,
                 pic, i_percent_range, percent)) {
-          WebPSafeFree(histogram_argb);
           goto Error;
         }
-        WebPSafeFree(histogram_argb);
       }
 
       // Store Huffman codes.
       {
-        int i;
         int max_tokens = 0;
         // Find maximum number of symbols for the huffman tree-set.
         for (i = 0; i < 5 * histogram_image_size; ++i) {
@@ -1015,7 +1006,7 @@ static int EncodeImageInternal(
       // Store actual literals.
       hdr_size_tmp = (int)(VP8LBitWriterNumBytes(bw) - init_byte_position);
       if (!StoreImageToBitMask(bw, width, histogram_bits, &refs_array[i_cache],
-                               histogram_symbols, huffman_codes, pic)) {
+                               histogram_argb, huffman_codes, pic)) {
         goto Error;
       }
       // Keep track of the smallest image so far.
@@ -1052,7 +1043,7 @@ static int EncodeImageInternal(
     WebPSafeFree(huffman_codes->codes);
     WebPSafeFree(huffman_codes);
   }
-  WebPSafeFree(histogram_symbols);
+  WebPSafeFree(histogram_argb);
   VP8LBitWriterWipeOut(&bw_best);
   return (pic->error_code == VP8_ENC_OK);
 }
