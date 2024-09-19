@@ -117,6 +117,10 @@ int VP8LColorSpaceTransform(int width, int height, int bits, int quality,
                             const WebPPicture* const pic, int percent_range,
                             int* const percent, int* const best_bits);
 
+void VP8LOptimizeSampling(uint32_t* const image, int full_width,
+                          int full_height, int bits, int max_bits,
+                          int* best_bits_out);
+
 //------------------------------------------------------------------------------
 
 #ifdef __cplusplus

@@ -496,15 +496,16 @@ static void CopyImageWithPrediction(int width, int height, int bits,
 
 // Checks whether 'image' can be subsampled by finding the biggest power of 2
 // squares (defined by 'best_bits') of uniform value it is made out of.
-static void OptimizeSampling(uint32_t* const image, int full_width,
-                             int full_height, int bits, int* best_bits_out) {
+void VP8LOptimizeSampling(uint32_t* const image, int full_width,
+                          int full_height, int bits, int max_bits,
+                          int* best_bits_out) {
   int width = VP8LSubSampleSize(full_width, bits);
   int height = VP8LSubSampleSize(full_height, bits);
   int old_width, x, y, square_size;
   int best_bits = bits;
   *best_bits_out = bits;
   // Check rows first.
-  while (best_bits < MAX_TRANSFORM_BITS) {
+  while (best_bits < max_bits) {
     const int new_square_size = 1 << (best_bits + 1 - bits);
     int is_good = 1;
     square_size = 1 << (best_bits - bits);
@@ -609,7 +610,8 @@ static void GetBestPredictorsAndSampling(
   }
   WebPSafeFree(raw_data);
 
-  OptimizeSampling(all_modes, width, height, bits, best_bits);
+  VP8LOptimizeSampling(all_modes, width, height, bits, MAX_TRANSFORM_BITS,
+                       best_bits);
 }
 
 // Finds the best predictor for each tile, and converts the image to residuals
@@ -923,6 +925,7 @@ int VP8LColorSpaceTransform(int width, int height, int bits, int quality,
       return 0;
     }
   }
-  OptimizeSampling(image, width, height, bits, best_bits);
+  VP8LOptimizeSampling(image, width, height, bits, MAX_TRANSFORM_BITS,
+                       best_bits);
   return 1;
 }

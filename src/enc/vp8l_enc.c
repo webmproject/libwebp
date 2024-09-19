@@ -827,12 +827,12 @@ static int EncodeImageInternal(
     VP8LBitWriter* const bw, const uint32_t* const argb,
     VP8LHashChain* const hash_chain, VP8LBackwardRefs refs_array[4], int width,
     int height, int quality, int low_effort, const CrunchConfig* const config,
-    int* cache_bits, int histogram_bits, size_t init_byte_position,
+    int* cache_bits, int histogram_bits_in, size_t init_byte_position,
     int* const hdr_size, int* const data_size, const WebPPicture* const pic,
     int percent_range, int* const percent) {
   const uint32_t histogram_image_xysize =
-      VP8LSubSampleSize(width, histogram_bits) *
-      VP8LSubSampleSize(height, histogram_bits);
+      VP8LSubSampleSize(width, histogram_bits_in) *
+      VP8LSubSampleSize(height, histogram_bits_in);
   int remaining_percent = percent_range;
   int percent_start = *percent;
   VP8LHistogramSet* histogram_image = NULL;
@@ -851,8 +851,8 @@ static int EncodeImageInternal(
   int hdr_size_tmp;
   VP8LHashChain hash_chain_histogram;  // histogram image hash chain
   size_t bw_size_best = ~(size_t)0;
-  assert(histogram_bits >= MIN_HUFFMAN_BITS);
-  assert(histogram_bits <= MAX_HUFFMAN_BITS);
+  assert(histogram_bits_in >= MIN_HUFFMAN_BITS);
+  assert(histogram_bits_in <= MAX_HUFFMAN_BITS);
   assert(hdr_size != NULL);
   assert(data_size != NULL);
 
@@ -905,6 +905,7 @@ static int EncodeImageInternal(
 
     for (i_cache = 0; i_cache < (sub_config->do_no_cache_ ? 2 : 1); ++i_cache) {
       const int cache_bits_tmp = (i_cache == 0) ? cache_bits_best : 0;
+      int histogram_bits = histogram_bits_in;
       // Speed-up: no need to study the no-cache case if it was already studied
       // in i_cache == 0.
       if (i_cache == 1 && cache_bits_best == 0) break;
@@ -970,6 +971,8 @@ static int EncodeImageInternal(
       write_histogram_image = (histogram_image_size > 1);
       VP8LPutBits(bw, write_histogram_image, 1);
       if (write_histogram_image) {
+        VP8LOptimizeSampling(histogram_argb, width, height, histogram_bits_in,
+                             MAX_HUFFMAN_BITS, &histogram_bits);
         VP8LPutBits(bw, histogram_bits - 2, 3);
         i_percent_range = i_remaining_percent / 2;
         i_remaining_percent -= i_percent_range;
