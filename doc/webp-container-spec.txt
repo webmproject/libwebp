@@ -525,7 +525,7 @@ Disposal method (D): 1 bit
     not present, standard RGB (sRGB) is to be assumed. (Note that sRGB also
     needs to be linearized due to a gamma of ~2.2.)
 
-Frame Data: _Chunk Size_ - `16` bytes
+Frame Data: _Chunk Size_ bytes - `16`
 
 : Consists of:
 
@@ -616,7 +616,7 @@ Compression method (C): 2 bits
     * `0`: No compression.
     * `1`: Compressed using the WebP lossless format.
 
-Alpha bitstream: _Chunk Size_ - `1` bytes
+Alpha bitstream: _Chunk Size_ bytes - `1`
 
 : Encoded alpha bitstream.
 
