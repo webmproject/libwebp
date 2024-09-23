@@ -131,7 +131,7 @@ Chunk Payload: _Chunk Size_ bytes
 : The data payload. If _Chunk Size_ is odd, a single padding byte -- which MUST
   be `0` to conform with RIFF -- is added.
 
-**Note:** RIFF has a convention that all-uppercase chunk FourCCs are standard
+**Note**: RIFF has a convention that all-uppercase chunk FourCCs are standard
 chunks that apply to any RIFF file format, while FourCCs specific to a file
 format are all lowercase. WebP does not follow this convention.
 
@@ -220,7 +220,7 @@ use another conversion method, but visual results may differ among decoders.
 Simple File Format (Lossless)
 -----------------------------
 
-**Note:** Older readers may not support files using the lossless format.
+**Note**: Older readers may not support files using the lossless format.
 
 This layout SHOULD be used if the image requires _lossless_ encoding (with an
 optional transparency channel) and does not require advanced features provided
@@ -262,7 +262,7 @@ and height of the canvas.
 Extended File Format
 --------------------
 
-**Note:** Older readers may not support files using the extended format.
+**Note**: Older readers may not support files using the extended format.
 
 An extended format file consists of:
 
@@ -290,12 +290,12 @@ up of:
 For an _animated image_, the _image data_ consists of multiple frames. More
 details about frames can be found in the [Animation](#animation) section.
 
-All chunks necessary for reconstruction and color correction, that is 'VP8X',
-'ICCP', 'ANIM', 'ANMF', 'ALPH', 'VP8 ' and 'VP8L', MUST appear in the order
+All chunks necessary for reconstruction and color correction, that is, 'VP8X',
+'ICCP', 'ANIM', 'ANMF', 'ALPH', 'VP8 ', and 'VP8L', MUST appear in the order
 described earlier. Readers SHOULD fail when chunks necessary for reconstruction
 and color correction are out of order.
 
-[Metadata](#metadata) and [unknown](#unknown-chunks) chunks MAY appear out of
+[Metadata](#metadata) and [unknown chunks](#unknown-chunks) MAY appear out of
 order.
 
 **Rationale:** The chunks necessary for reconstruction should appear first in
@@ -401,7 +401,7 @@ Background Color: 32 bits (_uint32_)
   around the frames, as well as the transparent pixels of the first frame.
   The background color is also used when the Disposal method is `1`.
 
-**Note**:
+**Notes**:
 
   * The background color MAY contain a non-opaque alpha value, even if the
     _Alpha_ flag in the ['VP8X' Chunk](#extended_header) is unset.
