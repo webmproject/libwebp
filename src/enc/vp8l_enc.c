@@ -31,6 +31,9 @@
 // Maximum number of histogram images (sub-blocks).
 #define MAX_HUFF_IMAGE_SIZE       2600
 #define MAX_HUFFMAN_BITS (MIN_HUFFMAN_BITS + (1 << NUM_HUFFMAN_BITS) - 1)
+// Empirical value for which it becomes too computationally expensive to
+// compute the best predictor image.
+#define MAX_PREDICTOR_IMAGE_SIZE (1 << 14)
 
 // -----------------------------------------------------------------------------
 // Palette
@@ -232,17 +235,33 @@ static int AnalyzeEntropy(const uint32_t* argb,
   }
 }
 
+// Clamp histogram and transform bits.
+static int ClampBits(int width, int height, int bits, int min_bits,
+                     int max_bits, int image_size_max) {
+  int image_size;
+  bits = (bits < min_bits) ? min_bits : (bits > max_bits) ? max_bits : bits;
+  image_size = VP8LSubSampleSize(width, bits) * VP8LSubSampleSize(height, bits);
+  while (bits < max_bits && image_size > image_size_max) {
+    ++bits;
+    image_size =
+        VP8LSubSampleSize(width, bits) * VP8LSubSampleSize(height, bits);
+  }
+  // In case the bits reduce the image too much, choose the smallest value
+  // setting the histogram image size to 1.
+  while (bits > min_bits && image_size == 1) {
+    image_size = VP8LSubSampleSize(width, bits - 1) *
+                 VP8LSubSampleSize(height, bits - 1);
+    if (image_size != 1) break;
+    --bits;
+  }
+  return bits;
+}
+
 static int GetHistoBits(int method, int use_palette, int width, int height) {
   // Make tile size a function of encoding method (Range: 0 to 6).
-  int histo_bits = (use_palette ? 9 : 7) - method;
-  while (1) {
-    const int huff_image_size = VP8LSubSampleSize(width, histo_bits) *
-                                VP8LSubSampleSize(height, histo_bits);
-    if (huff_image_size <= MAX_HUFF_IMAGE_SIZE) break;
-    ++histo_bits;
-  }
-  return (histo_bits < MIN_HUFFMAN_BITS) ? MIN_HUFFMAN_BITS :
-         (histo_bits > MAX_HUFFMAN_BITS) ? MAX_HUFFMAN_BITS : histo_bits;
+  const int histo_bits = (use_palette ? 9 : 7) - method;
+  return ClampBits(width, height, histo_bits, MIN_HUFFMAN_BITS,
+                   MAX_HUFFMAN_BITS, MAX_HUFF_IMAGE_SIZE);
 }
 
 static int GetTransformBits(int method, int histo_bits) {
@@ -1065,14 +1084,19 @@ static int ApplyPredictFilter(VP8LEncoder* const enc, int width, int height,
                               int quality, int low_effort,
                               int used_subtract_green, VP8LBitWriter* const bw,
                               int percent_range, int* const percent) {
-  const int min_bits = enc->predictor_transform_bits_;
   int best_bits;
-  // we disable near-lossless quantization if palette is used.
   const int near_lossless_strength =
       enc->use_palette_ ? 100 : enc->config_->near_lossless;
+  const int max_bits = ClampBits(width, height, enc->predictor_transform_bits_,
+                                 MIN_TRANSFORM_BITS, MAX_TRANSFORM_BITS,
+                                 MAX_PREDICTOR_IMAGE_SIZE);
+  const int min_bits = ClampBits(
+      width, height,
+      max_bits - 2 * (enc->config_->method > 4 ? enc->config_->method - 4 : 0),
+      MIN_TRANSFORM_BITS, MAX_TRANSFORM_BITS, MAX_PREDICTOR_IMAGE_SIZE);
 
-  if (!VP8LResidualImage(width, height, min_bits, low_effort, enc->argb_,
-                         enc->argb_scratch_, enc->transform_data_,
+  if (!VP8LResidualImage(width, height, min_bits, max_bits, low_effort,
+                         enc->argb_, enc->argb_scratch_, enc->transform_data_,
                          near_lossless_strength, enc->config_->exact,
                          used_subtract_green, enc->pic_, percent_range / 2,
                          percent, &best_bits)) {
@@ -1195,14 +1219,10 @@ static int AllocateTransformBuffer(VP8LEncoder* const enc, int width,
       enc->use_predict_ ? (width + 1) * 2 + (width * 2 + sizeof(uint32_t) - 1) /
                                                 sizeof(uint32_t)
                         : 0;
-  const int min_transform_bits =
-      (enc->predictor_transform_bits_ < enc->cross_color_transform_bits_)
-          ? enc->predictor_transform_bits_
-          : enc->cross_color_transform_bits_;
   const uint64_t transform_data_size =
       (enc->use_predict_ || enc->use_cross_color_)
-          ? (uint64_t)VP8LSubSampleSize(width, min_transform_bits) *
-                VP8LSubSampleSize(height, min_transform_bits)
+          ? (uint64_t)VP8LSubSampleSize(width, MIN_TRANSFORM_BITS) *
+                VP8LSubSampleSize(height, MIN_TRANSFORM_BITS)
           : 0;
   const uint64_t max_alignment_in_words =
       (WEBP_ALIGN_CST + sizeof(uint32_t) - 1) / sizeof(uint32_t);

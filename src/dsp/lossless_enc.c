@@ -336,6 +336,21 @@ static uint64_t CombinedShannonEntropy_C(const uint32_t X[256],
   return retval;
 }
 
+static uint64_t ShannonEntropy_C(const uint32_t* X, int n) {
+  int i;
+  uint64_t retval = 0;
+  uint32_t sumX = 0;
+  for (i = 0; i < n; ++i) {
+    const int x = X[i];
+    if (x != 0) {
+      sumX += x;
+      retval += VP8LFastSLog2(x);
+    }
+  }
+  retval = VP8LFastSLog2(sumX) - retval;
+  return retval;
+}
+
 void VP8LBitEntropyInit(VP8LBitEntropy* const entropy) {
   entropy->entropy = 0;
   entropy->sum = 0;
@@ -698,6 +713,7 @@ VP8LFastSLog2SlowFunc VP8LFastSLog2Slow;
 VP8LCostFunc VP8LExtraCost;
 VP8LCostCombinedFunc VP8LExtraCostCombined;
 VP8LCombinedShannonEntropyFunc VP8LCombinedShannonEntropy;
+VP8LShannonEntropyFunc VP8LShannonEntropy;
 
 VP8LGetEntropyUnrefinedFunc VP8LGetEntropyUnrefined;
 VP8LGetCombinedEntropyUnrefinedFunc VP8LGetCombinedEntropyUnrefined;
@@ -737,6 +753,7 @@ WEBP_DSP_INIT_FUNC(VP8LEncDspInit) {
   VP8LExtraCost = ExtraCost_C;
   VP8LExtraCostCombined = ExtraCostCombined_C;
   VP8LCombinedShannonEntropy = CombinedShannonEntropy_C;
+  VP8LShannonEntropy = ShannonEntropy_C;
 
   VP8LGetEntropyUnrefined = GetEntropyUnrefined_C;
   VP8LGetCombinedEntropyUnrefined = GetCombinedEntropyUnrefined_C;
@@ -826,6 +843,7 @@ WEBP_DSP_INIT_FUNC(VP8LEncDspInit) {
   assert(VP8LExtraCost != NULL);
   assert(VP8LExtraCostCombined != NULL);
   assert(VP8LCombinedShannonEntropy != NULL);
+  assert(VP8LShannonEntropy != NULL);
   assert(VP8LGetEntropyUnrefined != NULL);
   assert(VP8LGetCombinedEntropyUnrefined != NULL);
   assert(VP8LAddVector != NULL);

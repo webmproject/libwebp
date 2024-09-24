@@ -183,10 +183,12 @@ typedef uint32_t (*VP8LCostCombinedFunc)(const uint32_t* X, const uint32_t* Y,
                                          int length);
 typedef uint64_t (*VP8LCombinedShannonEntropyFunc)(const uint32_t X[256],
                                                    const uint32_t Y[256]);
+typedef uint64_t (*VP8LShannonEntropyFunc)(const uint32_t* X, int length);
 
 extern VP8LCostFunc VP8LExtraCost;
 extern VP8LCostCombinedFunc VP8LExtraCostCombined;
 extern VP8LCombinedShannonEntropyFunc VP8LCombinedShannonEntropy;
+extern VP8LShannonEntropyFunc VP8LShannonEntropy;
 
 typedef struct {        // small struct to hold counters
   int counts[2];        // index: 0=zero streak, 1=non-zero streak
