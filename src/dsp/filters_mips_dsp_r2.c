@@ -26,8 +26,9 @@
 
 #define DCHECK(in, out)                                                        \
   do {                                                                         \
-    assert(in != NULL);                                                        \
-    assert(out != NULL);                                                       \
+    assert((in) != NULL);                                                      \
+    assert((out) != NULL);                                                     \
+    assert((in) != (out));                                                     \
     assert(width > 0);                                                         \
     assert(height > 0);                                                        \
     assert(stride >= width);                                                   \
@@ -101,7 +102,8 @@
     );                                                                         \
   } while (0)
 
-static WEBP_INLINE void PredictLine_MIPSdspR2(const uint8_t* src, uint8_t* dst,
+static WEBP_INLINE void PredictLine_MIPSdspR2(const uint8_t* WEBP_RESTRICT src,
+                                              uint8_t* WEBP_RESTRICT dst,
                                               int length) {
   DO_PREDICT_LINE(src, dst, length, 0);
 }
@@ -191,9 +193,9 @@ static WEBP_INLINE void PredictLine_MIPSdspR2(const uint8_t* src, uint8_t* dst,
     }                                                                          \
   } while (0)
 
-static WEBP_INLINE void DoHorizontalFilter_MIPSdspR2(const uint8_t* in,
-                                                     int width, int height,
-                                                     int stride, uint8_t* out) {
+static WEBP_INLINE void DoHorizontalFilter_MIPSdspR2(
+    const uint8_t* WEBP_RESTRICT in, int width, int height, int stride,
+    uint8_t* WEBP_RESTRICT out) {
   const uint8_t* preds = in;
   int row;
   DCHECK(in, out);
@@ -210,9 +212,9 @@ static WEBP_INLINE void DoHorizontalFilter_MIPSdspR2(const uint8_t* in,
 }
 #undef FILTER_LINE_BY_LINE
 
-static void HorizontalFilter_MIPSdspR2(const uint8_t* data,
-                                       int width, int height,
-                                       int stride, uint8_t* filtered_data) {
+static void HorizontalFilter_MIPSdspR2(const uint8_t* WEBP_RESTRICT data,
+                                       int width, int height, int stride,
+                                       uint8_t* WEBP_RESTRICT filtered_data) {
   DoHorizontalFilter_MIPSdspR2(data, width, height, stride, filtered_data);
 }
 
@@ -228,9 +230,9 @@ static void HorizontalFilter_MIPSdspR2(const uint8_t* data,
     }                                                                          \
   } while (0)
 
-static WEBP_INLINE void DoVerticalFilter_MIPSdspR2(const uint8_t* in,
-                                                   int width, int height,
-                                                   int stride, uint8_t* out) {
+static WEBP_INLINE void DoVerticalFilter_MIPSdspR2(
+    const uint8_t* WEBP_RESTRICT in, int width, int height, int stride,
+    uint8_t* WEBP_RESTRICT out) {
   const uint8_t* preds = in;
   int row;
   DCHECK(in, out);
@@ -247,8 +249,9 @@ static WEBP_INLINE void DoVerticalFilter_MIPSdspR2(const uint8_t* in,
 }
 #undef FILTER_LINE_BY_LINE
 
-static void VerticalFilter_MIPSdspR2(const uint8_t* data, int width, int height,
-                                     int stride, uint8_t* filtered_data) {
+static void VerticalFilter_MIPSdspR2(const uint8_t* WEBP_RESTRICT data,
+                                     int width, int height, int stride,
+                                     uint8_t* WEBP_RESTRICT filtered_data) {
   DoVerticalFilter_MIPSdspR2(data, width, height, stride, filtered_data);
 }
 
@@ -284,9 +287,9 @@ static int GradientPredictor_MIPSdspR2(uint8_t a, uint8_t b, uint8_t c) {
     }                                                                          \
   } while (0)
 
-static void DoGradientFilter_MIPSdspR2(const uint8_t* in,
+static void DoGradientFilter_MIPSdspR2(const uint8_t* WEBP_RESTRICT in,
                                        int width, int height, int stride,
-                                       uint8_t* out) {
+                                       uint8_t* WEBP_RESTRICT out) {
   const uint8_t* preds = in;
   int row;
   DCHECK(in, out);
@@ -303,8 +306,9 @@ static void DoGradientFilter_MIPSdspR2(const uint8_t* in,
 }
 #undef FILTER_LINE_BY_LINE
 
-static void GradientFilter_MIPSdspR2(const uint8_t* data, int width, int height,
-                                     int stride, uint8_t* filtered_data) {
+static void GradientFilter_MIPSdspR2(const uint8_t* WEBP_RESTRICT data,
+                                     int width, int height, int stride,
+                                     uint8_t* WEBP_RESTRICT filtered_data) {
   DoGradientFilter_MIPSdspR2(data, width, height, stride, filtered_data);
 }
 

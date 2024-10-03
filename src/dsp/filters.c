@@ -23,14 +23,16 @@
   do {                                                                         \
     assert((in) != NULL);                                                      \
     assert((out) != NULL);                                                     \
+    assert((in) != (out));                                                     \
     assert(width > 0);                                                         \
     assert(height > 0);                                                        \
     assert(stride >= width);                                                   \
   } while (0)
 
 #if !WEBP_NEON_OMIT_C_CODE
-static WEBP_INLINE void PredictLine_C(const uint8_t* src, const uint8_t* pred,
-                                      uint8_t* dst, int length) {
+static WEBP_INLINE void PredictLine_C(const uint8_t* WEBP_RESTRICT src,
+                                      const uint8_t* WEBP_RESTRICT pred,
+                                      uint8_t* WEBP_RESTRICT dst, int length) {
   int i;
   for (i = 0; i < length; ++i) dst[i] = (uint8_t)(src[i] - pred[i]);
 }
@@ -38,9 +40,9 @@ static WEBP_INLINE void PredictLine_C(const uint8_t* src, const uint8_t* pred,
 //------------------------------------------------------------------------------
 // Horizontal filter.
 
-static WEBP_INLINE void DoHorizontalFilter_C(const uint8_t* in,
+static WEBP_INLINE void DoHorizontalFilter_C(const uint8_t* WEBP_RESTRICT in,
                                              int width, int height, int stride,
-                                             uint8_t* out) {
+                                             uint8_t* WEBP_RESTRICT out) {
   const uint8_t* preds = in;
   int row;
   DCHECK(in, out);
@@ -66,9 +68,9 @@ static WEBP_INLINE void DoHorizontalFilter_C(const uint8_t* in,
 //------------------------------------------------------------------------------
 // Vertical filter.
 
-static WEBP_INLINE void DoVerticalFilter_C(const uint8_t* in,
+static WEBP_INLINE void DoVerticalFilter_C(const uint8_t* WEBP_RESTRICT in,
                                            int width, int height, int stride,
-                                           uint8_t* out) {
+                                           uint8_t* WEBP_RESTRICT out) {
   const uint8_t* preds = in;
   int row;
   DCHECK(in, out);
@@ -99,9 +101,9 @@ static WEBP_INLINE int GradientPredictor_C(uint8_t a, uint8_t b, uint8_t c) {
 }
 
 #if !WEBP_NEON_OMIT_C_CODE
-static WEBP_INLINE void DoGradientFilter_C(const uint8_t* in,
+static WEBP_INLINE void DoGradientFilter_C(const uint8_t* WEBP_RESTRICT in,
                                            int width, int height, int stride,
-                                           uint8_t* out) {
+                                           uint8_t* WEBP_RESTRICT out) {
   const uint8_t* preds = in;
   int row;
   DCHECK(in, out);
@@ -136,18 +138,21 @@ static WEBP_INLINE void DoGradientFilter_C(const uint8_t* in,
 //------------------------------------------------------------------------------
 
 #if !WEBP_NEON_OMIT_C_CODE
-static void HorizontalFilter_C(const uint8_t* data, int width, int height,
-                               int stride, uint8_t* filtered_data) {
+static void HorizontalFilter_C(const uint8_t* WEBP_RESTRICT data,
+                               int width, int height, int stride,
+                               uint8_t* WEBP_RESTRICT filtered_data) {
   DoHorizontalFilter_C(data, width, height, stride, filtered_data);
 }
 
-static void VerticalFilter_C(const uint8_t* data, int width, int height,
-                             int stride, uint8_t* filtered_data) {
+static void VerticalFilter_C(const uint8_t* WEBP_RESTRICT data,
+                             int width, int height, int stride,
+                             uint8_t* WEBP_RESTRICT filtered_data) {
   DoVerticalFilter_C(data, width, height, stride, filtered_data);
 }
 
-static void GradientFilter_C(const uint8_t* data, int width, int height,
-                             int stride, uint8_t* filtered_data) {
+static void GradientFilter_C(const uint8_t* WEBP_RESTRICT data,
+                             int width, int height, int stride,
+                             uint8_t* WEBP_RESTRICT filtered_data) {
   DoGradientFilter_C(data, width, height, stride, filtered_data);
 }
 #endif  // !WEBP_NEON_OMIT_C_CODE

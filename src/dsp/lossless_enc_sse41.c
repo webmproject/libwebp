@@ -44,8 +44,9 @@ static uint32_t ExtraCost_SSE41(const uint32_t* const a, int length) {
   return HorizontalSum_SSE41(cost);
 }
 
-static uint32_t ExtraCostCombined_SSE41(const uint32_t* const a,
-                                        const uint32_t* const b, int length) {
+static uint32_t ExtraCostCombined_SSE41(const uint32_t* WEBP_RESTRICT const a,
+                                        const uint32_t* WEBP_RESTRICT const b,
+                                        int length) {
   int i;
   __m128i cost = _mm_add_epi32(_mm_set_epi32(2 * a[7], 2 * a[6], a[5], a[4]),
                                _mm_set_epi32(2 * b[7], 2 * b[6], b[5], b[4]));
@@ -95,7 +96,8 @@ static void SubtractGreenFromBlueAndRed_SSE41(uint32_t* argb_data,
 #define MK_CST_16(HI, LO) \
   _mm_set1_epi32((int)(((uint32_t)(HI) << 16) | ((LO) & 0xffff)))
 
-static void CollectColorBlueTransforms_SSE41(const uint32_t* argb, int stride,
+static void CollectColorBlueTransforms_SSE41(const uint32_t* WEBP_RESTRICT argb,
+                                             int stride,
                                              int tile_width, int tile_height,
                                              int green_to_blue, int red_to_blue,
                                              uint32_t histo[]) {
@@ -141,7 +143,8 @@ static void CollectColorBlueTransforms_SSE41(const uint32_t* argb, int stride,
   }
 }
 
-static void CollectColorRedTransforms_SSE41(const uint32_t* argb, int stride,
+static void CollectColorRedTransforms_SSE41(const uint32_t* WEBP_RESTRICT argb,
+                                            int stride,
                                             int tile_width, int tile_height,
                                             int green_to_red,
                                             uint32_t histo[]) {
