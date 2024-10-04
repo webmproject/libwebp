@@ -59,31 +59,31 @@ void SharpYuvComputeConversionMatrix(const SharpYuvColorSpace* yuv_color_space,
 }
 
 // Matrices are in YUV_FIX fixed point precision.
-// WebP's matrix, similar but not identical to kRec601LimitedMatrix.
+// WebP's matrix, similar but not identical to kRec601LimitedMatrix
 static const SharpYuvConversionMatrix kWebpMatrix = {
   {16839, 33059, 6420, 16 << 16},
   {-9719, -19081, 28800, 128 << 16},
   {28800, -24116, -4684, 128 << 16},
 };
-// Kr=0.2990f Kb=0.1140f bits=8 range=kSharpYuvRangeLimited
+// Kr=0.2990f Kb=0.1140f bit_depth=8 range=kSharpYuvRangeLimited
 static const SharpYuvConversionMatrix kRec601LimitedMatrix = {
   {16829, 33039, 6416, 16 << 16},
   {-9714, -19071, 28784, 128 << 16},
   {28784, -24103, -4681, 128 << 16},
 };
-// Kr=0.2990f Kb=0.1140f bits=8 range=kSharpYuvRangeFull
+// Kr=0.2990f Kb=0.1140f bit_depth=8 range=kSharpYuvRangeFull
 static const SharpYuvConversionMatrix kRec601FullMatrix = {
   {19595, 38470, 7471, 0},
   {-11058, -21710, 32768, 128 << 16},
   {32768, -27439, -5329, 128 << 16},
 };
-// Kr=0.2126f Kb=0.0722f bits=8 range=kSharpYuvRangeLimited
+// Kr=0.2126f Kb=0.0722f bit_depth=8 range=kSharpYuvRangeLimited
 static const SharpYuvConversionMatrix kRec709LimitedMatrix = {
   {11966, 40254, 4064, 16 << 16},
   {-6596, -22189, 28784, 128 << 16},
   {28784, -26145, -2639, 128 << 16},
 };
-// Kr=0.2126f Kb=0.0722f bits=8 range=kSharpYuvRangeFull
+// Kr=0.2126f Kb=0.0722f bit_depth=8 range=kSharpYuvRangeFull
 static const SharpYuvConversionMatrix kRec709FullMatrix = {
   {13933, 46871, 4732, 0},
   {-7509, -25259, 32768, 128 << 16},
