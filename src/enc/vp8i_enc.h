@@ -16,6 +16,7 @@
 
 #include <string.h>     // for memcpy()
 #include "src/dec/common_dec.h"
+#include "src/dsp/cpu.h"
 #include "src/dsp/dsp.h"
 #include "src/utils/bit_writer_utils.h"
 #include "src/utils/thread_utils.h"
@@ -233,7 +234,11 @@ typedef struct {
   VP8BitWriter* bw_;               // current bit-writer
   uint8_t*      preds_;            // intra mode predictors (4x4 blocks)
   uint32_t*     nz_;               // non-zero pattern
+#if WEBP_AARCH64 && BPS == 32
+  uint8_t       i4_boundary_[40];  // 32+8 boundary samples needed by intra4x4
+#else
   uint8_t       i4_boundary_[37];  // 32+5 boundary samples needed by intra4x4
+#endif
   uint8_t*      i4_top_;           // pointer to the current top boundary sample
   int           i4_;               // current intra4x4 mode being tested
   int           top_nz_[9];        // top-non-zero context.

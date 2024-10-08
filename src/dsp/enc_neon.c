@@ -927,8 +927,7 @@ static int Quantize2Blocks_NEON(int16_t in[32], int16_t out[32],
 
 #if WEBP_AARCH64
 
-// TODO: b/366668849 - enable Intra4Preds_NEON after fixing overread.
-#if 0
+#if BPS == 32
 #define DC4_VE4_HE4_TM4_NEON(dst, tbl, res, lane)                              \
   do {                                                                         \
     uint8x16_t r;                                                              \
@@ -1040,7 +1039,7 @@ static void Intra4Preds_NEON(uint8_t* WEBP_RESTRICT dst,
   vst1_u8(dst + I4HD4 + BPS * 2, vget_low_u8(result1));
   vst1_u8(dst + I4HD4 + BPS * 3, vget_high_u8(result1));
 }
-#endif  // 0
+#endif  // BPS == 32
 
 static WEBP_INLINE void Fill_NEON(uint8_t* dst, const uint8_t value) {
   uint8x16_t a = vdupq_n_u8(value);
@@ -1212,8 +1211,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8EncDspInitNEON(void) {
   VP8SSE4x4 = SSE4x4_NEON;
 
 #if WEBP_AARCH64
-  // TODO: b/366668849 - enable Intra4Preds_NEON after fixing overread.
-#if 0  // BPS == 32
+#if BPS == 32
   VP8EncPredLuma4 = Intra4Preds_NEON;
 #endif
   VP8EncPredLuma16 = Intra16Preds_NEON;

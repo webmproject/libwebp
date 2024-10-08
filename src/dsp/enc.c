@@ -359,8 +359,7 @@ static void Intra16Preds_C(uint8_t* WEBP_RESTRICT dst,
 //------------------------------------------------------------------------------
 // luma 4x4 prediction
 
-// TODO: b/366668849 - Restore this condition after Intra4Preds_NEON is fixed.
-#if 1  // !WEBP_NEON_OMIT_C_CODE || !WEBP_AARCH64
+#if !WEBP_NEON_OMIT_C_CODE || !WEBP_AARCH64 || BPS != 32
 
 #define DST(x, y) dst[(x) + (y) * BPS]
 #define AVG3(a, b, c) ((uint8_t)(((a) + 2 * (b) + (c) + 2) >> 2))
@@ -551,7 +550,7 @@ static void Intra4Preds_C(uint8_t* WEBP_RESTRICT dst,
   HU4(I4HU4 + dst, top);
 }
 
-#endif  // !WEBP_NEON_OMIT_C_CODE || !WEBP_AARCH64
+#endif  // !WEBP_NEON_OMIT_C_CODE || !WEBP_AARCH64 || BPS != 32
 
 //------------------------------------------------------------------------------
 // Metric
@@ -798,9 +797,9 @@ WEBP_DSP_INIT_FUNC(VP8EncDspInit) {
   VP8EncQuantizeBlockWHT = QuantizeBlock_C;
 #endif
 
-  // TODO: b/366668849 - Move this into the #if after Intra4Preds_NEON is
-  // fixed.
+#if !WEBP_NEON_OMIT_C_CODE || !WEBP_AARCH64 || BPS != 32
   VP8EncPredLuma4 = Intra4Preds_C;
+#endif
 #if !WEBP_NEON_OMIT_C_CODE || !WEBP_AARCH64
   VP8EncPredLuma16 = Intra16Preds_C;
 #endif
