@@ -354,6 +354,10 @@ Options:
 -lossy ................. encode image using lossy compression
 -mixed ................. for each frame in the image, pick lossy
                          or lossless compression heuristically
+-near_lossless <int> ... use near-lossless image preprocessing
+                         (0..100=off), default=100
+-sharp_yuv ............. use sharper (and slower) RGB->YUV conversion
+                         (lossy only)
 -q <float> ............. quality factor (0:small..100:big)
 -m <int> ............... compression method (0=fast, 6=slowest)
 -min_size .............. minimize output size (default:off)

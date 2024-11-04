@@ -567,7 +567,8 @@ if(WEBP_BUILD_GIF2WEBP)
   add_executable(gif2webp ${GIF2WEBP_SRCS})
   target_link_libraries(gif2webp exampleutil imageioutil webp libwebpmux
                         ${WEBP_DEP_GIF_LIBRARIES})
-  target_include_directories(gif2webp PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src)
+  target_include_directories(gif2webp PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src
+                                              ${CMAKE_CURRENT_SOURCE_DIR})
   install(TARGETS gif2webp RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
