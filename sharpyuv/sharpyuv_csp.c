@@ -22,16 +22,16 @@ void SharpYuvComputeConversionMatrix(const SharpYuvColorSpace* yuv_color_space,
   const float kr = yuv_color_space->kr;
   const float kb = yuv_color_space->kb;
   const float kg = 1.0f - kr - kb;
-  const float cr = 0.5f / (1.0f - kb);
-  const float cb = 0.5f / (1.0f - kr);
+  const float cb = 0.5f / (1.0f - kb);
+  const float cr = 0.5f / (1.0f - kr);
 
   const int shift = yuv_color_space->bit_depth - 8;
 
   const float denom = (float)((1 << yuv_color_space->bit_depth) - 1);
   float scale_y = 1.0f;
   float add_y = 0.0f;
-  float scale_u = cr;
-  float scale_v = cb;
+  float scale_u = cb;
+  float scale_v = cr;
   float add_uv = (float)(128 << shift);
   assert(yuv_color_space->bit_depth >= 8);
 
