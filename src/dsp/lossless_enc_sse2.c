@@ -175,64 +175,102 @@ static void CollectColorRedTransforms_SSE2(const uint32_t* WEBP_RESTRICT argb,
 
 // Note we are adding uint32_t's as *signed* int32's (using _mm_add_epi32). But
 // that's ok since the histogram values are less than 1<<28 (max picture size).
-#define LINE_SIZE 16    // 8 or 16
 static void AddVector_SSE2(const uint32_t* WEBP_RESTRICT a,
                            const uint32_t* WEBP_RESTRICT b,
                            uint32_t* WEBP_RESTRICT out, int size) {
-  int i;
-  for (i = 0; i + LINE_SIZE <= size; i += LINE_SIZE) {
+  int i = 0;
+  int aligned_size = size & ~15;
+  // Size is, at minimum, NUM_DISTANCE_CODES (40) and may be as large as
+  // NUM_LITERAL_CODES (256) + NUM_LENGTH_CODES (24) + (0 or a non-zero power of
+  // 2). See the usage in VP8LHistogramAdd().
+  assert(size >= 16);
+  assert(size % 2 == 0);
+
+  do {
     const __m128i a0 = _mm_loadu_si128((const __m128i*)&a[i +  0]);
     const __m128i a1 = _mm_loadu_si128((const __m128i*)&a[i +  4]);
-#if (LINE_SIZE == 16)
     const __m128i a2 = _mm_loadu_si128((const __m128i*)&a[i +  8]);
     const __m128i a3 = _mm_loadu_si128((const __m128i*)&a[i + 12]);
-#endif
     const __m128i b0 = _mm_loadu_si128((const __m128i*)&b[i +  0]);
     const __m128i b1 = _mm_loadu_si128((const __m128i*)&b[i +  4]);
-#if (LINE_SIZE == 16)
     const __m128i b2 = _mm_loadu_si128((const __m128i*)&b[i +  8]);
     const __m128i b3 = _mm_loadu_si128((const __m128i*)&b[i + 12]);
-#endif
     _mm_storeu_si128((__m128i*)&out[i +  0], _mm_add_epi32(a0, b0));
     _mm_storeu_si128((__m128i*)&out[i +  4], _mm_add_epi32(a1, b1));
-#if (LINE_SIZE == 16)
     _mm_storeu_si128((__m128i*)&out[i +  8], _mm_add_epi32(a2, b2));
     _mm_storeu_si128((__m128i*)&out[i + 12], _mm_add_epi32(a3, b3));
-#endif
+    i += 16;
+  } while (i != aligned_size);
+
+  if ((size & 8) != 0) {
+    const __m128i a0 = _mm_loadu_si128((const __m128i*)&a[i + 0]);
+    const __m128i a1 = _mm_loadu_si128((const __m128i*)&a[i + 4]);
+    const __m128i b0 = _mm_loadu_si128((const __m128i*)&b[i + 0]);
+    const __m128i b1 = _mm_loadu_si128((const __m128i*)&b[i + 4]);
+    _mm_storeu_si128((__m128i*)&out[i + 0], _mm_add_epi32(a0, b0));
+    _mm_storeu_si128((__m128i*)&out[i + 4], _mm_add_epi32(a1, b1));
+    i += 8;
   }
-  for (; i < size; ++i) {
-    out[i] = a[i] + b[i];
+
+  size &= 7;
+  if (size == 4) {
+    const __m128i a0 = _mm_loadu_si128((const __m128i*)&a[i]);
+    const __m128i b0 = _mm_loadu_si128((const __m128i*)&b[i]);
+    _mm_storeu_si128((__m128i*)&out[i], _mm_add_epi32(a0, b0));
+  } else if (size == 2) {
+    const __m128i a0 = _mm_loadl_epi64((const __m128i*)&a[i]);
+    const __m128i b0 = _mm_loadl_epi64((const __m128i*)&b[i]);
+    _mm_storel_epi64((__m128i*)&out[i], _mm_add_epi32(a0, b0));
   }
 }
 
 static void AddVectorEq_SSE2(const uint32_t* WEBP_RESTRICT a,
                              uint32_t* WEBP_RESTRICT out, int size) {
-  int i;
-  for (i = 0; i + LINE_SIZE <= size; i += LINE_SIZE) {
+  int i = 0;
+  int aligned_size = size & ~15;
+  // Size is, at minimum, NUM_DISTANCE_CODES (40) and may be as large as
+  // NUM_LITERAL_CODES (256) + NUM_LENGTH_CODES (24) + (0 or a non-zero power of
+  // 2). See the usage in VP8LHistogramAdd().
+  assert(size >= 16);
+  assert(size % 2 == 0);
+
+  do {
     const __m128i a0 = _mm_loadu_si128((const __m128i*)&a[i +  0]);
     const __m128i a1 = _mm_loadu_si128((const __m128i*)&a[i +  4]);
-#if (LINE_SIZE == 16)
     const __m128i a2 = _mm_loadu_si128((const __m128i*)&a[i +  8]);
     const __m128i a3 = _mm_loadu_si128((const __m128i*)&a[i + 12]);
-#endif
     const __m128i b0 = _mm_loadu_si128((const __m128i*)&out[i +  0]);
     const __m128i b1 = _mm_loadu_si128((const __m128i*)&out[i +  4]);
-#if (LINE_SIZE == 16)
     const __m128i b2 = _mm_loadu_si128((const __m128i*)&out[i +  8]);
     const __m128i b3 = _mm_loadu_si128((const __m128i*)&out[i + 12]);
-#endif
     _mm_storeu_si128((__m128i*)&out[i +  0], _mm_add_epi32(a0, b0));
     _mm_storeu_si128((__m128i*)&out[i +  4], _mm_add_epi32(a1, b1));
-#if (LINE_SIZE == 16)
     _mm_storeu_si128((__m128i*)&out[i +  8], _mm_add_epi32(a2, b2));
     _mm_storeu_si128((__m128i*)&out[i + 12], _mm_add_epi32(a3, b3));
-#endif
+    i += 16;
+  } while (i != aligned_size);
+
+  if ((size & 8) != 0) {
+    const __m128i a0 = _mm_loadu_si128((const __m128i*)&a[i + 0]);
+    const __m128i a1 = _mm_loadu_si128((const __m128i*)&a[i + 4]);
+    const __m128i b0 = _mm_loadu_si128((const __m128i*)&out[i + 0]);
+    const __m128i b1 = _mm_loadu_si128((const __m128i*)&out[i + 4]);
+    _mm_storeu_si128((__m128i*)&out[i + 0], _mm_add_epi32(a0, b0));
+    _mm_storeu_si128((__m128i*)&out[i + 4], _mm_add_epi32(a1, b1));
+    i += 8;
   }
-  for (; i < size; ++i) {
-    out[i] += a[i];
+
+  size &= 7;
+  if (size == 4) {
+    const __m128i a0 = _mm_loadu_si128((const __m128i*)&a[i]);
+    const __m128i b0 = _mm_loadu_si128((const __m128i*)&out[i]);
+    _mm_storeu_si128((__m128i*)&out[i], _mm_add_epi32(a0, b0));
+  } else if (size == 2) {
+    const __m128i a0 = _mm_loadl_epi64((const __m128i*)&a[i]);
+    const __m128i b0 = _mm_loadl_epi64((const __m128i*)&out[i]);
+    _mm_storel_epi64((__m128i*)&out[i], _mm_add_epi32(a0, b0));
   }
 }
-#undef LINE_SIZE
 
 //------------------------------------------------------------------------------
 // Entropy
