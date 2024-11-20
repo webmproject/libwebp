@@ -11,15 +11,15 @@
 //
 // The exact naming is Y'CbCr, following the ITU-R BT.601 standard.
 // More information at: https://en.wikipedia.org/wiki/YCbCr
-// Y = 0.2569 * R + 0.5044 * G + 0.0979 * B + 16
-// U = -0.1483 * R - 0.2911 * G + 0.4394 * B + 128
-// V = 0.4394 * R - 0.3679 * G - 0.0715 * B + 128
+// Y = 0.2568 * R + 0.5041 * G + 0.0979 * B + 16
+// U = -0.1482 * R - 0.2910 * G + 0.4392 * B + 128
+// V = 0.4392 * R - 0.3678 * G - 0.0714 * B + 128
 // We use 16bit fixed point operations for RGB->YUV conversion (YUV_FIX).
 //
 // For the Y'CbCr to RGB conversion, the BT.601 specification reads:
 //   R = 1.164 * (Y-16) + 1.596 * (V-128)
-//   G = 1.164 * (Y-16) - 0.813 * (V-128) - 0.391 * (U-128)
-//   B = 1.164 * (Y-16)                   + 2.018 * (U-128)
+//   G = 1.164 * (Y-16) - 0.813 * (V-128) - 0.392 * (U-128)
+//   B = 1.164 * (Y-16)                   + 2.017 * (U-128)
 // where Y is in the [16,235] range, and U/V in the [16,240] range.
 //
 // The fixed-point implementation used here is:

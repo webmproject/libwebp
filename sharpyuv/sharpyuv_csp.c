@@ -60,6 +60,10 @@ void SharpYuvComputeConversionMatrix(const SharpYuvColorSpace* yuv_color_space,
 
 // Matrices are in YUV_FIX fixed point precision.
 // WebP's matrix, similar but not identical to kRec601LimitedMatrix
+// Derived using the following formulas:
+// Y = 0.2569 * R + 0.5044 * G + 0.0979 * B + 16
+// U = -0.1483 * R - 0.2911 * G + 0.4394 * B + 128
+// V = 0.4394 * R - 0.3679 * G - 0.0715 * B + 128
 static const SharpYuvConversionMatrix kWebpMatrix = {
   {16839, 33059, 6420, 16 << 16},
   {-9719, -19081, 28800, 128 << 16},
