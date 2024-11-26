@@ -62,7 +62,8 @@ static void Help(void) {
   printf(" -lossless ............ use lossless mode (default)\n");
   printf(" -lossy ............... use lossy mode\n");
   printf(" -q <float> ........... quality\n");
-  printf(" -m <int> ............. method to use\n");
+  printf(" -m <int> ............. compression method (0=fast, 6=slowest), "
+         "default=4\n");
   printf(" -exact, -noexact ..... preserve or alter RGB values in transparent "
                                   "area\n"
          "                        (default: -noexact, may cause artifacts\n"
