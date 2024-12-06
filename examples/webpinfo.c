@@ -1132,7 +1132,7 @@ int main(int argc, const char* argv[]) {
 
   if (argc == 1) {
     Help();
-    FREE_WARGV_AND_RETURN(EXIT_SUCCESS);
+    FREE_WARGV_AND_RETURN(EXIT_FAILURE);
   }
 
   // Parse command-line input.

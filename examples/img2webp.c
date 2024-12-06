@@ -229,6 +229,8 @@ int main(int argc, const char* argv[]) {
   }
   if (!have_input) {
     fprintf(stderr, "No input file(s) for generating animation!\n");
+    ok = 0;
+    Help();
     goto End;
   }
 

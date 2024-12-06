@@ -698,7 +698,7 @@ int main(int argc, const char* argv[]) {
 
   if (argc == 1) {
     HelpShort();
-    FREE_WARGV_AND_RETURN(EXIT_SUCCESS);
+    FREE_WARGV_AND_RETURN(EXIT_FAILURE);
   }
 
   for (c = 1; c < argc; ++c) {

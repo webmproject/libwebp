@@ -57,6 +57,12 @@ int main(int argc, char* argv[]) {
 
   INIT_WARGV(argc, argv);
 
+  if (argc == 1) {
+    fprintf(stderr, "Usage: %s [-h] image.webp [more_files.webp...]\n",
+            argv[0]);
+    goto Error;
+  }
+
   for (c = 1; c < argc; ++c) {
     const char* file = NULL;
     const uint8_t* webp = NULL;
