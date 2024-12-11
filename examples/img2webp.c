@@ -151,6 +151,7 @@ int main(int argc, const char* argv[]) {
   WebPData webp_data;
   int c;
   int have_input = 0;
+  int last_input_index = 0;
   CommandLineArguments cmd_args;
   int ok;
 
@@ -279,6 +280,7 @@ int main(int argc, const char* argv[]) {
     // read next input image
     pic.use_argb = 1;
     ok = ReadImage((const char*)GET_WARGV_SHIFTED(argv, c), &pic);
+    last_input_index = c;
     if (!ok) goto End;
 
     if (enc == NULL) {
@@ -315,6 +317,13 @@ int main(int argc, const char* argv[]) {
     }
     timestamp_ms += duration;
     ++pic_num;
+  }
+
+  for (c = last_input_index + 1; c < argc; ++c) {
+    if (argv[c] != NULL) {
+      fprintf(stderr, "Warning: unused option [%s]!"
+                      " Frame options go before the input frame.\n", argv[c]);
+    }
   }
 
   // add a last fake frame to signal the last duration
