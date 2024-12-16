@@ -76,9 +76,8 @@ int CropOrScale(WebPPicture* const pic, const CropOrScaleParams& params) {
     }
   }
 #else   // defined(WEBP_REDUCE_SIZE)
-  (void)data;
-  (void)size;
-  (void)bit_pos;
+  (void)pic;
+  (void)params;
 #endif  // !defined(WEBP_REDUCE_SIZE)
   return 1;
 }
