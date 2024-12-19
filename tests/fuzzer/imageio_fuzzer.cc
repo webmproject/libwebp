@@ -20,6 +20,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>
+#include <string_view>
 
 #include "imageio/image_dec.h"
 #include "imageio/metadata.h"

@@ -15,6 +15,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <cstdint>
+#include <string_view>
 
 #include "src/webp/mux_types.h"
 #include "tests/fuzzer/fuzz_utils.h"
