@@ -1,5 +1,7 @@
-- 12/13/2024 version 1.5.0
+- 12/19/2024 version 1.5.0
   This is a binary compatible release.
+  API changes:
+    - `cross_color_transform_bits` added to WebPAuxStats
   * minor lossless encoder speed and compression improvements
   * lossless encoding does not use floats anymore
   * additional Arm optimizations for lossy & lossless + general code generation
