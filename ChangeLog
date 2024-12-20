@@ -1,3 +1,8 @@
+c3d85ce4 update NEWS
+ad14e811 tests/fuzzer/*: add missing <string_view> include
+74cd026e fuzz_utils.cc: fix build error w/WEBP_REDUCE_SIZE
+a027aa93 mux_demux_api_fuzzer.cc: fix -Wshadow warning
+25e17c68 update ChangeLog (tag: v1.5.0-rc1)
 aa2684fc update NEWS
 36923846 bump version to 1.5.0
 ceea8ff6 update AUTHORS
