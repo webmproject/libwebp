@@ -24,7 +24,7 @@
 #include "webp/types.h"
 
 #define XTRA_MAJ_VERSION 1
-#define XTRA_MIN_VERSION 4
+#define XTRA_MIN_VERSION 5
 #define XTRA_REV_VERSION 0
 
 //------------------------------------------------------------------------------

@@ -24,7 +24,7 @@
 
 namespace {
 
-void MuxDemuxApiTest(std::string_view data_in, bool mux) {
+void MuxDemuxApiTest(std::string_view data_in, bool use_mux_api) {
   const size_t size = data_in.size();
   WebPData webp_data;
   WebPDataInit(&webp_data);
@@ -34,7 +34,7 @@ void MuxDemuxApiTest(std::string_view data_in, bool mux) {
   // Extracted chunks and frames are not processed or decoded,
   // which is already covered extensively by the other fuzz targets.
 
-  if (mux) {
+  if (use_mux_api) {
     // Mux API
     WebPMux* mux = WebPMuxCreate(&webp_data, size & 2);
     if (!mux) return;
