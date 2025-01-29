@@ -15,6 +15,8 @@
 #include "src/webp/config.h"
 #endif
 
+#include <stddef.h>
+
 #include "src/dsp/cpu.h"
 #include "src/utils/bit_reader_inl_utils.h"
 #include "src/utils/utils.h"
@@ -25,11 +27,12 @@
 void VP8BitReaderSetBuffer(VP8BitReader* const br,
                            const uint8_t* const start,
                            size_t size) {
-  br->buf_     = start;
-  br->buf_end_ = start + size;
-  br->buf_max_ =
-      (size >= sizeof(lbit_t)) ? start + size - sizeof(lbit_t) + 1
-                               : start;
+  if (start != NULL) {
+    br->buf_ = start;
+    br->buf_end_ = start + size;
+    br->buf_max_ =
+        (size >= sizeof(lbit_t)) ? start + size - sizeof(lbit_t) + 1 : start;
+  }
 }
 
 void VP8InitBitReader(VP8BitReader* const br,
