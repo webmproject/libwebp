@@ -13,6 +13,7 @@
 //          Jyrki Alakuijala (jyrki@google.com)
 
 #include <assert.h>
+#include <stddef.h>
 #include <stdlib.h>
 
 #include "src/dec/alphai_dec.h"
@@ -624,8 +625,8 @@ static int EmitRescaledRowsRGBA(const VP8LDecoder* const dec,
   int num_lines_in = 0;
   int num_lines_out = 0;
   while (num_lines_in < mb_h) {
-    uint8_t* const row_in = in + (uint64_t)num_lines_in * in_stride;
-    uint8_t* const row_out = out + (uint64_t)num_lines_out * out_stride;
+    uint8_t* const row_in = in + (ptrdiff_t)num_lines_in * in_stride;
+    uint8_t* const row_out = out + (ptrdiff_t)num_lines_out * out_stride;
     const int lines_left = mb_h - num_lines_in;
     const int needed_lines = WebPRescaleNeededLines(dec->rescaler, lines_left);
     int lines_imported;
@@ -827,7 +828,7 @@ static void ProcessRows(VP8LDecoder* const dec, int row) {
       if (WebPIsRGBMode(output->colorspace)) {  // convert to RGBA
         const WebPRGBABuffer* const buf = &output->u.RGBA;
         uint8_t* const rgba =
-            buf->rgba + (int64_t)dec->last_out_row_ * buf->stride;
+            buf->rgba + (ptrdiff_t)dec->last_out_row_ * buf->stride;
         const int num_rows_out =
 #if !defined(WEBP_REDUCE_SIZE)
          io->use_scaling ?
