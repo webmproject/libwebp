@@ -945,6 +945,18 @@ static int Quantize2Blocks_NEON(int16_t in[32], int16_t out[32],
     vst1q_u8(dst, r);                                                          \
   } while (0)
 
+static WEBP_INLINE uint8x16x4_t Vld1qU8x4(const uint8_t* ptr) {
+#if LOCAL_GCC_PREREQ(9, 4)
+  return vld1q_u8_x4(ptr);
+#else
+  uint8x16x4_t res;
+  INIT_VECTOR4(res,
+               vld1q_u8(ptr + 0 * 16), vld1q_u8(ptr + 1 * 16),
+               vld1q_u8(ptr + 2 * 16), vld1q_u8(ptr + 3 * 16));
+  return res;
+#endif
+}
+
 static void Intra4Preds_NEON(uint8_t* WEBP_RESTRICT dst,
                              const uint8_t* WEBP_RESTRICT top) {
   // 0   1   2   3   4   5   6   7   8   9  10  11  12  13
@@ -971,9 +983,9 @@ static void Intra4Preds_NEON(uint8_t* WEBP_RESTRICT dst,
     30, 30, 30, 30,  0,  0,  0,  0, 21, 22, 23, 24, 16, 16, 16, 16
   };
 
-  const uint8x16x4_t lookup_avgs1 = vld1q_u8_x4(kLookupTbl1);
-  const uint8x16x4_t lookup_avgs2 = vld1q_u8_x4(kLookupTbl2);
-  const uint8x16x4_t lookup_avgs3 = vld1q_u8_x4(kLookupTbl3);
+  const uint8x16x4_t lookup_avgs1 = Vld1qU8x4(kLookupTbl1);
+  const uint8x16x4_t lookup_avgs2 = Vld1qU8x4(kLookupTbl2);
+  const uint8x16x4_t lookup_avgs3 = Vld1qU8x4(kLookupTbl3);
 
   const uint8x16_t preload = vld1q_u8(top - 5);
   uint8x16x2_t qcombined;
