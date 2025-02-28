@@ -192,6 +192,7 @@ static int ExtractMetadataFromPNG(png_structp png,
         }
       }
     }
+#ifdef PNG_iCCP_SUPPORTED
     // Look for an ICC profile.
     {
       png_charp name;
@@ -208,6 +209,7 @@ static int ExtractMetadataFromPNG(png_structp png,
         if (!MetadataCopy((const char*)profile, len, &metadata->iccp)) return 0;
       }
     }
+#endif  // PNG_iCCP_SUPPORTED
   }
   return 1;
 }
