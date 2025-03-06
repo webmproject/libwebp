@@ -946,7 +946,7 @@ static int Quantize2Blocks_NEON(int16_t in[32], int16_t out[32],
   } while (0)
 
 static WEBP_INLINE uint8x16x4_t Vld1qU8x4(const uint8_t* ptr) {
-#if LOCAL_GCC_PREREQ(9, 4)
+#if LOCAL_CLANG_PREREQ(3, 4) || LOCAL_GCC_PREREQ(9, 4) || defined(_MSC_VER)
   return vld1q_u8_x4(ptr);
 #else
   uint8x16x4_t res;
