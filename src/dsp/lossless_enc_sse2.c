@@ -645,25 +645,43 @@ static void PredictorSub13_SSE2(const uint32_t* in, const uint32_t* upper,
                                 int num_pixels, uint32_t* WEBP_RESTRICT out) {
   int i;
   const __m128i zero = _mm_setzero_si128();
-  for (i = 0; i + 2 <= num_pixels; i += 2) {
-    // we can only process two pixels at a time
-    const __m128i L = _mm_loadl_epi64((const __m128i*)&in[i - 1]);
-    const __m128i src = _mm_loadl_epi64((const __m128i*)&in[i]);
-    const __m128i T = _mm_loadl_epi64((const __m128i*)&upper[i]);
-    const __m128i TL = _mm_loadl_epi64((const __m128i*)&upper[i - 1]);
-    const __m128i L_lo = _mm_unpacklo_epi8(L, zero);
-    const __m128i T_lo = _mm_unpacklo_epi8(T, zero);
-    const __m128i TL_lo = _mm_unpacklo_epi8(TL, zero);
-    const __m128i sum = _mm_add_epi16(T_lo, L_lo);
-    const __m128i avg = _mm_srli_epi16(sum, 1);
-    const __m128i A1 = _mm_sub_epi16(avg, TL_lo);
-    const __m128i bit_fix = _mm_cmpgt_epi16(TL_lo, avg);
-    const __m128i A2 = _mm_sub_epi16(A1, bit_fix);
-    const __m128i A3 = _mm_srai_epi16(A2, 1);
-    const __m128i A4 = _mm_add_epi16(avg, A3);
-    const __m128i pred = _mm_packus_epi16(A4, A4);
-    const __m128i res = _mm_sub_epi8(src, pred);
-    _mm_storel_epi64((__m128i*)&out[i], res);
+  for (i = 0; i + 4 <= num_pixels; i += 4) {
+    const __m128i L = _mm_loadu_si128((const __m128i*)&in[i - 1]);
+    const __m128i src = _mm_loadu_si128((const __m128i*)&in[i]);
+    const __m128i T = _mm_loadu_si128((const __m128i*)&upper[i]);
+    const __m128i TL = _mm_loadu_si128((const __m128i*)&upper[i - 1]);
+    __m128i A4_lo, A4_hi;
+    // lo.
+    {
+      const __m128i L_lo = _mm_unpacklo_epi8(L, zero);
+      const __m128i T_lo = _mm_unpacklo_epi8(T, zero);
+      const __m128i TL_lo = _mm_unpacklo_epi8(TL, zero);
+      const __m128i sum_lo = _mm_add_epi16(T_lo, L_lo);
+      const __m128i avg_lo = _mm_srli_epi16(sum_lo, 1);
+      const __m128i A1_lo = _mm_sub_epi16(avg_lo, TL_lo);
+      const __m128i bit_fix_lo = _mm_cmpgt_epi16(TL_lo, avg_lo);
+      const __m128i A2_lo = _mm_sub_epi16(A1_lo, bit_fix_lo);
+      const __m128i A3_lo = _mm_srai_epi16(A2_lo, 1);
+      A4_lo = _mm_add_epi16(avg_lo, A3_lo);
+    }
+    // hi.
+    {
+      const __m128i L_hi = _mm_unpackhi_epi8(L, zero);
+      const __m128i T_hi = _mm_unpackhi_epi8(T, zero);
+      const __m128i TL_hi = _mm_unpackhi_epi8(TL, zero);
+      const __m128i sum_hi = _mm_add_epi16(T_hi, L_hi);
+      const __m128i avg_hi = _mm_srli_epi16(sum_hi, 1);
+      const __m128i A1_hi = _mm_sub_epi16(avg_hi, TL_hi);
+      const __m128i bit_fix_hi = _mm_cmpgt_epi16(TL_hi, avg_hi);
+      const __m128i A2_hi = _mm_sub_epi16(A1_hi, bit_fix_hi);
+      const __m128i A3_hi = _mm_srai_epi16(A2_hi, 1);
+      A4_hi = _mm_add_epi16(avg_hi, A3_hi);
+    }
+    {
+      const __m128i pred = _mm_packus_epi16(A4_lo, A4_hi);
+      const __m128i res = _mm_sub_epi8(src, pred);
+      _mm_storeu_si128((__m128i*)&out[i], res);
+    }
   }
   if (i != num_pixels) {
     VP8LPredictorsSub_C[13](in + i, upper + i, num_pixels - i, out + i);
