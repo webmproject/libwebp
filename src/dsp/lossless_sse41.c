@@ -13,9 +13,10 @@
 
 #if defined(WEBP_USE_SSE41)
 
-#include "src/dsp/common_sse41.h"
+#include <smmintrin.h>
+
+#include "src/dsp/cpu.h"
 #include "src/dsp/lossless.h"
-#include "src/dsp/lossless_common.h"
 
 //------------------------------------------------------------------------------
 // Color-space conversion functions

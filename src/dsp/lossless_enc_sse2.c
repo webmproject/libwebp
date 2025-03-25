@@ -14,11 +14,15 @@
 #include "src/dsp/dsp.h"
 
 #if defined(WEBP_USE_SSE2)
+
 #include <assert.h>
 #include <emmintrin.h>
+
+#include "src/dsp/cpu.h"
 #include "src/dsp/lossless.h"
-#include "src/dsp/common_sse2.h"
 #include "src/dsp/lossless_common.h"
+#include "src/utils/utils.h"
+#include "src/webp/types.h"
 
 // For sign-extended multiplying constants, pre-shifted by 5:
 #define CST_5b(X)  (((int16_t)((uint16_t)(X) << 8)) >> 5)

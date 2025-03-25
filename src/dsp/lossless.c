@@ -13,15 +13,21 @@
 //          Jyrki Alakuijala (jyrki@google.com)
 //          Urvang Joshi (urvang@google.com)
 
-#include "src/dsp/dsp.h"
+#include "src/dsp/lossless.h"
 
 #include <assert.h>
-#include <math.h>
 #include <stdlib.h>
+#include <string.h>
+
 #include "src/dec/vp8li_dec.h"
-#include "src/utils/endian_inl_utils.h"
-#include "src/dsp/lossless.h"
+#include "src/dsp/cpu.h"
+#include "src/dsp/dsp.h"
 #include "src/dsp/lossless_common.h"
+#include "src/utils/endian_inl_utils.h"
+#include "src/utils/utils.h"
+#include "src/webp/decode.h"
+#include "src/webp/format_constants.h"
+#include "src/webp/types.h"
 
 //------------------------------------------------------------------------------
 // Image transforms.

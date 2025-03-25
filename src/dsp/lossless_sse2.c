@@ -15,10 +15,13 @@
 
 #if defined(WEBP_USE_SSE2)
 
+#include <emmintrin.h>
+
 #include "src/dsp/common_sse2.h"
+#include "src/dsp/cpu.h"
 #include "src/dsp/lossless.h"
 #include "src/dsp/lossless_common.h"
-#include <emmintrin.h>
+#include "src/webp/types.h"
 
 //------------------------------------------------------------------------------
 // Predictor Transform
