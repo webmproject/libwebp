@@ -64,10 +64,12 @@ typedef void (*VP8LPredictorAddSubFunc)(const uint32_t* in,
                                         uint32_t* WEBP_RESTRICT out);
 extern VP8LPredictorAddSubFunc VP8LPredictorsAdd[16];
 extern VP8LPredictorAddSubFunc VP8LPredictorsAdd_C[16];
+extern VP8LPredictorAddSubFunc VP8LPredictorsAdd_SSE[16];
 
 typedef void (*VP8LProcessDecBlueAndRedFunc)(const uint32_t* src,
                                              int num_pixels, uint32_t* dst);
 extern VP8LProcessDecBlueAndRedFunc VP8LAddGreenToBlueAndRed;
+extern VP8LProcessDecBlueAndRedFunc VP8LAddGreenToBlueAndRed_SSE;
 
 typedef struct {
   // Note: the members are uint8_t, so that any negative values are
@@ -80,6 +82,7 @@ typedef void (*VP8LTransformColorInverseFunc)(const VP8LMultipliers* const m,
                                               const uint32_t* src,
                                               int num_pixels, uint32_t* dst);
 extern VP8LTransformColorInverseFunc VP8LTransformColorInverse;
+extern VP8LTransformColorInverseFunc VP8LTransformColorInverse_SSE;
 
 struct VP8LTransform;  // Defined in dec/vp8li.h.
 
@@ -99,6 +102,8 @@ extern VP8LConvertFunc VP8LConvertBGRAToRGBA;
 extern VP8LConvertFunc VP8LConvertBGRAToRGBA4444;
 extern VP8LConvertFunc VP8LConvertBGRAToRGB565;
 extern VP8LConvertFunc VP8LConvertBGRAToBGR;
+extern VP8LConvertFunc VP8LConvertBGRAToRGB_SSE;
+extern VP8LConvertFunc VP8LConvertBGRAToRGBA_SSE;
 
 // Converts from BGRA to other color spaces.
 void VP8LConvertFromBGRA(const uint32_t* const in_data, int num_pixels,
@@ -149,21 +154,25 @@ void VP8LDspInit(void);
 
 typedef void (*VP8LProcessEncBlueAndRedFunc)(uint32_t* dst, int num_pixels);
 extern VP8LProcessEncBlueAndRedFunc VP8LSubtractGreenFromBlueAndRed;
+extern VP8LProcessEncBlueAndRedFunc VP8LSubtractGreenFromBlueAndRed_SSE;
 typedef void (*VP8LTransformColorFunc)(
     const VP8LMultipliers* WEBP_RESTRICT const m, uint32_t* WEBP_RESTRICT dst,
     int num_pixels);
 extern VP8LTransformColorFunc VP8LTransformColor;
+extern VP8LTransformColorFunc VP8LTransformColor_SSE;
 typedef void (*VP8LCollectColorBlueTransformsFunc)(
     const uint32_t* WEBP_RESTRICT argb, int stride,
     int tile_width, int tile_height,
     int green_to_blue, int red_to_blue, uint32_t histo[]);
 extern VP8LCollectColorBlueTransformsFunc VP8LCollectColorBlueTransforms;
+extern VP8LCollectColorBlueTransformsFunc VP8LCollectColorBlueTransforms_SSE;
 
 typedef void (*VP8LCollectColorRedTransformsFunc)(
     const uint32_t* WEBP_RESTRICT argb, int stride,
     int tile_width, int tile_height,
     int green_to_red, uint32_t histo[]);
 extern VP8LCollectColorRedTransformsFunc VP8LCollectColorRedTransforms;
+extern VP8LCollectColorRedTransformsFunc VP8LCollectColorRedTransforms_SSE;
 
 // Expose some C-only fallback functions
 void VP8LTransformColor_C(const VP8LMultipliers* WEBP_RESTRICT const m,
@@ -181,6 +190,7 @@ void VP8LCollectColorBlueTransforms_C(const uint32_t* WEBP_RESTRICT argb,
 
 extern VP8LPredictorAddSubFunc VP8LPredictorsSub[16];
 extern VP8LPredictorAddSubFunc VP8LPredictorsSub_C[16];
+extern VP8LPredictorAddSubFunc VP8LPredictorsSub_SSE[16];
 
 // -----------------------------------------------------------------------------
 // Huffman-cost related functions.
@@ -255,6 +265,7 @@ typedef void (*VP8LBundleColorMapFunc)(const uint8_t* WEBP_RESTRICT const row,
                                        int width, int xbits,
                                        uint32_t* WEBP_RESTRICT dst);
 extern VP8LBundleColorMapFunc VP8LBundleColorMap;
+extern VP8LBundleColorMapFunc VP8LBundleColorMap_SSE;
 void VP8LBundleColorMap_C(const uint8_t* WEBP_RESTRICT const row,
                           int width, int xbits, uint32_t* WEBP_RESTRICT dst);
 

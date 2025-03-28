@@ -577,16 +577,21 @@ void VP8LConvertFromBGRA(const uint32_t* const in_data, int num_pixels,
 //------------------------------------------------------------------------------
 
 VP8LProcessDecBlueAndRedFunc VP8LAddGreenToBlueAndRed;
+VP8LProcessDecBlueAndRedFunc VP8LAddGreenToBlueAndRed_SSE;
 VP8LPredictorAddSubFunc VP8LPredictorsAdd[16];
+VP8LPredictorAddSubFunc VP8LPredictorsAdd_SSE[16];
 VP8LPredictorFunc VP8LPredictors[16];
 
 // exposed plain-C implementations
 VP8LPredictorAddSubFunc VP8LPredictorsAdd_C[16];
 
 VP8LTransformColorInverseFunc VP8LTransformColorInverse;
+VP8LTransformColorInverseFunc VP8LTransformColorInverse_SSE;
 
 VP8LConvertFunc VP8LConvertBGRAToRGB;
+VP8LConvertFunc VP8LConvertBGRAToRGB_SSE;
 VP8LConvertFunc VP8LConvertBGRAToRGBA;
+VP8LConvertFunc VP8LConvertBGRAToRGBA_SSE;
 VP8LConvertFunc VP8LConvertBGRAToRGBA4444;
 VP8LConvertFunc VP8LConvertBGRAToRGB565;
 VP8LConvertFunc VP8LConvertBGRAToBGR;
@@ -597,6 +602,7 @@ VP8LMapAlphaFunc VP8LMapColor8b;
 extern VP8CPUInfo VP8GetCPUInfo;
 extern void VP8LDspInitSSE2(void);
 extern void VP8LDspInitSSE41(void);
+extern void VP8LDspInitAVX2(void);
 extern void VP8LDspInitNEON(void);
 extern void VP8LDspInitMIPSdspR2(void);
 extern void VP8LDspInitMSA(void);
@@ -649,6 +655,11 @@ WEBP_DSP_INIT_FUNC(VP8LDspInit) {
 #if defined(WEBP_HAVE_SSE41)
       if (VP8GetCPUInfo(kSSE4_1)) {
         VP8LDspInitSSE41();
+#if defined(WEBP_HAVE_AVX2)
+        if (VP8GetCPUInfo(kAVX2)) {
+          VP8LDspInitAVX2();
+        }
+#endif
       }
 #endif
     }

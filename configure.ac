@@ -161,6 +161,25 @@ AS_IF([test "$GCC" = "yes" ], [
 AC_SUBST([AM_CFLAGS])
 
 dnl === Check for machine specific flags
+AC_ARG_ENABLE([avx2],
+              AS_HELP_STRING([--disable-avx2],
+                             [Disable detection of AVX2 support
+                              @<:@default=auto@:>@]))
+
+AS_IF([test "x$enable_avx2" != "xno" -a "x$enable_sse4_1" != "xno"
+      -a "x$enable_sse2" != "xno"], [
+  AVX2_FLAGS="$INTRINSICS_CFLAGS $AVX2_FLAGS"
+  TEST_AND_ADD_CFLAGS([AVX2_FLAGS], [-mavx2])
+  AS_IF([test -n "$AVX2_FLAGS"], [
+    SAVED_CFLAGS=$CFLAGS
+    CFLAGS="$CFLAGS $AVX2_FLAGS"
+    AC_CHECK_HEADER([immintrin.h],
+                    [AC_DEFINE(WEBP_HAVE_AVX2, [1],
+                     [Set to 1 if AVX2 is supported])],
+                    [AVX2_FLAGS=""])
+    CFLAGS=$SAVED_CFLAGS])
+  AC_SUBST([AVX2_FLAGS])])
+
 AC_ARG_ENABLE([sse4.1],
               AS_HELP_STRING([--disable-sse4.1],
                              [Disable detection of SSE4.1 support

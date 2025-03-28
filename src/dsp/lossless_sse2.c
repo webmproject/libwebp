@@ -16,6 +16,7 @@
 #if defined(WEBP_USE_SSE2)
 
 #include <emmintrin.h>
+#include <string.h>
 
 #include "src/dsp/common_sse2.h"
 #include "src/dsp/cpu.h"
@@ -710,6 +711,15 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitSSE2(void) {
   VP8LConvertBGRAToRGBA4444 = ConvertBGRAToRGBA4444_SSE2;
   VP8LConvertBGRAToRGB565 = ConvertBGRAToRGB565_SSE2;
   VP8LConvertBGRAToBGR = ConvertBGRAToBGR_SSE2;
+
+  // SSE exports for AVX and above.
+  memcpy(VP8LPredictorsAdd_SSE, VP8LPredictorsAdd, sizeof(VP8LPredictorsAdd));
+
+  VP8LAddGreenToBlueAndRed_SSE = AddGreenToBlueAndRed_SSE2;
+  VP8LTransformColorInverse_SSE = TransformColorInverse_SSE2;
+
+  VP8LConvertBGRAToRGB_SSE = ConvertBGRAToRGB_SSE2;
+  VP8LConvertBGRAToRGBA_SSE = ConvertBGRAToRGBA_SSE2;
 }
 
 #else  // !WEBP_USE_SSE2

@@ -231,6 +231,7 @@ DSP_DEC_OBJS = \
     $(DIROBJ)\dsp\lossless_neon.obj \
     $(DIROBJ)\dsp\lossless_sse2.obj \
     $(DIROBJ)\dsp\lossless_sse41.obj \
+    $(DIROBJ)\dsp\lossless_avx2.obj \
     $(DIROBJ)\dsp\rescaler.obj \
     $(DIROBJ)\dsp\rescaler_mips32.obj \
     $(DIROBJ)\dsp\rescaler_mips_dsp_r2.obj \
@@ -270,6 +271,7 @@ DSP_ENC_OBJS = \
     $(DIROBJ)\dsp\lossless_enc_neon.obj \
     $(DIROBJ)\dsp\lossless_enc_sse2.obj \
     $(DIROBJ)\dsp\lossless_enc_sse41.obj \
+    $(DIROBJ)\dsp\lossless_enc_avx2.obj \
     $(DIROBJ)\dsp\ssim.obj \
     $(DIROBJ)\dsp\ssim_sse2.obj \
 

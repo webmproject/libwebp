@@ -713,11 +713,15 @@ GENERATE_PREDICTOR_SUB(13)
 //------------------------------------------------------------------------------
 
 VP8LProcessEncBlueAndRedFunc VP8LSubtractGreenFromBlueAndRed;
+VP8LProcessEncBlueAndRedFunc VP8LSubtractGreenFromBlueAndRed_SSE;
 
 VP8LTransformColorFunc VP8LTransformColor;
+VP8LTransformColorFunc VP8LTransformColor_SSE;
 
 VP8LCollectColorBlueTransformsFunc VP8LCollectColorBlueTransforms;
+VP8LCollectColorBlueTransformsFunc VP8LCollectColorBlueTransforms_SSE;
 VP8LCollectColorRedTransformsFunc VP8LCollectColorRedTransforms;
+VP8LCollectColorRedTransformsFunc VP8LCollectColorRedTransforms_SSE;
 
 VP8LFastLog2SlowFunc VP8LFastLog2Slow;
 VP8LFastSLog2SlowFunc VP8LFastSLog2Slow;
@@ -735,13 +739,16 @@ VP8LAddVectorEqFunc VP8LAddVectorEq;
 
 VP8LVectorMismatchFunc VP8LVectorMismatch;
 VP8LBundleColorMapFunc VP8LBundleColorMap;
+VP8LBundleColorMapFunc VP8LBundleColorMap_SSE;
 
 VP8LPredictorAddSubFunc VP8LPredictorsSub[16];
 VP8LPredictorAddSubFunc VP8LPredictorsSub_C[16];
+VP8LPredictorAddSubFunc VP8LPredictorsSub_SSE[16];
 
 extern VP8CPUInfo VP8GetCPUInfo;
 extern void VP8LEncDspInitSSE2(void);
 extern void VP8LEncDspInitSSE41(void);
+extern void VP8LEncDspInitAVX2(void);
 extern void VP8LEncDspInitNEON(void);
 extern void VP8LEncDspInitMIPS32(void);
 extern void VP8LEncDspInitMIPSdspR2(void);
@@ -818,6 +825,11 @@ WEBP_DSP_INIT_FUNC(VP8LEncDspInit) {
 #if defined(WEBP_HAVE_SSE41)
       if (VP8GetCPUInfo(kSSE4_1)) {
         VP8LEncDspInitSSE41();
+#if defined(WEBP_HAVE_AVX2)
+        if (VP8GetCPUInfo(kAVX2)) {
+          VP8LEncDspInitAVX2();
+        }
+#endif
       }
 #endif
     }

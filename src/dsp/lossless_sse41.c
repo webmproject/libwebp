@@ -125,6 +125,10 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitSSE41(void) {
   VP8LTransformColorInverse = TransformColorInverse_SSE41;
   VP8LConvertBGRAToRGB = ConvertBGRAToRGB_SSE41;
   VP8LConvertBGRAToBGR = ConvertBGRAToBGR_SSE41;
+
+  // SSE exports for AVX and above.
+  VP8LTransformColorInverse_SSE = TransformColorInverse_SSE41;
+  VP8LConvertBGRAToRGB_SSE = ConvertBGRAToRGB_SSE41;
 }
 
 #else  // !WEBP_USE_SSE41

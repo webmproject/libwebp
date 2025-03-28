@@ -17,6 +17,7 @@
 
 #include <assert.h>
 #include <emmintrin.h>
+#include <string.h>
 
 #include "src/dsp/cpu.h"
 #include "src/dsp/lossless.h"
@@ -726,6 +727,15 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LEncDspInitSSE2(void) {
   VP8LPredictorsSub[13] = PredictorSub13_SSE2;
   VP8LPredictorsSub[14] = PredictorSub0_SSE2;  // <- padding security sentinels
   VP8LPredictorsSub[15] = PredictorSub0_SSE2;
+
+  // SSE exports for AVX and above.
+  VP8LSubtractGreenFromBlueAndRed_SSE = SubtractGreenFromBlueAndRed_SSE2;
+  VP8LTransformColor_SSE = TransformColor_SSE2;
+  VP8LCollectColorBlueTransforms_SSE = CollectColorBlueTransforms_SSE2;
+  VP8LCollectColorRedTransforms_SSE = CollectColorRedTransforms_SSE2;
+  VP8LBundleColorMap_SSE = BundleColorMap_SSE2;
+
+  memcpy(VP8LPredictorsSub_SSE, VP8LPredictorsSub, sizeof(VP8LPredictorsSub));
 }
 
 #else  // !WEBP_USE_SSE2
