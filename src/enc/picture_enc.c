@@ -226,9 +226,7 @@ int WebPMemoryWrite(const uint8_t* data, size_t data_size,
 void WebPMemoryWriterClear(WebPMemoryWriter* writer) {
   if (writer != NULL) {
     WebPSafeFree(writer->mem);
-    writer->mem = NULL;
-    writer->size = 0;
-    writer->max_size = 0;
+    WebPMemoryWriterInit(writer);
   }
 }
 
