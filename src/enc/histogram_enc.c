@@ -401,10 +401,8 @@ WEBP_NODISCARD static int GetCombinedHistogramEntropy(
   *cost = GetCombinedEntropy(a->literal_, b->literal_,
                              VP8LHistogramNumCodes(palette_code_bits),
                              a->is_used_[0], b->is_used_[0], 0);
-  *cost += (uint64_t)VP8LExtraCostCombined(a->literal_ + NUM_LITERAL_CODES,
-                                           b->literal_ + NUM_LITERAL_CODES,
-                                           NUM_LENGTH_CODES)
-           << LOG_2_PRECISION_BITS;
+  // No need to add the extra cost as it is a constant that does not influence
+  // the histograms.
   if (*cost >= cost_threshold) return 0;
 
   if (a->trivial_symbol_ != VP8L_NON_TRIVIAL_SYM &&
@@ -434,9 +432,8 @@ WEBP_NODISCARD static int GetCombinedHistogramEntropy(
 
   *cost += GetCombinedEntropy(a->distance_, b->distance_, NUM_DISTANCE_CODES,
                               a->is_used_[4], b->is_used_[4], 0);
-  *cost += (uint64_t)VP8LExtraCostCombined(a->distance_, b->distance_,
-                                           NUM_DISTANCE_CODES)
-           << LOG_2_PRECISION_BITS;
+  // No need to add the extra cost as it is a constant that does not influence
+  // the histograms.
   if (*cost >= cost_threshold) return 0;
 
   return 1;
@@ -528,16 +525,13 @@ static void UpdateHistogramCost(VP8LHistogram* const h) {
   uint32_t alpha_sym, red_sym, blue_sym;
   const uint64_t alpha_cost =
       PopulationCost(h->alpha_, NUM_LITERAL_CODES, &alpha_sym, &h->is_used_[3]);
+  // No need to add the extra cost as it is a constant that does not influence
+  // the histograms.
   const uint64_t distance_cost =
-      PopulationCost(h->distance_, NUM_DISTANCE_CODES, NULL, &h->is_used_[4]) +
-      ((uint64_t)VP8LExtraCost(h->distance_, NUM_DISTANCE_CODES)
-       << LOG_2_PRECISION_BITS);
+      PopulationCost(h->distance_, NUM_DISTANCE_CODES, NULL, &h->is_used_[4]);
   const int num_codes = VP8LHistogramNumCodes(h->palette_code_bits_);
   h->literal_cost_ =
-      PopulationCost(h->literal_, num_codes, NULL, &h->is_used_[0]) +
-      ((uint64_t)VP8LExtraCost(h->literal_ + NUM_LITERAL_CODES,
-                               NUM_LENGTH_CODES)
-       << LOG_2_PRECISION_BITS);
+      PopulationCost(h->literal_, num_codes, NULL, &h->is_used_[0]);
   h->red_cost_ =
       PopulationCost(h->red_, NUM_LITERAL_CODES, &red_sym, &h->is_used_[1]);
   h->blue_cost_ =
