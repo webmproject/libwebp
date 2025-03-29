@@ -119,7 +119,7 @@ static int DecodeImageStream(int xsize, int ysize,
 int VP8LCheckSignature(const uint8_t* const data, size_t size) {
   return (size >= VP8L_FRAME_HEADER_SIZE &&
           data[0] == VP8L_MAGIC_BYTE &&
-          (data[4] >> 5) == 0);  // version
+          (data[VP8L_FRAME_HEADER_SIZE - 1] >> 5) == 0);  // version
 }
 
 static int ReadImageInfo(VP8LBitReader* const br,
