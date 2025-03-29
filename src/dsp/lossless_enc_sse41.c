@@ -48,29 +48,6 @@ static uint32_t ExtraCost_SSE41(const uint32_t* const a, int length) {
   return HorizontalSum_SSE41(cost);
 }
 
-static uint32_t ExtraCostCombined_SSE41(const uint32_t* WEBP_RESTRICT const a,
-                                        const uint32_t* WEBP_RESTRICT const b,
-                                        int length) {
-  int i;
-  __m128i cost = _mm_add_epi32(_mm_set_epi32(2 * a[7], 2 * a[6], a[5], a[4]),
-                               _mm_set_epi32(2 * b[7], 2 * b[6], b[5], b[4]));
-  assert(length % 8 == 0);
-
-  for (i = 8; i + 8 <= length; i += 8) {
-    const int j = (i - 2) >> 1;
-    const __m128i a0 = _mm_loadu_si128((const __m128i*)&a[i]);
-    const __m128i a1 = _mm_loadu_si128((const __m128i*)&a[i + 4]);
-    const __m128i b0 = _mm_loadu_si128((const __m128i*)&b[i]);
-    const __m128i b1 = _mm_loadu_si128((const __m128i*)&b[i + 4]);
-    const __m128i w = _mm_set_epi32(j + 3, j + 2, j + 1, j);
-    const __m128i a2 = _mm_hadd_epi32(a0, a1);
-    const __m128i b2 = _mm_hadd_epi32(b0, b1);
-    const __m128i mul = _mm_mullo_epi32(_mm_add_epi32(a2, b2), w);
-    cost = _mm_add_epi32(mul, cost);
-  }
-  return HorizontalSum_SSE41(cost);
-}
-
 //------------------------------------------------------------------------------
 // Subtract-Green Transform
 
@@ -199,7 +176,6 @@ extern void VP8LEncDspInitSSE41(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8LEncDspInitSSE41(void) {
   VP8LExtraCost = ExtraCost_SSE41;
-  VP8LExtraCostCombined = ExtraCostCombined_SSE41;
   VP8LSubtractGreenFromBlueAndRed = SubtractGreenFromBlueAndRed_SSE41;
   VP8LCollectColorBlueTransforms = CollectColorBlueTransforms_SSE41;
   VP8LCollectColorRedTransforms = CollectColorRedTransforms_SSE41;

@@ -583,20 +583,6 @@ static uint32_t ExtraCost_C(const uint32_t* population, int length) {
   return cost;
 }
 
-static uint32_t ExtraCostCombined_C(const uint32_t* WEBP_RESTRICT X,
-                                    const uint32_t* WEBP_RESTRICT Y,
-                                    int length) {
-  int i;
-  uint32_t cost = X[4] + Y[4] + X[5] + Y[5];
-  assert(length % 2 == 0);
-  for (i = 2; i < length / 2 - 1; ++i) {
-    const int xy0 = X[2 * i + 2] + Y[2 * i + 2];
-    const int xy1 = X[2 * i + 3] + Y[2 * i + 3];
-    cost += i * (xy0 + xy1);
-  }
-  return cost;
-}
-
 //------------------------------------------------------------------------------
 
 static void AddVector_C(const uint32_t* WEBP_RESTRICT a,
@@ -727,7 +713,6 @@ VP8LFastLog2SlowFunc VP8LFastLog2Slow;
 VP8LFastSLog2SlowFunc VP8LFastSLog2Slow;
 
 VP8LCostFunc VP8LExtraCost;
-VP8LCostCombinedFunc VP8LExtraCostCombined;
 VP8LCombinedShannonEntropyFunc VP8LCombinedShannonEntropy;
 VP8LShannonEntropyFunc VP8LShannonEntropy;
 
@@ -770,7 +755,6 @@ WEBP_DSP_INIT_FUNC(VP8LEncDspInit) {
   VP8LFastSLog2Slow = FastSLog2Slow_C;
 
   VP8LExtraCost = ExtraCost_C;
-  VP8LExtraCostCombined = ExtraCostCombined_C;
   VP8LCombinedShannonEntropy = CombinedShannonEntropy_C;
   VP8LShannonEntropy = ShannonEntropy_C;
 
@@ -865,7 +849,6 @@ WEBP_DSP_INIT_FUNC(VP8LEncDspInit) {
   assert(VP8LFastLog2Slow != NULL);
   assert(VP8LFastSLog2Slow != NULL);
   assert(VP8LExtraCost != NULL);
-  assert(VP8LExtraCostCombined != NULL);
   assert(VP8LCombinedShannonEntropy != NULL);
   assert(VP8LShannonEntropy != NULL);
   assert(VP8LGetEntropyUnrefined != NULL);
