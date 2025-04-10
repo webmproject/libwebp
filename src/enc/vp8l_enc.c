@@ -14,6 +14,7 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "src/dsp/lossless.h"
 #include "src/dsp/lossless_common.h"
@@ -24,9 +25,11 @@
 #include "src/utils/bit_writer_utils.h"
 #include "src/utils/huffman_encode_utils.h"
 #include "src/utils/palette.h"
+#include "src/utils/thread_utils.h"
 #include "src/utils/utils.h"
 #include "src/webp/encode.h"
 #include "src/webp/format_constants.h"
+#include "src/webp/types.h"
 
 // Maximum number of histogram images (sub-blocks).
 #define MAX_HUFF_IMAGE_SIZE       2600
@@ -440,7 +443,7 @@ static int GetHuffBitLengthsAndCodes(
     assert(histo != NULL);
     for (k = 0; k < 5; ++k) {
       const int num_symbols =
-          (k == 0) ? VP8LHistogramNumCodes(histo->palette_code_bits_) :
+          (k == 0) ? VP8LHistogramNumCodes(histo->palette_code_bits) :
           (k == 4) ? NUM_DISTANCE_CODES : 256;
       codes[k].num_symbols = num_symbols;
       total_length_size += num_symbols;
@@ -478,11 +481,11 @@ static int GetHuffBitLengthsAndCodes(
   for (i = 0; i < histogram_image_size; ++i) {
     HuffmanTreeCode* const codes = &huffman_codes[5 * i];
     VP8LHistogram* const histo = histogram_image->histograms[i];
-    VP8LCreateHuffmanTree(histo->literal_, 15, buf_rle, huff_tree, codes + 0);
-    VP8LCreateHuffmanTree(histo->red_, 15, buf_rle, huff_tree, codes + 1);
-    VP8LCreateHuffmanTree(histo->blue_, 15, buf_rle, huff_tree, codes + 2);
-    VP8LCreateHuffmanTree(histo->alpha_, 15, buf_rle, huff_tree, codes + 3);
-    VP8LCreateHuffmanTree(histo->distance_, 15, buf_rle, huff_tree, codes + 4);
+    VP8LCreateHuffmanTree(histo->literal, 15, buf_rle, huff_tree, codes + 0);
+    VP8LCreateHuffmanTree(histo->red, 15, buf_rle, huff_tree, codes + 1);
+    VP8LCreateHuffmanTree(histo->blue, 15, buf_rle, huff_tree, codes + 2);
+    VP8LCreateHuffmanTree(histo->alpha, 15, buf_rle, huff_tree, codes + 3);
+    VP8LCreateHuffmanTree(histo->distance, 15, buf_rle, huff_tree, codes + 4);
   }
   ok = 1;
  End:

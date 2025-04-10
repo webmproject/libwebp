@@ -14,9 +14,8 @@
 #ifndef WEBP_ENC_HISTOGRAM_ENC_H_
 #define WEBP_ENC_HISTOGRAM_ENC_H_
 
-#include <string.h>
-
 #include "src/enc/backward_references_enc.h"
+#include "src/webp/encode.h"
 #include "src/webp/format_constants.h"
 #include "src/webp/types.h"
 
@@ -31,20 +30,20 @@ extern "C" {
 typedef struct {
   // literal_ contains green literal, palette-code and
   // copy-length-prefix histogram
-  uint32_t* literal_;         // Pointer to the allocated buffer for literal.
-  uint32_t red_[NUM_LITERAL_CODES];
-  uint32_t blue_[NUM_LITERAL_CODES];
-  uint32_t alpha_[NUM_LITERAL_CODES];
+  uint32_t* literal;        // Pointer to the allocated buffer for literal.
+  uint32_t red[NUM_LITERAL_CODES];
+  uint32_t blue[NUM_LITERAL_CODES];
+  uint32_t alpha[NUM_LITERAL_CODES];
   // Backward reference prefix-code histogram.
-  uint32_t distance_[NUM_DISTANCE_CODES];
-  int palette_code_bits_;
-  uint32_t trivial_symbol_;  // True, if histograms for Red, Blue & Alpha
-                             // literal symbols are single valued.
-  uint64_t bit_cost_;        // cached value of bit cost.
-  uint64_t literal_cost_;    // Cached values of dominant entropy costs:
-  uint64_t red_cost_;        // literal, red & blue.
-  uint64_t blue_cost_;
-  uint8_t is_used_[5];       // 5 for literal, red, blue, alpha, distance
+  uint32_t distance[NUM_DISTANCE_CODES];
+  int palette_code_bits;
+  uint32_t trivial_symbol;  // True, if histograms for Red, Blue & Alpha
+                            // literal symbols are single valued.
+  uint64_t bit_cost;        // cached value of bit cost.
+  uint64_t literal_cost;    // Cached values of dominant entropy costs:
+  uint64_t red_cost;        // literal, red & blue.
+  uint64_t blue_cost;
+  uint8_t is_used[5];       // 5 for literal, red, blue, alpha, distance
 } VP8LHistogram;
 
 // Collection of histograms with fixed capacity, allocated as one

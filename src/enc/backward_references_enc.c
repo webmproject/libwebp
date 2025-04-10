@@ -13,8 +13,9 @@
 #include "src/enc/backward_references_enc.h"
 
 #include <assert.h>
+#include <string.h>
 
-#include "src/dsp/dsp.h"
+#include "src/dsp/cpu.h"
 #include "src/dsp/lossless.h"
 #include "src/dsp/lossless_common.h"
 #include "src/enc/histogram_enc.h"
@@ -22,6 +23,8 @@
 #include "src/utils/color_cache_utils.h"
 #include "src/utils/utils.h"
 #include "src/webp/encode.h"
+#include "src/webp/format_constants.h"
+#include "src/webp/types.h"
 
 #define MIN_BLOCK_SIZE 256  // minimum block size for backward references
 
@@ -793,20 +796,20 @@ static int CalculateBestCacheSize(const uint32_t* argb, int quality,
       // The keys of the caches can be derived from the longest one.
       int key = VP8LHashPix(pix, 32 - cache_bits_max);
       // Do not use the color cache for cache_bits = 0.
-      ++histos[0]->blue_[b];
-      ++histos[0]->literal_[g];
-      ++histos[0]->red_[r];
-      ++histos[0]->alpha_[a];
+      ++histos[0]->blue[b];
+      ++histos[0]->literal[g];
+      ++histos[0]->red[r];
+      ++histos[0]->alpha[a];
       // Deal with cache_bits > 0.
       for (i = cache_bits_max; i >= 1; --i, key >>= 1) {
         if (VP8LColorCacheLookup(&hashers[i], key) == pix) {
-          ++histos[i]->literal_[NUM_LITERAL_CODES + NUM_LENGTH_CODES + key];
+          ++histos[i]->literal[NUM_LITERAL_CODES + NUM_LENGTH_CODES + key];
         } else {
           VP8LColorCacheSet(&hashers[i], key, pix);
-          ++histos[i]->blue_[b];
-          ++histos[i]->literal_[g];
-          ++histos[i]->red_[r];
-          ++histos[i]->alpha_[a];
+          ++histos[i]->blue[b];
+          ++histos[i]->literal[g];
+          ++histos[i]->red[r];
+          ++histos[i]->alpha[a];
         }
       }
     } else {
@@ -820,7 +823,7 @@ static int CalculateBestCacheSize(const uint32_t* argb, int quality,
       uint32_t argb_prev = *argb ^ 0xffffffffu;
       VP8LPrefixEncode(len, &code, &extra_bits, &extra_bits_value);
       for (i = 0; i <= cache_bits_max; ++i) {
-        ++histos[i]->literal_[NUM_LITERAL_CODES + code];
+        ++histos[i]->literal[NUM_LITERAL_CODES + code];
       }
       // Update the color caches.
       do {

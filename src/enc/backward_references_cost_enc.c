@@ -22,6 +22,8 @@
 #include "src/enc/histogram_enc.h"
 #include "src/utils/color_cache_utils.h"
 #include "src/utils/utils.h"
+#include "src/webp/format_constants.h"
+#include "src/webp/types.h"
 
 #define VALUES_IN_BYTE 256
 
@@ -76,16 +78,16 @@ static int CostModelBuild(CostModel* const m, int xsize, int cache_bits,
   }
 
   ConvertPopulationCountTableToBitEstimates(
-      VP8LHistogramNumCodes(histo->palette_code_bits_), histo->literal_,
+      VP8LHistogramNumCodes(histo->palette_code_bits), histo->literal,
       m->literal_);
   ConvertPopulationCountTableToBitEstimates(
-      VALUES_IN_BYTE, histo->red_, m->red_);
+      VALUES_IN_BYTE, histo->red, m->red_);
   ConvertPopulationCountTableToBitEstimates(
-      VALUES_IN_BYTE, histo->blue_, m->blue_);
+      VALUES_IN_BYTE, histo->blue, m->blue_);
   ConvertPopulationCountTableToBitEstimates(
-      VALUES_IN_BYTE, histo->alpha_, m->alpha_);
+      VALUES_IN_BYTE, histo->alpha, m->alpha_);
   ConvertPopulationCountTableToBitEstimates(
-      NUM_DISTANCE_CODES, histo->distance_, m->distance_);
+      NUM_DISTANCE_CODES, histo->distance, m->distance_);
   ok = 1;
 
  Error:
