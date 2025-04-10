@@ -516,6 +516,37 @@ static int WriteWebPWithMetadata(FILE* const out,
 }
 
 //------------------------------------------------------------------------------
+// Resize
+
+enum {
+  RESIZE_MODE_DOWN_ONLY,
+  RESIZE_MODE_UP_ONLY,
+  RESIZE_MODE_ALWAYS,
+  RESIZE_MODE_DEFAULT = RESIZE_MODE_ALWAYS
+};
+
+static void ApplyResizeMode(const int resize_mode,
+                            const WebPPicture* const pic,
+                            int* const resize_w, int* const resize_h) {
+  const int src_w = pic->width;
+  const int src_h = pic->height;
+  const int dst_w = *resize_w;
+  const int dst_h = *resize_h;
+
+  if (resize_mode == RESIZE_MODE_DOWN_ONLY) {
+    if ((dst_w == 0 && src_h <= dst_h) ||
+        (dst_h == 0 && src_w <= dst_w) ||
+        (src_w <= dst_w && src_h <= dst_h)) {
+      *resize_w = *resize_h = 0;
+    }
+  } else if (resize_mode == RESIZE_MODE_UP_ONLY) {
+    if (src_w >= dst_w && src_h >= dst_h) {
+      *resize_w = *resize_h = 0;
+    }
+  }
+}
+
+//------------------------------------------------------------------------------
 
 static int ProgressReport(int percent, const WebPPicture* const picture) {
   fprintf(stderr, "[%s]: %3d %%      \r",
@@ -583,6 +614,8 @@ static void HelpLong(void) {
          "                           (default: 0 100)\n");
   printf("  -crop <x> <y> <w> <h> .. crop picture with the given rectangle\n");
   printf("  -resize <w> <h> ........ resize picture (*after* any cropping)\n");
+  printf("  -resize_mode <string> .. one of: up_only, down_only,"
+         " always (default)\n");
   printf("  -mt .................... use multi-threading if available\n");
   printf("  -low_memory ............ reduce memory usage (slower encoding)\n");
   printf("  -map <int> ............. print map of extra info\n");
@@ -670,6 +703,7 @@ int main(int argc, const char* argv[]) {
   uint32_t background_color = 0xffffffu;
   int crop = 0, crop_x = 0, crop_y = 0, crop_w = 0, crop_h = 0;
   int resize_w = 0, resize_h = 0;
+  int resize_mode = RESIZE_MODE_DEFAULT;
   int lossless_preset = 6;
   int use_lossless_preset = -1;  // -1=unset, 0=don't use, 1=use it
   int show_progress = 0;
@@ -837,6 +871,18 @@ int main(int argc, const char* argv[]) {
     } else if (!strcmp(argv[c], "-resize") && c + 2 < argc) {
       resize_w = ExUtilGetInt(argv[++c], 0, &parse_error);
       resize_h = ExUtilGetInt(argv[++c], 0, &parse_error);
+    } else if (!strcmp(argv[c], "-resize_mode") && c + 1 < argc) {
+      ++c;
+      if (!strcmp(argv[c], "down_only")) {
+        resize_mode = RESIZE_MODE_DOWN_ONLY;
+      } else if (!strcmp(argv[c], "up_only")) {
+        resize_mode = RESIZE_MODE_UP_ONLY;
+      } else if (!strcmp(argv[c], "always")) {
+        resize_mode = RESIZE_MODE_ALWAYS;
+      } else {
+        fprintf(stderr, "Error! Unrecognized resize mode: %s\n", argv[c]);
+        goto Error;
+      }
 #ifndef WEBP_DLL
     } else if (!strcmp(argv[c], "-noasm")) {
       VP8GetCPUInfo = NULL;
@@ -1057,6 +1103,7 @@ int main(int argc, const char* argv[]) {
       goto Error;
     }
   }
+  ApplyResizeMode(resize_mode, &picture, &resize_w, &resize_h);
   if ((resize_w | resize_h) > 0) {
     WebPPicture picture_no_alpha;
     if (config.exact) {
