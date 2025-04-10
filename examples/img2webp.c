@@ -160,8 +160,8 @@ int main(int argc, const char* argv[]) {
   ok = ExUtilInitCommandLineArguments(argc - 1, argv + 1, &cmd_args);
   if (!ok) FREE_WARGV_AND_RETURN(EXIT_FAILURE);
 
-  argc = cmd_args.argc_;
-  argv = cmd_args.argv_;
+  argc = cmd_args.argc;
+  argv = cmd_args.argv;
 
   WebPDataInit(&webp_data);
   if (!WebPAnimEncoderOptionsInit(&anim_config) ||

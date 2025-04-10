@@ -28,10 +28,10 @@
 void WebPInfoTest(std::string_view data) {
   WebPInfo webp_info;
   WebPInfoInit(&webp_info);
-  webp_info.quiet_ = 1;
-  webp_info.show_summary_ = 0;
-  webp_info.show_diagnosis_ = 0;
-  webp_info.parse_bitstream_ = 1;
+  webp_info.quiet = 1;
+  webp_info.show_summary = 0;
+  webp_info.show_diagnosis = 0;
+  webp_info.parse_bitstream = 1;
   WebPData webp_data = {reinterpret_cast<const uint8_t *>(data.data()),
                         data.size()};
   AnalyzeWebP(&webp_info, &webp_data);
