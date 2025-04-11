@@ -44,6 +44,7 @@ typedef struct {
   uint64_t red_cost;        // literal, red & blue.
   uint64_t blue_cost;
   uint8_t is_used[5];       // 5 for literal, red, blue, alpha, distance
+  uint16_t bin_id;          // entropy bin index.
 } VP8LHistogram;
 
 // Collection of histograms with fixed capacity, allocated as one
