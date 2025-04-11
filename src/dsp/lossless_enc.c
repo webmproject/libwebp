@@ -482,10 +482,10 @@ void VP8LTransformColor_C(const VP8LMultipliers* WEBP_RESTRICT const m,
     const int8_t red   = U32ToS8(argb >> 16);
     int new_red = red & 0xff;
     int new_blue = argb & 0xff;
-    new_red -= ColorTransformDelta((int8_t)m->green_to_red_, green);
+    new_red -= ColorTransformDelta((int8_t)m->green_to_red, green);
     new_red &= 0xff;
-    new_blue -= ColorTransformDelta((int8_t)m->green_to_blue_, green);
-    new_blue -= ColorTransformDelta((int8_t)m->red_to_blue_, red);
+    new_blue -= ColorTransformDelta((int8_t)m->green_to_blue, green);
+    new_blue -= ColorTransformDelta((int8_t)m->red_to_blue, red);
     new_blue &= 0xff;
     data[i] = (argb & 0xff00ff00u) | (new_red << 16) | (new_blue);
   }

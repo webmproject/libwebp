@@ -28,7 +28,7 @@ extern "C" {
 
 // A simple container for histograms of data.
 typedef struct {
-  // literal_ contains green literal, palette-code and
+  // 'literal' contains green literal, palette-code and
   // copy-length-prefix histogram
   uint32_t* literal;        // Pointer to the allocated buffer for literal.
   uint32_t red[NUM_LITERAL_CODES];

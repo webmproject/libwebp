@@ -111,7 +111,7 @@ VP8LHistogram* VP8LAllocateHistogram(int cache_bits) {
   uint8_t* const memory = (uint8_t*)WebPSafeMalloc(total_size, sizeof(*memory));
   if (memory == NULL) return NULL;
   histo = (VP8LHistogram*)memory;
-  // literal_ won't necessary be aligned.
+  // 'literal' won't necessary be aligned.
   histo->literal = (uint32_t*)(memory + sizeof(VP8LHistogram));
   VP8LHistogramInit(histo, cache_bits, /*init_arrays=*/ 0);
   return histo;
@@ -127,7 +127,7 @@ static void HistogramSetResetPointers(VP8LHistogramSet* const set,
   for (i = 0; i < set->max_size; ++i) {
     memory = (uint8_t*) WEBP_ALIGN(memory);
     set->histograms[i] = (VP8LHistogram*) memory;
-    // literal_ won't necessary be aligned.
+    // 'literal' won't necessary be aligned.
     set->histograms[i]->literal = (uint32_t*)(memory + sizeof(VP8LHistogram));
     memory += histo_size;
   }
@@ -514,31 +514,31 @@ WEBP_NODISCARD static int HistogramAddThresh(const VP8LHistogram* const a,
 // The structure to keep track of cost range for the three dominant entropy
 // symbols.
 typedef struct {
-  uint64_t literal_max_;
-  uint64_t literal_min_;
-  uint64_t red_max_;
-  uint64_t red_min_;
-  uint64_t blue_max_;
-  uint64_t blue_min_;
+  uint64_t literal_max;
+  uint64_t literal_min;
+  uint64_t red_max;
+  uint64_t red_min;
+  uint64_t blue_max;
+  uint64_t blue_min;
 } DominantCostRange;
 
 static void DominantCostRangeInit(DominantCostRange* const c) {
-  c->literal_max_ = 0;
-  c->literal_min_ = WEBP_UINT64_MAX;
-  c->red_max_ = 0;
-  c->red_min_ = WEBP_UINT64_MAX;
-  c->blue_max_ = 0;
-  c->blue_min_ = WEBP_UINT64_MAX;
+  c->literal_max = 0;
+  c->literal_min = WEBP_UINT64_MAX;
+  c->red_max = 0;
+  c->red_min = WEBP_UINT64_MAX;
+  c->blue_max = 0;
+  c->blue_min = WEBP_UINT64_MAX;
 }
 
 static void UpdateDominantCostRange(
     const VP8LHistogram* const h, DominantCostRange* const c) {
-  if (c->literal_max_ < h->literal_cost) c->literal_max_ = h->literal_cost;
-  if (c->literal_min_ > h->literal_cost) c->literal_min_ = h->literal_cost;
-  if (c->red_max_ < h->red_cost) c->red_max_ = h->red_cost;
-  if (c->red_min_ > h->red_cost) c->red_min_ = h->red_cost;
-  if (c->blue_max_ < h->blue_cost) c->blue_max_ = h->blue_cost;
-  if (c->blue_min_ > h->blue_cost) c->blue_min_ = h->blue_cost;
+  if (c->literal_max < h->literal_cost) c->literal_max = h->literal_cost;
+  if (c->literal_min > h->literal_cost) c->literal_min = h->literal_cost;
+  if (c->red_max < h->red_cost) c->red_max = h->red_cost;
+  if (c->red_min > h->red_cost) c->red_min = h->red_cost;
+  if (c->blue_max < h->blue_cost) c->blue_max = h->blue_cost;
+  if (c->blue_min > h->blue_cost) c->blue_min = h->blue_cost;
 }
 
 static void UpdateHistogramCost(VP8LHistogram* const h) {
@@ -578,13 +578,13 @@ static int GetBinIdForEntropy(uint64_t min, uint64_t max, uint64_t val) {
 static int GetHistoBinIndex(const VP8LHistogram* const h,
                             const DominantCostRange* const c, int low_effort) {
   int bin_id =
-      GetBinIdForEntropy(c->literal_min_, c->literal_max_, h->literal_cost);
+      GetBinIdForEntropy(c->literal_min, c->literal_max, h->literal_cost);
   assert(bin_id < NUM_PARTITIONS);
   if (!low_effort) {
     bin_id = bin_id * NUM_PARTITIONS
-           + GetBinIdForEntropy(c->red_min_, c->red_max_, h->red_cost);
+           + GetBinIdForEntropy(c->red_min, c->red_max, h->red_cost);
     bin_id = bin_id * NUM_PARTITIONS
-           + GetBinIdForEntropy(c->blue_min_, c->blue_max_, h->blue_cost);
+           + GetBinIdForEntropy(c->blue_min, c->blue_max, h->blue_cost);
     assert(bin_id < BIN_SIZE);
   }
   return bin_id;
@@ -1064,7 +1064,7 @@ static int HistogramCombineStochastic(VP8LHistogramSet* const image_histo,
 
 // Find the best 'out' histogram for each of the 'in' histograms.
 // At call-time, 'out' contains the histograms of the clusters.
-// Note: we assume that out[]->bit_cost_ is already up-to-date.
+// Note: we assume that out[]->bit_cost is already up-to-date.
 static void HistogramRemap(const VP8LHistogramSet* const in,
                            VP8LHistogramSet* const out,
                            uint32_t* const symbols) {

@@ -245,7 +245,7 @@ static void GetCombinedEntropyUnrefined_MIPS32(
 // A..D - offsets
 // E - temp variable to tell macro
 //     if pointer should be incremented
-// literal_ and successive histograms could be unaligned
+// 'literal' and successive histograms could be unaligned
 // so we must use ulw and usw
 #define ADD_TO_OUT(A, B, C, D, E, P0, P1, P2)           \
     "ulw    %[temp0], " #A "(%[" #P0 "])    \n\t"       \

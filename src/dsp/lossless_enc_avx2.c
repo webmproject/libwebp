@@ -58,8 +58,8 @@ static void TransformColor_AVX2(const VP8LMultipliers* WEBP_RESTRICT const m,
                                 uint32_t* WEBP_RESTRICT argb_data,
                                 int num_pixels) {
   const __m256i mults_rb =
-      MK_CST_16(CST_5b(m->green_to_red_), CST_5b(m->green_to_blue_));
-  const __m256i mults_b2 = MK_CST_16(CST_5b(m->red_to_blue_), 0);
+      MK_CST_16(CST_5b(m->green_to_red), CST_5b(m->green_to_blue));
+  const __m256i mults_b2 = MK_CST_16(CST_5b(m->red_to_blue), 0);
   const __m256i mask_rb = _mm256_set1_epi32(0x00ff00ff);  // red-blue masks
   const __m256i kCstShuffle = _mm256_set_epi8(
       29, -1, 29, -1, 25, -1, 25, -1, 21, -1, 21, -1, 17, -1, 17, -1, 13, -1,

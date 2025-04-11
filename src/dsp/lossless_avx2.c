@@ -362,9 +362,9 @@ static void TransformColorInverse_AVX2(const VP8LMultipliers* const m,
 // sign-extended multiplying constants, pre-shifted by 5.
 #define CST(X)  (((int16_t)(m->X << 8)) >> 5)   // sign-extend
   const __m256i mults_rb =
-      _mm256_set1_epi32((int)((uint32_t)CST(green_to_red_) << 16 |
-                              (CST(green_to_blue_) & 0xffff)));
-  const __m256i mults_b2 = _mm256_set1_epi32(CST(red_to_blue_));
+      _mm256_set1_epi32((int)((uint32_t)CST(green_to_red) << 16 |
+                              (CST(green_to_blue) & 0xffff)));
+  const __m256i mults_b2 = _mm256_set1_epi32(CST(red_to_blue));
 #undef CST
   const __m256i mask_ag = _mm256_set1_epi32((int)0xff00ff00);
   const __m256i perm1 = _mm256_setr_epi8(

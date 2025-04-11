@@ -74,9 +74,9 @@ extern VP8LProcessDecBlueAndRedFunc VP8LAddGreenToBlueAndRed_SSE;
 typedef struct {
   // Note: the members are uint8_t, so that any negative values are
   // automatically converted to "mod 256" values.
-  uint8_t green_to_red_;
-  uint8_t green_to_blue_;
-  uint8_t red_to_blue_;
+  uint8_t green_to_red;
+  uint8_t green_to_blue;
+  uint8_t red_to_blue;
 } VP8LMultipliers;
 typedef void (*VP8LTransformColorInverseFunc)(const VP8LMultipliers* const m,
                                               const uint32_t* src,

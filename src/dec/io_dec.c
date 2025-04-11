@@ -259,7 +259,7 @@ static int EmitRescaledYUV(const VP8Io* const io, WebPDecParams* const p) {
   if (WebPIsAlphaMode(p->output->colorspace) && io->a != NULL) {
     // Before rescaling, we premultiply the luma directly into the io->y
     // internal buffer. This is OK since these samples are not used for
-    // intra-prediction (the top samples are saved in cache_y_/u_/v_).
+    // intra-prediction (the top samples are saved in cache_y/u/v).
     // But we need to cast the const away, though.
     WebPMultRows((uint8_t*)io->y, io->y_stride,
                  io->a, io->width, io->mb_w, mb_h, 0);

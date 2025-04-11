@@ -841,11 +841,11 @@ static int SSE4x4_NEON(const uint8_t* WEBP_RESTRICT a,
 static int16x8_t Quantize_NEON(int16_t* WEBP_RESTRICT const in,
                                const VP8Matrix* WEBP_RESTRICT const mtx,
                                int offset) {
-  const uint16x8_t sharp = vld1q_u16(&mtx->sharpen_[offset]);
-  const uint16x8_t q = vld1q_u16(&mtx->q_[offset]);
-  const uint16x8_t iq = vld1q_u16(&mtx->iq_[offset]);
-  const uint32x4_t bias0 = vld1q_u32(&mtx->bias_[offset + 0]);
-  const uint32x4_t bias1 = vld1q_u32(&mtx->bias_[offset + 4]);
+  const uint16x8_t sharp = vld1q_u16(&mtx->sharpen[offset]);
+  const uint16x8_t q = vld1q_u16(&mtx->q[offset]);
+  const uint16x8_t iq = vld1q_u16(&mtx->iq[offset]);
+  const uint32x4_t bias0 = vld1q_u32(&mtx->bias[offset + 0]);
+  const uint32x4_t bias1 = vld1q_u32(&mtx->bias[offset + 4]);
 
   const int16x8_t a = vld1q_s16(in + offset);                // in
   const uint16x8_t b = vreinterpretq_u16_s16(vabsq_s16(a));  // coeff = abs(in)
