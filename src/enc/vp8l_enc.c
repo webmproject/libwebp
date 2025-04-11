@@ -797,7 +797,9 @@ static int EncodeImageNoHuffman(VP8LBitWriter* const bw,
   VP8LHistogramSetClear(histogram_image);
 
   // Build histogram image and symbols from backward references.
-  VP8LHistogramStoreRefs(refs, histogram_image->histograms[0]);
+  VP8LHistogramStoreRefs(refs, /*distance_modifier=*/NULL,
+                         /*distance_modifier_arg0=*/0,
+                         histogram_image->histograms[0]);
 
   // Create Huffman bit lengths and codes for each histogram image.
   assert(histogram_image->size == 1);

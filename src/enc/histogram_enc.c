@@ -79,15 +79,6 @@ void VP8LFreeHistogramSet(VP8LHistogramSet* const histo) {
   WebPSafeFree(histo);
 }
 
-void VP8LHistogramStoreRefs(const VP8LBackwardRefs* const refs,
-                            VP8LHistogram* const histo) {
-  VP8LRefsCursor c = VP8LRefsCursorInit(refs);
-  while (VP8LRefsCursorOk(&c)) {
-    VP8LHistogramAddSinglePixOrCopy(histo, c.cur_pos, NULL, 0);
-    VP8LRefsCursorNext(&c);
-  }
-}
-
 void VP8LHistogramCreate(VP8LHistogram* const p,
                          const VP8LBackwardRefs* const refs,
                          int palette_code_bits) {
@@ -95,7 +86,8 @@ void VP8LHistogramCreate(VP8LHistogram* const p,
     p->palette_code_bits = palette_code_bits;
   }
   HistogramClear(p);
-  VP8LHistogramStoreRefs(refs, p);
+  VP8LHistogramStoreRefs(refs, /*distance_modifier=*/NULL,
+                         /*distance_modifier_arg0=*/0, p);
 }
 
 void VP8LHistogramInit(VP8LHistogram* const p, int palette_code_bits,
@@ -201,10 +193,9 @@ static void HistogramSetRemoveHistogram(VP8LHistogramSet* const set, int i,
 
 // -----------------------------------------------------------------------------
 
-void VP8LHistogramAddSinglePixOrCopy(VP8LHistogram* const histo,
-                                     const PixOrCopy* const v,
-                                     int (*const distance_modifier)(int, int),
-                                     int distance_modifier_arg0) {
+static void HistogramAddSinglePixOrCopy(
+    VP8LHistogram* const histo, const PixOrCopy* const v,
+    int (*const distance_modifier)(int, int), int distance_modifier_arg0) {
   if (PixOrCopyIsLiteral(v)) {
     ++histo->alpha[PixOrCopyLiteral(v, 3)];
     ++histo->red[PixOrCopyLiteral(v, 2)];
@@ -227,6 +218,18 @@ void VP8LHistogramAddSinglePixOrCopy(VP8LHistogram* const histo,
           &code, &extra_bits);
     }
     ++histo->distance[code];
+  }
+}
+
+void VP8LHistogramStoreRefs(const VP8LBackwardRefs* const refs,
+                            int (*const distance_modifier)(int, int),
+                            int distance_modifier_arg0,
+                            VP8LHistogram* const histo) {
+  VP8LRefsCursor c = VP8LRefsCursorInit(refs);
+  while (VP8LRefsCursorOk(&c)) {
+    HistogramAddSinglePixOrCopy(histo, c.cur_pos, distance_modifier,
+                                distance_modifier_arg0);
+    VP8LRefsCursorNext(&c);
   }
 }
 
@@ -324,12 +327,37 @@ static uint64_t PopulationCost(const uint32_t* const population, int length,
 
 // trivial_at_end is 1 if the two histograms only have one element that is
 // non-zero: both the zero-th one, or both the last one.
-static WEBP_INLINE uint64_t GetCombinedEntropy(const uint32_t* const X,
-                                               const uint32_t* const Y,
-                                               int length, int is_X_used,
-                                               int is_Y_used,
-                                               int trivial_at_end) {
+// 'index' is the index of the symbol in the histogram (literal, red, blue,
+// alpha, distance).
+static WEBP_INLINE uint64_t GetCombinedEntropy(
+    const VP8LHistogram* const histo_X, const VP8LHistogram* const histo_Y,
+    int index, int trivial_at_end) {
+  const uint32_t* X;
+  const uint32_t* Y;
+  int length;
   VP8LStreaks stats;
+  if (index == 0) {
+    X = histo_X->literal;
+    Y = histo_Y->literal;
+    length = VP8LHistogramNumCodes(histo_X->palette_code_bits);
+  } else if (index == 1) {
+    X = histo_X->red;
+    Y = histo_Y->red;
+    length = NUM_LITERAL_CODES;
+  } else if (index == 2) {
+    X = histo_X->blue;
+    Y = histo_Y->blue;
+    length = NUM_LITERAL_CODES;
+  } else if (index == 3) {
+    X = histo_X->alpha;
+    Y = histo_Y->alpha;
+    length = NUM_LITERAL_CODES;
+  } else {
+    assert(index == 4);
+    X = histo_X->distance;
+    Y = histo_Y->distance;
+    length = NUM_DISTANCE_CODES;
+  }
   if (trivial_at_end) {
     // This configuration is due to palettization that transforms an indexed
     // pixel into 0xff000000 | (pixel << 8) in VP8LBundleColorMap.
@@ -343,6 +371,8 @@ static WEBP_INLINE uint64_t GetCombinedEntropy(const uint32_t* const X,
     stats.streaks[0][1] = length - 1;
     return FinalHuffmanCost(&stats);
   } else {
+    const int is_X_used = histo_X->is_used[index];
+    const int is_Y_used = histo_Y->is_used[index];
     VP8LBitEntropy bit_entropy;
     if (is_X_used) {
       if (is_Y_used) {
@@ -396,16 +426,13 @@ static WEBP_INLINE void SaturateAdd(uint64_t a, int64_t* b) {
 WEBP_NODISCARD static int GetCombinedHistogramEntropy(
     const VP8LHistogram* const a, const VP8LHistogram* const b,
     int64_t cost_threshold_in, uint64_t* cost) {
-  const int palette_code_bits = a->palette_code_bits;
-  int trivial_at_end = 0;
+  int trivial_at_end = 0, i;
   const uint64_t cost_threshold = (uint64_t)cost_threshold_in;
   assert(a->palette_code_bits == b->palette_code_bits);
   if (cost_threshold_in <= 0) return 0;
-  *cost = GetCombinedEntropy(a->literal, b->literal,
-                             VP8LHistogramNumCodes(palette_code_bits),
-                             a->is_used[0], b->is_used[0], 0);
-  // No need to add the extra cost as it is a constant that does not influence
-  // the histograms.
+  *cost = GetCombinedEntropy(a, b, /*index=*/0, /*trivial_at_end=*/0);
+  // No need to add the extra cost for lengths as it is a constant that does not
+  // influence the histograms.
   if (*cost >= cost_threshold) return 0;
 
   if (a->trivial_symbol != VP8L_NON_TRIVIAL_SYM &&
@@ -421,23 +448,13 @@ WEBP_NODISCARD static int GetCombinedHistogramEntropy(
     }
   }
 
-  *cost += GetCombinedEntropy(a->red, b->red, NUM_LITERAL_CODES, a->is_used[1],
-                              b->is_used[1], trivial_at_end);
-  if (*cost >= cost_threshold) return 0;
-
-  *cost += GetCombinedEntropy(a->blue, b->blue, NUM_LITERAL_CODES,
-                              a->is_used[2], b->is_used[2], trivial_at_end);
-  if (*cost >= cost_threshold) return 0;
-
-  *cost += GetCombinedEntropy(a->alpha, b->alpha, NUM_LITERAL_CODES,
-                              a->is_used[3], b->is_used[3], trivial_at_end);
-  if (*cost >= cost_threshold) return 0;
-
-  *cost += GetCombinedEntropy(a->distance, b->distance, NUM_DISTANCE_CODES,
-                              a->is_used[4], b->is_used[4], 0);
-  // No need to add the extra cost as it is a constant that does not influence
-  // the histograms.
-  if (*cost >= cost_threshold) return 0;
+  for (i = 1; i <= 4; ++i) {
+    *cost += GetCombinedEntropy(a, b, i,
+                                /*trivial_at_end=*/i <= 3 ? trivial_at_end : 0);
+    if (*cost >= cost_threshold) return 0;
+  }
+  // No need to add the extra cost for distances as it is a constant that does
+  // not influence the histograms.
 
   return 1;
 }
@@ -586,7 +603,7 @@ static void HistogramBuild(
   while (VP8LRefsCursorOk(&c)) {
     const PixOrCopy* const v = c.cur_pos;
     const int ix = (y >> histo_bits) * histo_xsize + (x >> histo_bits);
-    VP8LHistogramAddSinglePixOrCopy(histograms[ix], v, NULL, 0);
+    HistogramAddSinglePixOrCopy(histograms[ix], v, NULL, 0);
     x += PixOrCopyLength(v);
     while (x >= xsize) {
       x -= xsize;

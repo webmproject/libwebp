@@ -70,7 +70,11 @@ void VP8LHistogramInit(VP8LHistogram* const p, int palette_code_bits,
                        int init_arrays);
 
 // Collect all the references into a histogram (without reset)
+// The distance modifier function is applied to the distance before
+// the histogram is updated. It can be NULL.
 void VP8LHistogramStoreRefs(const VP8LBackwardRefs* const refs,
+                            int (*const distance_modifier)(int, int),
+                            int distance_modifier_arg0,
                             VP8LHistogram* const histo);
 
 // Free the memory allocated for the histogram.
@@ -90,12 +94,6 @@ void VP8LHistogramSetClear(VP8LHistogramSet* const set);
 // Returns NULL in case of memory error.
 // Special case of VP8LAllocateHistogramSet, with size equals 1.
 VP8LHistogram* VP8LAllocateHistogram(int cache_bits);
-
-// Accumulate a token 'v' into a histogram.
-void VP8LHistogramAddSinglePixOrCopy(VP8LHistogram* const histo,
-                                     const PixOrCopy* const v,
-                                     int (*const distance_modifier)(int, int),
-                                     int distance_modifier_arg0);
 
 static WEBP_INLINE int VP8LHistogramNumCodes(int palette_code_bits) {
   return NUM_LITERAL_CODES + NUM_LENGTH_CODES +

@@ -64,18 +64,13 @@ static void ConvertPopulationCountTableToBitEstimates(
 static int CostModelBuild(CostModel* const m, int xsize, int cache_bits,
                           const VP8LBackwardRefs* const refs) {
   int ok = 0;
-  VP8LRefsCursor c = VP8LRefsCursorInit(refs);
   VP8LHistogram* const histo = VP8LAllocateHistogram(cache_bits);
   if (histo == NULL) goto Error;
 
   // The following code is similar to VP8LHistogramCreate but converts the
   // distance to plane code.
   VP8LHistogramInit(histo, cache_bits, /*init_arrays=*/ 1);
-  while (VP8LRefsCursorOk(&c)) {
-    VP8LHistogramAddSinglePixOrCopy(histo, c.cur_pos, VP8LDistanceToPlaneCode,
-                                    xsize);
-    VP8LRefsCursorNext(&c);
-  }
+  VP8LHistogramStoreRefs(refs, VP8LDistanceToPlaneCode, xsize, histo);
 
   ConvertPopulationCountTableToBitEstimates(
       VP8LHistogramNumCodes(histo->palette_code_bits), histo->literal,
