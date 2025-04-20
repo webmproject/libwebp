@@ -39,10 +39,9 @@ typedef struct {
   int palette_code_bits;
   uint32_t trivial_symbol;  // True, if histograms for Red, Blue & Alpha
                             // literal symbols are single valued.
-  uint64_t bit_cost;        // cached value of bit cost.
-  uint64_t literal_cost;    // Cached values of dominant entropy costs:
-  uint64_t red_cost;        // literal, red & blue.
-  uint64_t blue_cost;
+  uint64_t bit_cost;        // Cached value of total bit cost.
+  // Cached values of entropy costs: literal, red, blue, alpha, distance
+  uint64_t costs[5];
   uint8_t is_used[5];       // 5 for literal, red, blue, alpha, distance
   uint16_t bin_id;          // entropy bin index.
 } VP8LHistogram;
