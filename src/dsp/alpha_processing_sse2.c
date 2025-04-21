@@ -29,7 +29,7 @@ static int DispatchAlpha_SSE2(const uint8_t* WEBP_RESTRICT alpha,
   int i, j;
   const __m128i zero = _mm_setzero_si128();
   const __m128i alpha_mask = _mm_set1_epi32((int)0xff);  // to preserve A
-  const __m128i all_0xff = _mm_set1_epi8(0xff);
+  const __m128i all_0xff = _mm_set1_epi8((char)0xff);
   __m128i all_alphas16 = all_0xff;
   __m128i all_alphas8 = all_0xff;
 
