@@ -41,7 +41,7 @@ typedef enum {
   RED,
   BLUE,
   ALPHA,
-  DISTANCE,
+  DISTANCE
 } HistogramIndex;
 
 // Return the size of the histogram for a given cache_bits.
@@ -105,7 +105,8 @@ void VP8LHistogramInit(VP8LHistogram* const p, int palette_code_bits,
   if (init_arrays) {
     HistogramClear(p);
   } else {
-    p->trivial_symbol = 0;
+    int i;
+    for (i = 0; i < 5; ++i) p->trivial_symbol[i] = VP8L_NON_TRIVIAL_SYM;
     p->bit_cost = 0;
     memset(p->costs, 0, sizeof(p->costs));
     memset(p->is_used, 0, sizeof(p->is_used));
@@ -317,7 +318,7 @@ static uint64_t FinalHuffmanCost(const VP8LStreaks* const stats) {
 // Get the symbol entropy for the distribution 'population'.
 // Set 'trivial_sym', if there's only one symbol present in the distribution.
 static uint64_t PopulationCost(const uint32_t* const population, int length,
-                               uint32_t* const trivial_sym,
+                               uint16_t* const trivial_sym,
                                uint8_t* const is_used) {
   VP8LBitEntropy bit_entropy;
   VP8LStreaks stats;
@@ -332,13 +333,41 @@ static uint64_t PopulationCost(const uint32_t* const population, int length,
   return BitsEntropyRefine(&bit_entropy) + FinalHuffmanCost(&stats);
 }
 
+static WEBP_INLINE void GetPopulationInfo(const VP8LHistogram* const histo,
+                                          HistogramIndex index,
+                                          const uint32_t** population,
+                                          int* length) {
+  switch (index) {
+    case LITERAL:
+      *population = histo->literal;
+      *length = VP8LHistogramNumCodes(histo->palette_code_bits);
+      break;
+    case RED:
+      *population = histo->red;
+      *length = NUM_LITERAL_CODES;
+      break;
+    case BLUE:
+      *population = histo->blue;
+      *length = NUM_LITERAL_CODES;
+      break;
+    case ALPHA:
+      *population = histo->alpha;
+      *length = NUM_LITERAL_CODES;
+      break;
+    case DISTANCE:
+      *population = histo->distance;
+      *length = NUM_DISTANCE_CODES;
+      break;
+  }
+}
+
 // trivial_at_end is 1 if the two histograms only have one element that is
 // non-zero: both the zero-th one, or both the last one.
 // 'index' is the index of the symbol in the histogram (literal, red, blue,
 // alpha, distance).
-static WEBP_INLINE uint64_t GetCombinedEntropy(
-    const VP8LHistogram* const histo_X, const VP8LHistogram* const histo_Y,
-    HistogramIndex index, int trivial_at_end) {
+static WEBP_INLINE uint64_t
+GetCombinedEntropy(const VP8LHistogram* const histo_X,
+                   const VP8LHistogram* const histo_Y, HistogramIndex index) {
   const uint32_t* X;
   const uint32_t* Y;
   int length;
@@ -346,35 +375,18 @@ static WEBP_INLINE uint64_t GetCombinedEntropy(
   VP8LBitEntropy bit_entropy;
   const int is_X_used = histo_X->is_used[index];
   const int is_Y_used = histo_Y->is_used[index];
+  const int is_trivial =
+      histo_X->trivial_symbol[index] != VP8L_NON_TRIVIAL_SYM &&
+      histo_X->trivial_symbol[index] == histo_Y->trivial_symbol[index];
 
-  if (trivial_at_end || !is_X_used || !is_Y_used) {
+  if (is_trivial || !is_X_used || !is_Y_used) {
     if (is_X_used) return histo_X->costs[index];
     return histo_Y->costs[index];
   }
   assert(is_X_used && is_Y_used);
 
-  if (index == LITERAL) {
-    X = histo_X->literal;
-    Y = histo_Y->literal;
-    length = VP8LHistogramNumCodes(histo_X->palette_code_bits);
-  } else if (index == RED) {
-    X = histo_X->red;
-    Y = histo_Y->red;
-    length = NUM_LITERAL_CODES;
-  } else if (index == BLUE) {
-    X = histo_X->blue;
-    Y = histo_Y->blue;
-    length = NUM_LITERAL_CODES;
-  } else if (index == ALPHA) {
-    X = histo_X->alpha;
-    Y = histo_Y->alpha;
-    length = NUM_LITERAL_CODES;
-  } else {
-    assert(index == DISTANCE);
-    X = histo_X->distance;
-    Y = histo_Y->distance;
-    length = NUM_DISTANCE_CODES;
-  }
+  GetPopulationInfo(histo_X, index, &X, &length);
+  GetPopulationInfo(histo_Y, index, &Y, &length);
   VP8LGetCombinedEntropyUnrefined(X, Y, length, &bit_entropy, &stats);
   return BitsEntropyRefine(&bit_entropy) + FinalHuffmanCost(&stats);
 }
@@ -411,38 +423,19 @@ static WEBP_INLINE void SaturateAdd(uint64_t a, int64_t* b) {
 WEBP_NODISCARD static int GetCombinedHistogramEntropy(
     const VP8LHistogram* const a, const VP8LHistogram* const b,
     int64_t cost_threshold_in, uint64_t* cost, uint64_t costs[5]) {
-  int trivial_at_end = 0, i;
+  int i;
   const uint64_t cost_threshold = (uint64_t)cost_threshold_in;
   assert(a->palette_code_bits == b->palette_code_bits);
   if (cost_threshold_in <= 0) return 0;
-  *cost = costs[LITERAL] =
-      GetCombinedEntropy(a, b, LITERAL, /*trivial_at_end=*/0);
-  // No need to add the extra cost for lengths as it is a constant that does not
-  // influence the histograms.
-  if (*cost >= cost_threshold) return 0;
+  *cost = 0;
 
-  if (a->trivial_symbol != VP8L_NON_TRIVIAL_SYM &&
-      a->trivial_symbol == b->trivial_symbol) {
-    // A, R and B are all 0 or 0xff.
-    const uint32_t color_a = (a->trivial_symbol >> 24) & 0xff;
-    const uint32_t color_r = (a->trivial_symbol >> 16) & 0xff;
-    const uint32_t color_b = (a->trivial_symbol >> 0) & 0xff;
-    if ((color_a == 0 || color_a == 0xff) &&
-        (color_r == 0 || color_r == 0xff) &&
-        (color_b == 0 || color_b == 0xff)) {
-      trivial_at_end = 1;
-    }
-  }
-
-  for (i = 1; i <= 4; ++i) {
-    costs[i] =
-        GetCombinedEntropy(a, b, (HistogramIndex)i,
-                           /*trivial_at_end=*/i <= 3 ? trivial_at_end : 0);
+  // No need to add the extra cost for length and distance as it is a constant
+  // that does not influence the histograms.
+  for (i = 0; i < 5; ++i) {
+    costs[i] = GetCombinedEntropy(a, b, (HistogramIndex)i);
     *cost += costs[i];
     if (*cost >= cost_threshold) return 0;
   }
-  // No need to add the extra cost for distances as it is a constant that does
-  // not influence the histograms.
 
   return 1;
 }
@@ -450,10 +443,13 @@ WEBP_NODISCARD static int GetCombinedHistogramEntropy(
 static WEBP_INLINE void HistogramAdd(const VP8LHistogram* const a,
                                      const VP8LHistogram* const b,
                                      VP8LHistogram* const out) {
+  int i;
   VP8LHistogramAdd(a, b, out);
-  out->trivial_symbol = (a->trivial_symbol == b->trivial_symbol)
-                      ? a->trivial_symbol
-                      : VP8L_NON_TRIVIAL_SYM;
+  for (i = 0; i < 5; ++i) {
+    out->trivial_symbol[i] = a->trivial_symbol[i] == b->trivial_symbol[i]
+                                 ? a->trivial_symbol[i]
+                                 : VP8L_NON_TRIVIAL_SYM;
+  }
 }
 
 // Performs out = a + b, computing the cost C(a+b) - C(a) - C(b) while comparing
@@ -533,28 +529,18 @@ static void UpdateDominantCostRange(
 }
 
 static void UpdateHistogramCost(VP8LHistogram* const h) {
-  uint32_t alpha_sym, red_sym, blue_sym;
-  const int num_codes = VP8LHistogramNumCodes(h->palette_code_bits);
-  h->costs[ALPHA] = PopulationCost(h->alpha, NUM_LITERAL_CODES, &alpha_sym,
-                                   &h->is_used[ALPHA]);
-  // No need to add the extra cost as it is a constant that does not influence
-  // the histograms.
-  h->costs[DISTANCE] = PopulationCost(h->distance, NUM_DISTANCE_CODES, NULL,
-                                      &h->is_used[DISTANCE]);
-  h->costs[LITERAL] =
-      PopulationCost(h->literal, num_codes, NULL, &h->is_used[LITERAL]);
-  h->costs[RED] =
-      PopulationCost(h->red, NUM_LITERAL_CODES, &red_sym, &h->is_used[RED]);
-  h->costs[BLUE] =
-      PopulationCost(h->blue, NUM_LITERAL_CODES, &blue_sym, &h->is_used[BLUE]);
+  int i;
+  // No need to add the extra cost for length and distance as it is a constant
+  // that does not influence the histograms.
+  for (i = 0; i < 5; ++i) {
+    const uint32_t* population;
+    int length;
+    GetPopulationInfo(h, i, &population, &length);
+    h->costs[i] = PopulationCost(population, length, &h->trivial_symbol[i],
+                                 &h->is_used[i]);
+  }
   h->bit_cost = h->costs[LITERAL] + h->costs[RED] + h->costs[BLUE] +
                 h->costs[ALPHA] + h->costs[DISTANCE];
-  if ((alpha_sym | red_sym | blue_sym) == VP8L_NON_TRIVIAL_SYM) {
-    h->trivial_symbol = VP8L_NON_TRIVIAL_SYM;
-  } else {
-    h->trivial_symbol =
-        ((uint32_t)alpha_sym << 24) | (red_sym << 16) | (blue_sym << 0);
-  }
 }
 
 static int GetBinIdForEntropy(uint64_t min, uint64_t max, uint64_t val) {
@@ -695,16 +681,26 @@ static void HistogramCombineEntropyBin(VP8LHistogramSet* const image_histo,
           -DivRound((int64_t)bit_cost * combine_cost_factor, 100);
       if (HistogramAddEval(histograms[first], histograms[idx], cur_combo,
                            bit_cost_thresh)) {
+        const int max_combine_failures = 32;
         // Try to merge two histograms only if the combo is a trivial one or
         // the two candidate histograms are already non-trivial.
         // For some images, 'try_combine' turns out to be false for a lot of
         // histogram pairs. In that case, we fallback to combining
         // histograms as usual to avoid increasing the header size.
-        const int try_combine =
-            (cur_combo->trivial_symbol != VP8L_NON_TRIVIAL_SYM) ||
-            ((histograms[idx]->trivial_symbol == VP8L_NON_TRIVIAL_SYM) &&
-             (histograms[first]->trivial_symbol == VP8L_NON_TRIVIAL_SYM));
-        const int max_combine_failures = 32;
+        int try_combine =
+            cur_combo->trivial_symbol[RED] != VP8L_NON_TRIVIAL_SYM &&
+            cur_combo->trivial_symbol[BLUE] != VP8L_NON_TRIVIAL_SYM &&
+            cur_combo->trivial_symbol[ALPHA] != VP8L_NON_TRIVIAL_SYM;
+        if (!try_combine) {
+          try_combine =
+              histograms[idx]->trivial_symbol[RED] == VP8L_NON_TRIVIAL_SYM ||
+              histograms[idx]->trivial_symbol[BLUE] == VP8L_NON_TRIVIAL_SYM ||
+              histograms[idx]->trivial_symbol[ALPHA] == VP8L_NON_TRIVIAL_SYM;
+          try_combine &=
+              histograms[first]->trivial_symbol[RED] == VP8L_NON_TRIVIAL_SYM ||
+              histograms[first]->trivial_symbol[BLUE] == VP8L_NON_TRIVIAL_SYM ||
+              histograms[first]->trivial_symbol[ALPHA] == VP8L_NON_TRIVIAL_SYM;
+        }
         if (try_combine ||
             bin_info[bin_id].num_combine_failures >= max_combine_failures) {
           // move the (better) merged histogram to its final slot
