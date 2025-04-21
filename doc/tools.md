@@ -65,6 +65,7 @@ Options:
                          (default: 0 100)
 -crop <x> <y> <w> <h> .. crop picture with the given rectangle
 -resize <w> <h> ........ resize picture (*after* any cropping)
+-resize_mode <string> .. one of: up_only, down_only, always (default)
 -mt .................... use multi-threading if available
 -low_memory ............ reduce memory usage (slower encoding)
 -map <int> ............. print map of extra info

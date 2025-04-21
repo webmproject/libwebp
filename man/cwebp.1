@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH CWEBP 1 "September 17, 2024"
+.TH CWEBP 1 "April 10, 2025"
 .SH NAME
 cwebp \- compress an image file to a WebP file
 .SH SYNOPSIS
@@ -101,6 +101,14 @@ Resize the source to a rectangle with size \fBwidth\fP x \fBheight\fP.
 If either (but not both) of the \fBwidth\fP or \fBheight\fP parameters is 0,
 the value will be calculated preserving the aspect\-ratio. Note: scaling
 is applied \fIafter\fP cropping.
+.TP
+.BI \-resize_mode " string
+Specify the behavior of the \fB\-resize\fP option. Possible values are:
+\fBdown_only\fP, \fBup_only\fP, \fBalways\fP (default). \fBdown_only\fP will
+use the values specified by \fB\-resize\fP if \fIeither\fP the input width or
+height are larger than the given dimensions. Similarly, \fBup_only\fP will only
+resize if \fIeither\fP the input width or height are smaller than the given
+dimensions.
 .TP
 .B \-mt
 Use multi\-threading for encoding, if possible.
