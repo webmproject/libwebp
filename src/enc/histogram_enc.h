@@ -24,7 +24,7 @@ extern "C" {
 #endif
 
 // Not a trivial literal symbol.
-#define VP8L_NON_TRIVIAL_SYM (0xffffffff)
+#define VP8L_NON_TRIVIAL_SYM ((uint16_t)(0xffff))
 
 // A simple container for histograms of data.
 typedef struct {
@@ -37,8 +37,9 @@ typedef struct {
   // Backward reference prefix-code histogram.
   uint32_t distance[NUM_DISTANCE_CODES];
   int palette_code_bits;
-  uint32_t trivial_symbol;  // True, if histograms for Red, Blue & Alpha
-                            // literal symbols are single valued.
+  // Index of the unique value of a histogram if any, VP8L_NON_TRIVIAL_SYM
+  // otherwise.
+  uint16_t trivial_symbol[5];
   uint64_t bit_cost;        // Cached value of total bit cost.
   // Cached values of entropy costs: literal, red, blue, alpha, distance
   uint64_t costs[5];
