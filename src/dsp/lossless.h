@@ -15,12 +15,8 @@
 #ifndef WEBP_DSP_LOSSLESS_H_
 #define WEBP_DSP_LOSSLESS_H_
 
-#include "src/webp/types.h"
-#include "src/webp/decode.h"
-
 #include "src/dsp/dsp.h"
-#include "src/enc/histogram_enc.h"
-#include "src/utils/utils.h"
+#include "src/webp/decode.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -245,9 +241,6 @@ extern VP8LAddVectorFunc VP8LAddVector;
 typedef void (*VP8LAddVectorEqFunc)(const uint32_t* WEBP_RESTRICT a,
                                     uint32_t* WEBP_RESTRICT out, int size);
 extern VP8LAddVectorEqFunc VP8LAddVectorEq;
-void VP8LHistogramAdd(const VP8LHistogram* WEBP_RESTRICT const a,
-                      const VP8LHistogram* WEBP_RESTRICT const b,
-                      VP8LHistogram* WEBP_RESTRICT const out);
 
 // -----------------------------------------------------------------------------
 // PrefixEncode()

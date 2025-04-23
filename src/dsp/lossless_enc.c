@@ -598,58 +598,6 @@ static void AddVectorEq_C(const uint32_t* WEBP_RESTRICT a,
   for (i = 0; i < size; ++i) out[i] += a[i];
 }
 
-#define ADD(X, ARG, LEN) do {                                                  \
-  if (a->is_used[X]) {                                                         \
-    if (b->is_used[X]) {                                                       \
-      VP8LAddVector(a->ARG, b->ARG, out->ARG, (LEN));                          \
-    } else {                                                                   \
-      memcpy(&out->ARG[0], &a->ARG[0], (LEN) * sizeof(out->ARG[0]));           \
-    }                                                                          \
-  } else if (b->is_used[X]) {                                                  \
-    memcpy(&out->ARG[0], &b->ARG[0], (LEN) * sizeof(out->ARG[0]));             \
-  } else {                                                                     \
-    memset(&out->ARG[0], 0, (LEN) * sizeof(out->ARG[0]));                      \
-  }                                                                            \
-} while (0)
-
-#define ADD_EQ(X, ARG, LEN) do {                                               \
-  if (a->is_used[X]) {                                                         \
-    if (out->is_used[X]) {                                                     \
-      VP8LAddVectorEq(a->ARG, out->ARG, (LEN));                                \
-    } else {                                                                   \
-      memcpy(&out->ARG[0], &a->ARG[0], (LEN) * sizeof(out->ARG[0]));           \
-    }                                                                          \
-  }                                                                            \
-} while (0)
-
-void VP8LHistogramAdd(const VP8LHistogram* WEBP_RESTRICT const a,
-                      const VP8LHistogram* WEBP_RESTRICT const b,
-                      VP8LHistogram* WEBP_RESTRICT const out) {
-  int i;
-  const int literal_size = VP8LHistogramNumCodes(a->palette_code_bits);
-  assert(a->palette_code_bits == b->palette_code_bits);
-
-  if (b != out) {
-    ADD(0, literal, literal_size);
-    ADD(1, red, NUM_LITERAL_CODES);
-    ADD(2, blue, NUM_LITERAL_CODES);
-    ADD(3, alpha, NUM_LITERAL_CODES);
-    ADD(4, distance, NUM_DISTANCE_CODES);
-    for (i = 0; i < 5; ++i) {
-      out->is_used[i] = (a->is_used[i] | b->is_used[i]);
-    }
-  } else {
-    ADD_EQ(0, literal, literal_size);
-    ADD_EQ(1, red, NUM_LITERAL_CODES);
-    ADD_EQ(2, blue, NUM_LITERAL_CODES);
-    ADD_EQ(3, alpha, NUM_LITERAL_CODES);
-    ADD_EQ(4, distance, NUM_DISTANCE_CODES);
-    for (i = 0; i < 5; ++i) out->is_used[i] |= a->is_used[i];
-  }
-}
-#undef ADD
-#undef ADD_EQ
-
 //------------------------------------------------------------------------------
 // Image transforms.
 

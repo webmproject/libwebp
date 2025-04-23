@@ -37,6 +37,8 @@ typedef struct {
   // Backward reference prefix-code histogram.
   uint32_t distance[NUM_DISTANCE_CODES];
   int palette_code_bits;
+  // The following members are only used within VP8LGetHistoImageSymbols.
+
   // Index of the unique value of a histogram if any, VP8L_NON_TRIVIAL_SYM
   // otherwise.
   uint16_t trivial_symbol[5];
@@ -60,13 +62,13 @@ typedef struct {
 // The input data is the PixOrCopy data, which models the literals, stop
 // codes and backward references (both distances and lengths).  Also: if
 // palette_code_bits is >= 0, initialize the histogram with this value.
-void VP8LHistogramCreate(VP8LHistogram* const p,
+void VP8LHistogramCreate(VP8LHistogram* const h,
                          const VP8LBackwardRefs* const refs,
                          int palette_code_bits);
 
 // Set the palette_code_bits and reset the stats.
 // If init_arrays is true, the arrays are also filled with 0's.
-void VP8LHistogramInit(VP8LHistogram* const p, int palette_code_bits,
+void VP8LHistogramInit(VP8LHistogram* const h, int palette_code_bits,
                        int init_arrays);
 
 // Collect all the references into a histogram (without reset)
@@ -116,7 +118,7 @@ uint64_t VP8LBitsEntropy(const uint32_t* const array, int n);
 
 // Estimate how many bits the combined entropy of literals and distance
 // approximately maps to.
-uint64_t VP8LHistogramEstimateBits(VP8LHistogram* const p);
+uint64_t VP8LHistogramEstimateBits(const VP8LHistogram* const h);
 
 #ifdef __cplusplus
 }

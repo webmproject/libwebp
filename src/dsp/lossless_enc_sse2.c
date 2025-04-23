@@ -23,6 +23,7 @@
 #include "src/dsp/lossless.h"
 #include "src/dsp/lossless_common.h"
 #include "src/utils/utils.h"
+#include "src/webp/format_constants.h"
 #include "src/webp/types.h"
 
 // For sign-extended multiplying constants, pre-shifted by 5:

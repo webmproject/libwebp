@@ -22,6 +22,7 @@
 #include "src/dsp/cpu.h"
 #include "src/dsp/lossless.h"
 #include "src/dsp/lossless_common.h"
+#include "src/webp/format_constants.h"
 #include "src/webp/types.h"
 
 //------------------------------------------------------------------------------

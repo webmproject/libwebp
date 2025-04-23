@@ -19,6 +19,7 @@
 
 #include "src/dsp/lossless.h"
 #include "src/dsp/neon.h"
+#include "src/webp/format_constants.h"
 
 //------------------------------------------------------------------------------
 // Colorspace conversion functions
