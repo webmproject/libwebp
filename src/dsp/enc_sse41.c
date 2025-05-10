@@ -14,11 +14,15 @@
 #include "src/dsp/dsp.h"
 
 #if defined(WEBP_USE_SSE41)
+#include <emmintrin.h>
 #include <smmintrin.h>
+
 #include <stdlib.h>  // for abs()
 
 #include "src/dsp/common_sse2.h"
+#include "src/dsp/cpu.h"
 #include "src/enc/vp8i_enc.h"
+#include "src/webp/types.h"
 
 //------------------------------------------------------------------------------
 // Compute susceptibility based on DCT-coeff histograms.

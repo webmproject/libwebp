@@ -14,7 +14,10 @@
 #ifndef WEBP_DEC_ALPHAI_DEC_H_
 #define WEBP_DEC_ALPHAI_DEC_H_
 
+#include "src/dec/vp8_dec.h"
+#include "src/webp/types.h"
 #include "src/dec/webpi_dec.h"
+#include "src/dsp/dsp.h"
 #include "src/utils/filters_utils.h"
 
 #ifdef __cplusplus

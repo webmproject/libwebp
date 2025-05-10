@@ -14,13 +14,18 @@
 #include "src/dsp/dsp.h"
 
 #if defined(WEBP_USE_SSE2)
-#include <assert.h>
-#include <stdlib.h>  // for abs()
 #include <emmintrin.h>
 
+#include <assert.h>
+#include <stdlib.h>  // for abs()
+#include <string.h>
+
 #include "src/dsp/common_sse2.h"
+#include "src/dsp/cpu.h"
 #include "src/enc/cost_enc.h"
 #include "src/enc/vp8i_enc.h"
+#include "src/utils/utils.h"
+#include "src/webp/types.h"
 
 //------------------------------------------------------------------------------
 // Transforms (Paragraph 14.4)

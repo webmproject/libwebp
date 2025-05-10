@@ -19,6 +19,7 @@
 #include <string.h>   // for memset
 
 #include "src/utils/utils.h"
+#include "src/webp/types.h"
 
 // #define USE_DITHERING   // uncomment to enable ordered dithering (not vital)
 

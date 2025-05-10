@@ -17,6 +17,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
+#include <cstdlib>
 #include <iostream>
 #include <string>
 #include <string_view>
@@ -41,7 +42,7 @@ void EncTest(std::string_view file, uint32_t optimization_index, bool use_argb,
   WebPPicture pic;
   if (!WebPPictureInit(&pic)) {
     std::cerr << "WebPPictureInit failed.\n";
-    abort();
+    std::abort();
   }
   pic.use_argb = use_argb;
 
@@ -57,7 +58,7 @@ void EncTest(std::string_view file, uint32_t optimization_index, bool use_argb,
     WebPPictureFree(&pic);
     if (error_code == VP8_ENC_ERROR_OUT_OF_MEMORY) return;
     std::cerr << "CropOrScale failed. Error code: " << error_code << "\n";
-    abort();
+    std::abort();
   }
 
   // Skip the cruncher except on small images, it's likely to timeout.
@@ -78,7 +79,7 @@ void EncTest(std::string_view file, uint32_t optimization_index, bool use_argb,
     if (error_code == VP8_ENC_ERROR_OUT_OF_MEMORY) return;
     std::cerr << "WebPEncode failed. Error code: " << error_code
               << " \nFile starts with: " << file.substr(0, 20) << "\n";
-    abort();
+    std::abort();
   }
 
   // Try decoding the result.
@@ -92,7 +93,7 @@ void EncTest(std::string_view file, uint32_t optimization_index, bool use_argb,
     WebPFree(rgba);
     WebPMemoryWriterClear(&memory_writer);
     WebPPictureFree(&pic);
-    abort();
+    std::abort();
   }
 
   // Compare the results if exact encoding.
@@ -117,7 +118,7 @@ void EncTest(std::string_view file, uint32_t optimization_index, bool use_argb,
           WebPFree(rgba);
           WebPMemoryWriterClear(&memory_writer);
           WebPPictureFree(&pic);
-          abort();
+          std::abort();
         }
       }
     }

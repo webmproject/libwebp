@@ -11,9 +11,20 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
+#include <assert.h>
 #include <stdlib.h>
+#include <string.h>
+
+#include "src/dec/common_dec.h"
+#include "src/dec/vp8_dec.h"
 #include "src/dec/vp8i_dec.h"
+#include "src/dec/webpi_dec.h"
+#include "src/dsp/dsp.h"
+#include "src/utils/random_utils.h"
+#include "src/utils/thread_utils.h"
 #include "src/utils/utils.h"
+#include "src/webp/decode.h"
+#include "src/webp/types.h"
 
 //------------------------------------------------------------------------------
 // Main reconstruction function.

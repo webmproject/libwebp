@@ -12,11 +12,16 @@
 // Author: Skal (pascal.massimino@gmail.com)
 
 #include <assert.h>
+#include <stddef.h>
 
+#include "src/dec/common_dec.h"
+#include "src/webp/types.h"
+#include "src/enc/vp8i_enc.h"
+#include "src/utils/bit_writer_utils.h"
 #include "src/utils/utils.h"
+#include "src/webp/encode.h"
 #include "src/webp/format_constants.h"  // RIFF constants
 #include "src/webp/mux_types.h"         // ALPHA_FLAG
-#include "src/enc/vp8i_enc.h"
 
 //------------------------------------------------------------------------------
 // Helper functions
@@ -389,4 +394,3 @@ int VP8EncWrite(VP8Encoder* const enc) {
 }
 
 //------------------------------------------------------------------------------
-

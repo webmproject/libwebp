@@ -195,6 +195,7 @@ static _gostring_ _swig_makegostring(const char *p, size_t l) {
 
 
 #include "webp/decode.h"
+#include "src/webp/types.h"
 #include "webp/encode.h"
 
 #ifdef __cplusplus

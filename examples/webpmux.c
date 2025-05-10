@@ -60,11 +60,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "webp/decode.h"
-#include "webp/mux.h"
 #include "../examples/example_util.h"
 #include "../imageio/imageio_util.h"
 #include "./unicode.h"
+#include "webp/decode.h"
+#include "webp/mux.h"
+#include "webp/mux_types.h"
+#include "webp/types.h"
 
 //------------------------------------------------------------------------------
 // Config object to parse command-line arguments.

@@ -11,12 +11,17 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
-#include <string.h>
+#include <assert.h>
 #include <math.h>
+#include <string.h>
 
+#include "src/dec/common_dec.h"
+#include "src/webp/types.h"
+#include "src/dsp/dsp.h"
 #include "src/enc/cost_enc.h"
 #include "src/enc/vp8i_enc.h"
-#include "src/dsp/dsp.h"
+#include "src/utils/bit_writer_utils.h"
+#include "src/webp/encode.h"
 #include "src/webp/format_constants.h"  // RIFF constants
 
 #define SEGMENT_VISU 0

@@ -12,6 +12,8 @@
 // Author: Skal (pascal.massimino@gmail.com)
 
 #include <string.h>
+
+#include "src/webp/types.h"
 #include "src/utils/random_utils.h"
 
 //------------------------------------------------------------------------------
@@ -40,4 +42,3 @@ void VP8InitRandom(VP8Random* const rg, float dithering) {
 }
 
 //------------------------------------------------------------------------------
-

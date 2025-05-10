@@ -15,6 +15,7 @@
 
 #if defined(WEBP_USE_AVX2)
 
+#include <stddef.h>
 #include <immintrin.h>
 
 #include "src/dsp/cpu.h"

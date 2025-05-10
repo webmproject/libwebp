@@ -16,10 +16,15 @@
 #define WEBP_DEC_VP8LI_DEC_H_
 
 #include <string.h>     // for memcpy()
+
+#include "src/dec/vp8_dec.h"
 #include "src/dec/webpi_dec.h"
 #include "src/utils/bit_reader_utils.h"
 #include "src/utils/color_cache_utils.h"
 #include "src/utils/huffman_utils.h"
+#include "src/utils/rescaler_utils.h"
+#include "src/webp/decode.h"
+#include "src/webp/format_constants.h"
 #include "src/webp/types.h"
 
 #ifdef __cplusplus

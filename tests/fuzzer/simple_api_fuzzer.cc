@@ -16,10 +16,12 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <cstdlib>
 #include <string_view>
 
 #include "./fuzz_utils.h"
 #include "src/webp/decode.h"
+#include "src/webp/types.h"
 
 namespace {
 

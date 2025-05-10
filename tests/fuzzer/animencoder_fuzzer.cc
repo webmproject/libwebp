@@ -59,7 +59,7 @@ int AddFrame(WebPAnimEncoder** const enc,
   if (enc == nullptr || width == nullptr || height == nullptr) {
     fprintf(stderr, "NULL parameters.\n");
     if (enc != nullptr) WebPAnimEncoderDelete(*enc);
-    abort();
+    std::abort();
   }
 
   // Init the source picture.
@@ -74,7 +74,7 @@ int AddFrame(WebPAnimEncoder** const enc,
       if (error_code == VP8_ENC_ERROR_OUT_OF_MEMORY) return 0;
       fprintf(stderr, "ExtractAndCropOrScale failed. Error code: %d\n",
               error_code);
-      abort();
+      std::abort();
     }
   } else {  // Other frames will be resized to the first frame's dimensions.
     if (!WebPPictureRescale(&pic, *width, *height)) {
@@ -85,7 +85,7 @@ int AddFrame(WebPAnimEncoder** const enc,
       fprintf(stderr,
               "WebPPictureRescale failed. Size: %d,%d. Error code: %d\n",
               *width, *height, error_code);
-      abort();
+      std::abort();
     }
   }
 
@@ -124,7 +124,7 @@ int AddFrame(WebPAnimEncoder** const enc,
       return 0;
     }
     fprintf(stderr, "WebPEncode failed. Error code: %d\n", error_code);
-    abort();
+    std::abort();
   }
 
   WebPPictureFree(&pic);
@@ -147,7 +147,7 @@ void AnimEncoderTest(std::string_view blob, bool minimize_size,
   WebPAnimEncoderOptions anim_config;
   if (!WebPAnimEncoderOptionsInit(&anim_config)) {
     fprintf(stderr, "WebPAnimEncoderOptionsInit failed.\n");
-    abort();
+    std::abort();
   }
   anim_config.minimize_size = minimize_size;
   anim_config.kmin = kmin_kmax.first;
@@ -170,7 +170,7 @@ void AnimEncoderTest(std::string_view blob, bool minimize_size,
     fprintf(stderr, "Last WebPAnimEncoderAdd failed: %s.\n",
             WebPAnimEncoderGetError(enc));
     WebPAnimEncoderDelete(enc);
-    abort();
+    std::abort();
   }
   WebPData webp_data;
   WebPDataInit(&webp_data);
@@ -182,7 +182,7 @@ void AnimEncoderTest(std::string_view blob, bool minimize_size,
             WebPAnimEncoderGetError(enc));
     WebPAnimEncoderDelete(enc);
     WebPDataClear(&webp_data);
-    abort();
+    std::abort();
   }
 
   WebPAnimEncoderDelete(enc);

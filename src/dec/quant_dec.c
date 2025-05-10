@@ -11,7 +11,11 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
+#include "src/dec/common_dec.h"
+#include "src/dec/vp8_dec.h"
 #include "src/dec/vp8i_dec.h"
+#include "src/utils/bit_reader_utils.h"
+#include "src/webp/types.h"
 
 static WEBP_INLINE int clip(int v, int M) {
   return v < 0 ? 0 : v > M ? M : v;
@@ -112,4 +116,3 @@ void VP8ParseQuant(VP8Decoder* const dec) {
 }
 
 //------------------------------------------------------------------------------
-

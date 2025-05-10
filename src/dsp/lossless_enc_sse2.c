@@ -14,9 +14,9 @@
 #include "src/dsp/dsp.h"
 
 #if defined(WEBP_USE_SSE2)
+#include <emmintrin.h>
 
 #include <assert.h>
-#include <emmintrin.h>
 #include <string.h>
 
 #include "src/dsp/cpu.h"

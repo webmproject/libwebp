@@ -16,6 +16,7 @@
 
 #include <cstdint>
 #include <cstdio>
+#include <cstdlib>
 #include <string_view>
 
 #include "src/webp/decode.h"
@@ -27,7 +28,7 @@ void DecodeWebP(std::string_view arbitrary_bytes) {
   WebPDecoderConfig decoder_config;
   if (!WebPInitDecoderConfig(&decoder_config)) {
     fprintf(stderr, "WebPInitDecoderConfig failed.\n");
-    abort();
+    std::abort();
   }
   const VP8StatusCode status =
       WebPDecode(reinterpret_cast<const uint8_t*>(arbitrary_bytes.data()),
@@ -36,7 +37,7 @@ void DecodeWebP(std::string_view arbitrary_bytes) {
   // The decoding may fail (because the fuzzed input can be anything) but not
   // for these reasons.
   if (status == VP8_STATUS_SUSPENDED || status == VP8_STATUS_USER_ABORT) {
-    abort();
+    std::abort();
   }
 }
 

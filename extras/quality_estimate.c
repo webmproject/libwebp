@@ -11,10 +11,12 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
-#include "extras/extras.h"
-#include "webp/decode.h"
-
 #include <math.h>
+#include <stddef.h>
+
+#include "extras/extras.h"
+#include "src/webp/types.h"
+#include "webp/decode.h"
 
 //------------------------------------------------------------------------------
 

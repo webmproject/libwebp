@@ -327,6 +327,9 @@ SWIGINTERNINLINE int SWIG_CheckState(int r) {
 #endif
 
 
+#include <stdlib.h>
+#include <stdio.h>
+#include <assert.h>
 #include <string.h>
 
 #ifdef __cplusplus
@@ -3381,6 +3384,7 @@ SWIG_AsVal_size_t (PyObject * obj, size_t *val)
 
 
 #include "webp/decode.h"
+#include "src/webp/types.h"
 #include "webp/encode.h"
 
 

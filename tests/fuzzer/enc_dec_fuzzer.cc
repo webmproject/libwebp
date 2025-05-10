@@ -17,6 +17,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
+#include <cstdlib>
 
 #include "./fuzz_utils.h"
 #include "src/dsp/cpu.h"
@@ -42,7 +43,7 @@ void EncDecTest(bool use_argb, int source_image_index, WebPConfig config,
     if (error_code == VP8_ENC_ERROR_OUT_OF_MEMORY) return;
     fprintf(stderr, "ExtractAndCropOrScale failed. Error code: %d\n",
             error_code);
-    abort();
+    std::abort();
   }
 
   // Skip slow settings on big images, it's likely to timeout.
@@ -76,7 +77,7 @@ void EncDecTest(bool use_argb, int source_image_index, WebPConfig config,
       return;
     }
     fprintf(stderr, "WebPEncode failed. Error code: %d\n", error_code);
-    abort();
+    std::abort();
   }
 
   // Try decoding the result.
@@ -87,7 +88,7 @@ void EncDecTest(bool use_argb, int source_image_index, WebPConfig config,
     fprintf(stderr, "WebPInitDecoderConfig failed.\n");
     WebPMemoryWriterClear(&memory_writer);
     WebPPictureFree(&pic);
-    abort();
+    std::abort();
   }
 
   dec_config.output.colorspace = MODE_BGRA;
@@ -100,7 +101,7 @@ void EncDecTest(bool use_argb, int source_image_index, WebPConfig config,
     WebPFreeDecBuffer(&dec_config.output);
     WebPMemoryWriterClear(&memory_writer);
     WebPPictureFree(&pic);
-    abort();
+    std::abort();
   }
 
   if (status == VP8_STATUS_OK) {
@@ -127,7 +128,7 @@ void EncDecTest(bool use_argb, int source_image_index, WebPConfig config,
             WebPFreeDecBuffer(&dec_config.output);
             WebPMemoryWriterClear(&memory_writer);
             WebPPictureFree(&pic);
-            abort();
+            std::abort();
           }
         }
       }

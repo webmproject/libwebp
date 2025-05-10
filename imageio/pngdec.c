@@ -22,13 +22,15 @@
 #define PNG_USER_MEM_SUPPORTED  // for png_create_read_struct_2
 #endif
 #include <png.h>
+
 #include <setjmp.h>   // note: this must be included *after* png.h
 #include <stdlib.h>
 #include <string.h>
 
-#include "webp/encode.h"
 #include "./imageio_util.h"
 #include "./metadata.h"
+#include "webp/encode.h"
+#include "webp/types.h"
 
 #define LOCAL_PNG_VERSION ((PNG_LIBPNG_VER_MAJOR << 8) | PNG_LIBPNG_VER_MINOR)
 #define LOCAL_PNG_PREREQ(maj, min) \

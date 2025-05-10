@@ -11,13 +11,18 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 
-#include "src/enc/vp8i_enc.h"
+#include "src/dec/common_dec.h"
+#include "src/dsp/dsp.h"
 #include "src/enc/cost_enc.h"
+#include "src/enc/vp8i_enc.h"
+#include "src/utils/thread_utils.h"
 #include "src/utils/utils.h"
+#include "src/webp/encode.h"
+#include "src/webp/types.h"
 
 #define MAX_ITERS_K_MEANS  6
 
@@ -480,4 +485,3 @@ int VP8EncAnalyze(VP8Encoder* const enc) {
   }
   return ok;
 }
-

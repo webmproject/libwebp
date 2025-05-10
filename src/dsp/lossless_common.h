@@ -16,6 +16,9 @@
 #ifndef WEBP_DSP_LOSSLESS_COMMON_H_
 #define WEBP_DSP_LOSSLESS_COMMON_H_
 
+#include <assert.h>
+#include <stddef.h>
+
 #include "src/dsp/cpu.h"
 #include "src/utils/utils.h"
 #include "src/webp/types.h"

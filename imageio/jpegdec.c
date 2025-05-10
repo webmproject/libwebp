@@ -24,9 +24,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "webp/encode.h"
 #include "./imageio_util.h"
 #include "./metadata.h"
+#include "webp/encode.h"
+#include "webp/types.h"
 
 // -----------------------------------------------------------------------------
 // Metadata processing

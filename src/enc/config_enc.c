@@ -15,7 +15,10 @@
 #include "src/webp/config.h"
 #endif
 
+#include <stddef.h>
+
 #include "src/webp/encode.h"
+#include "src/webp/types.h"
 
 //------------------------------------------------------------------------------
 // WebPConfig

@@ -22,6 +22,7 @@
 #include "./anim_util.h"
 #include "./example_util.h"
 #include "./unicode.h"
+#include "webp/types.h"
 
 #if defined(_MSC_VER) && _MSC_VER < 1900
 #define snprintf _snprintf

@@ -15,9 +15,10 @@
 
 #include <assert.h>
 #include <stdlib.h>
-#include "src/webp/types.h"
+
 #include "src/webp/encode.h"
 #include "src/webp/format_constants.h"
+#include "src/webp/types.h"
 
 #ifdef __cplusplus
 extern "C" {

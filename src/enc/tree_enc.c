@@ -11,7 +11,12 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
+#include <string.h>
+
+#include "src/dec/common_dec.h"
+#include "src/webp/types.h"
 #include "src/enc/vp8i_enc.h"
+#include "src/utils/bit_writer_utils.h"
 
 //------------------------------------------------------------------------------
 // Default probabilities
@@ -501,4 +506,3 @@ void VP8WriteProbas(VP8BitWriter* const bw, const VP8EncProba* const probas) {
     VP8PutBits(bw, probas->skip_proba, 8);
   }
 }
-

@@ -13,10 +13,11 @@
 //         Vikas Arora (vikaas.arora@gmail.com)
 
 #include <assert.h>
-#include <string.h>   // for memcpy()
 #include <stdlib.h>
+#include <string.h>   // for memcpy()
 
 #include "src/utils/bit_writer_utils.h"
+#include "src/webp/types.h"
 #include "src/utils/endian_inl_utils.h"
 #include "src/utils/utils.h"
 

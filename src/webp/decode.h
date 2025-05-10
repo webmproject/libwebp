@@ -14,6 +14,8 @@
 #ifndef WEBP_WEBP_DECODE_H_
 #define WEBP_WEBP_DECODE_H_
 
+#include <stddef.h>
+
 #include "./types.h"
 
 #ifdef __cplusplus

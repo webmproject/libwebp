@@ -11,7 +11,9 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
+#include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "src/dec/common_dec.h"
 #include "src/dec/vp8_dec.h"
@@ -21,6 +23,7 @@
 #include "src/utils/rescaler_utils.h"
 #include "src/utils/utils.h"
 #include "src/webp/decode.h"
+#include "src/webp/format_constants.h"
 #include "src/webp/mux_types.h"  // ALPHA_FLAG
 #include "src/webp/types.h"
 

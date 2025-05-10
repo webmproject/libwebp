@@ -22,6 +22,9 @@
 #include "src/webp/decode.h"     // WebPGetFeatures
 #include "src/webp/demux.h"
 #include "src/webp/format_constants.h"
+#include "src/webp/mux.h"
+#include "src/webp/mux_types.h"
+#include "src/webp/types.h"
 
 #define DMUX_MAJ_VERSION 1
 #define DMUX_MIN_VERSION 5
@@ -972,4 +975,3 @@ int WebPDemuxPrevChunk(WebPChunkIterator* iter) {
 void WebPDemuxReleaseChunkIterator(WebPChunkIterator* iter) {
   (void)iter;
 }
-

@@ -17,12 +17,16 @@
 #ifdef HAVE_CONFIG_H
 #include "src/webp/config.h"
 #endif
+
+#include <stddef.h>
+
 // Either WEBP_NEAR_LOSSLESS is defined as 0 in config.h when compiling to
 // disable near-lossless, or it is enabled by default.
 #ifndef WEBP_NEAR_LOSSLESS
 #define WEBP_NEAR_LOSSLESS 1
 #endif
 
+#include "src/webp/types.h"
 #include "src/enc/backward_references_enc.h"
 #include "src/enc/histogram_enc.h"
 #include "src/utils/bit_writer_utils.h"

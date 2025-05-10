@@ -20,9 +20,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "src/dec/common_dec.h"
+#include "src/dsp/dsp.h"
 #include "src/enc/cost_enc.h"
 #include "src/enc/vp8i_enc.h"
+#include "src/utils/bit_writer_utils.h"
 #include "src/utils/utils.h"
+#include "src/webp/types.h"
 
 #if !defined(DISABLE_TOKEN_BUFFER)
 
@@ -259,4 +263,3 @@ void VP8TBufferClear(VP8TBuffer* const b) {
 }
 
 #endif    // !DISABLE_TOKEN_BUFFER
-

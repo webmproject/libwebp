@@ -15,6 +15,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #ifdef HAVE_CONFIG_H
 #include "webp/config.h"
@@ -25,6 +26,7 @@
 #include "webp/decode.h"
 #include "webp/format_constants.h"
 #include "webp/mux_types.h"
+#include "webp/types.h"
 
 #if defined(_MSC_VER) && _MSC_VER < 1900
 #define snprintf _snprintf

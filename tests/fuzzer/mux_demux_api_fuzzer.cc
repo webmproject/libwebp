@@ -21,6 +21,7 @@
 #include "./fuzz_utils.h"
 #include "src/webp/demux.h"
 #include "src/webp/mux.h"
+#include "src/webp/mux_types.h"
 
 namespace {
 

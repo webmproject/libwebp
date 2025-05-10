@@ -14,6 +14,8 @@
 #ifndef WEBP_UTILS_BIT_WRITER_UTILS_H_
 #define WEBP_UTILS_BIT_WRITER_UTILS_H_
 
+#include <stddef.h>
+
 #include "src/webp/types.h"
 
 #ifdef __cplusplus

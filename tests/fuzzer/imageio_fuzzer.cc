@@ -34,7 +34,7 @@ void TestReader(const uint8_t *data, size_t size, WebPImageReader reader,
   WebPPicture pic;
   if (!WebPPictureInit(&pic)) {
     std::cerr << "WebPPictureInit failed" << std::endl;
-    abort();
+    std::abort();
   }
   Metadata metadata;
   MetadataInit(&metadata);

@@ -16,9 +16,13 @@
 
 #include <assert.h>
 #include <stdlib.h>
+
 #include "src/dec/vp8i_dec.h"
 #include "src/dec/vp8li_dec.h"
+#include "src/webp/format_constants.h"
 #include "src/webp/mux.h"
+#include "src/webp/mux_types.h"
+#include "src/webp/types.h"
 
 #ifdef __cplusplus
 extern "C" {

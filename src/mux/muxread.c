@@ -13,8 +13,15 @@
 //          Vikas (vikasa@google.com)
 
 #include <assert.h>
+#include <stddef.h>
+
+#include "src/dec/vp8_dec.h"
 #include "src/mux/muxi.h"
 #include "src/utils/utils.h"
+#include "src/webp/format_constants.h"
+#include "src/webp/mux.h"
+#include "src/webp/mux_types.h"
+#include "src/webp/types.h"
 
 //------------------------------------------------------------------------------
 // Helper method(s).

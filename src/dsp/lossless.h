@@ -16,6 +16,7 @@
 #define WEBP_DSP_LOSSLESS_H_
 
 #include "src/dsp/dsp.h"
+#include "src/webp/types.h"
 #include "src/webp/decode.h"
 
 #ifdef __cplusplus

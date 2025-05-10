@@ -13,9 +13,11 @@
 
 #include "src/utils/utils.h"
 
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>  // for memcpy()
 
+#include "src/webp/types.h"
 #include "src/utils/palette.h"
 #include "src/webp/encode.h"
 

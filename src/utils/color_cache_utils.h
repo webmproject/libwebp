@@ -17,6 +17,7 @@
 
 #include <assert.h>
 
+#include "src/dsp/cpu.h"
 #include "src/dsp/dsp.h"
 #include "src/webp/types.h"
 

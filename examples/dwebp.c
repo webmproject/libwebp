@@ -25,6 +25,8 @@
 #include "../imageio/webpdec.h"
 #include "./stopwatch.h"
 #include "./unicode.h"
+#include "webp/decode.h"
+#include "webp/types.h"
 
 static int verbose = 0;
 static int quiet = 0;

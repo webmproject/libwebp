@@ -15,10 +15,14 @@
 #include "src/webp/config.h"
 #endif
 
+#include <assert.h>
 #include <stddef.h>
 
+#include "src/webp/types.h"
 #include "src/dsp/cpu.h"
 #include "src/utils/bit_reader_inl_utils.h"
+#include "src/utils/bit_reader_utils.h"
+#include "src/utils/endian_inl_utils.h"
 #include "src/utils/utils.h"
 
 //------------------------------------------------------------------------------

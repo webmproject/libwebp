@@ -15,12 +15,16 @@
 #define WEBP_DEC_VP8I_DEC_H_
 
 #include <string.h>     // for memcpy()
+
 #include "src/dec/common_dec.h"
+#include "src/dec/vp8_dec.h"
 #include "src/dec/vp8li_dec.h"
+#include "src/dec/webpi_dec.h"
+#include "src/dsp/dsp.h"
 #include "src/utils/bit_reader_utils.h"
 #include "src/utils/random_utils.h"
 #include "src/utils/thread_utils.h"
-#include "src/dsp/dsp.h"
+#include "src/webp/decode.h"
 #include "src/webp/types.h"
 
 #ifdef __cplusplus

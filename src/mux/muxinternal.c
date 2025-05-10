@@ -13,8 +13,15 @@
 //          Vikas (vikasa@google.com)
 
 #include <assert.h>
+#include <stddef.h>
+#include <string.h>
+
 #include "src/mux/muxi.h"
+#include "src/webp/types.h"
 #include "src/utils/utils.h"
+#include "src/webp/format_constants.h"
+#include "src/webp/mux.h"
+#include "src/webp/mux_types.h"
 
 #define UNDEFINED_CHUNK_SIZE ((uint32_t)(-1))
 
@@ -546,4 +553,3 @@ WebPMuxError MuxValidate(const WebPMux* const mux) {
 #undef NO_FLAG
 
 //------------------------------------------------------------------------------
-

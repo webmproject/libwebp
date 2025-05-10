@@ -12,14 +12,18 @@
 // Author: Skal (pascal.massimino@gmail.com)
 
 #include <assert.h>
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
 
+#include "src/dec/common_dec.h"
+#include "src/webp/types.h"
+#include "src/dsp/dsp.h"
 #include "src/enc/cost_enc.h"
 #include "src/enc/vp8i_enc.h"
 #include "src/enc/vp8li_enc.h"
 #include "src/utils/utils.h"
+#include "src/webp/encode.h"
 
 // #define PRINT_MEMORY_INFO
 
