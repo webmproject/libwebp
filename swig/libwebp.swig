@@ -154,6 +154,7 @@ int WebPGetEncoderVersion(void);
 %{
 #include "webp/decode.h"
 #include "webp/encode.h"
+#include "webp/types.h"
 %}
 
 #ifdef SWIGJAVA
