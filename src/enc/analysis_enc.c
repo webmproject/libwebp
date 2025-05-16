@@ -17,7 +17,6 @@
 
 #include "src/dec/common_dec.h"
 #include "src/dsp/dsp.h"
-#include "src/enc/cost_enc.h"
 #include "src/enc/vp8i_enc.h"
 #include "src/utils/thread_utils.h"
 #include "src/utils/utils.h"
