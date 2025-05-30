@@ -945,6 +945,16 @@ static int Quantize2Blocks_NEON(int16_t in[32], int16_t out[32],
     vst1q_u8(dst, r);                                                          \
   } while (0)
 
+static WEBP_INLINE uint8x8x2_t Vld1U8x2(const uint8_t* ptr) {
+#if LOCAL_CLANG_PREREQ(3, 4) || LOCAL_GCC_PREREQ(8, 5) || defined(_MSC_VER)
+  return vld1_u8_x2(ptr);
+#else
+  uint8x8x2_t res;
+  INIT_VECTOR2(res, vld1_u8(ptr + 0 * 8), vld1_u8(ptr + 1 * 8));
+  return res;
+#endif
+}
+
 static WEBP_INLINE uint8x16x4_t Vld1qU8x4(const uint8_t* ptr) {
 #if LOCAL_CLANG_PREREQ(3, 4) || LOCAL_GCC_PREREQ(9, 4) || defined(_MSC_VER)
   return vld1q_u8_x4(ptr);
@@ -1179,7 +1189,7 @@ static WEBP_INLINE void TrueMotion_NEON(uint8_t* dst, const uint8_t* left,
 
   // Neither left nor top are NULL.
   a = vdupq_n_u16(left[-1]);
-  inner = vld1_u8_x2(top);
+  inner = Vld1U8x2(top);
 
   for (i = 0; i < 4; i++) {
     const uint8x8x4_t outer = vld4_dup_u8(&left[i * 4]);
