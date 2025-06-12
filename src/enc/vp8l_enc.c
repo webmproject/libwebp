@@ -69,23 +69,35 @@ typedef enum {
   kHistoTotal  // Must be last.
 } HistoIx;
 
+
+#define NUM_BUCKETS 256
+
+typedef uint32_t HistogramBuckets[NUM_BUCKETS];
+
+// Keeping track of histograms, indexed by HistoIx.
+// Ideally, this would just be a struct with meaningful fields, but the
+// calculation of `entropy_comp` uses the index. One refactoring at a time :)
+typedef struct {
+  HistogramBuckets category[kHistoTotal];
+} Histograms;
+
 static void AddSingleSubGreen(uint32_t p,
-                              uint32_t* const r, uint32_t* const b) {
+                              HistogramBuckets r, HistogramBuckets b) {
   const int green = (int)p >> 8;  // The upper bits are masked away later.
   ++r[(((int)p >> 16) - green) & 0xff];
   ++b[(((int)p >>  0) - green) & 0xff];
 }
 
 static void AddSingle(uint32_t p,
-                      uint32_t* const a, uint32_t* const r,
-                      uint32_t* const g, uint32_t* const b) {
+                      HistogramBuckets a, HistogramBuckets r,
+                      HistogramBuckets g, HistogramBuckets b) {
   ++a[(p >> 24) & 0xff];
   ++r[(p >> 16) & 0xff];
   ++g[(p >>  8) & 0xff];
   ++b[(p >>  0) & 0xff];
 }
 
-static WEBP_INLINE uint32_t HashPix(uint32_t pix) {
+static WEBP_INLINE uint8_t HashPix(uint32_t pix) {
   // Note that masking with 0xffffffffu is for preventing an
   // 'unsigned int overflow' warning. Doesn't impact the compiled code.
   return ((((uint64_t)pix + (pix >> 19)) * 0x39c5fba7ull) & 0xffffffffu) >> 24;
@@ -97,8 +109,7 @@ static int AnalyzeEntropy(const uint32_t* argb,
                           int palette_size, int transform_bits,
                           EntropyIx* const min_entropy_ix,
                           int* const red_and_blue_always_zero) {
-  // Allocate histogram set with cache_bits = 0.
-  uint32_t* histo;
+  Histograms* histo;
 
   if (use_palette && palette_size <= 16) {
     // In the case of small palettes, we pack 2, 4 or 8 pixels together. In
@@ -107,7 +118,8 @@ static int AnalyzeEntropy(const uint32_t* argb,
     *red_and_blue_always_zero = 1;
     return 1;
   }
-  histo = (uint32_t*)WebPSafeCalloc(kHistoTotal, sizeof(*histo) * 256);
+
+  histo = (Histograms*)WebPSafeCalloc(1, sizeof(*histo));
   if (histo != NULL) {
     int i, x, y;
     const uint32_t* prev_row = NULL;
@@ -122,25 +134,25 @@ static int AnalyzeEntropy(const uint32_t* argb,
           continue;
         }
         AddSingle(pix,
-                  &histo[kHistoAlpha * 256],
-                  &histo[kHistoRed * 256],
-                  &histo[kHistoGreen * 256],
-                  &histo[kHistoBlue * 256]);
+                  histo->category[kHistoAlpha],
+                  histo->category[kHistoRed],
+                  histo->category[kHistoGreen],
+                  histo->category[kHistoBlue]);
         AddSingle(pix_diff,
-                  &histo[kHistoAlphaPred * 256],
-                  &histo[kHistoRedPred * 256],
-                  &histo[kHistoGreenPred * 256],
-                  &histo[kHistoBluePred * 256]);
+                  histo->category[kHistoAlphaPred],
+                  histo->category[kHistoRedPred],
+                  histo->category[kHistoGreenPred],
+                  histo->category[kHistoBluePred]);
         AddSingleSubGreen(pix,
-                          &histo[kHistoRedSubGreen * 256],
-                          &histo[kHistoBlueSubGreen * 256]);
+                          histo->category[kHistoRedSubGreen],
+                          histo->category[kHistoBlueSubGreen]);
         AddSingleSubGreen(pix_diff,
-                          &histo[kHistoRedPredSubGreen * 256],
-                          &histo[kHistoBluePredSubGreen * 256]);
+                          histo->category[kHistoRedPredSubGreen],
+                          histo->category[kHistoBluePredSubGreen]);
         {
           // Approximate the palette by the entropy of the multiplicative hash.
-          const uint32_t hash = HashPix(pix);
-          ++histo[kHistoPalette * 256 + hash];
+          const uint8_t hash = HashPix(pix);
+          ++histo->category[kHistoPalette][hash];
         }
       }
       prev_row = curr_row;
@@ -155,15 +167,15 @@ static int AnalyzeEntropy(const uint32_t* argb,
       // Let's add one zero to the predicted histograms. The zeros are removed
       // too efficiently by the pix_diff == 0 comparison, at least one of the
       // zeros is likely to exist.
-      ++histo[kHistoRedPredSubGreen * 256];
-      ++histo[kHistoBluePredSubGreen * 256];
-      ++histo[kHistoRedPred * 256];
-      ++histo[kHistoGreenPred * 256];
-      ++histo[kHistoBluePred * 256];
-      ++histo[kHistoAlphaPred * 256];
+      ++histo->category[kHistoRedPredSubGreen][0];
+      ++histo->category[kHistoBluePredSubGreen][0];
+      ++histo->category[kHistoRedPred][0];
+      ++histo->category[kHistoGreenPred][0];
+      ++histo->category[kHistoBluePred][0];
+      ++histo->category[kHistoAlphaPred][0];
 
       for (j = 0; j < kHistoTotal; ++j) {
-        entropy_comp[j] = VP8LBitsEntropy(&histo[j * 256], 256);
+        entropy_comp[j] = VP8LBitsEntropy(histo->category[j], NUM_BUCKETS);
       }
       entropy[kDirect] = entropy_comp[kHistoAlpha] +
           entropy_comp[kHistoRed] +
@@ -219,12 +231,12 @@ static int AnalyzeEntropy(const uint32_t* argb,
           { kHistoRedPredSubGreen, kHistoBluePredSubGreen },
           { kHistoRed, kHistoBlue }
         };
-        const uint32_t* const red_histo =
-            &histo[256 * kHistoPairs[*min_entropy_ix][0]];
-        const uint32_t* const blue_histo =
-            &histo[256 * kHistoPairs[*min_entropy_ix][1]];
-        for (i = 1; i < 256; ++i) {
-          if ((red_histo[i] | blue_histo[i]) != 0) {
+        const HistogramBuckets* const red_histo =
+            &histo->category[kHistoPairs[*min_entropy_ix][0]];
+        const HistogramBuckets* const blue_histo =
+            &histo->category[kHistoPairs[*min_entropy_ix][1]];
+        for (i = 1; i < NUM_BUCKETS; ++i) {
+          if (((*red_histo)[i] | (*blue_histo)[i]) != 0) {
             *red_and_blue_always_zero = 0;
             break;
           }
