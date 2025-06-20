@@ -1088,8 +1088,8 @@ static void ApplySubtractGreen(VP8LEncoder* const enc, int width, int height,
 static int ApplyPredictFilter(VP8LEncoder* const enc, int width, int height,
                               int quality, int low_effort,
                               int used_subtract_green, VP8LBitWriter* const bw,
-                              int percent_range, int* const percent) {
-  int best_bits;
+                              int percent_range, int* const percent,
+                              int* best_bits) {
   const int near_lossless_strength =
       enc->use_palette ? 100 : enc->config->near_lossless;
   const int max_bits = ClampBits(width, height, enc->predictor_transform_bits,
@@ -1104,43 +1104,40 @@ static int ApplyPredictFilter(VP8LEncoder* const enc, int width, int height,
                          enc->argb, enc->argb_scratch, enc->transform_data,
                          near_lossless_strength, enc->config->exact,
                          used_subtract_green, enc->pic, percent_range / 2,
-                         percent, &best_bits)) {
+                         percent, best_bits)) {
     return 0;
   }
   VP8LPutBits(bw, TRANSFORM_PRESENT, 1);
   VP8LPutBits(bw, PREDICTOR_TRANSFORM, 2);
-  assert(best_bits >= MIN_TRANSFORM_BITS && best_bits <= MAX_TRANSFORM_BITS);
-  VP8LPutBits(bw, best_bits - MIN_TRANSFORM_BITS, NUM_TRANSFORM_BITS);
-  enc->predictor_transform_bits = best_bits;
+  assert(*best_bits >= MIN_TRANSFORM_BITS && *best_bits <= MAX_TRANSFORM_BITS);
+  VP8LPutBits(bw, *best_bits - MIN_TRANSFORM_BITS, NUM_TRANSFORM_BITS);
   return EncodeImageNoHuffman(
       bw, enc->transform_data, &enc->hash_chain, &enc->refs[0],
-      VP8LSubSampleSize(width, best_bits), VP8LSubSampleSize(height, best_bits),
-      quality, low_effort, enc->pic, percent_range - percent_range / 2,
-      percent);
+      VP8LSubSampleSize(width, *best_bits),
+      VP8LSubSampleSize(height, *best_bits), quality, low_effort, enc->pic,
+      percent_range - percent_range / 2, percent);
 }
 
 static int ApplyCrossColorFilter(VP8LEncoder* const enc, int width, int height,
                                  int quality, int low_effort,
                                  VP8LBitWriter* const bw, int percent_range,
-                                 int* const percent) {
+                                 int* const percent, int* best_bits) {
   const int min_bits = enc->cross_color_transform_bits;
-  int best_bits;
 
   if (!VP8LColorSpaceTransform(width, height, min_bits, quality, enc->argb,
-                               enc->transform_data, enc->pic,
-                               percent_range / 2, percent, &best_bits)) {
+                               enc->transform_data, enc->pic, percent_range / 2,
+                               percent, best_bits)) {
     return 0;
   }
   VP8LPutBits(bw, TRANSFORM_PRESENT, 1);
   VP8LPutBits(bw, CROSS_COLOR_TRANSFORM, 2);
-  assert(best_bits >= MIN_TRANSFORM_BITS && best_bits <= MAX_TRANSFORM_BITS);
-  VP8LPutBits(bw, best_bits - MIN_TRANSFORM_BITS, NUM_TRANSFORM_BITS);
-  enc->cross_color_transform_bits = best_bits;
+  assert(*best_bits >= MIN_TRANSFORM_BITS && *best_bits <= MAX_TRANSFORM_BITS);
+  VP8LPutBits(bw, *best_bits - MIN_TRANSFORM_BITS, NUM_TRANSFORM_BITS);
   return EncodeImageNoHuffman(
       bw, enc->transform_data, &enc->hash_chain, &enc->refs[0],
-      VP8LSubSampleSize(width, best_bits), VP8LSubSampleSize(height, best_bits),
-      quality, low_effort, enc->pic, percent_range - percent_range / 2,
-      percent);
+      VP8LSubSampleSize(width, *best_bits),
+      VP8LSubSampleSize(height, *best_bits), quality, low_effort, enc->pic,
+      percent_range - percent_range / 2, percent);
 }
 
 // -----------------------------------------------------------------------------
@@ -1539,6 +1536,7 @@ static int EncodeStreamHook(void* input, void* data2) {
   for (idx = 0; idx < num_crunch_configs; ++idx) {
     const int entropy_idx = crunch_configs[idx].entropy_idx;
     int remaining_percent = 97 / num_crunch_configs, percent_range;
+    int predictor_transform_bits = 0, cross_color_transform_bits = 0;
     enc->use_palette =
         (entropy_idx == kPalette) || (entropy_idx == kPaletteAndSpatial);
     enc->use_subtract_green =
@@ -1613,7 +1611,8 @@ static int EncodeStreamHook(void* input, void* data2) {
       percent_range = remaining_percent / 3;
       if (!ApplyPredictFilter(enc, enc->current_width, height, quality,
                               low_effort, enc->use_subtract_green, bw,
-                              percent_range, &percent)) {
+                              percent_range, &percent,
+                              &predictor_transform_bits)) {
         goto Error;
       }
       remaining_percent -= percent_range;
@@ -1622,7 +1621,8 @@ static int EncodeStreamHook(void* input, void* data2) {
     if (enc->use_cross_color) {
       percent_range = remaining_percent / 2;
       if (!ApplyCrossColorFilter(enc, enc->current_width, height, quality,
-                                 low_effort, bw, percent_range, &percent)) {
+                                 low_effort, bw, percent_range, &percent,
+                                 &cross_color_transform_bits)) {
         goto Error;
       }
       remaining_percent -= percent_range;
@@ -1654,8 +1654,8 @@ static int EncodeStreamHook(void* input, void* data2) {
         if (enc->use_subtract_green) stats->lossless_features |= 4;
         if (enc->use_palette) stats->lossless_features |= 8;
         stats->histogram_bits = enc->histo_bits;
-        stats->transform_bits = enc->predictor_transform_bits;
-        stats->cross_color_transform_bits = enc->cross_color_transform_bits;
+        stats->transform_bits = predictor_transform_bits;
+        stats->cross_color_transform_bits = cross_color_transform_bits;
         stats->cache_bits = enc->cache_bits;
         stats->palette_size = enc->palette_size;
         stats->lossless_size = (int)(best_size - byte_position);
