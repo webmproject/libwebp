@@ -31,12 +31,11 @@
 void VP8BitReaderSetBuffer(VP8BitReader* const br,
                            const uint8_t* const start,
                            size_t size) {
-  if (start != NULL) {
-    br->buf = start;
-    br->buf_end = start + size;
-    br->buf_max =
-        (size >= sizeof(lbit_t)) ? start + size - sizeof(lbit_t) + 1 : start;
-  }
+  assert(start != NULL);
+  br->buf = start;
+  br->buf_end = start + size;
+  br->buf_max =
+      (size >= sizeof(lbit_t)) ? start + size - sizeof(lbit_t) + 1 : start;
 }
 
 void VP8InitBitReader(VP8BitReader* const br,
