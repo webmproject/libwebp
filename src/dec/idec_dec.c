@@ -141,8 +141,14 @@ static void DoRemap(WebPIDecoder* const idec, ptrdiff_t offset) {
       }
       {
         const uint8_t* const last_start = dec->parts[last_part].buf;
-        VP8BitReaderSetBuffer(&dec->parts[last_part], last_start,
-                              mem->buf + mem->end - last_start);
+        // 'last_start' will be NULL when 'idec->state' is < STATE_VP8_PARTS0
+        // and through a portion of that state (when there isn't enough data to
+        // parse the partitions). The bitreader is only used meaningfully when
+        // there is enough data to begin parsing partition 0.
+        if (last_start != NULL) {
+          VP8BitReaderSetBuffer(&dec->parts[last_part], last_start,
+                                mem->buf + mem->end - last_start);
+        }
       }
       if (NeedCompressedAlpha(idec)) {
         ALPHDecoder* const alph_dec = dec->alph_dec;
