@@ -1089,7 +1089,7 @@ static int ApplyPredictFilter(VP8LEncoder* const enc, int width, int height,
                               int quality, int low_effort,
                               int used_subtract_green, VP8LBitWriter* const bw,
                               int percent_range, int* const percent,
-                              int* best_bits) {
+                              int* const best_bits) {
   const int near_lossless_strength =
       enc->use_palette ? 100 : enc->config->near_lossless;
   const int max_bits = ClampBits(width, height, enc->predictor_transform_bits,
@@ -1121,7 +1121,7 @@ static int ApplyPredictFilter(VP8LEncoder* const enc, int width, int height,
 static int ApplyCrossColorFilter(VP8LEncoder* const enc, int width, int height,
                                  int quality, int low_effort,
                                  VP8LBitWriter* const bw, int percent_range,
-                                 int* const percent, int* best_bits) {
+                                 int* const percent, int* const best_bits) {
   const int min_bits = enc->cross_color_transform_bits;
 
   if (!VP8LColorSpaceTransform(width, height, min_bits, quality, enc->argb,
