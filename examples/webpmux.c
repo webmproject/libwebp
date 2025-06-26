@@ -680,7 +680,6 @@ static int ParseCommandLine(Config* config, const W_CHAR** const unicode_argv) {
       } else if (!strcmp(argv[i], "-strip")) {
         if (ACTION_IS_NIL) {
           config->action_type = ACTION_STRIP;
-          config->arg_count = 0;
         } else {
           ERROR_GOTO1("ERROR: Multiple actions specified.\n", ErrParse);
         }
@@ -760,48 +759,63 @@ static int ParseCommandLine(Config* config, const W_CHAR** const unicode_argv) {
         ERROR_GOTO2("ERROR: Unknown option: '%s'.\n", argv[i], ErrParse);
       }
     } else {  // One of the feature types or input.
+      // After consuming the arguments to -get/-set/-strip, treat any remaining
+      // arguments as input. This allows files that are named the same as the
+      // keywords used with these options.
+      int is_input = feature_arg_index == config->arg_count;
       if (ACTION_IS_NIL) {
         ERROR_GOTO1("ERROR: Action must be specified before other arguments.\n",
                     ErrParse);
       }
-      if (!strcmp(argv[i], "icc") || !strcmp(argv[i], "exif") ||
-          !strcmp(argv[i], "xmp")) {
-        if (FEATURETYPE_IS_NIL) {
-          config->type = (!strcmp(argv[i], "icc")) ? FEATURE_ICCP :
-              (!strcmp(argv[i], "exif")) ? FEATURE_EXIF : FEATURE_XMP;
-        } else {
-          ERROR_GOTO1("ERROR: Multiple features specified.\n", ErrParse);
-        }
-        if (config->action_type == ACTION_SET) {
+      if (!is_input) {
+        if (!strcmp(argv[i], "icc") || !strcmp(argv[i], "exif") ||
+            !strcmp(argv[i], "xmp")) {
+          if (FEATURETYPE_IS_NIL) {
+            config->type = (!strcmp(argv[i], "icc")) ? FEATURE_ICCP :
+                (!strcmp(argv[i], "exif")) ? FEATURE_EXIF : FEATURE_XMP;
+          } else {
+            ERROR_GOTO1("ERROR: Multiple features specified.\n", ErrParse);
+          }
+          if (config->action_type == ACTION_SET) {
+            CHECK_NUM_ARGS_AT_LEAST(2, ErrParse);
+            arg->filename = wargv[i + 1];
+            ++feature_arg_index;
+            i += 2;
+          } else {
+            // Note: 'arg->params' is not used in this case. 'arg_count' is
+            // used as a flag to indicate the -get/-strip feature has already
+            // been consumed, allowing input types to be named the same as the
+            // feature type.
+            config->arg_count = 0;
+            ++i;
+          }
+        } else if (!strcmp(argv[i], "frame") &&
+                   (config->action_type == ACTION_GET)) {
           CHECK_NUM_ARGS_AT_LEAST(2, ErrParse);
-          arg->filename = wargv[i + 1];
+          config->type = FEATURE_ANMF;
+          arg->params = argv[i + 1];
+          ++feature_arg_index;
+          i += 2;
+        } else if (!strcmp(argv[i], "loop") &&
+                   (config->action_type == ACTION_SET)) {
+          CHECK_NUM_ARGS_AT_LEAST(2, ErrParse);
+          config->type = FEATURE_LOOP;
+          arg->params = argv[i + 1];
+          ++feature_arg_index;
+          i += 2;
+        } else if (!strcmp(argv[i], "bgcolor") &&
+                   (config->action_type == ACTION_SET)) {
+          CHECK_NUM_ARGS_AT_LEAST(2, ErrParse);
+          config->type = FEATURE_BGCOLOR;
+          arg->params = argv[i + 1];
           ++feature_arg_index;
           i += 2;
         } else {
-          ++i;
+          is_input = 1;
         }
-      } else if (!strcmp(argv[i], "frame") &&
-                 (config->action_type == ACTION_GET)) {
-        CHECK_NUM_ARGS_AT_LEAST(2, ErrParse);
-        config->type = FEATURE_ANMF;
-        arg->params = argv[i + 1];
-        ++feature_arg_index;
-        i += 2;
-      } else if (!strcmp(argv[i], "loop") &&
-                 (config->action_type == ACTION_SET)) {
-        CHECK_NUM_ARGS_AT_LEAST(2, ErrParse);
-        config->type = FEATURE_LOOP;
-        arg->params = argv[i + 1];
-        ++feature_arg_index;
-        i += 2;
-      } else if (!strcmp(argv[i], "bgcolor") &&
-                 (config->action_type == ACTION_SET)) {
-        CHECK_NUM_ARGS_AT_LEAST(2, ErrParse);
-        config->type = FEATURE_BGCOLOR;
-        arg->params = argv[i + 1];
-        ++feature_arg_index;
-        i += 2;
-      } else {  // Assume input file.
+      }
+
+      if (is_input) {
         if (config->input == NULL) {
           config->input = wargv[i];
         } else {
