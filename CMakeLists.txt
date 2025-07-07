@@ -84,6 +84,15 @@ if(WEBP_BUILD_WEBP_JS)
     message(NOTICE
             "wasm2js does not support SIMD, disabling webp.js generation.")
   endif()
+
+  if(NOT EMSCRIPTEN_VERSION)
+    message(
+      WARNING
+        "EMSCRIPTEN_VERSION not detected!\n"
+        "WEBP_BUILD_WEBP_JS is only supported with emcmake/emmake.\n"
+        "The build may fail if those tools are not used. See webp_js/README.md."
+    )
+  endif()
 endif()
 
 set(SHARPYUV_DEP_LIBRARIES)
