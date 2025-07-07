@@ -13,7 +13,7 @@ Emscripten and CMake.
 -   install the Emscripten SDK following the procedure described at:
     https://emscripten.org/docs/getting_started/downloads.html#installation-instructions-using-the-emsdk-recommended
     After installation, you should have some global variable positioned to the
-    location of the SDK. In particular, $EMSDK should point to the top-level
+    location of the SDK. In particular, `$EMSDK` should point to the top-level
     directory containing Emscripten tools.
 
 -   configure the project 'WEBP_JS' with CMake using:
@@ -23,12 +23,12 @@ Emscripten and CMake.
     emcmake cmake -DWEBP_BUILD_WEBP_JS=ON ../
     ```
 
--   compile webp.js using 'emmake make'.
+-   compile webp.js using `emmake make`.
 
 -   that's it! Upon completion, you should have the 'webp.js', 'webp.js.mem',
     'webp_wasm.js' and 'webp_wasm.wasm' files generated.
 
-The callable JavaScript function is WebPToSDL(), which decodes a raw WebP
+The callable JavaScript function is `WebPToSDL()`, which decodes a raw WebP
 bitstream into a canvas. See webp_js/index.html for a simple usage sample (see
 below for instructions).
 
