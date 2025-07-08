@@ -1,3 +1,6 @@
+370aa581 webp_js/README.md: add some more code formatting (``)
+f83c6b32 CMakeLists: add warning for incorrect emscripten config
+6a3e656b update ChangeLog (tag: v1.6.0-rc1)
 bf0bf1e7 api.md: add WebPValidateDecoderConfig to pseudocode
 e8ae210d update NEWS
 ce53efd7 bump version to 1.6.0
