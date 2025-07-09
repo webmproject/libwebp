@@ -1,4 +1,4 @@
-AC_INIT([libwebp], [1.5.0],
+AC_INIT([libwebp], [1.6.0],
         [https://issues.webmproject.org],,
         [https://developers.google.com/speed/webp])
 AC_CANONICAL_HOST

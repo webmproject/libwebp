@@ -202,6 +202,7 @@ config.output.u.RGBA.rgba = (uint8_t*) memory_buffer;
 config.output.u.RGBA.stride = scanline_stride;
 config.output.u.RGBA.size = total_size_of_the_memory_buffer;
 config.output.is_external_memory = 1;
+config_error = WebPValidateDecoderConfig(&config);  // not mandatory, but useful
 
 // E) Decode the WebP image. There are two variants w.r.t decoding image.
 // The first one (E.1) decodes the full image and the second one (E.2) is

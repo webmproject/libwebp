@@ -27,7 +27,7 @@
 #include "src/webp/types.h"
 
 #define DMUX_MAJ_VERSION 1
-#define DMUX_MIN_VERSION 5
+#define DMUX_MIN_VERSION 6
 #define DMUX_REV_VERSION 0
 
 typedef struct {
