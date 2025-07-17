@@ -46,6 +46,10 @@ option(WEBP_USE_THREAD "Enable threading support" ON)
 option(WEBP_NEAR_LOSSLESS "Enable near-lossless encoding" ON)
 option(WEBP_ENABLE_SWAP_16BIT_CSP "Enable byte swap for 16 bit colorspaces."
        OFF)
+option(
+  WEBP_ENABLE_FBOUNDS_SAFETY
+  "Enable -fbounds-safety for the part of the codebase which supports it. This expects an experimental toolchain."
+  OFF)
 set(WEBP_BITTRACE "0" CACHE STRING "Bit trace mode (0=none, 1=bit, 2=bytes)")
 set_property(CACHE WEBP_BITTRACE PROPERTY STRINGS 0 1 2)
 option(WEBP_ENABLE_WUNUSED_RESULT "Add [[nodiscard]] to some functions. \
@@ -408,6 +412,11 @@ target_include_directories(webputils PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
                                              ${CMAKE_CURRENT_SOURCE_DIR})
 add_library(webp $<TARGET_OBJECTS:webpdecode> $<TARGET_OBJECTS:webpdsp>
                  $<TARGET_OBJECTS:webpencode> $<TARGET_OBJECTS:webputils>)
+if(WEBP_ENABLE_FBOUNDS_SAFETY)
+  # Enable -fbounds-safety only for webputils for now.
+  target_compile_options(webputils PRIVATE -fbounds-safety)
+endif()
+
 target_link_libraries(webp sharpyuv)
 if(XCODE)
   libwebp_add_stub_file(webp)
