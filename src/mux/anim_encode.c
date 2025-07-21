@@ -514,7 +514,7 @@ typedef struct {
   FrameRectangle rect_lossy;     // Frame rectangle for lossy compression.
                                  // Could be smaller than 'rect_ll' as pixels
                                  // with small diffs can be ignored.
-  WebPPicture sub_frame_lossy;   // Sub-frame pic for lossless compression.
+  WebPPicture sub_frame_lossy;   // Sub-frame pic for lossy compression.
 } SubFrameParams;
 
 static int SubFrameParamsInit(SubFrameParams* const params,
