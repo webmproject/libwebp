@@ -561,7 +561,7 @@ VP8StatusCode VP8EnterCritical(VP8Decoder* const dec, VP8Io* const io) {
   // Call setup() first. This may trigger additional decoding features on 'io'.
   // Note: Afterward, we must call teardown() no matter what.
   if (io->setup != NULL && !io->setup(io)) {
-    VP8SetError(dec, VP8_STATUS_USER_ABORT, "Frame setup failed");
+    VP8SetError(dec, VP8_STATUS_INVALID_PARAM, "Frame setup failed");
     return dec->status;
   }
 
