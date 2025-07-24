@@ -23,9 +23,9 @@
 
 //-----------------------------------------------------------------------------
 
-static uint8x8_t ConvertRGBToY_NEON(const uint8x8_t R,
-                                    const uint8x8_t G,
-                                    const uint8x8_t B) {
+static uint8x8_t ConvertRGBToYImpl_NEON(const uint8x8_t R,
+                                        const uint8x8_t G,
+                                        const uint8x8_t B) {
   const uint16x8_t r = vmovl_u8(R);
   const uint16x8_t g = vmovl_u8(G);
   const uint16x8_t b = vmovl_u8(B);
@@ -47,28 +47,48 @@ static uint8x8_t ConvertRGBToY_NEON(const uint8x8_t R,
   return vqmovn_u16(Y2);
 }
 
-static void ConvertRGB24ToY_NEON(const uint8_t* WEBP_RESTRICT rgb,
-                                 uint8_t* WEBP_RESTRICT y, int width) {
+static void ConvertRGBToY_NEON(const uint8_t* WEBP_RESTRICT rgb,
+                               uint8_t* WEBP_RESTRICT y, int width, int step) {
   int i;
-  for (i = 0; i + 8 <= width; i += 8, rgb += 3 * 8) {
-    const uint8x8x3_t RGB = vld3_u8(rgb);
-    const uint8x8_t Y = ConvertRGBToY_NEON(RGB.val[0], RGB.val[1], RGB.val[2]);
-    vst1_u8(y + i, Y);
+  if (step == 3) {
+    for (i = 0; i + 8 <= width; i += 8, rgb += 3 * 8) {
+      const uint8x8x3_t RGB = vld3_u8(rgb);
+      const uint8x8_t Y =
+          ConvertRGBToYImpl_NEON(RGB.val[0], RGB.val[1], RGB.val[2]);
+      vst1_u8(y + i, Y);
+    }
+  } else {
+    for (i = 0; i + 8 <= width; i += 8, rgb += 4 * 8) {
+      const uint8x8x4_t RGB = vld4_u8(rgb);
+      const uint8x8_t Y =
+          ConvertRGBToYImpl_NEON(RGB.val[0], RGB.val[1], RGB.val[2]);
+      vst1_u8(y + i, Y);
+    }
   }
-  for (; i < width; ++i, rgb += 3) {   // left-over
+  for (; i < width; ++i, rgb += step) {  // left-over
     y[i] = VP8RGBToY(rgb[0], rgb[1], rgb[2], YUV_HALF);
   }
 }
 
-static void ConvertBGR24ToY_NEON(const uint8_t* WEBP_RESTRICT bgr,
-                                 uint8_t* WEBP_RESTRICT y, int width) {
+static void ConvertBGRToY_NEON(const uint8_t* WEBP_RESTRICT bgr,
+                               uint8_t* WEBP_RESTRICT y, int width, int step) {
   int i;
-  for (i = 0; i + 8 <= width; i += 8, bgr += 3 * 8) {
-    const uint8x8x3_t BGR = vld3_u8(bgr);
-    const uint8x8_t Y = ConvertRGBToY_NEON(BGR.val[2], BGR.val[1], BGR.val[0]);
-    vst1_u8(y + i, Y);
+  if (step == 3) {
+    for (i = 0; i + 8 <= width; i += 8, bgr += 3 * 8) {
+      const uint8x8x3_t BGR = vld3_u8(bgr);
+      const uint8x8_t Y =
+          ConvertRGBToYImpl_NEON(BGR.val[2], BGR.val[1], BGR.val[0]);
+      vst1_u8(y + i, Y);
+    }
+  } else {
+    for (i = 0; i + 8 <= width; i += 8, bgr += 4 * 8) {
+      const uint8x8x4_t BGR = vld4_u8(bgr);
+      const uint8x8_t Y =
+          ConvertRGBToYImpl_NEON(BGR.val[2], BGR.val[1], BGR.val[0]);
+      vst1_u8(y + i, Y);
+    }
   }
-  for (; i < width; ++i, bgr += 3) {  // left-over
+  for (; i < width; ++i, bgr += step) {  // left-over
     y[i] = VP8RGBToY(bgr[2], bgr[1], bgr[0], YUV_HALF);
   }
 }
@@ -78,7 +98,8 @@ static void ConvertARGBToY_NEON(const uint32_t* WEBP_RESTRICT argb,
   int i;
   for (i = 0; i + 8 <= width; i += 8) {
     const uint8x8x4_t RGB = vld4_u8((const uint8_t*)&argb[i]);
-    const uint8x8_t Y = ConvertRGBToY_NEON(RGB.val[2], RGB.val[1], RGB.val[0]);
+    const uint8x8_t Y =
+        ConvertRGBToYImpl_NEON(RGB.val[2], RGB.val[1], RGB.val[0]);
     vst1_u8(y + i, Y);
   }
   for (; i < width; ++i) {   // left-over
@@ -173,8 +194,8 @@ static void ConvertARGBToUV_NEON(const uint32_t* WEBP_RESTRICT argb,
 extern void WebPInitConvertARGBToYUVNEON(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void WebPInitConvertARGBToYUVNEON(void) {
-  WebPConvertRGB24ToY = ConvertRGB24ToY_NEON;
-  WebPConvertBGR24ToY = ConvertBGR24ToY_NEON;
+  WebPConvertRGBToY = ConvertRGBToY_NEON;
+  WebPConvertBGRToY = ConvertBGRToY_NEON;
   WebPConvertARGBToY = ConvertARGBToY_NEON;
   WebPConvertARGBToUV = ConvertARGBToUV_NEON;
   WebPConvertRGBA32ToUV = ConvertRGBA32ToUV_NEON;

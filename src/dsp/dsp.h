@@ -352,11 +352,11 @@ extern void (*WebPConvertRGBA32ToUV)(const uint16_t* WEBP_RESTRICT rgb,
                                      uint8_t* WEBP_RESTRICT u,
                                      uint8_t* WEBP_RESTRICT v, int width);
 
-// Convert RGB or BGR to Y
-extern void (*WebPConvertRGB24ToY)(const uint8_t* WEBP_RESTRICT rgb,
-                                   uint8_t* WEBP_RESTRICT y, int width);
-extern void (*WebPConvertBGR24ToY)(const uint8_t* WEBP_RESTRICT bgr,
-                                   uint8_t* WEBP_RESTRICT y, int width);
+// Convert RGB or BGR to Y. Step is 3 or 4. If step is 4, data is RGBA or BGRA.
+extern void (*WebPConvertRGBToY)(const uint8_t* WEBP_RESTRICT rgb,
+                                 uint8_t* WEBP_RESTRICT y, int width, int step);
+extern void (*WebPConvertBGRToY)(const uint8_t* WEBP_RESTRICT bgr,
+                                 uint8_t* WEBP_RESTRICT y, int width, int step);
 
 // used for plain-C fallback.
 extern void WebPConvertARGBToUV_C(const uint32_t* WEBP_RESTRICT argb,

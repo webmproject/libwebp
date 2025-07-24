@@ -519,7 +519,6 @@ static int ImportYUVAFromRGBA(const uint8_t* r_ptr,
     }
   } else {
     const int uv_width = (width + 1) >> 1;
-    int use_dsp = (step == 3);  // use special function in this case
     // temporary storage for accumulated R/G/B values during conversion to U/V
     uint16_t* const tmp_rgb =
         (uint16_t*)WebPSafeMalloc(4 * uv_width, sizeof(*tmp_rgb));
@@ -533,7 +532,6 @@ static int ImportYUVAFromRGBA(const uint8_t* r_ptr,
     if (dithering > 0.) {
       VP8InitRandom(&base_rg, dithering);
       rg = &base_rg;
-      use_dsp = 0;   // can't use dsp in this case
     }
     WebPInitConvertARGBToYUV();
     InitGammaTables();
@@ -545,15 +543,15 @@ static int ImportYUVAFromRGBA(const uint8_t* r_ptr,
     // Downsample Y/U/V planes, two rows at a time
     for (y = 0; y < (height >> 1); ++y) {
       int rows_have_alpha = has_alpha;
-      if (use_dsp) {
+      if (rg == NULL) {
         if (is_rgb) {
-          WebPConvertRGB24ToY(r_ptr, dst_y, width);
-          WebPConvertRGB24ToY(r_ptr + rgb_stride,
-                              dst_y + picture->y_stride, width);
+          WebPConvertRGBToY(r_ptr, dst_y, width, step);
+          WebPConvertRGBToY(r_ptr + rgb_stride, dst_y + picture->y_stride,
+                            width, step);
         } else {
-          WebPConvertBGR24ToY(b_ptr, dst_y, width);
-          WebPConvertBGR24ToY(b_ptr + rgb_stride,
-                              dst_y + picture->y_stride, width);
+          WebPConvertBGRToY(b_ptr, dst_y, width, step);
+          WebPConvertBGRToY(b_ptr + rgb_stride, dst_y + picture->y_stride,
+                            width, step);
         }
       } else {
         ConvertRowToY(r_ptr, g_ptr, b_ptr, step, dst_y, width, rg);
@@ -589,11 +587,11 @@ static int ImportYUVAFromRGBA(const uint8_t* r_ptr,
     }
     if (height & 1) {    // extra last row
       int row_has_alpha = has_alpha;
-      if (use_dsp) {
-        if (r_ptr < b_ptr) {
-          WebPConvertRGB24ToY(r_ptr, dst_y, width);
+      if (rg == NULL) {
+        if (is_rgb) {
+          WebPConvertRGBToY(r_ptr, dst_y, width, step);
         } else {
-          WebPConvertBGR24ToY(b_ptr, dst_y, width);
+          WebPConvertBGRToY(b_ptr, dst_y, width, step);
         }
       } else {
         ConvertRowToY(r_ptr, g_ptr, b_ptr, step, dst_y, width, rg);

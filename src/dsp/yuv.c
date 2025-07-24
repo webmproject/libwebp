@@ -177,18 +177,18 @@ void WebPConvertARGBToUV_C(const uint32_t* WEBP_RESTRICT argb,
 
 //-----------------------------------------------------------------------------
 
-static void ConvertRGB24ToY_C(const uint8_t* WEBP_RESTRICT rgb,
-                              uint8_t* WEBP_RESTRICT y, int width) {
+static void ConvertRGBToY_C(const uint8_t* WEBP_RESTRICT rgb,
+                            uint8_t* WEBP_RESTRICT y, int width, int step) {
   int i;
-  for (i = 0; i < width; ++i, rgb += 3) {
+  for (i = 0; i < width; ++i, rgb += step) {
     y[i] = VP8RGBToY(rgb[0], rgb[1], rgb[2], YUV_HALF);
   }
 }
 
-static void ConvertBGR24ToY_C(const uint8_t* WEBP_RESTRICT bgr,
-                              uint8_t* WEBP_RESTRICT y, int width) {
+static void ConvertBGRToY_C(const uint8_t* WEBP_RESTRICT bgr,
+                            uint8_t* WEBP_RESTRICT y, int width, int step) {
   int i;
-  for (i = 0; i < width; ++i, bgr += 3) {
+  for (i = 0; i < width; ++i, bgr += step) {
     y[i] = VP8RGBToY(bgr[2], bgr[1], bgr[0], YUV_HALF);
   }
 }
@@ -206,10 +206,10 @@ void WebPConvertRGBA32ToUV_C(const uint16_t* WEBP_RESTRICT rgb,
 
 //-----------------------------------------------------------------------------
 
-void (*WebPConvertRGB24ToY)(const uint8_t* WEBP_RESTRICT rgb,
-                            uint8_t* WEBP_RESTRICT y, int width);
-void (*WebPConvertBGR24ToY)(const uint8_t* WEBP_RESTRICT bgr,
-                            uint8_t* WEBP_RESTRICT y, int width);
+void (*WebPConvertRGBToY)(const uint8_t* WEBP_RESTRICT rgb,
+                          uint8_t* WEBP_RESTRICT y, int width, int step);
+void (*WebPConvertBGRToY)(const uint8_t* WEBP_RESTRICT bgr,
+                          uint8_t* WEBP_RESTRICT y, int width, int step);
 void (*WebPConvertRGBA32ToUV)(const uint16_t* WEBP_RESTRICT rgb,
                               uint8_t* WEBP_RESTRICT u,
                               uint8_t* WEBP_RESTRICT v, int width);
@@ -228,8 +228,8 @@ WEBP_DSP_INIT_FUNC(WebPInitConvertARGBToYUV) {
   WebPConvertARGBToY = ConvertARGBToY_C;
   WebPConvertARGBToUV = WebPConvertARGBToUV_C;
 
-  WebPConvertRGB24ToY = ConvertRGB24ToY_C;
-  WebPConvertBGR24ToY = ConvertBGR24ToY_C;
+  WebPConvertRGBToY = ConvertRGBToY_C;
+  WebPConvertBGRToY = ConvertBGRToY_C;
 
   WebPConvertRGBA32ToUV = WebPConvertRGBA32ToUV_C;
 
@@ -255,7 +255,7 @@ WEBP_DSP_INIT_FUNC(WebPInitConvertARGBToYUV) {
 
   assert(WebPConvertARGBToY != NULL);
   assert(WebPConvertARGBToUV != NULL);
-  assert(WebPConvertRGB24ToY != NULL);
-  assert(WebPConvertBGR24ToY != NULL);
+  assert(WebPConvertRGBToY != NULL);
+  assert(WebPConvertBGRToY != NULL);
   assert(WebPConvertRGBA32ToUV != NULL);
 }

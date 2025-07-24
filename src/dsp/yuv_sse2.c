@@ -491,7 +491,7 @@ static WEBP_INLINE void RGB24PackedToPlanarHelper_SSE2(
 // Unpack the 8b input rgbrgbrgbrgb ... as contiguous registers:
 // rrrr... rrrr... gggg... gggg... bbbb... bbbb....
 // Similar to PlanarTo24bHelper(), but in reverse order.
-static WEBP_INLINE void RGB24PackedToPlanar_SSE2(
+static WEBP_INLINE void RGBPackedToPlanar_SSE2(
     const uint8_t* WEBP_RESTRICT const rgb, __m128i* const out /*out[6]*/) {
   __m128i tmp[6];
   tmp[0] = _mm_loadu_si128((const __m128i*)(rgb +  0));
@@ -508,8 +508,31 @@ static WEBP_INLINE void RGB24PackedToPlanar_SSE2(
   RGB24PackedToPlanarHelper_SSE2(tmp, out);
 }
 
-// Convert 8 packed ARGB to r[], g[], b[]
-static WEBP_INLINE void RGB32PackedToPlanar_SSE2(
+// Unpack the 8b input rgbargbargba... as contiguous registers:
+// rrrr... rrrr... gggg... gggg... bbbb... bbbb....
+static WEBP_INLINE void RGBAPackedToRGBPlanar_SSE2(
+    const uint8_t* WEBP_RESTRICT const rgba, __m128i* const rgb /*in[6]*/) {
+  __m128i a0 = _mm_loadu_si128((const __m128i*)(rgba + 0));
+  __m128i a1 = _mm_loadu_si128((const __m128i*)(rgba + 16));
+  __m128i a2 = _mm_loadu_si128((const __m128i*)(rgba + 32));
+  __m128i a3 = _mm_loadu_si128((const __m128i*)(rgba + 48));
+  __m128i a4 = _mm_loadu_si128((const __m128i*)(rgba + 64));
+  __m128i a5 = _mm_loadu_si128((const __m128i*)(rgba + 80));
+  __m128i a6 = _mm_loadu_si128((const __m128i*)(rgba + 96));
+  __m128i a7 = _mm_loadu_si128((const __m128i*)(rgba + 112));
+  VP8L32bToPlanar_SSE2(&a0, &a1, &a2, &a3);
+  rgb[0] = a3;
+  rgb[2] = a2;
+  rgb[4] = a1;
+  VP8L32bToPlanar_SSE2(&a4, &a5, &a6, &a7);
+  rgb[1] = a7;
+  rgb[3] = a6;
+  rgb[5] = a5;
+}
+
+// Unpack the 8b input argbargbargb... as contiguous registers:
+// 0r0r0r... 0r0r0r... 0g0g0g... 0g0g0g0... 0b0b0b... 0b0b0b....
+static WEBP_INLINE void RGB32PackedToPlanar16_SSE2(
     const uint32_t* WEBP_RESTRICT const argb, __m128i* const rgb /*in[6]*/) {
   const __m128i zero = _mm_setzero_si128();
   __m128i a0 = LOAD_16(argb + 0);
@@ -544,10 +567,10 @@ static WEBP_INLINE void RGB32PackedToPlanar_SSE2(
 } while (0)
 
 #define MK_CST_16(A, B) _mm_set_epi16((B), (A), (B), (A), (B), (A), (B), (A))
-static WEBP_INLINE void ConvertRGBToY_SSE2(const __m128i* const R,
-                                           const __m128i* const G,
-                                           const __m128i* const B,
-                                           __m128i* const Y) {
+static WEBP_INLINE void ConvertRGBToYImpl_SSE2(const __m128i* const R,
+                                               const __m128i* const G,
+                                               const __m128i* const B,
+                                               __m128i* const Y) {
   const __m128i kRG_y = MK_CST_16(16839, 33059 - 16384);
   const __m128i kGB_y = MK_CST_16(16384, 6420);
   const __m128i kHALF_Y = _mm_set1_epi32((16 << YUV_FIX) + YUV_HALF);
@@ -583,72 +606,70 @@ static WEBP_INLINE void ConvertRGBToUV_SSE2(const __m128i* const R,
 #undef MK_CST_16
 #undef TRANSFORM
 
-static void ConvertRGB24ToY_SSE2(const uint8_t* WEBP_RESTRICT rgb,
-                                 uint8_t* WEBP_RESTRICT y, int width) {
+static WEBP_INLINE void ConvertRGBToYHelper_SSE2(
+    const __m128i* const rgb_plane /*in[6]*/, int swap_rb, int* i,
+    uint8_t* WEBP_RESTRICT y) {
+  int j;
+
+  for (j = 0; j < 2; ++j, *i += 16) {
+    const __m128i zero = _mm_setzero_si128();
+    __m128i r, g, b, Y0, Y1;
+
+    // Convert to 16-bit Y.
+    r = _mm_unpacklo_epi8(rgb_plane[(swap_rb ? 4 : 0) + j], zero);
+    g = _mm_unpacklo_epi8(rgb_plane[2 + j], zero);
+    b = _mm_unpacklo_epi8(rgb_plane[(swap_rb ? 0 : 4) + j], zero);
+    ConvertRGBToYImpl_SSE2(&r, &g, &b, &Y0);
+
+    // Convert to 16-bit Y.
+    r = _mm_unpackhi_epi8(rgb_plane[(swap_rb ? 4 : 0) + j], zero);
+    g = _mm_unpackhi_epi8(rgb_plane[2 + j], zero);
+    b = _mm_unpackhi_epi8(rgb_plane[(swap_rb ? 0 : 4) + j], zero);
+    ConvertRGBToYImpl_SSE2(&r, &g, &b, &Y1);
+
+    // Cast to 8-bit and store.
+    STORE_16(_mm_packus_epi16(Y0, Y1), y + *i);
+  }
+}
+
+static void ConvertRGBToY_SSE2(const uint8_t* WEBP_RESTRICT rgb,
+                               uint8_t* WEBP_RESTRICT y, int width, int step) {
   const int max_width = width & ~31;
   int i;
-  for (i = 0; i < max_width; rgb += 3 * 16 * 2) {
-    __m128i rgb_plane[6];
-    int j;
-
-    RGB24PackedToPlanar_SSE2(rgb, rgb_plane);
-
-    for (j = 0; j < 2; ++j, i += 16) {
-      const __m128i zero = _mm_setzero_si128();
-      __m128i r, g, b, Y0, Y1;
-
-      // Convert to 16-bit Y.
-      r = _mm_unpacklo_epi8(rgb_plane[0 + j], zero);
-      g = _mm_unpacklo_epi8(rgb_plane[2 + j], zero);
-      b = _mm_unpacklo_epi8(rgb_plane[4 + j], zero);
-      ConvertRGBToY_SSE2(&r, &g, &b, &Y0);
-
-      // Convert to 16-bit Y.
-      r = _mm_unpackhi_epi8(rgb_plane[0 + j], zero);
-      g = _mm_unpackhi_epi8(rgb_plane[2 + j], zero);
-      b = _mm_unpackhi_epi8(rgb_plane[4 + j], zero);
-      ConvertRGBToY_SSE2(&r, &g, &b, &Y1);
-
-      // Cast to 8-bit and store.
-      STORE_16(_mm_packus_epi16(Y0, Y1), y + i);
+  __m128i rgb_plane[6];
+  if (step == 3) {
+    for (i = 0; i < max_width; rgb += 3 * 16 * 2) {
+      RGBPackedToPlanar_SSE2(rgb, rgb_plane);
+      ConvertRGBToYHelper_SSE2(rgb_plane, /*swap_rb=*/0, &i, y);
+    }
+  } else {
+    for (i = 0; i < max_width; rgb += 4 * 16 * 2) {
+      RGBAPackedToRGBPlanar_SSE2(rgb, rgb_plane);
+      ConvertRGBToYHelper_SSE2(rgb_plane, /*swap_rb=*/0, &i, y);
     }
   }
-  for (; i < width; ++i, rgb += 3) {   // left-over
+  for (; i < width; ++i, rgb += step) {  // left-over
     y[i] = VP8RGBToY(rgb[0], rgb[1], rgb[2], YUV_HALF);
   }
 }
 
-static void ConvertBGR24ToY_SSE2(const uint8_t* WEBP_RESTRICT bgr,
-                                 uint8_t* WEBP_RESTRICT y, int width) {
+static void ConvertBGRToY_SSE2(const uint8_t* WEBP_RESTRICT bgr,
+                               uint8_t* WEBP_RESTRICT y, int width, int step) {
   const int max_width = width & ~31;
   int i;
-  for (i = 0; i < max_width; bgr += 3 * 16 * 2) {
-    __m128i bgr_plane[6];
-    int j;
-
-    RGB24PackedToPlanar_SSE2(bgr, bgr_plane);
-
-    for (j = 0; j < 2; ++j, i += 16) {
-      const __m128i zero = _mm_setzero_si128();
-      __m128i r, g, b, Y0, Y1;
-
-      // Convert to 16-bit Y.
-      b = _mm_unpacklo_epi8(bgr_plane[0 + j], zero);
-      g = _mm_unpacklo_epi8(bgr_plane[2 + j], zero);
-      r = _mm_unpacklo_epi8(bgr_plane[4 + j], zero);
-      ConvertRGBToY_SSE2(&r, &g, &b, &Y0);
-
-      // Convert to 16-bit Y.
-      b = _mm_unpackhi_epi8(bgr_plane[0 + j], zero);
-      g = _mm_unpackhi_epi8(bgr_plane[2 + j], zero);
-      r = _mm_unpackhi_epi8(bgr_plane[4 + j], zero);
-      ConvertRGBToY_SSE2(&r, &g, &b, &Y1);
-
-      // Cast to 8-bit and store.
-      STORE_16(_mm_packus_epi16(Y0, Y1), y + i);
+  __m128i bgr_plane[6];
+  if (step == 3) {
+    for (i = 0; i < max_width; bgr += 3 * 16 * 2) {
+      RGBPackedToPlanar_SSE2(bgr, bgr_plane);
+      ConvertRGBToYHelper_SSE2(bgr_plane, /*swap_rb=*/1, &i, y);
+    }
+  } else {
+    for (i = 0; i < max_width; bgr += 4 * 16 * 2) {
+      RGBAPackedToRGBPlanar_SSE2(bgr, bgr_plane);
+      ConvertRGBToYHelper_SSE2(bgr_plane, /*swap_rb=*/1, &i, y);
     }
   }
-  for (; i < width; ++i, bgr += 3) {  // left-over
+  for (; i < width; ++i, bgr += step) {  // left-over
     y[i] = VP8RGBToY(bgr[2], bgr[1], bgr[0], YUV_HALF);
   }
 }
@@ -659,9 +680,9 @@ static void ConvertARGBToY_SSE2(const uint32_t* WEBP_RESTRICT argb,
   int i;
   for (i = 0; i < max_width; i += 16) {
     __m128i Y0, Y1, rgb[6];
-    RGB32PackedToPlanar_SSE2(&argb[i], rgb);
-    ConvertRGBToY_SSE2(&rgb[0], &rgb[2], &rgb[4], &Y0);
-    ConvertRGBToY_SSE2(&rgb[1], &rgb[3], &rgb[5], &Y1);
+    RGB32PackedToPlanar16_SSE2(&argb[i], rgb);
+    ConvertRGBToYImpl_SSE2(&rgb[0], &rgb[2], &rgb[4], &Y0);
+    ConvertRGBToYImpl_SSE2(&rgb[1], &rgb[3], &rgb[5], &Y1);
     STORE_16(_mm_packus_epi16(Y0, Y1), y + i);
   }
   for (; i < width; ++i) {   // left-over
@@ -690,13 +711,13 @@ static void ConvertARGBToUV_SSE2(const uint32_t* WEBP_RESTRICT argb,
   int i;
   for (i = 0; i < max_width; i += 32, u += 16, v += 16) {
     __m128i rgb[6], U0, V0, U1, V1;
-    RGB32PackedToPlanar_SSE2(&argb[i], rgb);
+    RGB32PackedToPlanar16_SSE2(&argb[i], rgb);
     HorizontalAddPack_SSE2(&rgb[0], &rgb[1], &rgb[0]);
     HorizontalAddPack_SSE2(&rgb[2], &rgb[3], &rgb[2]);
     HorizontalAddPack_SSE2(&rgb[4], &rgb[5], &rgb[4]);
     ConvertRGBToUV_SSE2(&rgb[0], &rgb[2], &rgb[4], &U0, &V0);
 
-    RGB32PackedToPlanar_SSE2(&argb[i + 16], rgb);
+    RGB32PackedToPlanar16_SSE2(&argb[i + 16], rgb);
     HorizontalAddPack_SSE2(&rgb[0], &rgb[1], &rgb[0]);
     HorizontalAddPack_SSE2(&rgb[2], &rgb[3], &rgb[2]);
     HorizontalAddPack_SSE2(&rgb[4], &rgb[5], &rgb[4]);
@@ -770,8 +791,8 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPInitConvertARGBToYUVSSE2(void) {
   WebPConvertARGBToY = ConvertARGBToY_SSE2;
   WebPConvertARGBToUV = ConvertARGBToUV_SSE2;
 
-  WebPConvertRGB24ToY = ConvertRGB24ToY_SSE2;
-  WebPConvertBGR24ToY = ConvertBGR24ToY_SSE2;
+  WebPConvertRGBToY = ConvertRGBToY_SSE2;
+  WebPConvertBGRToY = ConvertBGRToY_SSE2;
 
   WebPConvertRGBA32ToUV = ConvertRGBA32ToUV_SSE2;
 }
