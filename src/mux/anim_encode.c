@@ -1262,13 +1262,16 @@ static int CacheFrame(WebPAnimEncoder* const enc,
       // Note: We need '>=' below because when kmin and kmax are both zero,
       // count_since_key_frame will always be > kmax.
       if (enc->count_since_key_frame >= enc->options.kmax) {
-        // Force the next frame to be a key frame.
-        enc->best_delta = DELTA_INFINITY;
-        // Flush all encoded frames.
-        enc->flush_count = enc->count - 1;
+        // Start a new sequence of kmin sub-frames, followed by (kmax-kmin)
+        // candidate frames. Exactly one of these candidate frames will end up
+        // as a key-frame in the output encoded animation.
         enc->count_since_key_frame = 0;
+        enc->best_delta = DELTA_INFINITY;
+        // Freeze the previous candidate, whether it is a key-frame or not.
         enc->prev_candidate_undecided = 0;
         enc->keyframe = KEYFRAME_NONE;
+        // Flush all previous frames.
+        enc->flush_count = enc->count - 1;
       }
       if (!enc->prev_candidate_undecided) {
         enc->prev_rect =
