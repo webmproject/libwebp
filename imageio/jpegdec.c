@@ -18,8 +18,8 @@
 #include <stdio.h>
 
 #ifdef WEBP_HAVE_JPEG
-#include <jpeglib.h>
 #include <jerror.h>
+#include <jpeglib.h>
 #include <setjmp.h>
 #include <stdlib.h>
 #include <string.h>
@@ -33,10 +33,10 @@
 // Metadata processing
 
 #ifndef JPEG_APP1
-# define JPEG_APP1 (JPEG_APP0 + 1)
+#define JPEG_APP1 (JPEG_APP0 + 1)
 #endif
 #ifndef JPEG_APP2
-# define JPEG_APP2 (JPEG_APP0 + 2)
+#define JPEG_APP2 (JPEG_APP0 + 2)
 #endif
 
 typedef struct {
@@ -64,7 +64,7 @@ static int StoreICCP(j_decompress_ptr dinfo, MetadataPayload* const iccp) {
   // ICC.1:2010-12 (4.3.0.0) Annex B.4 Embedding ICC Profiles in JPEG files
   static const char kICCPSignature[] = "ICC_PROFILE";
   static const size_t kICCPSignatureLength = 12;  // signature includes '\0'
-  static const size_t kICCPSkipLength = 14;  // signature + seq & count
+  static const size_t kICCPSkipLength = 14;       // signature + seq & count
   int expected_count = 0;
   int actual_count = 0;
   int seq_max = 0;
@@ -74,8 +74,7 @@ static int StoreICCP(j_decompress_ptr dinfo, MetadataPayload* const iccp) {
 
   memset(iccp_segments, 0, sizeof(iccp_segments));
   for (marker = dinfo->marker_list; marker != NULL; marker = marker->next) {
-    if (marker->marker == JPEG_APP2 &&
-        marker->data_length > kICCPSkipLength &&
+    if (marker->marker == JPEG_APP2 && marker->data_length > kICCPSkipLength &&
         !memcmp(marker->data, kICCPSignature, kICCPSignatureLength)) {
       // ICC_PROFILE\0<seq><count>; 'seq' starts at 1.
       const int seq = marker->data[kICCPSignatureLength];
@@ -84,8 +83,9 @@ static int StoreICCP(j_decompress_ptr dinfo, MetadataPayload* const iccp) {
       ICCPSegment* segment;
 
       if (segment_size == 0 || count == 0 || seq == 0) {
-        fprintf(stderr, "[ICCP] size (%d) / count (%d) / sequence number (%d)"
-                        " cannot be 0!\n",
+        fprintf(stderr,
+                "[ICCP] size (%d) / count (%d) / sequence number (%d)"
+                " cannot be 0!\n",
                 (int)segment_size, seq, count);
         return 0;
       }
@@ -100,7 +100,7 @@ static int StoreICCP(j_decompress_ptr dinfo, MetadataPayload* const iccp) {
 
       segment = iccp_segments + seq - 1;
       if (segment->data_length != 0) {
-        fprintf(stderr, "[ICCP] Duplicate segment number (%d)!\n" , seq);
+        fprintf(stderr, "[ICCP] Duplicate segment number (%d)!\n", seq);
         return 0;
       }
 
@@ -138,8 +138,8 @@ static int StoreICCP(j_decompress_ptr dinfo, MetadataPayload* const iccp) {
     int i;
     size_t offset = 0;
     for (i = 0; i < seq_max; ++i) {
-      memcpy(iccp->bytes + offset,
-             iccp_segments[i].data, iccp_segments[i].data_length);
+      memcpy(iccp->bytes + offset, iccp_segments[i].data,
+             iccp_segments[i].data_length);
       offset += iccp_segments[i].data_length;
     }
   }
@@ -156,12 +156,12 @@ static int ExtractMetadataFromJPEG(j_decompress_ptr dinfo,
     size_t signature_length;
     size_t storage_offset;
   } kJPEGMetadataMap[] = {
-    // Exif 2.2 Section 4.7.2 Interoperability Structure of APP1 ...
-    { JPEG_APP1, "Exif\0",                        6, METADATA_OFFSET(exif) },
-    // XMP Specification Part 3 Section 3 Embedding XMP Metadata ... #JPEG
-    // TODO(jzern) Add support for 'ExtendedXMP'
-    { JPEG_APP1, "http://ns.adobe.com/xap/1.0/", 29, METADATA_OFFSET(xmp) },
-    { 0, NULL, 0, 0 },
+      // Exif 2.2 Section 4.7.2 Interoperability Structure of APP1 ...
+      {JPEG_APP1, "Exif\0", 6, METADATA_OFFSET(exif)},
+      // XMP Specification Part 3 Section 3 Embedding XMP Metadata ... #JPEG
+      // TODO(jzern) Add support for 'ExtendedXMP'
+      {JPEG_APP1, "http://ns.adobe.com/xap/1.0/", 29, METADATA_OFFSET(xmp)},
+      {0, NULL, 0, 0},
   };
   jpeg_saved_marker_ptr marker;
   // Treat ICC profiles separately as they may be segmented and out of order.
@@ -179,8 +179,8 @@ static int ExtractMetadataFromJPEG(j_decompress_ptr dinfo,
                                kJPEGMetadataMap[i].storage_offset);
 
         if (payload->bytes == NULL) {
-          const char* marker_data = (const char*)marker->data +
-                                    kJPEGMetadataMap[i].signature_length;
+          const char* marker_data =
+              (const char*)marker->data + kJPEGMetadataMap[i].signature_length;
           const size_t marker_data_length =
               marker->data_length - kJPEGMetadataMap[i].signature_length;
           if (!MetadataCopy(marker_data, marker_data_length, payload)) return 0;
@@ -250,9 +250,7 @@ static void ContextSkip(j_decompress_ptr cinfo, long jump_size) {
   ctx->pub.next_input_byte += jump;
 }
 
-static void ContextTerm(j_decompress_ptr cinfo) {
-  (void)cinfo;
-}
+static void ContextTerm(j_decompress_ptr cinfo) { (void)cinfo; }
 
 static void ContextSetup(volatile struct jpeg_decompress_struct* const cinfo,
                          JPEGReadContext* const ctx) {
@@ -267,8 +265,7 @@ static void ContextSetup(volatile struct jpeg_decompress_struct* const cinfo,
 }
 
 int ReadJPEG(const uint8_t* const data, size_t data_size,
-             WebPPicture* const pic, int keep_alpha,
-             Metadata* const metadata) {
+             WebPPicture* const pic, int keep_alpha, Metadata* const metadata) {
   volatile int ok = 0;
   int width, height;
   int64_t stride;
@@ -285,12 +282,12 @@ int ReadJPEG(const uint8_t* const data, size_t data_size,
   ctx.data = data;
   ctx.data_size = data_size;
 
-  memset((j_decompress_ptr)&dinfo, 0, sizeof(dinfo));   // for setjmp safety
+  memset((j_decompress_ptr)&dinfo, 0, sizeof(dinfo));  // for setjmp safety
   dinfo.err = jpeg_std_error(&jerr.pub);
   jerr.pub.error_exit = my_error_exit;
 
   if (setjmp(jerr.setjmp_buffer)) {
- Error:
+  Error:
     MetadataFree(metadata);
     jpeg_destroy_decompress((j_decompress_ptr)&dinfo);
     goto End;
@@ -353,11 +350,11 @@ int ReadJPEG(const uint8_t* const data, size_t data_size,
     MetadataFree(metadata);  // In case the caller forgets to free it on error.
   }
 
- End:
+End:
   free(rgb);
   return ok;
 }
-#else  // !WEBP_HAVE_JPEG
+#else   // !WEBP_HAVE_JPEG
 int ReadJPEG(const uint8_t* const data, size_t data_size,
              struct WebPPicture* const pic, int keep_alpha,
              struct Metadata* const metadata) {
@@ -366,7 +363,8 @@ int ReadJPEG(const uint8_t* const data, size_t data_size,
   (void)pic;
   (void)keep_alpha;
   (void)metadata;
-  fprintf(stderr, "JPEG support not compiled. Please install the libjpeg "
+  fprintf(stderr,
+          "JPEG support not compiled. Please install the libjpeg "
           "development package before building.\n");
   return 0;
 }

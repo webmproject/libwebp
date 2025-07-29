@@ -28,13 +28,13 @@
 #endif
 
 #if !defined(HAVE_CONFIG_H)
-#if LOCAL_GCC_PREREQ(4,8) || __has_builtin(__builtin_bswap16)
+#if LOCAL_GCC_PREREQ(4, 8) || __has_builtin(__builtin_bswap16)
 #define HAVE_BUILTIN_BSWAP16
 #endif
-#if LOCAL_GCC_PREREQ(4,3) || __has_builtin(__builtin_bswap32)
+#if LOCAL_GCC_PREREQ(4, 3) || __has_builtin(__builtin_bswap32)
 #define HAVE_BUILTIN_BSWAP32
 #endif
-#if LOCAL_GCC_PREREQ(4,3) || __has_builtin(__builtin_bswap64)
+#if LOCAL_GCC_PREREQ(4, 3) || __has_builtin(__builtin_bswap64)
 #define HAVE_BUILTIN_BSWAP64
 #endif
 #endif  // !HAVE_CONFIG_H
@@ -53,12 +53,11 @@ static WEBP_INLINE uint16_t BSwap16(uint16_t x) {
 static WEBP_INLINE uint32_t BSwap32(uint32_t x) {
 #if defined(WEBP_USE_MIPS32_R2)
   uint32_t ret;
-  __asm__ volatile (
-    "wsbh   %[ret], %[x]          \n\t"
-    "rotr   %[ret], %[ret],  16   \n\t"
-    : [ret]"=r"(ret)
-    : [x]"r"(x)
-  );
+  __asm__ volatile(
+      "wsbh   %[ret], %[x]          \n\t"
+      "rotr   %[ret], %[ret],  16   \n\t"
+      : [ret] "=r"(ret)
+      : [x] "r"(x));
   return ret;
 #elif defined(HAVE_BUILTIN_BSWAP32)
   return __builtin_bswap32(x);
@@ -82,10 +81,10 @@ static WEBP_INLINE uint64_t BSwap64(uint64_t x) {
   return swapped_bytes;
 #elif defined(_MSC_VER)
   return (uint64_t)_byteswap_uint64(x);
-#else  // generic code for swapping 64-bit values (suggested by bdb@)
+#else   // generic code for swapping 64-bit values (suggested by bdb@)
   x = ((x & 0xffffffff00000000ull) >> 32) | ((x & 0x00000000ffffffffull) << 32);
   x = ((x & 0xffff0000ffff0000ull) >> 16) | ((x & 0x0000ffff0000ffffull) << 16);
-  x = ((x & 0xff00ff00ff00ff00ull) >>  8) | ((x & 0x00ff00ff00ff00ffull) <<  8);
+  x = ((x & 0xff00ff00ff00ff00ull) >> 8) | ((x & 0x00ff00ff00ff00ffull) << 8);
   return x;
 #endif  // HAVE_BUILTIN_BSWAP64
 }

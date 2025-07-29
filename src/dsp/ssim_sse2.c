@@ -14,9 +14,8 @@
 #include "src/dsp/dsp.h"
 
 #if defined(WEBP_USE_SSE2)
-#include <emmintrin.h>
-
 #include <assert.h>
+#include <emmintrin.h>
 
 #include "src/dsp/common_sse2.h"
 #include "src/dsp/cpu.h"
@@ -44,8 +43,8 @@ static WEBP_INLINE void SubtractAndSquare_SSE2(const __m128i a, const __m128i b,
 //------------------------------------------------------------------------------
 // SSIM / PSNR entry point
 
-static uint32_t AccumulateSSE_SSE2(const uint8_t* src1,
-                                   const uint8_t* src2, int len) {
+static uint32_t AccumulateSSE_SSE2(const uint8_t* src1, const uint8_t* src2,
+                                   int len) {
   int i = 0;
   uint32_t sse2 = 0;
   if (len >= 16) {
@@ -100,29 +99,30 @@ static uint32_t HorizontalAdd32b_SSE2(const __m128i* const m) {
   return (uint32_t)_mm_cvtsi128_si32(c);
 }
 
-static const uint16_t kWeight[] = { 1, 2, 3, 4, 3, 2, 1, 0 };
+static const uint16_t kWeight[] = {1, 2, 3, 4, 3, 2, 1, 0};
 
-#define ACCUMULATE_ROW(WEIGHT) do {                         \
-  /* compute row weight (Wx * Wy) */                        \
-  const __m128i Wy = _mm_set1_epi16((WEIGHT));              \
-  const __m128i W = _mm_mullo_epi16(Wx, Wy);                \
-  /* process 8 bytes at a time (7 bytes, actually) */       \
-  const __m128i a0 = _mm_loadl_epi64((const __m128i*)src1); \
-  const __m128i b0 = _mm_loadl_epi64((const __m128i*)src2); \
-  /* convert to 16b and multiply by weight */               \
-  const __m128i a1 = _mm_unpacklo_epi8(a0, zero);           \
-  const __m128i b1 = _mm_unpacklo_epi8(b0, zero);           \
-  const __m128i wa1 = _mm_mullo_epi16(a1, W);               \
-  const __m128i wb1 = _mm_mullo_epi16(b1, W);               \
-  /* accumulate */                                          \
-  xm  = _mm_add_epi16(xm, wa1);                             \
-  ym  = _mm_add_epi16(ym, wb1);                             \
-  xxm = _mm_add_epi32(xxm, _mm_madd_epi16(a1, wa1));        \
-  xym = _mm_add_epi32(xym, _mm_madd_epi16(a1, wb1));        \
-  yym = _mm_add_epi32(yym, _mm_madd_epi16(b1, wb1));        \
-  src1 += stride1;                                          \
-  src2 += stride2;                                          \
-} while (0)
+#define ACCUMULATE_ROW(WEIGHT)                                \
+  do {                                                        \
+    /* compute row weight (Wx * Wy) */                        \
+    const __m128i Wy = _mm_set1_epi16((WEIGHT));              \
+    const __m128i W = _mm_mullo_epi16(Wx, Wy);                \
+    /* process 8 bytes at a time (7 bytes, actually) */       \
+    const __m128i a0 = _mm_loadl_epi64((const __m128i*)src1); \
+    const __m128i b0 = _mm_loadl_epi64((const __m128i*)src2); \
+    /* convert to 16b and multiply by weight */               \
+    const __m128i a1 = _mm_unpacklo_epi8(a0, zero);           \
+    const __m128i b1 = _mm_unpacklo_epi8(b0, zero);           \
+    const __m128i wa1 = _mm_mullo_epi16(a1, W);               \
+    const __m128i wb1 = _mm_mullo_epi16(b1, W);               \
+    /* accumulate */                                          \
+    xm = _mm_add_epi16(xm, wa1);                              \
+    ym = _mm_add_epi16(ym, wb1);                              \
+    xxm = _mm_add_epi32(xxm, _mm_madd_epi16(a1, wa1));        \
+    xym = _mm_add_epi32(xym, _mm_madd_epi16(a1, wb1));        \
+    yym = _mm_add_epi32(yym, _mm_madd_epi16(b1, wb1));        \
+    src1 += stride1;                                          \
+    src2 += stride2;                                          \
+  } while (0)
 
 static double SSIMGet_SSE2(const uint8_t* src1, int stride1,
                            const uint8_t* src2, int stride2) {
@@ -139,8 +139,8 @@ static double SSIMGet_SSE2(const uint8_t* src1, int stride1,
   ACCUMULATE_ROW(3);
   ACCUMULATE_ROW(2);
   ACCUMULATE_ROW(1);
-  stats.xm  = HorizontalAdd16b_SSE2(&xm);
-  stats.ym  = HorizontalAdd16b_SSE2(&ym);
+  stats.xm = HorizontalAdd16b_SSE2(&xm);
+  stats.ym = HorizontalAdd16b_SSE2(&ym);
   stats.xxm = HorizontalAdd32b_SSE2(&xxm);
   stats.xym = HorizontalAdd32b_SSE2(&xym);
   stats.yym = HorizontalAdd32b_SSE2(&yym);

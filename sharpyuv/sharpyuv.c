@@ -26,9 +26,7 @@
 
 //------------------------------------------------------------------------------
 
-int SharpYuvGetVersion(void) {
-  return SHARPYUV_VERSION;
-}
+int SharpYuvGetVersion(void) { return SHARPYUV_VERSION; }
 
 //------------------------------------------------------------------------------
 // Sharp RGB->YUV conversion
@@ -49,8 +47,8 @@ static int GetPrecisionShift(int rgb_bit_depth) {
                                                : (kMaxBitDepth - rgb_bit_depth);
 }
 
-typedef int16_t fixed_t;      // signed type with extra precision for UV
-typedef uint16_t fixed_y_t;   // unsigned type with extra precision for W
+typedef int16_t fixed_t;     // signed type with extra precision for UV
+typedef uint16_t fixed_y_t;  // unsigned type with extra precision for W
 
 //------------------------------------------------------------------------------
 
@@ -121,7 +119,7 @@ static void UpdateChroma(const fixed_y_t* src1, const fixed_y_t* src2,
     dst[0 * uv_w] = (fixed_t)(r - W);
     dst[1 * uv_w] = (fixed_t)(g - W);
     dst[2 * uv_w] = (fixed_t)(b - W);
-    dst  += 1;
+    dst += 1;
     src1 += 2;
     src2 += 2;
   } while (++i < uv_w);
@@ -148,12 +146,9 @@ static WEBP_INLINE int Shift(int v, int shift) {
   return (shift >= 0) ? (v << shift) : (v >> -shift);
 }
 
-static void ImportOneRow(const uint8_t* const r_ptr,
-                         const uint8_t* const g_ptr,
-                         const uint8_t* const b_ptr,
-                         int rgb_step,
-                         int rgb_bit_depth,
-                         int pic_width,
+static void ImportOneRow(const uint8_t* const r_ptr, const uint8_t* const g_ptr,
+                         const uint8_t* const b_ptr, int rgb_step,
+                         int rgb_bit_depth, int pic_width,
                          fixed_y_t* const dst) {
   // Convert the rgb_step from a number of bytes to a number of uint8_t or
   // uint16_t values depending the bit depth.
@@ -181,18 +176,14 @@ static void ImportOneRow(const uint8_t* const r_ptr,
 }
 
 static void InterpolateTwoRows(const fixed_y_t* const best_y,
-                               const fixed_t* prev_uv,
-                               const fixed_t* cur_uv,
-                               const fixed_t* next_uv,
-                               int w,
-                               fixed_y_t* out1,
-                               fixed_y_t* out2,
-                               int rgb_bit_depth) {
+                               const fixed_t* prev_uv, const fixed_t* cur_uv,
+                               const fixed_t* next_uv, int w, fixed_y_t* out1,
+                               fixed_y_t* out2, int rgb_bit_depth) {
   const int uv_w = w >> 1;
-  const int len = (w - 1) >> 1;   // length to filter
+  const int len = (w - 1) >> 1;  // length to filter
   int k = 3;
   const int bit_depth = rgb_bit_depth + GetPrecisionShift(rgb_bit_depth);
-  while (k-- > 0) {   // process each R/G/B segments in turn
+  while (k-- > 0) {  // process each R/G/B segments in turn
     // special boundary case for i==0
     out1[0] = Filter2(cur_uv[0], prev_uv[0], best_y[0], bit_depth);
     out2[0] = Filter2(cur_uv[0], next_uv[0], best_y[w], bit_depth);
@@ -212,7 +203,7 @@ static void InterpolateTwoRows(const fixed_y_t* const best_y,
     out1 += w;
     out2 += w;
     prev_uv += uv_w;
-    cur_uv  += uv_w;
+    cur_uv += uv_w;
     next_uv += uv_w;
   }
 }
@@ -220,16 +211,16 @@ static void InterpolateTwoRows(const fixed_y_t* const best_y,
 static WEBP_INLINE int RGBToYUVComponent(int r, int g, int b,
                                          const int coeffs[4], int sfix) {
   const int srounder = 1 << (YUV_FIX + sfix - 1);
-  const int luma = coeffs[0] * r + coeffs[1] * g + coeffs[2] * b +
-                   coeffs[3] + srounder;
+  const int luma =
+      coeffs[0] * r + coeffs[1] * g + coeffs[2] * b + coeffs[3] + srounder;
   return (luma >> (YUV_FIX + sfix));
 }
 
 static int ConvertWRGBToYUV(const fixed_y_t* best_y, const fixed_t* best_uv,
                             uint8_t* y_ptr, int y_stride, uint8_t* u_ptr,
                             int u_stride, uint8_t* v_ptr, int v_stride,
-                            int rgb_bit_depth,
-                            int yuv_bit_depth, int width, int height,
+                            int rgb_bit_depth, int yuv_bit_depth, int width,
+                            int height,
                             const SharpYuvConversionMatrix* yuv_matrix) {
   int i, j;
   const fixed_t* const best_uv_base = best_uv;
@@ -319,7 +310,7 @@ static int DoSharpArgbToYuv(const uint8_t* r_ptr, const uint8_t* g_ptr,
 
   // TODO(skal): allocate one big memory chunk. But for now, it's easier
   // for valgrind debugging to have several chunks.
-  fixed_y_t* const tmp_buffer = SAFE_ALLOC(w * 3, 2, fixed_y_t);   // scratch
+  fixed_y_t* const tmp_buffer = SAFE_ALLOC(w * 3, 2, fixed_y_t);  // scratch
   fixed_y_t* const best_y_base = SAFE_ALLOC(w, h, fixed_y_t);
   fixed_y_t* const target_y_base = SAFE_ALLOC(w, h, fixed_y_t);
   fixed_y_t* const best_rgb_y = SAFE_ALLOC(w, 2, fixed_y_t);
@@ -335,9 +326,8 @@ static int DoSharpArgbToYuv(const uint8_t* r_ptr, const uint8_t* g_ptr,
   assert(w > 0);
   assert(h > 0);
 
-  if (best_y_base == NULL || best_uv_base == NULL ||
-      target_y_base == NULL || target_uv_base == NULL ||
-      best_rgb_y == NULL || best_rgb_uv == NULL ||
+  if (best_y_base == NULL || best_uv_base == NULL || target_y_base == NULL ||
+      target_uv_base == NULL || best_rgb_y == NULL || best_rgb_uv == NULL ||
       tmp_buffer == NULL) {
     ok = 0;
     goto End;
@@ -350,8 +340,7 @@ static int DoSharpArgbToYuv(const uint8_t* r_ptr, const uint8_t* g_ptr,
     fixed_y_t* const src2 = tmp_buffer + 3 * w;
 
     // prepare two rows of input
-    ImportOneRow(r_ptr, g_ptr, b_ptr, rgb_step, rgb_bit_depth, width,
-                 src1);
+    ImportOneRow(r_ptr, g_ptr, b_ptr, rgb_step, rgb_bit_depth, width, src1);
     if (!is_last_row) {
       ImportOneRow(r_ptr + rgb_stride, g_ptr + rgb_stride, b_ptr + rgb_stride,
                    rgb_step, rgb_bit_depth, width, src2);
@@ -390,8 +379,8 @@ static int DoSharpArgbToYuv(const uint8_t* r_ptr, const uint8_t* g_ptr,
       fixed_y_t* const src2 = tmp_buffer + 3 * w;
       {
         const fixed_t* const next_uv = cur_uv + ((j < h - 2) ? 3 * uv_w : 0);
-        InterpolateTwoRows(best_y, prev_uv, cur_uv, next_uv, w,
-                           src1, src2, rgb_bit_depth);
+        InterpolateTwoRows(best_y, prev_uv, cur_uv, next_uv, w, src1, src2,
+                           rgb_bit_depth);
         prev_uv = cur_uv;
         cur_uv = next_uv;
       }
@@ -424,7 +413,7 @@ static int DoSharpArgbToYuv(const uint8_t* r_ptr, const uint8_t* g_ptr,
                         u_stride, v_ptr, v_stride, rgb_bit_depth, yuv_bit_depth,
                         width, height, yuv_matrix);
 
- End:
+End:
   free(best_y_base);
   free(best_uv_base);
   free(target_y_base);
@@ -440,16 +429,18 @@ static int DoSharpArgbToYuv(const uint8_t* r_ptr, const uint8_t* g_ptr,
 #if defined(WEBP_USE_THREAD) && !defined(_WIN32)
 #include <pthread.h>  // NOLINT
 
-#define LOCK_ACCESS \
-    static pthread_mutex_t sharpyuv_lock = PTHREAD_MUTEX_INITIALIZER; \
-    if (pthread_mutex_lock(&sharpyuv_lock)) return
-#define UNLOCK_ACCESS_AND_RETURN                  \
-    do {                                          \
-      (void)pthread_mutex_unlock(&sharpyuv_lock); \
-      return;                                     \
-    } while (0)
+#define LOCK_ACCESS                                                 \
+  static pthread_mutex_t sharpyuv_lock = PTHREAD_MUTEX_INITIALIZER; \
+  if (pthread_mutex_lock(&sharpyuv_lock)) return
+#define UNLOCK_ACCESS_AND_RETURN                \
+  do {                                          \
+    (void)pthread_mutex_unlock(&sharpyuv_lock); \
+    return;                                     \
+  } while (0)
 #else  // !(defined(WEBP_USE_THREAD) && !defined(_WIN32))
-#define LOCK_ACCESS do {} while (0)
+#define LOCK_ACCESS \
+  do {              \
+  } while (0)
 #define UNLOCK_ACCESS_AND_RETURN return
 #endif  // defined(WEBP_USE_THREAD) && !defined(_WIN32)
 

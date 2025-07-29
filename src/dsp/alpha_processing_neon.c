@@ -22,25 +22,26 @@
 #define MULTIPLIER(a) ((a) * 0x8081)
 #define PREMULTIPLY(x, m) (((x) * (m)) >> 23)
 
-#define MULTIPLY_BY_ALPHA(V, ALPHA, OTHER) do {                        \
-  const uint8x8_t alpha = (V).val[(ALPHA)];                            \
-  const uint16x8_t r1 = vmull_u8((V).val[1], alpha);                   \
-  const uint16x8_t g1 = vmull_u8((V).val[2], alpha);                   \
-  const uint16x8_t b1 = vmull_u8((V).val[(OTHER)], alpha);             \
-  /* we use: v / 255 = (v + 1 + (v >> 8)) >> 8 */                      \
-  const uint16x8_t r2 = vsraq_n_u16(r1, r1, 8);                        \
-  const uint16x8_t g2 = vsraq_n_u16(g1, g1, 8);                        \
-  const uint16x8_t b2 = vsraq_n_u16(b1, b1, 8);                        \
-  const uint16x8_t r3 = vaddq_u16(r2, kOne);                           \
-  const uint16x8_t g3 = vaddq_u16(g2, kOne);                           \
-  const uint16x8_t b3 = vaddq_u16(b2, kOne);                           \
-  (V).val[1] = vshrn_n_u16(r3, 8);                                     \
-  (V).val[2] = vshrn_n_u16(g3, 8);                                     \
-  (V).val[(OTHER)] = vshrn_n_u16(b3, 8);                               \
-} while (0)
+#define MULTIPLY_BY_ALPHA(V, ALPHA, OTHER)                   \
+  do {                                                       \
+    const uint8x8_t alpha = (V).val[(ALPHA)];                \
+    const uint16x8_t r1 = vmull_u8((V).val[1], alpha);       \
+    const uint16x8_t g1 = vmull_u8((V).val[2], alpha);       \
+    const uint16x8_t b1 = vmull_u8((V).val[(OTHER)], alpha); \
+    /* we use: v / 255 = (v + 1 + (v >> 8)) >> 8 */          \
+    const uint16x8_t r2 = vsraq_n_u16(r1, r1, 8);            \
+    const uint16x8_t g2 = vsraq_n_u16(g1, g1, 8);            \
+    const uint16x8_t b2 = vsraq_n_u16(b1, b1, 8);            \
+    const uint16x8_t r3 = vaddq_u16(r2, kOne);               \
+    const uint16x8_t g3 = vaddq_u16(g2, kOne);               \
+    const uint16x8_t b3 = vaddq_u16(b2, kOne);               \
+    (V).val[1] = vshrn_n_u16(r3, 8);                         \
+    (V).val[2] = vshrn_n_u16(g3, 8);                         \
+    (V).val[(OTHER)] = vshrn_n_u16(b3, 8);                   \
+  } while (0)
 
-static void ApplyAlphaMultiply_NEON(uint8_t* rgba, int alpha_first,
-                                    int w, int h, int stride) {
+static void ApplyAlphaMultiply_NEON(uint8_t* rgba, int alpha_first, int w,
+                                    int h, int stride) {
   const uint16x8_t kOne = vdupq_n_u16(1u);
   while (h-- > 0) {
     uint32_t* const rgbx = (uint32_t*)rgba;
@@ -118,7 +119,7 @@ static void DispatchAlphaToGreen_NEON(const uint8_t* WEBP_RESTRICT alpha,
                                       uint32_t* WEBP_RESTRICT dst,
                                       int dst_stride) {
   int i, j;
-  uint8x8x4_t greens;   // leave A/R/B channels zero'd.
+  uint8x8x4_t greens;  // leave A/R/B channels zero'd.
   greens.val[0] = vdup_n_u8(0);
   greens.val[2] = vdup_n_u8(0);
   greens.val[3] = vdup_n_u8(0);

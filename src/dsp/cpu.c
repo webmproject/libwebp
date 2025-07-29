@@ -33,19 +33,20 @@
 // apple/darwin gcc-4.0.1 defines __PIC__, but not __pic__ with -fPIC.
 #if (defined(__pic__) || defined(__PIC__)) && defined(__i386__)
 static WEBP_INLINE void GetCPUInfo(int cpu_info[4], int info_type) {
-  __asm__ volatile (
-    "mov %%ebx, %%edi\n"
-    "cpuid\n"
-    "xchg %%edi, %%ebx\n"
-    : "=a"(cpu_info[0]), "=D"(cpu_info[1]), "=c"(cpu_info[2]), "=d"(cpu_info[3])
-    : "a"(info_type), "c"(0));
+  __asm__ volatile(
+      "mov %%ebx, %%edi\n"
+      "cpuid\n"
+      "xchg %%edi, %%ebx\n"
+      : "=a"(cpu_info[0]), "=D"(cpu_info[1]), "=c"(cpu_info[2]),
+        "=d"(cpu_info[3])
+      : "a"(info_type), "c"(0));
 }
 #elif defined(__i386__) || defined(__x86_64__)
 static WEBP_INLINE void GetCPUInfo(int cpu_info[4], int info_type) {
-  __asm__ volatile (
-    "cpuid\n"
-    : "=a"(cpu_info[0]), "=b"(cpu_info[1]), "=c"(cpu_info[2]), "=d"(cpu_info[3])
-    : "a"(info_type), "c"(0));
+  __asm__ volatile("cpuid\n"
+                   : "=a"(cpu_info[0]), "=b"(cpu_info[1]), "=c"(cpu_info[2]),
+                     "=d"(cpu_info[3])
+                   : "a"(info_type), "c"(0));
 }
 #elif defined(_MSC_VER) && (defined(_M_X64) || defined(_M_IX86))
 
@@ -67,13 +68,13 @@ static WEBP_INLINE uint64_t xgetbv(void) {
   const uint32_t ecx = 0;
   uint32_t eax, edx;
   // Use the raw opcode for xgetbv for compatibility with older toolchains.
-  __asm__ volatile (
-    ".byte 0x0f, 0x01, 0xd0\n"
-    : "=a"(eax), "=d"(edx) : "c" (ecx));
+  __asm__ volatile(".byte 0x0f, 0x01, 0xd0\n"
+                   : "=a"(eax), "=d"(edx)
+                   : "c"(ecx));
   return ((uint64_t)edx << 32) | eax;
 }
-#elif (defined(_M_X64) || defined(_M_IX86)) && \
-      defined(_MSC_FULL_VER) && _MSC_FULL_VER >= 160040219  // >= VS2010 SP1
+#elif (defined(_M_X64) || defined(_M_IX86)) && defined(_MSC_FULL_VER) && \
+    _MSC_FULL_VER >= 160040219  // >= VS2010 SP1
 #include <immintrin.h>
 #define xgetbv() _xgetbv(0)
 #elif defined(_MSC_VER) && defined(_M_IX86)
@@ -100,8 +101,8 @@ static int CheckSlowModel(int info) {
   // (ie 2 cycles vs 10/16 cycles) and some SSSE3 instructions like pshufb.
   // Refer to Intel 64 and IA-32 Architectures Optimization Reference Manual.
   static const uint8_t kSlowModels[] = {
-    0x37, 0x4a, 0x4d,  // Silvermont Microarchitecture
-    0x1c, 0x26, 0x27   // Atom Microarchitecture
+      0x37, 0x4a, 0x4d,  // Silvermont Microarchitecture
+      0x1c, 0x26, 0x27   // Atom Microarchitecture
   };
   const uint32_t model = ((info & 0xf0000) >> 12) | ((info >> 4) & 0xf);
   const uint32_t family = (info >> 8) & 0xf;
@@ -130,7 +131,7 @@ static int x86CPUInfo(CPUFeature feature) {
     const int VENDOR_ID_INTEL_ECX = 0x6c65746e;  // letn
     is_intel = (cpu_info[1] == VENDOR_ID_INTEL_EBX &&
                 cpu_info[2] == VENDOR_ID_INTEL_ECX &&
-                cpu_info[3] == VENDOR_ID_INTEL_EDX);    // genuine Intel?
+                cpu_info[3] == VENDOR_ID_INTEL_EDX);  // genuine Intel?
   }
 
   GetCPUInfo(cpu_info, 1);
@@ -141,7 +142,7 @@ static int x86CPUInfo(CPUFeature feature) {
     return !!(cpu_info[2] & (1 << 0));
   }
   if (feature == kSlowSSSE3) {
-    if (is_intel && (cpu_info[2] & (1 << 9))) {   // SSSE3?
+    if (is_intel && (cpu_info[2] & (1 << 9))) {  // SSSE3?
       return CheckSlowModel(cpu_info[0]);
     }
     return 0;
@@ -179,7 +180,7 @@ static int AndroidCPUInfo(CPUFeature feature) {
 }
 WEBP_EXTERN VP8CPUInfo VP8GetCPUInfo;
 VP8CPUInfo VP8GetCPUInfo = AndroidCPUInfo;
-#elif defined(EMSCRIPTEN) // also needs to be before generic NEON test
+#elif defined(EMSCRIPTEN)         // also needs to be before generic NEON test
 // Use compile flags as an indicator of SIMD support instead of a runtime check.
 static int wasmCPUInfo(CPUFeature feature) {
   switch (feature) {
@@ -234,14 +235,13 @@ static int armCPUInfo(CPUFeature feature) {
 WEBP_EXTERN VP8CPUInfo VP8GetCPUInfo;
 VP8CPUInfo VP8GetCPUInfo = armCPUInfo;
 #elif defined(WEBP_USE_MIPS32) || defined(WEBP_USE_MIPS_DSP_R2) || \
-      defined(WEBP_USE_MSA)
+    defined(WEBP_USE_MSA)
 static int mipsCPUInfo(CPUFeature feature) {
   if ((feature == kMIPS32) || (feature == kMIPSdspR2) || (feature == kMSA)) {
     return 1;
   } else {
     return 0;
   }
-
 }
 WEBP_EXTERN VP8CPUInfo VP8GetCPUInfo;
 VP8CPUInfo VP8GetCPUInfo = mipsCPUInfo;

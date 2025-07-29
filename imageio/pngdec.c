@@ -22,8 +22,7 @@
 #define PNG_USER_MEM_SUPPORTED  // for png_create_read_struct_2
 #endif
 #include <png.h>
-
-#include <setjmp.h>   // note: this must be included *after* png.h
+#include <setjmp.h>  // note: this must be included *after* png.h
 #include <stdlib.h>
 #include <string.h>
 
@@ -33,15 +32,14 @@
 #include "webp/types.h"
 
 #define LOCAL_PNG_VERSION ((PNG_LIBPNG_VER_MAJOR << 8) | PNG_LIBPNG_VER_MINOR)
-#define LOCAL_PNG_PREREQ(maj, min) \
-   (LOCAL_PNG_VERSION >= (((maj) << 8) | (min)))
+#define LOCAL_PNG_PREREQ(maj, min) (LOCAL_PNG_VERSION >= (((maj) << 8) | (min)))
 
 static void PNGAPI error_function(png_structp png, png_const_charp error) {
   if (error != NULL) fprintf(stderr, "libpng error: %s\n", error);
   longjmp(png_jmpbuf(png), 1);
 }
 
-#if LOCAL_PNG_PREREQ(1,4)
+#if LOCAL_PNG_PREREQ(1, 4)
 typedef png_alloc_size_t LocalPngAllocSize;
 #else
 typedef png_size_t LocalPngAllocSize;
@@ -113,7 +111,8 @@ static int ProcessRawProfile(const char* profile, size_t profile_len,
   }
   ++src;
   // skip the profile name and extract the length.
-  while (*src != '\0' && *src++ != '\n') {}
+  while (*src != '\0' && *src++ != '\n') {
+  }
   expected_length = (int)strtol(src, &end, 10);
   if (*end != '\n') {
     fprintf(stderr, "Malformed raw profile, expected '\\n' got '\\x%.2X'\n",
@@ -135,30 +134,29 @@ static const struct {
                  MetadataPayload* const payload);
   size_t storage_offset;
 } kPNGMetadataMap[] = {
-  // https://exiftool.org/TagNames/PNG.html#TextualData
-  // See also: ExifTool on CPAN.
-  { "Raw profile type exif", ProcessRawProfile, METADATA_OFFSET(exif) },
-  { "Raw profile type xmp",  ProcessRawProfile, METADATA_OFFSET(xmp) },
-  // Exiftool puts exif data in APP1 chunk, too.
-  { "Raw profile type APP1", ProcessRawProfile, METADATA_OFFSET(exif) },
-  // ImageMagick uses lowercase app1.
-  { "Raw profile type app1", ProcessRawProfile, METADATA_OFFSET(exif) },
-  // XMP Specification Part 3, Section 3 #PNG
-  { "XML:com.adobe.xmp",     MetadataCopy,      METADATA_OFFSET(xmp) },
-  { NULL, NULL, 0 },
+    // https://exiftool.org/TagNames/PNG.html#TextualData
+    // See also: ExifTool on CPAN.
+    {"Raw profile type exif", ProcessRawProfile, METADATA_OFFSET(exif)},
+    {"Raw profile type xmp", ProcessRawProfile, METADATA_OFFSET(xmp)},
+    // Exiftool puts exif data in APP1 chunk, too.
+    {"Raw profile type APP1", ProcessRawProfile, METADATA_OFFSET(exif)},
+    // ImageMagick uses lowercase app1.
+    {"Raw profile type app1", ProcessRawProfile, METADATA_OFFSET(exif)},
+    // XMP Specification Part 3, Section 3 #PNG
+    {"XML:com.adobe.xmp", MetadataCopy, METADATA_OFFSET(xmp)},
+    {NULL, NULL, 0},
 };
 
 // Looks for metadata at both the beginning and end of the PNG file, giving
 // preference to the head.
 // Returns true on success. The caller must use MetadataFree() on 'metadata' in
 // all cases.
-static int ExtractMetadataFromPNG(png_structp png,
-                                  png_infop const head_info,
+static int ExtractMetadataFromPNG(png_structp png, png_infop const head_info,
                                   png_infop const end_info,
                                   Metadata* const metadata) {
   int p;
 
-  for (p = 0; p < 2; ++p)  {
+  for (p = 0; p < 2; ++p) {
     png_infop const info = (p == 0) ? head_info : end_info;
     png_textp text = NULL;
     const png_uint_32 num = png_get_text(png, info, &text, NULL);
@@ -215,15 +213,15 @@ static int ExtractMetadataFromPNG(png_structp png,
     {
       png_charp name;
       int comp_type;
-#if LOCAL_PNG_PREREQ(1,5)
+#if LOCAL_PNG_PREREQ(1, 5)
       png_bytep profile;
 #else
       png_charp profile;
 #endif
       png_uint_32 len;
 
-      if (png_get_iCCP(png, info,
-                       &name, &comp_type, &profile, &len) == PNG_INFO_iCCP) {
+      if (png_get_iCCP(png, info, &name, &comp_type, &profile, &len) ==
+          PNG_INFO_iCCP) {
         if (!MetadataCopy((const char*)profile, len, &metadata->iccp)) return 0;
       }
     }
@@ -248,12 +246,12 @@ static void ReadFunc(png_structp png_ptr, png_bytep data, png_size_t length) {
 }
 
 int ReadPNG(const uint8_t* const data, size_t data_size,
-            struct WebPPicture* const pic,
-            int keep_alpha, struct Metadata* const metadata) {
+            struct WebPPicture* const pic, int keep_alpha,
+            struct Metadata* const metadata) {
   volatile png_structp png = NULL;
   volatile png_infop info = NULL;
   volatile png_infop end_info = NULL;
-  PNGReadContext context = { NULL, 0, 0 };
+  PNGReadContext context = {NULL, 0, 0};
   int color_type, bit_depth, interlaced;
   int num_channels;
   int num_passes;
@@ -268,19 +266,19 @@ int ReadPNG(const uint8_t* const data, size_t data_size,
   context.data = data;
   context.data_size = data_size;
 
-  png = png_create_read_struct_2(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL,
-                                 NULL, MallocFunc, FreeFunc);
+  png = png_create_read_struct_2(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL, NULL,
+                                 MallocFunc, FreeFunc);
   if (png == NULL) goto End;
 
   png_set_error_fn(png, 0, error_function, NULL);
   if (setjmp(png_jmpbuf(png))) {
- Error:
+  Error:
     MetadataFree(metadata);
     goto End;
   }
 
-#if LOCAL_PNG_PREREQ(1,5) || \
-    (LOCAL_PNG_PREREQ(1,4) && PNG_LIBPNG_VER_RELEASE >= 1)
+#if LOCAL_PNG_PREREQ(1, 5) || \
+    (LOCAL_PNG_PREREQ(1, 4) && PNG_LIBPNG_VER_RELEASE >= 1)
   // If it looks like the bitstream is going to need more memory than libpng's
   // internal limit (default: 8M), try to (reasonably) raise it.
   if (data_size > png_get_chunk_malloc_max(png) && data_size < (1u << 24)) {
@@ -295,9 +293,9 @@ int ReadPNG(const uint8_t* const data, size_t data_size,
 
   png_set_read_fn(png, &context, ReadFunc);
   png_read_info(png, info);
-  if (!png_get_IHDR(png, info,
-                    &width, &height, &bit_depth, &color_type, &interlaced,
-                    NULL, NULL)) goto Error;
+  if (!png_get_IHDR(png, info, &width, &height, &bit_depth, &color_type,
+                    &interlaced, NULL, NULL))
+    goto Error;
 
   png_set_strip_16(png);
   png_set_packing(png);
@@ -368,24 +366,25 @@ int ReadPNG(const uint8_t* const data, size_t data_size,
     goto Error;
   }
 
- End:
+End:
   if (png != NULL) {
-    png_destroy_read_struct((png_structpp)&png,
-                            (png_infopp)&info, (png_infopp)&end_info);
+    png_destroy_read_struct((png_structpp)&png, (png_infopp)&info,
+                            (png_infopp)&end_info);
   }
   free(rgb);
   return ok;
 }
-#else  // !WEBP_HAVE_PNG
+#else   // !WEBP_HAVE_PNG
 int ReadPNG(const uint8_t* const data, size_t data_size,
-            struct WebPPicture* const pic,
-            int keep_alpha, struct Metadata* const metadata) {
+            struct WebPPicture* const pic, int keep_alpha,
+            struct Metadata* const metadata) {
   (void)data;
   (void)data_size;
   (void)pic;
   (void)keep_alpha;
   (void)metadata;
-  fprintf(stderr, "PNG support not compiled. Please install the libpng "
+  fprintf(stderr,
+          "PNG support not compiled. Please install the libpng "
           "development package before building.\n");
   return 0;
 }

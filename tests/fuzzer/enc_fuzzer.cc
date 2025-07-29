@@ -131,10 +131,10 @@ void EncTest(std::string_view file, uint32_t optimization_index, bool use_argb,
 }  // namespace
 
 FUZZ_TEST(Enc, EncTest)
-    .WithDomains(
-        fuzztest::Arbitrary<std::string>(),
-        /*optimization_index=*/
-        fuzztest::InRange<uint32_t>(0, fuzz_utils::kMaxOptimizationIndex),
-        /*use_argb=*/fuzztest::Arbitrary<bool>(),
-        fuzz_utils::ArbitraryWebPConfig(),
-        fuzz_utils::ArbitraryCropOrScaleParams());
+    .WithDomains(fuzztest::Arbitrary<std::string>(),
+                 /*optimization_index=*/
+                 fuzztest::InRange<uint32_t>(0,
+                                             fuzz_utils::kMaxOptimizationIndex),
+                 /*use_argb=*/fuzztest::Arbitrary<bool>(),
+                 fuzz_utils::ArbitraryWebPConfig(),
+                 fuzz_utils::ArbitraryCropOrScaleParams());

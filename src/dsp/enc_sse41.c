@@ -16,7 +16,6 @@
 #if defined(WEBP_USE_SSE41)
 #include <emmintrin.h>
 #include <smmintrin.h>
-
 #include <stdlib.h>  // for abs()
 
 #include "src/dsp/common_sse2.h"
@@ -33,7 +32,7 @@ static void CollectHistogram_SSE41(const uint8_t* WEBP_RESTRICT ref,
                                    VP8Histogram* WEBP_RESTRICT const histo) {
   const __m128i max_coeff_thresh = _mm_set1_epi16(MAX_COEFF_THRESH);
   int j;
-  int distribution[MAX_COEFF_THRESH + 1] = { 0 };
+  int distribution[MAX_COEFF_THRESH + 1] = {0};
   for (j = start_block; j < end_block; ++j) {
     int16_t out[16];
     int k;
@@ -198,7 +197,7 @@ static int Disto16x16_SSE41(const uint8_t* WEBP_RESTRICT const a,
 //
 
 // Generates a pshufb constant for shuffling 16b words.
-#define PSHUFB_CST(A,B,C,D,E,F,G,H) \
+#define PSHUFB_CST(A, B, C, D, E, F, G, H)                         \
   _mm_set_epi8(2 * (H) + 1, 2 * (H) + 0, 2 * (G) + 1, 2 * (G) + 0, \
                2 * (F) + 1, 2 * (F) + 0, 2 * (E) + 1, 2 * (E) + 0, \
                2 * (D) + 1, 2 * (D) + 0, 2 * (C) + 1, 2 * (C) + 0, \
@@ -321,7 +320,7 @@ static int Quantize2Blocks_SSE41(int16_t in[32], int16_t out[32],
                                  const VP8Matrix* WEBP_RESTRICT const mtx) {
   int nz;
   const uint16_t* const sharpen = &mtx->sharpen[0];
-  nz  = DoQuantizeBlock_SSE41(in + 0 * 16, out + 0 * 16, sharpen, mtx) << 0;
+  nz = DoQuantizeBlock_SSE41(in + 0 * 16, out + 0 * 16, sharpen, mtx) << 0;
   nz |= DoQuantizeBlock_SSE41(in + 1 * 16, out + 1 * 16, sharpen, mtx) << 1;
   return nz;
 }

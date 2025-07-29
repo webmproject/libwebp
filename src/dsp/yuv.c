@@ -11,45 +11,45 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
+#include "src/dsp/yuv.h"
+
 #include <assert.h>
 #include <stdlib.h>
 
 #include "src/dsp/cpu.h"
-#include "src/webp/types.h"
 #include "src/dsp/dsp.h"
-#include "src/dsp/yuv.h"
 #include "src/webp/decode.h"
+#include "src/webp/types.h"
 
 //-----------------------------------------------------------------------------
 // Plain-C version
 
-#define ROW_FUNC(FUNC_NAME, FUNC, XSTEP)                                       \
-static void FUNC_NAME(const uint8_t* WEBP_RESTRICT y,                          \
-                      const uint8_t* WEBP_RESTRICT u,                          \
-                      const uint8_t* WEBP_RESTRICT v,                          \
-                      uint8_t* WEBP_RESTRICT dst, int len) {                   \
-  const uint8_t* const end = dst + (len & ~1) * (XSTEP);                       \
-  while (dst != end) {                                                         \
-    FUNC(y[0], u[0], v[0], dst);                                               \
-    FUNC(y[1], u[0], v[0], dst + (XSTEP));                                     \
-    y += 2;                                                                    \
-    ++u;                                                                       \
-    ++v;                                                                       \
-    dst += 2 * (XSTEP);                                                        \
-  }                                                                            \
-  if (len & 1) {                                                               \
-    FUNC(y[0], u[0], v[0], dst);                                               \
-  }                                                                            \
-}                                                                              \
+#define ROW_FUNC(FUNC_NAME, FUNC, XSTEP)                                     \
+  static void FUNC_NAME(                                                     \
+      const uint8_t* WEBP_RESTRICT y, const uint8_t* WEBP_RESTRICT u,        \
+      const uint8_t* WEBP_RESTRICT v, uint8_t* WEBP_RESTRICT dst, int len) { \
+    const uint8_t* const end = dst + (len & ~1) * (XSTEP);                   \
+    while (dst != end) {                                                     \
+      FUNC(y[0], u[0], v[0], dst);                                           \
+      FUNC(y[1], u[0], v[0], dst + (XSTEP));                                 \
+      y += 2;                                                                \
+      ++u;                                                                   \
+      ++v;                                                                   \
+      dst += 2 * (XSTEP);                                                    \
+    }                                                                        \
+    if (len & 1) {                                                           \
+      FUNC(y[0], u[0], v[0], dst);                                           \
+    }                                                                        \
+  }
 
 // All variants implemented.
-ROW_FUNC(YuvToRgbRow,      VP8YuvToRgb,  3)
-ROW_FUNC(YuvToBgrRow,      VP8YuvToBgr,  3)
-ROW_FUNC(YuvToRgbaRow,     VP8YuvToRgba, 4)
-ROW_FUNC(YuvToBgraRow,     VP8YuvToBgra, 4)
-ROW_FUNC(YuvToArgbRow,     VP8YuvToArgb, 4)
+ROW_FUNC(YuvToRgbRow, VP8YuvToRgb, 3)
+ROW_FUNC(YuvToBgrRow, VP8YuvToBgr, 3)
+ROW_FUNC(YuvToRgbaRow, VP8YuvToRgba, 4)
+ROW_FUNC(YuvToBgraRow, VP8YuvToBgra, 4)
+ROW_FUNC(YuvToArgbRow, VP8YuvToArgb, 4)
 ROW_FUNC(YuvToRgba4444Row, VP8YuvToRgba4444, 2)
-ROW_FUNC(YuvToRgb565Row,   VP8YuvToRgb565, 2)
+ROW_FUNC(YuvToRgb565Row, VP8YuvToRgb565, 2)
 
 #undef ROW_FUNC
 
@@ -83,16 +83,16 @@ extern void WebPInitSamplersMIPS32(void);
 extern void WebPInitSamplersMIPSdspR2(void);
 
 WEBP_DSP_INIT_FUNC(WebPInitSamplers) {
-  WebPSamplers[MODE_RGB]       = YuvToRgbRow;
-  WebPSamplers[MODE_RGBA]      = YuvToRgbaRow;
-  WebPSamplers[MODE_BGR]       = YuvToBgrRow;
-  WebPSamplers[MODE_BGRA]      = YuvToBgraRow;
-  WebPSamplers[MODE_ARGB]      = YuvToArgbRow;
+  WebPSamplers[MODE_RGB] = YuvToRgbRow;
+  WebPSamplers[MODE_RGBA] = YuvToRgbaRow;
+  WebPSamplers[MODE_BGR] = YuvToBgrRow;
+  WebPSamplers[MODE_BGRA] = YuvToBgraRow;
+  WebPSamplers[MODE_ARGB] = YuvToArgbRow;
   WebPSamplers[MODE_RGBA_4444] = YuvToRgba4444Row;
-  WebPSamplers[MODE_RGB_565]   = YuvToRgb565Row;
-  WebPSamplers[MODE_rgbA]      = YuvToRgbaRow;
-  WebPSamplers[MODE_bgrA]      = YuvToBgraRow;
-  WebPSamplers[MODE_Argb]      = YuvToArgbRow;
+  WebPSamplers[MODE_RGB_565] = YuvToRgb565Row;
+  WebPSamplers[MODE_rgbA] = YuvToRgbaRow;
+  WebPSamplers[MODE_bgrA] = YuvToBgraRow;
+  WebPSamplers[MODE_Argb] = YuvToArgbRow;
   WebPSamplers[MODE_rgbA_4444] = YuvToRgba4444Row;
 
   // If defined, use CPUInfo() to overwrite some pointers with faster versions.
@@ -128,8 +128,8 @@ static void ConvertARGBToY_C(const uint32_t* WEBP_RESTRICT argb,
   int i;
   for (i = 0; i < width; ++i) {
     const uint32_t p = argb[i];
-    y[i] = VP8RGBToY((p >> 16) & 0xff, (p >> 8) & 0xff, (p >>  0) & 0xff,
-                     YUV_HALF);
+    y[i] =
+        VP8RGBToY((p >> 16) & 0xff, (p >> 8) & 0xff, (p >> 0) & 0xff, YUV_HALF);
   }
 }
 
@@ -145,8 +145,8 @@ void WebPConvertARGBToUV_C(const uint32_t* WEBP_RESTRICT argb,
     // VP8RGBToU/V expects four accumulated pixels. Hence we need to
     // scale r/g/b value by a factor 2. We just shift v0/v1 one bit less.
     const int r = ((v0 >> 15) & 0x1fe) + ((v1 >> 15) & 0x1fe);
-    const int g = ((v0 >>  7) & 0x1fe) + ((v1 >>  7) & 0x1fe);
-    const int b = ((v0 <<  1) & 0x1fe) + ((v1 <<  1) & 0x1fe);
+    const int g = ((v0 >> 7) & 0x1fe) + ((v1 >> 7) & 0x1fe);
+    const int b = ((v0 << 1) & 0x1fe) + ((v1 << 1) & 0x1fe);
     const int tmp_u = VP8RGBToU(r, g, b, YUV_HALF << 2);
     const int tmp_v = VP8RGBToV(r, g, b, YUV_HALF << 2);
     if (do_store) {
@@ -158,11 +158,11 @@ void WebPConvertARGBToUV_C(const uint32_t* WEBP_RESTRICT argb,
       v[i] = (v[i] + tmp_v + 1) >> 1;
     }
   }
-  if (src_width & 1) {       // last pixel
+  if (src_width & 1) {  // last pixel
     const uint32_t v0 = argb[2 * i + 0];
     const int r = (v0 >> 14) & 0x3fc;
-    const int g = (v0 >>  6) & 0x3fc;
-    const int b = (v0 <<  2) & 0x3fc;
+    const int g = (v0 >> 6) & 0x3fc;
+    const int b = (v0 << 2) & 0x3fc;
     const int tmp_u = VP8RGBToU(r, g, b, YUV_HALF << 2);
     const int tmp_v = VP8RGBToV(r, g, b, YUV_HALF << 2);
     if (do_store) {

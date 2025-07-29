@@ -26,12 +26,12 @@
 #define WEBP_NEAR_LOSSLESS 1
 #endif
 
-#include "src/webp/types.h"
 #include "src/enc/backward_references_enc.h"
 #include "src/enc/histogram_enc.h"
 #include "src/utils/bit_writer_utils.h"
 #include "src/webp/encode.h"
 #include "src/webp/format_constants.h"
+#include "src/webp/types.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -48,8 +48,8 @@ typedef enum {
 } VP8LEncoderARGBContent;
 
 typedef struct {
-  const WebPConfig* config;      // user configuration and parameters
-  const WebPPicture* pic;        // input picture.
+  const WebPConfig* config;  // user configuration and parameters
+  const WebPPicture* pic;    // input picture.
 
   uint32_t* argb;                       // Transformed argb image data.
   VP8LEncoderARGBContent argb_content;  // Content type of the argb buffer.
@@ -57,15 +57,15 @@ typedef struct {
                                         // (used for prediction).
   uint32_t* transform_data;             // Scratch memory for transform data.
   uint32_t* transform_mem;              // Currently allocated memory.
-  size_t    transform_mem_size;         // Currently allocated memory size.
+  size_t transform_mem_size;            // Currently allocated memory size.
 
-  int       current_width;       // Corresponds to packed image width.
+  int current_width;  // Corresponds to packed image width.
 
   // Encoding parameters derived from quality parameter.
   int histo_bits;
   int predictor_transform_bits;    // <= MAX_TRANSFORM_BITS
   int cross_color_transform_bits;  // <= MAX_TRANSFORM_BITS
-  int cache_bits;        // If equal to 0, don't use color cache.
+  int cache_bits;                  // If equal to 0, don't use color cache.
 
   // Encoding parameters derived from image characteristics.
   int use_cross_color;
@@ -128,7 +128,7 @@ void VP8LOptimizeSampling(uint32_t* const image, int full_width,
 //------------------------------------------------------------------------------
 
 #ifdef __cplusplus
-}    // extern "C"
+}  // extern "C"
 #endif
 
 #endif  // WEBP_ENC_VP8LI_ENC_H_

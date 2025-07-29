@@ -50,7 +50,7 @@
 
 #include <stddef.h>
 
-#include "./decode.h"     // for WEBP_CSP_MODE
+#include "./decode.h"  // for WEBP_CSP_MODE
 #include "./mux_types.h"
 #include "./types.h"
 
@@ -58,7 +58,7 @@
 extern "C" {
 #endif
 
-#define WEBP_DEMUX_ABI_VERSION 0x0107    // MAJOR(8b) + MINOR(8b)
+#define WEBP_DEMUX_ABI_VERSION 0x0107  // MAJOR(8b) + MINOR(8b)
 
 // Note: forward declaring enumerations is not allowed in (strict) C and C++,
 // the types are left here for reference.
@@ -80,16 +80,16 @@ WEBP_EXTERN int WebPGetDemuxVersion(void);
 // Life of a Demux object
 
 typedef enum WebPDemuxState {
-  WEBP_DEMUX_PARSE_ERROR    = -1,  // An error occurred while parsing.
-  WEBP_DEMUX_PARSING_HEADER =  0,  // Not enough data to parse full header.
-  WEBP_DEMUX_PARSED_HEADER  =  1,  // Header parsing complete,
-                                   // data may be available.
-  WEBP_DEMUX_DONE           =  2   // Entire file has been parsed.
+  WEBP_DEMUX_PARSE_ERROR = -1,    // An error occurred while parsing.
+  WEBP_DEMUX_PARSING_HEADER = 0,  // Not enough data to parse full header.
+  WEBP_DEMUX_PARSED_HEADER = 1,   // Header parsing complete,
+                                  // data may be available.
+  WEBP_DEMUX_DONE = 2             // Entire file has been parsed.
 } WebPDemuxState;
 
 // Internal, version-checked, entry point
-WEBP_NODISCARD WEBP_EXTERN WebPDemuxer* WebPDemuxInternal(
-    const WebPData*, int, WebPDemuxState*, int);
+WEBP_NODISCARD WEBP_EXTERN WebPDemuxer* WebPDemuxInternal(const WebPData*, int,
+                                                          WebPDemuxState*, int);
 
 // Parses the full WebP file given by 'data'. For single images the WebP file
 // header alone or the file header and the chunk header may be absent.
@@ -118,8 +118,8 @@ WEBP_EXTERN void WebPDemuxDelete(WebPDemuxer* dmux);
 // Data/information extraction.
 
 typedef enum WebPFormatFeature {
-  WEBP_FF_FORMAT_FLAGS,      // bit-wise combination of WebPFeatureFlags
-                             // corresponding to the 'VP8X' chunk (if present).
+  WEBP_FF_FORMAT_FLAGS,  // bit-wise combination of WebPFeatureFlags
+                         // corresponding to the 'VP8X' chunk (if present).
   WEBP_FF_CANVAS_WIDTH,
   WEBP_FF_CANVAS_HEIGHT,
   WEBP_FF_LOOP_COUNT,        // only relevant for animated file
@@ -137,28 +137,28 @@ typedef enum WebPFormatFeature {
 // combination of WebPFeatureFlags values.
 // If 'feature' is WEBP_FF_LOOP_COUNT, WEBP_FF_BACKGROUND_COLOR, the returned
 // value is only meaningful if the bitstream is animated.
-WEBP_EXTERN uint32_t WebPDemuxGetI(
-    const WebPDemuxer* dmux, WebPFormatFeature feature);
+WEBP_EXTERN uint32_t WebPDemuxGetI(const WebPDemuxer* dmux,
+                                   WebPFormatFeature feature);
 
 //------------------------------------------------------------------------------
 // Frame iteration.
 
 struct WebPIterator {
   int frame_num;
-  int num_frames;          // equivalent to WEBP_FF_FRAME_COUNT.
-  int x_offset, y_offset;  // offset relative to the canvas.
-  int width, height;       // dimensions of this frame.
-  int duration;            // display duration in milliseconds.
+  int num_frames;                     // equivalent to WEBP_FF_FRAME_COUNT.
+  int x_offset, y_offset;             // offset relative to the canvas.
+  int width, height;                  // dimensions of this frame.
+  int duration;                       // display duration in milliseconds.
   WebPMuxAnimDispose dispose_method;  // dispose method for the frame.
-  int complete;   // true if 'fragment' contains a full frame. partial images
-                  // may still be decoded with the WebP incremental decoder.
+  int complete;  // true if 'fragment' contains a full frame. partial images
+                 // may still be decoded with the WebP incremental decoder.
   WebPData fragment;  // The frame given by 'frame_num'. Note for historical
                       // reasons this is called a fragment.
   int has_alpha;      // True if the frame contains transparency.
   WebPMuxAnimBlend blend_method;  // Blend operation for the frame.
 
-  uint32_t pad[2];         // padding for later use.
-  void* private_;          // for internal use only.
+  uint32_t pad[2];  // padding for later use.
+  void* private_;   // for internal use only.
 };
 
 // Retrieves frame 'frame_number' from 'dmux'.
@@ -167,8 +167,9 @@ struct WebPIterator {
 // Returns false if 'dmux' is NULL or frame 'frame_number' is not present.
 // Call WebPDemuxReleaseIterator() when use of the iterator is complete.
 // NOTE: 'dmux' must persist for the lifetime of 'iter'.
-WEBP_NODISCARD WEBP_EXTERN int WebPDemuxGetFrame(
-    const WebPDemuxer* dmux, int frame_number, WebPIterator* iter);
+WEBP_NODISCARD WEBP_EXTERN int WebPDemuxGetFrame(const WebPDemuxer* dmux,
+                                                 int frame_number,
+                                                 WebPIterator* iter);
 
 // Sets 'iter->fragment' to point to the next ('iter->frame_num' + 1) or
 // previous ('iter->frame_num' - 1) frame. These functions do not loop.
@@ -190,9 +191,9 @@ struct WebPChunkIterator {
   // WebPDemuxGetChunk().
   int chunk_num;
   int num_chunks;
-  WebPData chunk;    // The payload of the chunk.
+  WebPData chunk;  // The payload of the chunk.
 
-  uint32_t pad[6];   // padding for later use
+  uint32_t pad[6];  // padding for later use
   void* private_;
 };
 
@@ -256,8 +257,8 @@ struct WebPAnimDecoderOptions {
   // Output colorspace. Only the following modes are supported:
   // MODE_RGBA, MODE_BGRA, MODE_rgbA and MODE_bgrA.
   WEBP_CSP_MODE color_mode;
-  int use_threads;           // If true, use multi-threaded decoding.
-  uint32_t padding[7];       // Padding for later use.
+  int use_threads;      // If true, use multi-threaded decoding.
+  uint32_t padding[7];  // Padding for later use.
 };
 
 // Internal, version-checked, entry point.
@@ -301,7 +302,7 @@ struct WebPAnimInfo {
   uint32_t loop_count;
   uint32_t bgcolor;
   uint32_t frame_count;
-  uint32_t pad[4];   // padding for later use
+  uint32_t pad[4];  // padding for later use
 };
 
 // Get global information about the animation.
@@ -363,7 +364,7 @@ WEBP_NODISCARD WEBP_EXTERN const WebPDemuxer* WebPAnimDecoderGetDemuxer(
 WEBP_EXTERN void WebPAnimDecoderDelete(WebPAnimDecoder* dec);
 
 #ifdef __cplusplus
-}    // extern "C"
+}  // extern "C"
 #endif
 
 #endif  // WEBP_WEBP_DEMUX_H_

@@ -30,12 +30,11 @@ extern "C" {
 
 // GIFLIB_MAJOR is only defined in libgif >= 4.2.0.
 #if defined(GIFLIB_MAJOR) && defined(GIFLIB_MINOR)
-# define LOCAL_GIF_VERSION ((GIFLIB_MAJOR << 8) | GIFLIB_MINOR)
-# define LOCAL_GIF_PREREQ(maj, min) \
-    (LOCAL_GIF_VERSION >= (((maj) << 8) | (min)))
+#define LOCAL_GIF_VERSION ((GIFLIB_MAJOR << 8) | GIFLIB_MINOR)
+#define LOCAL_GIF_PREREQ(maj, min) (LOCAL_GIF_VERSION >= (((maj) << 8) | (min)))
 #else
-# define LOCAL_GIF_VERSION 0
-# define LOCAL_GIF_PREREQ(maj, min) 0
+#define LOCAL_GIF_VERSION 0
+#define LOCAL_GIF_PREREQ(maj, min) 0
 #endif
 
 #define GIF_INDEX_INVALID (-1)
@@ -111,7 +110,7 @@ void GIFCopyPixels(const struct WebPPicture* const src,
                    struct WebPPicture* const dst);
 
 #ifdef __cplusplus
-}    // extern "C"
+}  // extern "C"
 #endif
 
 #endif  // WEBP_EXAMPLES_GIFDEC_H_

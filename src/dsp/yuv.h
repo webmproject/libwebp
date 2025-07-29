@@ -48,17 +48,17 @@ extern "C" {
 #endif
 
 enum {
-  YUV_FIX = 16,                    // fixed-point precision for RGB->YUV
+  YUV_FIX = 16,  // fixed-point precision for RGB->YUV
   YUV_HALF = 1 << (YUV_FIX - 1),
 
-  YUV_FIX2 = 6,                   // fixed-point precision for YUV->RGB
+  YUV_FIX2 = 6,  // fixed-point precision for YUV->RGB
   YUV_MASK2 = (256 << YUV_FIX2) - 1
 };
 
 //------------------------------------------------------------------------------
 // slower on x86 by ~7-8%, but bit-exact with the SSE2/NEON version
 
-static WEBP_INLINE int MultHi(int v, int coeff) {   // _mm_mulhi_epu16 emulation
+static WEBP_INLINE int MultHi(int v, int coeff) {  // _mm_mulhi_epu16 emulation
   return (v * coeff) >> 8;
 }
 
@@ -78,15 +78,13 @@ static WEBP_INLINE int VP8YUVToB(int y, int u) {
   return VP8Clip8(MultHi(y, 19077) + MultHi(u, 33050) - 17685);
 }
 
-static WEBP_INLINE void VP8YuvToRgb(int y, int u, int v,
-                                    uint8_t* const rgb) {
+static WEBP_INLINE void VP8YuvToRgb(int y, int u, int v, uint8_t* const rgb) {
   rgb[0] = VP8YUVToR(y, v);
   rgb[1] = VP8YUVToG(y, u, v);
   rgb[2] = VP8YUVToB(y, u);
 }
 
-static WEBP_INLINE void VP8YuvToBgr(int y, int u, int v,
-                                    uint8_t* const bgr) {
+static WEBP_INLINE void VP8YuvToBgr(int y, int u, int v, uint8_t* const bgr) {
   bgr[0] = VP8YUVToB(y, u);
   bgr[1] = VP8YUVToG(y, u, v);
   bgr[2] = VP8YUVToR(y, v);
@@ -94,9 +92,9 @@ static WEBP_INLINE void VP8YuvToBgr(int y, int u, int v,
 
 static WEBP_INLINE void VP8YuvToRgb565(int y, int u, int v,
                                        uint8_t* const rgb) {
-  const int r = VP8YUVToR(y, v);      // 5 usable bits
-  const int g = VP8YUVToG(y, u, v);   // 6 usable bits
-  const int b = VP8YUVToB(y, u);      // 5 usable bits
+  const int r = VP8YUVToR(y, v);     // 5 usable bits
+  const int g = VP8YUVToG(y, u, v);  // 6 usable bits
+  const int b = VP8YUVToB(y, u);     // 5 usable bits
   const int rg = (r & 0xf8) | (g >> 5);
   const int gb = ((g << 3) & 0xe0) | (b >> 3);
 #if (WEBP_SWAP_16BIT_CSP == 1)
@@ -110,11 +108,11 @@ static WEBP_INLINE void VP8YuvToRgb565(int y, int u, int v,
 
 static WEBP_INLINE void VP8YuvToRgba4444(int y, int u, int v,
                                          uint8_t* const argb) {
-  const int r = VP8YUVToR(y, v);        // 4 usable bits
-  const int g = VP8YUVToG(y, u, v);     // 4 usable bits
-  const int b = VP8YUVToB(y, u);        // 4 usable bits
+  const int r = VP8YUVToR(y, v);     // 4 usable bits
+  const int g = VP8YUVToG(y, u, v);  // 4 usable bits
+  const int b = VP8YUVToB(y, u);     // 4 usable bits
   const int rg = (r & 0xf0) | (g >> 4);
-  const int ba = (b & 0xf0) | 0x0f;     // overwrite the lower 4 bits
+  const int ba = (b & 0xf0) | 0x0f;  // overwrite the lower 4 bits
 #if (WEBP_SWAP_16BIT_CSP == 1)
   argb[0] = ba;
   argb[1] = rg;
@@ -180,7 +178,7 @@ void VP8YuvToRgb56532_SSE2(const uint8_t* WEBP_RESTRICT y,
                            const uint8_t* WEBP_RESTRICT v,
                            uint8_t* WEBP_RESTRICT dst);
 
-#endif    // WEBP_USE_SSE2
+#endif  // WEBP_USE_SSE2
 
 //-----------------------------------------------------------------------------
 // SSE41 extra functions (mostly for upsampling_sse41.c)
@@ -197,7 +195,7 @@ void VP8YuvToBgr32_SSE41(const uint8_t* WEBP_RESTRICT y,
                          const uint8_t* WEBP_RESTRICT v,
                          uint8_t* WEBP_RESTRICT dst);
 
-#endif    // WEBP_USE_SSE41
+#endif  // WEBP_USE_SSE41
 
 //------------------------------------------------------------------------------
 // RGB -> YUV conversion
@@ -224,7 +222,7 @@ static WEBP_INLINE int VP8RGBToV(int r, int g, int b, int rounding) {
 }
 
 #ifdef __cplusplus
-}    // extern "C"
+}  // extern "C"
 #endif
 
 #endif  // WEBP_DSP_YUV_H_

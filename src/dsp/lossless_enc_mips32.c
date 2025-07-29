@@ -34,15 +34,13 @@ static uint64_t FastSLog2Slow_MIPS32(uint32_t v) {
     // Xf = 256 = 2^8
     // log_cnt is index of leading one in upper 24 bits
     __asm__ volatile(
-      "clz      %[log_cnt], %[v]                      \n\t"
-      "addiu    %[y],       $zero,        1           \n\t"
-      "subu     %[log_cnt], %[c24],       %[log_cnt]  \n\t"
-      "sllv     %[y],       %[y],         %[log_cnt]  \n\t"
-      "srlv     %[temp],    %[v],         %[log_cnt]  \n\t"
-      : [log_cnt]"=&r"(log_cnt), [y]"=&r"(y),
-        [temp]"=r"(temp)
-      : [c24]"r"(c24), [v]"r"(v)
-    );
+        "clz      %[log_cnt], %[v]                      \n\t"
+        "addiu    %[y],       $zero,        1           \n\t"
+        "subu     %[log_cnt], %[c24],       %[log_cnt]  \n\t"
+        "sllv     %[y],       %[y],         %[log_cnt]  \n\t"
+        "srlv     %[temp],    %[v],         %[log_cnt]  \n\t"
+        : [log_cnt] "=&r"(log_cnt), [y] "=&r"(y), [temp] "=r"(temp)
+        : [c24] "r"(c24), [v] "r"(v));
 
     // vf = (2^log_cnt) * Xf; where y = 2^log_cnt and Xf < 256
     // Xf = floor(Xf) * (1 + (v % y) / v)
@@ -69,15 +67,13 @@ static uint32_t FastLog2Slow_MIPS32(uint32_t v) {
     uint32_t temp;
 
     __asm__ volatile(
-      "clz      %[log_cnt], %[v]                      \n\t"
-      "addiu    %[y],       $zero,        1           \n\t"
-      "subu     %[log_cnt], %[c24],       %[log_cnt]  \n\t"
-      "sllv     %[y],       %[y],         %[log_cnt]  \n\t"
-      "srlv     %[temp],    %[v],         %[log_cnt]  \n\t"
-      : [log_cnt]"=&r"(log_cnt), [y]"=&r"(y),
-        [temp]"=r"(temp)
-      : [c24]"r"(c24), [v]"r"(v)
-    );
+        "clz      %[log_cnt], %[v]                      \n\t"
+        "addiu    %[y],       $zero,        1           \n\t"
+        "subu     %[log_cnt], %[c24],       %[log_cnt]  \n\t"
+        "sllv     %[y],       %[y],         %[log_cnt]  \n\t"
+        "srlv     %[temp],    %[v],         %[log_cnt]  \n\t"
+        : [log_cnt] "=&r"(log_cnt), [y] "=&r"(y), [temp] "=r"(temp)
+        : [c24] "r"(c24), [v] "r"(v));
 
     log_2 = kLog2Table[temp] + (log_cnt << LOG_2_PRECISION_BITS);
     if (v >= APPROX_LOG_MAX) {
@@ -110,55 +106,52 @@ static uint32_t ExtraCost_MIPS32(const uint32_t* const population, int length) {
   const uint32_t* const LoopEnd = &population[length];
 
   __asm__ volatile(
-    "mult   $zero,    $zero                  \n\t"
-    "xor    %[i],     %[i],       %[i]       \n\t"
-    "beq    %[pop],   %[LoopEnd], 2f         \n\t"
-  "1:                                        \n\t"
-    "lw     %[temp0], 0(%[pop])              \n\t"
-    "lw     %[temp1], 4(%[pop])              \n\t"
-    "addiu  %[i],     %[i],       1          \n\t"
-    "addiu  %[pop],   %[pop],     8          \n\t"
-    "madd   %[i],     %[temp0]               \n\t"
-    "madd   %[i],     %[temp1]               \n\t"
-    "bne    %[pop],   %[LoopEnd], 1b         \n\t"
-  "2:                                        \n\t"
-    "mfhi   %[temp0]                         \n\t"
-    "mflo   %[temp1]                         \n\t"
-    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1),
-      [i]"=&r"(i), [pop]"+r"(pop)
-    : [LoopEnd]"r"(LoopEnd)
-    : "memory", "hi", "lo"
-  );
+      "mult   $zero,    $zero                  \n\t"
+      "xor    %[i],     %[i],       %[i]       \n\t"
+      "beq    %[pop],   %[LoopEnd], 2f         \n\t"
+      "1:                                      \n\t"
+      "lw     %[temp0], 0(%[pop])              \n\t"
+      "lw     %[temp1], 4(%[pop])              \n\t"
+      "addiu  %[i],     %[i],       1          \n\t"
+      "addiu  %[pop],   %[pop],     8          \n\t"
+      "madd   %[i],     %[temp0]               \n\t"
+      "madd   %[i],     %[temp1]               \n\t"
+      "bne    %[pop],   %[LoopEnd], 1b         \n\t"
+      "2:                                      \n\t"
+      "mfhi   %[temp0]                         \n\t"
+      "mflo   %[temp1]                         \n\t"
+      :
+      [temp0] "=&r"(temp0), [temp1] "=&r"(temp1), [i] "=&r"(i), [pop] "+r"(pop)
+      : [LoopEnd] "r"(LoopEnd)
+      : "memory", "hi", "lo");
 
   return ((int64_t)temp0 << 32 | temp1);
 }
 
-#define HUFFMAN_COST_PASS                                 \
-  __asm__ volatile(                                       \
-    "sll   %[temp1],  %[temp0],    3           \n\t"      \
-    "addiu %[temp3],  %[streak],   -3          \n\t"      \
-    "addu  %[temp2],  %[pstreaks], %[temp1]    \n\t"      \
-    "blez  %[temp3],  1f                       \n\t"      \
-    "srl   %[temp1],  %[temp1],    1           \n\t"      \
-    "addu  %[temp3],  %[pcnts],    %[temp1]    \n\t"      \
-    "lw    %[temp0],  4(%[temp2])              \n\t"      \
-    "lw    %[temp1],  0(%[temp3])              \n\t"      \
-    "addu  %[temp0],  %[temp0],    %[streak]   \n\t"      \
-    "addiu %[temp1],  %[temp1],    1           \n\t"      \
-    "sw    %[temp0],  4(%[temp2])              \n\t"      \
-    "sw    %[temp1],  0(%[temp3])              \n\t"      \
-    "b     2f                                  \n\t"      \
-  "1:                                          \n\t"      \
-    "lw    %[temp0],  0(%[temp2])              \n\t"      \
-    "addu  %[temp0],  %[temp0],    %[streak]   \n\t"      \
-    "sw    %[temp0],  0(%[temp2])              \n\t"      \
-  "2:                                          \n\t"      \
-    : [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),           \
-      [temp3]"=&r"(temp3), [temp0]"+r"(temp0)             \
-    : [pstreaks]"r"(pstreaks), [pcnts]"r"(pcnts),         \
-      [streak]"r"(streak)                                 \
-    : "memory"                                            \
-  );
+#define HUFFMAN_COST_PASS                                                  \
+  __asm__ volatile(                                                        \
+      "sll   %[temp1],  %[temp0],    3           \n\t"                     \
+      "addiu %[temp3],  %[streak],   -3          \n\t"                     \
+      "addu  %[temp2],  %[pstreaks], %[temp1]    \n\t"                     \
+      "blez  %[temp3],  1f                       \n\t"                     \
+      "srl   %[temp1],  %[temp1],    1           \n\t"                     \
+      "addu  %[temp3],  %[pcnts],    %[temp1]    \n\t"                     \
+      "lw    %[temp0],  4(%[temp2])              \n\t"                     \
+      "lw    %[temp1],  0(%[temp3])              \n\t"                     \
+      "addu  %[temp0],  %[temp0],    %[streak]   \n\t"                     \
+      "addiu %[temp1],  %[temp1],    1           \n\t"                     \
+      "sw    %[temp0],  4(%[temp2])              \n\t"                     \
+      "sw    %[temp1],  0(%[temp3])              \n\t"                     \
+      "b     2f                                  \n\t"                     \
+      "1:                                        \n\t"                     \
+      "lw    %[temp0],  0(%[temp2])              \n\t"                     \
+      "addu  %[temp0],  %[temp0],    %[streak]   \n\t"                     \
+      "sw    %[temp0],  0(%[temp2])              \n\t"                     \
+      "2:                                        \n\t"                     \
+      : [temp1] "=&r"(temp1), [temp2] "=&r"(temp2), [temp3] "=&r"(temp3),  \
+        [temp0] "+r"(temp0)                                                \
+      : [pstreaks] "r"(pstreaks), [pcnts] "r"(pcnts), [streak] "r"(streak) \
+      : "memory");
 
 // Returns the various RLE counts
 static WEBP_INLINE void GetEntropyUnrefinedHelper(
@@ -234,7 +227,7 @@ static void GetCombinedEntropyUnrefined_MIPS32(
   entropy->entropy = VP8LFastSLog2(entropy->sum) - entropy->entropy;
 }
 
-#define ASM_START                                       \
+#define ASM_START                                 \
   __asm__ volatile(                                     \
     ".set   push                            \n\t"       \
     ".set   at                              \n\t"       \
@@ -247,6 +240,7 @@ static void GetCombinedEntropyUnrefined_MIPS32(
 //     if pointer should be incremented
 // 'literal' and successive histograms could be unaligned
 // so we must use ulw and usw
+// clang-format off
 #define ADD_TO_OUT(A, B, C, D, E, P0, P1, P2)           \
     "ulw    %[temp0], " #A "(%[" #P0 "])    \n\t"       \
     "ulw    %[temp1], " #B "(%[" #P0 "])    \n\t"       \
@@ -270,28 +264,28 @@ static void GetCombinedEntropyUnrefined_MIPS32(
     "usw    %[temp7], " #D "(%[" #P2 "])    \n\t"       \
     "addiu  %[" #P2 "], %[" #P2 "],   16    \n\t"       \
     "bne    %[" #P0 "], %[LoopEnd], 1b      \n\t"       \
-    ".set   pop                             \n\t"       \
+    ".set   pop                             \n\t"
+// clang-format on
 
-#define ASM_END_COMMON_0                                \
+#define ASM_END_COMMON_0                        \
     : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1),         \
       [temp2]"=&r"(temp2), [temp3]"=&r"(temp3),         \
       [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),         \
       [temp6]"=&r"(temp6), [temp7]"=&r"(temp7),         \
       [pa]"+r"(pa), [pout]"+r"(pout)
 
-#define ASM_END_COMMON_1                                \
+#define ASM_END_COMMON_1    \
     : [LoopEnd]"r"(LoopEnd)                             \
     : "memory", "at"                                    \
   );
 
-#define ASM_END_0                                       \
-    ASM_END_COMMON_0                                    \
-      , [pb]"+r"(pb)                                    \
-    ASM_END_COMMON_1
+#define ASM_END_0  \
+  ASM_END_COMMON_0 \
+  , [pb] "+r"(pb)ASM_END_COMMON_1
 
-#define ASM_END_1                                       \
-    ASM_END_COMMON_0                                    \
-    ASM_END_COMMON_1
+#define ASM_END_1  \
+  ASM_END_COMMON_0 \
+  ASM_END_COMMON_1
 
 static void AddVector_MIPS32(const uint32_t* WEBP_RESTRICT pa,
                              const uint32_t* WEBP_RESTRICT pb,

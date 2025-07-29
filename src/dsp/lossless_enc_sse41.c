@@ -14,10 +14,9 @@
 #include "src/dsp/dsp.h"
 
 #if defined(WEBP_USE_SSE41)
+#include <assert.h>
 #include <emmintrin.h>
 #include <smmintrin.h>
-
-#include <assert.h>
 
 #include "src/dsp/cpu.h"
 #include "src/dsp/lossless.h"
@@ -55,8 +54,8 @@ static uint32_t ExtraCost_SSE41(const uint32_t* const a, int length) {
 static void SubtractGreenFromBlueAndRed_SSE41(uint32_t* argb_data,
                                               int num_pixels) {
   int i;
-  const __m128i kCstShuffle = _mm_set_epi8(-1, 13, -1, 13, -1, 9, -1, 9,
-                                           -1,  5, -1,  5, -1, 1, -1, 1);
+  const __m128i kCstShuffle =
+      _mm_set_epi8(-1, 13, -1, 13, -1, 9, -1, 9, -1, 5, -1, 5, -1, 1, -1, 1);
   for (i = 0; i + 4 <= num_pixels; i += 4) {
     const __m128i in = _mm_loadu_si128((__m128i*)&argb_data[i]);
     const __m128i in_0g0g = _mm_shuffle_epi8(in, kCstShuffle);
@@ -79,12 +78,12 @@ static void SubtractGreenFromBlueAndRed_SSE41(uint32_t* argb_data,
   _mm_set1_epi32((int)(((uint32_t)(HI) << 16) | ((LO) & 0xffff)))
 
 static void CollectColorBlueTransforms_SSE41(const uint32_t* WEBP_RESTRICT argb,
-                                             int stride,
-                                             int tile_width, int tile_height,
-                                             int green_to_blue, int red_to_blue,
+                                             int stride, int tile_width,
+                                             int tile_height, int green_to_blue,
+                                             int red_to_blue,
                                              uint32_t histo[]) {
   const __m128i mult =
-      MK_CST_16(CST_5b(red_to_blue) + 256,CST_5b(green_to_blue));
+      MK_CST_16(CST_5b(red_to_blue) + 256, CST_5b(green_to_blue));
   const __m128i perm =
       _mm_setr_epi8(-1, 1, -1, 2, -1, 5, -1, 6, -1, 9, -1, 10, -1, 13, -1, 14);
   if (tile_width >= 4) {
@@ -100,18 +99,18 @@ static void CollectColorBlueTransforms_SSE41(const uint32_t* WEBP_RESTRICT argb,
       for (x = 4; x + 4 <= tile_width; x += 4) {
         const __m128i A2 = _mm_loadu_si128((const __m128i*)(src + x));
         __m128i B2, C2, D2;
-        ++histo[_mm_extract_epi8(E,  0)];
+        ++histo[_mm_extract_epi8(E, 0)];
         B2 = _mm_shuffle_epi8(A2, perm);
-        ++histo[_mm_extract_epi8(E,  4)];
+        ++histo[_mm_extract_epi8(E, 4)];
         C2 = _mm_mulhi_epi16(B2, mult);
-        ++histo[_mm_extract_epi8(E,  8)];
+        ++histo[_mm_extract_epi8(E, 8)];
         D2 = _mm_sub_epi16(A2, C2);
         ++histo[_mm_extract_epi8(E, 12)];
         E = _mm_add_epi16(_mm_srli_epi32(D2, 16), D2);
       }
-      ++histo[_mm_extract_epi8(E,  0)];
-      ++histo[_mm_extract_epi8(E,  4)];
-      ++histo[_mm_extract_epi8(E,  8)];
+      ++histo[_mm_extract_epi8(E, 0)];
+      ++histo[_mm_extract_epi8(E, 4)];
+      ++histo[_mm_extract_epi8(E, 8)];
       ++histo[_mm_extract_epi8(E, 12)];
     }
   }
@@ -119,16 +118,15 @@ static void CollectColorBlueTransforms_SSE41(const uint32_t* WEBP_RESTRICT argb,
     const int left_over = tile_width & 3;
     if (left_over > 0) {
       VP8LCollectColorBlueTransforms_C(argb + tile_width - left_over, stride,
-                                       left_over, tile_height,
-                                       green_to_blue, red_to_blue, histo);
+                                       left_over, tile_height, green_to_blue,
+                                       red_to_blue, histo);
     }
   }
 }
 
 static void CollectColorRedTransforms_SSE41(const uint32_t* WEBP_RESTRICT argb,
-                                            int stride,
-                                            int tile_width, int tile_height,
-                                            int green_to_red,
+                                            int stride, int tile_width,
+                                            int tile_height, int green_to_red,
                                             uint32_t histo[]) {
   const __m128i mult = MK_CST_16(0, CST_5b(green_to_red));
   const __m128i mask_g = _mm_set1_epi32(0x0000ff00);
@@ -144,16 +142,16 @@ static void CollectColorRedTransforms_SSE41(const uint32_t* WEBP_RESTRICT argb,
       for (x = 4; x + 4 <= tile_width; x += 4) {
         const __m128i A2 = _mm_loadu_si128((const __m128i*)(src + x));
         __m128i B2, C2;
-        ++histo[_mm_extract_epi8(D,  2)];
+        ++histo[_mm_extract_epi8(D, 2)];
         B2 = _mm_and_si128(A2, mask_g);
-        ++histo[_mm_extract_epi8(D,  6)];
+        ++histo[_mm_extract_epi8(D, 6)];
         C2 = _mm_madd_epi16(B2, mult);
         ++histo[_mm_extract_epi8(D, 10)];
         ++histo[_mm_extract_epi8(D, 14)];
         D = _mm_sub_epi16(A2, C2);
       }
-      ++histo[_mm_extract_epi8(D,  2)];
-      ++histo[_mm_extract_epi8(D,  6)];
+      ++histo[_mm_extract_epi8(D, 2)];
+      ++histo[_mm_extract_epi8(D, 6)];
       ++histo[_mm_extract_epi8(D, 10)];
       ++histo[_mm_extract_epi8(D, 14)];
     }

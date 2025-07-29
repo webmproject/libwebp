@@ -69,6 +69,5 @@ End:
 }  // namespace
 
 FUZZ_TEST(AnimDecoder, AnimDecoderTest)
-    .WithDomains(
-        fuzztest::String()
-            .WithMaxSize(fuzz_utils::kMaxWebPFileSize + 1));
+    .WithDomains(fuzztest::String().WithMaxSize(fuzz_utils::kMaxWebPFileSize +
+                                                1));

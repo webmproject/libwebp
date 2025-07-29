@@ -22,7 +22,7 @@ extern "C" {
 #include "sharpyuv/sharpyuv.h"
 #include "webp/encode.h"
 
-#define WEBP_EXTRAS_ABI_VERSION 0x0003    // MAJOR(8b) + MINOR(8b)
+#define WEBP_EXTRAS_ABI_VERSION 0x0003  // MAJOR(8b) + MINOR(8b)
 
 //------------------------------------------------------------------------------
 
@@ -49,10 +49,10 @@ WEBP_EXTERN int WebPImportRGB4444(const uint8_t* rgb4444, WebPPicture* pic);
 // MAX_PALETTE_SIZE. 'pic' must have been initialized. Its content, if any,
 // will be discarded. Returns 'false' in case of error, or if indexed[] contains
 // invalid indices.
-WEBP_EXTERN int
-WebPImportColorMappedARGB(const uint8_t* indexed, int indexed_stride,
-                          const uint32_t palette[], int palette_size,
-                          WebPPicture* pic);
+WEBP_EXTERN int WebPImportColorMappedARGB(const uint8_t* indexed,
+                                          int indexed_stride,
+                                          const uint32_t palette[],
+                                          int palette_size, WebPPicture* pic);
 
 // Convert the ARGB content of 'pic' from associated to unassociated.
 // 'pic' can be for instance the result of calling of some WebPPictureImportXXX
@@ -98,15 +98,17 @@ WEBP_EXTERN int VP8EstimateQuality(const uint8_t* const data, size_t size);
 //     currently supported.
 // width, height: width and height of the image in pixels
 // Returns 0 on failure.
-WEBP_EXTERN int SharpYuvEstimate420Risk(
-    const void* r_ptr, const void* g_ptr, const void* b_ptr, int rgb_step,
-    int rgb_stride, int rgb_bit_depth, int width, int height,
-    const SharpYuvOptions* options, float* score);
+WEBP_EXTERN int SharpYuvEstimate420Risk(const void* r_ptr, const void* g_ptr,
+                                        const void* b_ptr, int rgb_step,
+                                        int rgb_stride, int rgb_bit_depth,
+                                        int width, int height,
+                                        const SharpYuvOptions* options,
+                                        float* score);
 
 //------------------------------------------------------------------------------
 
 #ifdef __cplusplus
-}    // extern "C"
+}  // extern "C"
 #endif
 
 #endif  // WEBP_EXTRAS_EXTRAS_H_

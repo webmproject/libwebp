@@ -17,28 +17,27 @@
 #include <string.h>
 
 #include "src/mux/muxi.h"
-#include "src/webp/types.h"
 #include "src/utils/utils.h"
 #include "src/webp/format_constants.h"
 #include "src/webp/mux.h"
 #include "src/webp/mux_types.h"
+#include "src/webp/types.h"
 
 #define UNDEFINED_CHUNK_SIZE ((uint32_t)(-1))
 
 const ChunkInfo kChunks[] = {
-  { MKFOURCC('V', 'P', '8', 'X'),  WEBP_CHUNK_VP8X,    VP8X_CHUNK_SIZE },
-  { MKFOURCC('I', 'C', 'C', 'P'),  WEBP_CHUNK_ICCP,    UNDEFINED_CHUNK_SIZE },
-  { MKFOURCC('A', 'N', 'I', 'M'),  WEBP_CHUNK_ANIM,    ANIM_CHUNK_SIZE },
-  { MKFOURCC('A', 'N', 'M', 'F'),  WEBP_CHUNK_ANMF,    ANMF_CHUNK_SIZE },
-  { MKFOURCC('A', 'L', 'P', 'H'),  WEBP_CHUNK_ALPHA,   UNDEFINED_CHUNK_SIZE },
-  { MKFOURCC('V', 'P', '8', ' '),  WEBP_CHUNK_IMAGE,   UNDEFINED_CHUNK_SIZE },
-  { MKFOURCC('V', 'P', '8', 'L'),  WEBP_CHUNK_IMAGE,   UNDEFINED_CHUNK_SIZE },
-  { MKFOURCC('E', 'X', 'I', 'F'),  WEBP_CHUNK_EXIF,    UNDEFINED_CHUNK_SIZE },
-  { MKFOURCC('X', 'M', 'P', ' '),  WEBP_CHUNK_XMP,     UNDEFINED_CHUNK_SIZE },
-  { NIL_TAG,                       WEBP_CHUNK_UNKNOWN, UNDEFINED_CHUNK_SIZE },
+    {MKFOURCC('V', 'P', '8', 'X'), WEBP_CHUNK_VP8X, VP8X_CHUNK_SIZE},
+    {MKFOURCC('I', 'C', 'C', 'P'), WEBP_CHUNK_ICCP, UNDEFINED_CHUNK_SIZE},
+    {MKFOURCC('A', 'N', 'I', 'M'), WEBP_CHUNK_ANIM, ANIM_CHUNK_SIZE},
+    {MKFOURCC('A', 'N', 'M', 'F'), WEBP_CHUNK_ANMF, ANMF_CHUNK_SIZE},
+    {MKFOURCC('A', 'L', 'P', 'H'), WEBP_CHUNK_ALPHA, UNDEFINED_CHUNK_SIZE},
+    {MKFOURCC('V', 'P', '8', ' '), WEBP_CHUNK_IMAGE, UNDEFINED_CHUNK_SIZE},
+    {MKFOURCC('V', 'P', '8', 'L'), WEBP_CHUNK_IMAGE, UNDEFINED_CHUNK_SIZE},
+    {MKFOURCC('E', 'X', 'I', 'F'), WEBP_CHUNK_EXIF, UNDEFINED_CHUNK_SIZE},
+    {MKFOURCC('X', 'M', 'P', ' '), WEBP_CHUNK_XMP, UNDEFINED_CHUNK_SIZE},
+    {NIL_TAG, WEBP_CHUNK_UNKNOWN, UNDEFINED_CHUNK_SIZE},
 
-  { NIL_TAG,                       WEBP_CHUNK_NIL,     UNDEFINED_CHUNK_SIZE }
-};
+    {NIL_TAG, WEBP_CHUNK_NIL, UNDEFINED_CHUNK_SIZE}};
 
 //------------------------------------------------------------------------------
 
@@ -131,10 +130,10 @@ WebPMuxError ChunkAssignData(WebPChunk* chunk, const WebPData* const data,
   ChunkRelease(chunk);
 
   if (data != NULL) {
-    if (copy_data) {        // Copy data.
+    if (copy_data) {  // Copy data.
       if (!WebPDataCopy(data, &chunk->data)) return WEBP_MUX_MEMORY_ERROR;
-      chunk->owner = 1;     // Chunk is owner of data.
-    } else {                // Don't copy data.
+      chunk->owner = 1;  // Chunk is owner of data.
+    } else {             // Don't copy data.
       chunk->data = *data;
     }
   }
@@ -202,8 +201,7 @@ static uint8_t* ChunkEmit(const WebPChunk* const chunk, uint8_t* dst) {
   PutLE32(dst + TAG_SIZE, (uint32_t)chunk_size);
   assert(chunk_size == (uint32_t)chunk_size);
   memcpy(dst + CHUNK_HEADER_SIZE, chunk->data.bytes, chunk_size);
-  if (chunk_size & 1)
-    dst[CHUNK_HEADER_SIZE + chunk_size] = 0;  // Add padding.
+  if (chunk_size & 1) dst[CHUNK_HEADER_SIZE + chunk_size] = 0;  // Add padding.
   return dst + ChunkDiskSize(chunk);
 }
 
@@ -255,10 +253,14 @@ static WebPChunk** GetChunkListFromId(const WebPMuxImage* const wpi,
                                       WebPChunkId id) {
   assert(wpi != NULL);
   switch (id) {
-    case WEBP_CHUNK_ANMF:  return (WebPChunk**)&wpi->header;
-    case WEBP_CHUNK_ALPHA: return (WebPChunk**)&wpi->alpha;
-    case WEBP_CHUNK_IMAGE: return (WebPChunk**)&wpi->img;
-    default: return NULL;
+    case WEBP_CHUNK_ANMF:
+      return (WebPChunk**)&wpi->header;
+    case WEBP_CHUNK_ALPHA:
+      return (WebPChunk**)&wpi->alpha;
+    case WEBP_CHUNK_IMAGE:
+      return (WebPChunk**)&wpi->img;
+    default:
+      return NULL;
   }
 }
 
@@ -428,12 +430,18 @@ uint8_t* MuxEmitRiffHeader(uint8_t* const data, size_t size) {
 WebPChunk** MuxGetChunkListFromId(const WebPMux* mux, WebPChunkId id) {
   assert(mux != NULL);
   switch (id) {
-    case WEBP_CHUNK_VP8X:    return (WebPChunk**)&mux->vp8x;
-    case WEBP_CHUNK_ICCP:    return (WebPChunk**)&mux->iccp;
-    case WEBP_CHUNK_ANIM:    return (WebPChunk**)&mux->anim;
-    case WEBP_CHUNK_EXIF:    return (WebPChunk**)&mux->exif;
-    case WEBP_CHUNK_XMP:     return (WebPChunk**)&mux->xmp;
-    default:                 return (WebPChunk**)&mux->unknown;
+    case WEBP_CHUNK_VP8X:
+      return (WebPChunk**)&mux->vp8x;
+    case WEBP_CHUNK_ICCP:
+      return (WebPChunk**)&mux->iccp;
+    case WEBP_CHUNK_ANIM:
+      return (WebPChunk**)&mux->anim;
+    case WEBP_CHUNK_EXIF:
+      return (WebPChunk**)&mux->exif;
+    case WEBP_CHUNK_XMP:
+      return (WebPChunk**)&mux->xmp;
+    default:
+      return (WebPChunk**)&mux->unknown;
   }
 }
 
@@ -448,11 +456,9 @@ static int IsNotCompatible(int feature, int num_items) {
 // and feature incompatibility (use NO_FLAG to skip).
 // On success returns WEBP_MUX_OK and stores the chunk count in *num.
 static WebPMuxError ValidateChunk(const WebPMux* const mux, CHUNK_INDEX idx,
-                                  WebPFeatureFlags feature,
-                                  uint32_t vp8x_flags,
+                                  WebPFeatureFlags feature, uint32_t vp8x_flags,
                                   int max, int* num) {
-  const WebPMuxError err =
-      WebPMuxNumChunks(mux, kChunks[idx].id, num);
+  const WebPMuxError err = WebPMuxNumChunks(mux, kChunks[idx].id, num);
   if (err != WEBP_MUX_OK) return err;
   if (max > -1 && *num > max) return WEBP_MUX_INVALID_ARGUMENT;
   if (feature != NO_FLAG && IsNotCompatible(vp8x_flags & feature, *num)) {

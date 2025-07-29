@@ -37,11 +37,11 @@ extern "C" {
 //------------------------------------------------------------------------------
 // Derived type lbit_t = natural type for memory I/O
 
-#if   (BITS > 32)
+#if (BITS > 32)
 typedef uint64_t lbit_t;
 #elif (BITS > 16)
 typedef uint32_t lbit_t;
-#elif (BITS >  8)
+#elif (BITS > 8)
 typedef uint16_t lbit_t;
 #else
 typedef uint8_t lbit_t;
@@ -57,8 +57,8 @@ void VP8LoadFinalBytes(VP8BitReader* const br);
 // Inlined critical functions
 
 // makes sure br->value has at least BITS bits worth of data
-static WEBP_UBSAN_IGNORE_UNDEF WEBP_INLINE
-void VP8LoadNewBytes(VP8BitReader* WEBP_RESTRICT const br) {
+static WEBP_UBSAN_IGNORE_UNDEF WEBP_INLINE void VP8LoadNewBytes(
+    VP8BitReader* WEBP_RESTRICT const br) {
   assert(br != NULL && br->buf != NULL);
   // Read 'BITS' bits at a time if possible.
   if (br->buf < br->buf_max) {
@@ -69,15 +69,14 @@ void VP8LoadNewBytes(VP8BitReader* WEBP_RESTRICT const br) {
     lbit_t in_bits;
     lbit_t* p_buf = (lbit_t*)br->buf;
     __asm__ volatile(
-      ".set   push                             \n\t"
-      ".set   at                               \n\t"
-      ".set   macro                            \n\t"
-      "ulw    %[in_bits], 0(%[p_buf])          \n\t"
-      ".set   pop                              \n\t"
-      : [in_bits]"=r"(in_bits)
-      : [p_buf]"r"(p_buf)
-      : "memory", "at"
-    );
+        ".set   push                             \n\t"
+        ".set   at                               \n\t"
+        ".set   macro                            \n\t"
+        "ulw    %[in_bits], 0(%[p_buf])          \n\t"
+        ".set   pop                              \n\t"
+        : [in_bits] "=r"(in_bits)
+        : [p_buf] "r"(p_buf)
+        : "memory", "at");
 #else
     lbit_t in_bits;
     memcpy(&in_bits, br->buf, sizeof(in_bits));
@@ -95,20 +94,20 @@ void VP8LoadNewBytes(VP8BitReader* WEBP_RESTRICT const br) {
 #else   // BITS == 8
     bits = (bit_t)in_bits;
 #endif  // BITS > 32
-#else    // WORDS_BIGENDIAN
+#else   // WORDS_BIGENDIAN
     bits = (bit_t)in_bits;
     if (BITS != 8 * sizeof(bit_t)) bits >>= (8 * sizeof(bit_t) - BITS);
 #endif
     br->value = bits | (br->value << BITS);
     br->bits += BITS;
   } else {
-    VP8LoadFinalBytes(br);    // no need to be inlined
+    VP8LoadFinalBytes(br);  // no need to be inlined
   }
 }
 
 // Read a bit with proba 'prob'. Speed-critical function!
-static WEBP_INLINE int VP8GetBit(VP8BitReader* WEBP_RESTRICT const br,
-                                 int prob, const char label[]) {
+static WEBP_INLINE int VP8GetBit(VP8BitReader* WEBP_RESTRICT const br, int prob,
+                                 const char label[]) {
   // Don't move this declaration! It makes a big speed difference to store
   // 'range' *before* calling VP8LoadNewBytes(), even if this function doesn't
   // alter br->range value.
@@ -139,9 +138,8 @@ static WEBP_INLINE int VP8GetBit(VP8BitReader* WEBP_RESTRICT const br,
 }
 
 // simplified version of VP8GetBit() for prob=0x80 (note shift is always 1 here)
-static WEBP_UBSAN_IGNORE_UNSIGNED_OVERFLOW WEBP_INLINE
-int VP8GetSigned(VP8BitReader* WEBP_RESTRICT const br, int v,
-                 const char label[]) {
+static WEBP_UBSAN_IGNORE_UNSIGNED_OVERFLOW WEBP_INLINE int VP8GetSigned(
+    VP8BitReader* WEBP_RESTRICT const br, int v, const char label[]) {
   if (br->bits < 0) {
     VP8LoadNewBytes(br);
   }
@@ -193,7 +191,7 @@ static WEBP_INLINE int VP8GetBitAlt(VP8BitReader* WEBP_RESTRICT const br,
 }
 
 #ifdef __cplusplus
-}    // extern "C"
+}  // extern "C"
 #endif
 
 #endif  // WEBP_UTILS_BIT_READER_INL_UTILS_H_

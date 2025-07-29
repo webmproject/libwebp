@@ -16,8 +16,8 @@
 #include "src/dsp/neon.h"
 #include "src/enc/cost_enc.h"
 
-static const uint8_t position[16] = { 1, 2,  3,  4,  5,  6,  7,  8,
-                                      9, 10, 11, 12, 13, 14, 15, 16 };
+static const uint8_t position[16] = {1, 2,  3,  4,  5,  6,  7,  8,
+                                     9, 10, 11, 12, 13, 14, 15, 16};
 
 static void SetResidualCoeffs_NEON(const int16_t* WEBP_RESTRICT const coeffs,
                                    VP8Residual* WEBP_RESTRICT const res) {
@@ -65,7 +65,7 @@ static int GetResidualCost_NEON(int ctx0, const VP8Residual* const res) {
     return VP8BitCost(0, p0);
   }
 
-  {   // precompute clamped levels and contexts, packed to 8b.
+  {  // precompute clamped levels and contexts, packed to 8b.
     const uint8x16_t kCst2 = vdupq_n_u8(2);
     const uint8x16_t kCst67 = vdupq_n_u8(MAX_VARIABLE_LEVEL);
     const int16x8_t c0 = vld1q_s16(res->coeffs);
@@ -85,7 +85,7 @@ static int GetResidualCost_NEON(int ctx0, const VP8Residual* const res) {
   for (; n < res->last; ++n) {
     const int ctx = ctxs[n];
     const int level = levels[n];
-    const int flevel = abs_levels[n];   // full level
+    const int flevel = abs_levels[n];               // full level
     cost += VP8LevelFixedCosts[flevel] + t[level];  // simplified VP8LevelCost()
     t = costs[n + 1][ctx];
   }

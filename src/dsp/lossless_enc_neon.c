@@ -25,25 +25,24 @@
 
 // vtbl?_u8 are marked unavailable for iOS arm64 with Xcode < 6.3, use
 // non-standard versions there.
-#if defined(__APPLE__) && WEBP_AARCH64 && \
-    defined(__apple_build_version__) && (__apple_build_version__< 6020037)
+#if defined(__APPLE__) && WEBP_AARCH64 && defined(__apple_build_version__) && \
+    (__apple_build_version__ < 6020037)
 #define USE_VTBLQ
 #endif
 
 #ifdef USE_VTBLQ
 // 255 = byte will be zeroed
-static const uint8_t kGreenShuffle[16] = {
-  1, 255, 1, 255, 5, 255, 5, 255, 9, 255, 9, 255, 13, 255, 13, 255
-};
+static const uint8_t kGreenShuffle[16] = {1, 255, 1, 255, 5,  255, 5,  255,
+                                          9, 255, 9, 255, 13, 255, 13, 255};
 
 static WEBP_INLINE uint8x16_t DoGreenShuffle_NEON(const uint8x16_t argb,
                                                   const uint8x16_t shuffle) {
   return vcombine_u8(vtbl1q_u8(argb, vget_low_u8(shuffle)),
                      vtbl1q_u8(argb, vget_high_u8(shuffle)));
 }
-#else  // !USE_VTBLQ
+#else   // !USE_VTBLQ
 // 255 = byte will be zeroed
-static const uint8_t kGreenShuffle[8] = { 1, 255, 1, 255, 5, 255, 5, 255  };
+static const uint8_t kGreenShuffle[8] = {1, 255, 1, 255, 5, 255, 5, 255};
 
 static WEBP_INLINE uint8x16_t DoGreenShuffle_NEON(const uint8x16_t argb,
                                                   const uint8x8_t shuffle) {
@@ -76,27 +75,24 @@ static void TransformColor_NEON(const VP8LMultipliers* WEBP_RESTRICT const m,
                                 uint32_t* WEBP_RESTRICT argb_data,
                                 int num_pixels) {
   // sign-extended multiplying constants, pre-shifted by 6.
-#define CST(X)  (((int16_t)(m->X << 8)) >> 6)
-  const int16_t rb[8] = {
-    CST(green_to_blue), CST(green_to_red),
-    CST(green_to_blue), CST(green_to_red),
-    CST(green_to_blue), CST(green_to_red),
-    CST(green_to_blue), CST(green_to_red)
-  };
+#define CST(X) (((int16_t)(m->X << 8)) >> 6)
+  const int16_t rb[8] = {CST(green_to_blue), CST(green_to_red),
+                         CST(green_to_blue), CST(green_to_red),
+                         CST(green_to_blue), CST(green_to_red),
+                         CST(green_to_blue), CST(green_to_red)};
   const int16x8_t mults_rb = vld1q_s16(rb);
   const int16_t b2[8] = {
-    0, CST(red_to_blue), 0, CST(red_to_blue),
-    0, CST(red_to_blue), 0, CST(red_to_blue),
+      0, CST(red_to_blue), 0, CST(red_to_blue),
+      0, CST(red_to_blue), 0, CST(red_to_blue),
   };
   const int16x8_t mults_b2 = vld1q_s16(b2);
 #undef CST
 #ifdef USE_VTBLQ
-  static const uint8_t kg0g0[16] = {
-    255, 1, 255, 1, 255, 5, 255, 5, 255, 9, 255, 9, 255, 13, 255, 13
-  };
+  static const uint8_t kg0g0[16] = {255, 1, 255, 1, 255, 5,  255, 5,
+                                    255, 9, 255, 9, 255, 13, 255, 13};
   const uint8x16_t shuffle = vld1q_u8(kg0g0);
 #else
-  static const uint8_t k0g0g[8] = { 255, 1, 255, 1, 255, 5, 255, 5 };
+  static const uint8_t k0g0g[8] = {255, 1, 255, 1, 255, 5, 255, 5};
   const uint8x8_t shuffle = vld1_u8(k0g0g);
 #endif
   const uint32x4_t mask_rb = vdupq_n_u32(0x00ff00ffu);  // red-blue masks
@@ -114,12 +110,12 @@ static void TransformColor_NEON(const VP8LMultipliers* WEBP_RESTRICT const m,
     // 0 0   x db2
     const uint32x4_t D = vshrq_n_u32(vreinterpretq_u32_s16(C), 16);
     // x dr  x  db
-    const int8x16_t E = vaddq_s8(vreinterpretq_s8_u32(D),
-                                 vreinterpretq_s8_s16(A));
+    const int8x16_t E =
+        vaddq_s8(vreinterpretq_s8_u32(D), vreinterpretq_s8_s16(A));
     // 0 dr  0  db
     const uint32x4_t F = vandq_u32(vreinterpretq_u32_s8(E), mask_rb);
-    const int8x16_t out = vsubq_s8(vreinterpretq_s8_u8(in),
-                                   vreinterpretq_s8_u32(F));
+    const int8x16_t out =
+        vsubq_s8(vreinterpretq_s8_u8(in), vreinterpretq_s8_u32(F));
     vst1q_s8((int8_t*)(argb_data + i), out);
   }
   // fallthrough and finish off with plain-C

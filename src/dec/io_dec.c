@@ -17,7 +17,6 @@
 #include <string.h>
 
 #include "src/dec/vp8_dec.h"
-#include "src/webp/types.h"
 #include "src/dec/vp8i_dec.h"
 #include "src/dec/webpi_dec.h"
 #include "src/dsp/cpu.h"
@@ -26,6 +25,7 @@
 #include "src/utils/rescaler_utils.h"
 #include "src/utils/utils.h"
 #include "src/webp/decode.h"
+#include "src/webp/types.h"
 
 //------------------------------------------------------------------------------
 // Main YUV<->RGB conversion functions
@@ -51,9 +51,8 @@ static int EmitSampledRGB(const VP8Io* const io, WebPDecParams* const p) {
   WebPDecBuffer* const output = p->output;
   WebPRGBABuffer* const buf = &output->u.RGBA;
   uint8_t* const dst = buf->rgba + (ptrdiff_t)io->mb_y * buf->stride;
-  WebPSamplerProcessPlane(io->y, io->y_stride,
-                          io->u, io->v, io->uv_stride,
-                          dst, buf->stride, io->mb_w, io->mb_h,
+  WebPSamplerProcessPlane(io->y, io->y_stride, io->u, io->v, io->uv_stride, dst,
+                          buf->stride, io->mb_w, io->mb_h,
                           WebPSamplers[output->colorspace]);
   return io->mb_h;
 }
@@ -63,7 +62,7 @@ static int EmitSampledRGB(const VP8Io* const io, WebPDecParams* const p) {
 
 #ifdef FANCY_UPSAMPLING
 static int EmitFancyRGB(const VP8Io* const io, WebPDecParams* const p) {
-  int num_lines_out = io->mb_h;   // a priori guess
+  int num_lines_out = io->mb_h;  // a priori guess
   const WebPRGBABuffer* const buf = &p->output->u.RGBA;
   uint8_t* dst = buf->rgba + (ptrdiff_t)io->mb_y * buf->stride;
   WebPUpsampleLinePairFunc upsample = WebPUpsamplers[p->output->colorspace];
@@ -82,8 +81,8 @@ static int EmitFancyRGB(const VP8Io* const io, WebPDecParams* const p) {
     upsample(cur_y, NULL, cur_u, cur_v, cur_u, cur_v, dst, NULL, mb_w);
   } else {
     // We can finish the left-over line from previous call.
-    upsample(p->tmp_y, cur_y, top_u, top_v, cur_u, cur_v,
-             dst - buf->stride, dst, mb_w);
+    upsample(p->tmp_y, cur_y, top_u, top_v, cur_u, cur_v, dst - buf->stride,
+             dst, mb_w);
     ++num_lines_out;
   }
   // Loop over each output pairs of row.
@@ -94,8 +93,7 @@ static int EmitFancyRGB(const VP8Io* const io, WebPDecParams* const p) {
     cur_v += io->uv_stride;
     dst += 2 * buf->stride;
     cur_y += 2 * io->y_stride;
-    upsample(cur_y - io->y_stride, cur_y,
-             top_u, top_v, cur_u, cur_v,
+    upsample(cur_y - io->y_stride, cur_y, top_u, top_v, cur_u, cur_v,
              dst - buf->stride, dst, mb_w);
   }
   // move to last row
@@ -111,14 +109,14 @@ static int EmitFancyRGB(const VP8Io* const io, WebPDecParams* const p) {
   } else {
     // Process the very last row of even-sized picture
     if (!(y_end & 1)) {
-      upsample(cur_y, NULL, cur_u, cur_v, cur_u, cur_v,
-               dst + buf->stride, NULL, mb_w);
+      upsample(cur_y, NULL, cur_u, cur_v, cur_u, cur_v, dst + buf->stride, NULL,
+               mb_w);
     }
   }
   return num_lines_out;
 }
 
-#endif    /* FANCY_UPSAMPLING */
+#endif /* FANCY_UPSAMPLING */
 
 //------------------------------------------------------------------------------
 
@@ -153,8 +151,8 @@ static int EmitAlphaYUV(const VP8Io* const io, WebPDecParams* const p,
   return 0;
 }
 
-static int GetAlphaSourceRow(const VP8Io* const io,
-                             const uint8_t** alpha, int* const num_rows) {
+static int GetAlphaSourceRow(const VP8Io* const io, const uint8_t** alpha,
+                             int* const num_rows) {
   int start_y = io->mb_y;
   *num_rows = io->mb_h;
 
@@ -192,14 +190,14 @@ static int EmitAlphaRGB(const VP8Io* const io, WebPDecParams* const p,
     const int start_y = GetAlphaSourceRow(io, &alpha, &num_rows);
     uint8_t* const base_rgba = buf->rgba + (ptrdiff_t)start_y * buf->stride;
     uint8_t* const dst = base_rgba + (alpha_first ? 0 : 3);
-    const int has_alpha = WebPDispatchAlpha(alpha, io->width, mb_w,
-                                            num_rows, dst, buf->stride);
+    const int has_alpha =
+        WebPDispatchAlpha(alpha, io->width, mb_w, num_rows, dst, buf->stride);
     (void)expected_num_lines_out;
     assert(expected_num_lines_out == num_rows);
     // has_alpha is true if there's non-trivial alpha to premultiply with.
     if (has_alpha && WebPIsPremultipliedMode(colorspace)) {
-      WebPApplyAlphaMultiply(base_rgba, alpha_first,
-                             mb_w, num_rows, buf->stride);
+      WebPApplyAlphaMultiply(base_rgba, alpha_first, mb_w, num_rows,
+                             buf->stride);
     }
   }
   return 0;
@@ -245,14 +243,14 @@ static int EmitAlphaRGBA4444(const VP8Io* const io, WebPDecParams* const p,
 // YUV rescaling (no final RGB conversion needed)
 
 #if !defined(WEBP_REDUCE_SIZE)
-static int Rescale(const uint8_t* src, int src_stride,
-                   int new_lines, WebPRescaler* const wrk) {
+static int Rescale(const uint8_t* src, int src_stride, int new_lines,
+                   WebPRescaler* const wrk) {
   int num_lines_out = 0;
-  while (new_lines > 0) {    // import new contributions of source rows.
+  while (new_lines > 0) {  // import new contributions of source rows.
     const int lines_in = WebPRescalerImport(wrk, new_lines, src, src_stride);
     src += lines_in * src_stride;
     new_lines -= lines_in;
-    num_lines_out += WebPRescalerExport(wrk);    // emit output row(s)
+    num_lines_out += WebPRescalerExport(wrk);  // emit output row(s)
   }
   return num_lines_out;
 }
@@ -267,8 +265,8 @@ static int EmitRescaledYUV(const VP8Io* const io, WebPDecParams* const p) {
     // internal buffer. This is OK since these samples are not used for
     // intra-prediction (the top samples are saved in cache_y/u/v).
     // But we need to cast the const away, though.
-    WebPMultRows((uint8_t*)io->y, io->y_stride,
-                 io->a, io->width, io->mb_w, mb_h, 0);
+    WebPMultRows((uint8_t*)io->y, io->y_stride, io->a, io->width, io->mb_w,
+                 mb_h, 0);
   }
   num_lines_out = Rescale(io->y, io->y_stride, mb_h, scaler);
   Rescale(io->u, io->uv_stride, uv_mb_h, p->scaler_u);
@@ -284,7 +282,7 @@ static int EmitRescaledAlphaYUV(const VP8Io* const io, WebPDecParams* const p,
     uint8_t* const dst_y = buf->y + (ptrdiff_t)p->last_y * buf->y_stride;
     const int num_lines_out = Rescale(io->a, io->width, io->mb_h, p->scaler_a);
     assert(expected_num_lines_out == num_lines_out);
-    if (num_lines_out > 0) {   // unmultiply the Y
+    if (num_lines_out > 0) {  // unmultiply the Y
       WebPMultRows(dst_y, buf->y_stride, dst_a, buf->a_stride,
                    p->scaler_a->dst_width, num_lines_out, 1);
     }
@@ -300,11 +298,11 @@ static int EmitRescaledAlphaYUV(const VP8Io* const io, WebPDecParams* const p,
 static int InitYUVRescaler(const VP8Io* const io, WebPDecParams* const p) {
   const int has_alpha = WebPIsAlphaMode(p->output->colorspace);
   const WebPYUVABuffer* const buf = &p->output->u.YUVA;
-  const int out_width  = io->scaled_width;
+  const int out_width = io->scaled_width;
   const int out_height = io->scaled_height;
-  const int uv_out_width  = (out_width + 1) >> 1;
+  const int uv_out_width = (out_width + 1) >> 1;
   const int uv_out_height = (out_height + 1) >> 1;
-  const int uv_in_width  = (io->mb_w + 1) >> 1;
+  const int uv_in_width = (io->mb_w + 1) >> 1;
   const int uv_in_height = (io->mb_h + 1) >> 1;
   // scratch memory for luma rescaler
   const size_t work_size = 2 * (size_t)out_width;
@@ -327,33 +325,32 @@ static int InitYUVRescaler(const VP8Io* const io, WebPDecParams* const p) {
 
   p->memory = WebPSafeMalloc(1ULL, (size_t)total_size);
   if (p->memory == NULL) {
-    return 0;   // memory error
+    return 0;  // memory error
   }
   work = (rescaler_t*)p->memory;
 
-  scalers = (WebPRescaler*)WEBP_ALIGN(
-      (const uint8_t*)work + total_size - rescaler_size);
+  scalers = (WebPRescaler*)WEBP_ALIGN((const uint8_t*)work + total_size -
+                                      rescaler_size);
   p->scaler_y = &scalers[0];
   p->scaler_u = &scalers[1];
   p->scaler_v = &scalers[2];
   p->scaler_a = has_alpha ? &scalers[3] : NULL;
 
-  if (!WebPRescalerInit(p->scaler_y, io->mb_w, io->mb_h,
-                        buf->y, out_width, out_height, buf->y_stride, 1,
-                        work) ||
-      !WebPRescalerInit(p->scaler_u, uv_in_width, uv_in_height,
-                        buf->u, uv_out_width, uv_out_height, buf->u_stride, 1,
+  if (!WebPRescalerInit(p->scaler_y, io->mb_w, io->mb_h, buf->y, out_width,
+                        out_height, buf->y_stride, 1, work) ||
+      !WebPRescalerInit(p->scaler_u, uv_in_width, uv_in_height, buf->u,
+                        uv_out_width, uv_out_height, buf->u_stride, 1,
                         work + work_size) ||
-      !WebPRescalerInit(p->scaler_v, uv_in_width, uv_in_height,
-                        buf->v, uv_out_width, uv_out_height, buf->v_stride, 1,
+      !WebPRescalerInit(p->scaler_v, uv_in_width, uv_in_height, buf->v,
+                        uv_out_width, uv_out_height, buf->v_stride, 1,
                         work + work_size + uv_work_size)) {
     return 0;
   }
   p->emit = EmitRescaledYUV;
 
   if (has_alpha) {
-    if (!WebPRescalerInit(p->scaler_a, io->mb_w, io->mb_h,
-                          buf->a, out_width, out_height, buf->a_stride, 1,
+    if (!WebPRescalerInit(p->scaler_a, io->mb_w, io->mb_h, buf->a, out_width,
+                          out_height, buf->a_stride, 1,
                           work + work_size + 2 * uv_work_size)) {
       return 0;
     }
@@ -381,8 +378,8 @@ static int ExportRGB(WebPDecParams* const p, int y_pos) {
     WebPRescalerExportRow(p->scaler_y);
     WebPRescalerExportRow(p->scaler_u);
     WebPRescalerExportRow(p->scaler_v);
-    convert(p->scaler_y->dst, p->scaler_u->dst, p->scaler_v->dst,
-            dst, p->scaler_y->dst_width);
+    convert(p->scaler_y->dst, p->scaler_u->dst, p->scaler_v->dst, dst,
+            p->scaler_y->dst_width);
     dst += buf->stride;
     ++num_lines_out;
   }
@@ -406,7 +403,7 @@ static int EmitRescaledRGB(const VP8Io* const io, WebPDecParams* const p) {
       const int v_lines_in = WebPRescalerImport(
           p->scaler_v, uv_mb_h - uv_j, io->v + (ptrdiff_t)uv_j * io->uv_stride,
           io->uv_stride);
-      (void)v_lines_in;   // remove a gcc warning
+      (void)v_lines_in;  // remove a gcc warning
       assert(u_lines_in == v_lines_in);
       uv_j += u_lines_in;
     }
@@ -419,8 +416,7 @@ static int ExportAlpha(WebPDecParams* const p, int y_pos, int max_lines_out) {
   const WebPRGBABuffer* const buf = &p->output->u.RGBA;
   uint8_t* const base_rgba = buf->rgba + (ptrdiff_t)y_pos * buf->stride;
   const WEBP_CSP_MODE colorspace = p->output->colorspace;
-  const int alpha_first =
-      (colorspace == MODE_ARGB || colorspace == MODE_Argb);
+  const int alpha_first = (colorspace == MODE_ARGB || colorspace == MODE_Argb);
   uint8_t* dst = base_rgba + (alpha_first ? 0 : 3);
   int num_lines_out = 0;
   const int is_premult_alpha = WebPIsPremultipliedMode(colorspace);
@@ -436,8 +432,8 @@ static int ExportAlpha(WebPDecParams* const p, int y_pos, int max_lines_out) {
     ++num_lines_out;
   }
   if (is_premult_alpha && non_opaque) {
-    WebPApplyAlphaMultiply(base_rgba, alpha_first,
-                           width, num_lines_out, buf->stride);
+    WebPApplyAlphaMultiply(base_rgba, alpha_first, width, num_lines_out,
+                           buf->stride);
   }
   return num_lines_out;
 }
@@ -495,14 +491,14 @@ static int EmitRescaledAlphaRGB(const VP8Io* const io, WebPDecParams* const p,
 
 static int InitRGBRescaler(const VP8Io* const io, WebPDecParams* const p) {
   const int has_alpha = WebPIsAlphaMode(p->output->colorspace);
-  const int out_width  = io->scaled_width;
+  const int out_width = io->scaled_width;
   const int out_height = io->scaled_height;
-  const int uv_in_width  = (io->mb_w + 1) >> 1;
+  const int uv_in_width = (io->mb_w + 1) >> 1;
   const int uv_in_height = (io->mb_h + 1) >> 1;
   // scratch memory for one rescaler
   const size_t work_size = 2 * (size_t)out_width;
   rescaler_t* work;  // rescalers work area
-  uint8_t* tmp;   // tmp storage for scaled YUV444 samples before RGB conversion
+  uint8_t* tmp;  // tmp storage for scaled YUV444 samples before RGB conversion
   uint64_t tmp_size1, tmp_size2, total_size;
   size_t rescaler_size;
   WebPRescaler* scalers;
@@ -519,21 +515,20 @@ static int InitRGBRescaler(const VP8Io* const io, WebPDecParams* const p) {
 
   p->memory = WebPSafeMalloc(1ULL, (size_t)total_size);
   if (p->memory == NULL) {
-    return 0;   // memory error
+    return 0;  // memory error
   }
   work = (rescaler_t*)p->memory;
   tmp = (uint8_t*)(work + tmp_size1);
 
-  scalers = (WebPRescaler*)WEBP_ALIGN(
-      (const uint8_t*)work + total_size - rescaler_size);
+  scalers = (WebPRescaler*)WEBP_ALIGN((const uint8_t*)work + total_size -
+                                      rescaler_size);
   p->scaler_y = &scalers[0];
   p->scaler_u = &scalers[1];
   p->scaler_v = &scalers[2];
   p->scaler_a = has_alpha ? &scalers[3] : NULL;
 
-  if (!WebPRescalerInit(p->scaler_y, io->mb_w, io->mb_h,
-                        tmp + 0 * out_width, out_width, out_height, 0, 1,
-                        work + 0 * work_size) ||
+  if (!WebPRescalerInit(p->scaler_y, io->mb_w, io->mb_h, tmp + 0 * out_width,
+                        out_width, out_height, 0, 1, work + 0 * work_size) ||
       !WebPRescalerInit(p->scaler_u, uv_in_width, uv_in_height,
                         tmp + 1 * out_width, out_width, out_height, 0, 1,
                         work + 1 * work_size) ||
@@ -546,9 +541,8 @@ static int InitRGBRescaler(const VP8Io* const io, WebPDecParams* const p) {
   WebPInitYUV444Converters();
 
   if (has_alpha) {
-    if (!WebPRescalerInit(p->scaler_a, io->mb_w, io->mb_h,
-                          tmp + 3 * out_width, out_width, out_height, 0, 1,
-                          work + 3 * work_size)) {
+    if (!WebPRescalerInit(p->scaler_a, io->mb_w, io->mb_h, tmp + 3 * out_width,
+                          out_width, out_height, 0, 1, work + 3 * work_size)) {
       return 0;
     }
     p->emit_alpha = EmitRescaledAlphaRGB;
@@ -588,21 +582,21 @@ static int CustomSetup(VP8Io* io) {
 #if !defined(WEBP_REDUCE_SIZE)
     const int ok = is_rgb ? InitRGBRescaler(io, p) : InitYUVRescaler(io, p);
     if (!ok) {
-      return 0;    // memory error
+      return 0;  // memory error
     }
 #else
-    return 0;   // rescaling support not compiled
+    return 0;  // rescaling support not compiled
 #endif
   } else {
     if (is_rgb) {
       WebPInitSamplers();
-      p->emit = EmitSampledRGB;   // default
+      p->emit = EmitSampledRGB;  // default
       if (io->fancy_upsampling) {
 #ifdef FANCY_UPSAMPLING
         const int uv_width = (io->mb_w + 1) >> 1;
         p->memory = WebPSafeMalloc(1ULL, (size_t)(io->mb_w + 2 * uv_width));
         if (p->memory == NULL) {
-          return 0;   // memory error.
+          return 0;  // memory error.
         }
         p->tmp_y = (uint8_t*)p->memory;
         p->tmp_u = p->tmp_y + io->mb_w;
@@ -616,10 +610,10 @@ static int CustomSetup(VP8Io* io) {
     }
     if (is_alpha) {  // need transparency output
       p->emit_alpha =
-          (colorspace == MODE_RGBA_4444 || colorspace == MODE_rgbA_4444) ?
-              EmitAlphaRGBA4444
+          (colorspace == MODE_RGBA_4444 || colorspace == MODE_rgbA_4444)
+              ? EmitAlphaRGBA4444
           : is_rgb ? EmitAlphaRGB
-          : EmitAlphaYUV;
+                   : EmitAlphaYUV;
       if (is_rgb) {
         WebPInitAlphaProcessing();
       }
@@ -661,10 +655,10 @@ static void CustomTeardown(const VP8Io* io) {
 // Main entry point
 
 void WebPInitCustomIo(WebPDecParams* const params, VP8Io* const io) {
-  io->put      = CustomPut;
-  io->setup    = CustomSetup;
+  io->put = CustomPut;
+  io->setup = CustomSetup;
   io->teardown = CustomTeardown;
-  io->opaque   = params;
+  io->opaque = params;
 }
 
 //------------------------------------------------------------------------------

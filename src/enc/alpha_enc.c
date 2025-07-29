@@ -16,7 +16,6 @@
 #include <string.h>
 
 #include "src/dsp/dsp.h"
-#include "src/webp/types.h"
 #include "src/enc/vp8i_enc.h"
 #include "src/utils/bit_writer_utils.h"
 #include "src/utils/filters_utils.h"
@@ -25,6 +24,7 @@
 #include "src/utils/utils.h"
 #include "src/webp/encode.h"
 #include "src/webp/format_constants.h"
+#include "src/webp/types.h"
 
 // -----------------------------------------------------------------------------
 // Encodes the given alpha data via specified compression method 'method'.
@@ -110,8 +110,7 @@ typedef struct {
 static int EncodeAlphaInternal(const uint8_t* const data, int width, int height,
                                int method, int filter, int reduce_levels,
                                int effort_level,  // in [0..6] range
-                               uint8_t* const tmp_alpha,
-                               FilterTrial* result) {
+                               uint8_t* const tmp_alpha, FilterTrial* result) {
   int ok = 0;
   const uint8_t* alpha_src;
   WebPFilterFunc filter_func;
@@ -131,7 +130,7 @@ static int EncodeAlphaInternal(const uint8_t* const data, int width, int height,
   if (filter_func != NULL) {
     filter_func(data, width, height, width, tmp_alpha);
     alpha_src = tmp_alpha;
-  }  else {
+  } else {
     alpha_src = data;
   }
 
@@ -187,7 +186,7 @@ static int GetNumColors(const uint8_t* data, int width, int height,
                         int stride) {
   int j;
   int colors = 0;
-  uint8_t color[256] = { 0 };
+  uint8_t color[256] = {0};
 
   for (j = 0; j < height; ++j) {
     int i;
@@ -217,8 +216,8 @@ static uint32_t GetFilterMap(const uint8_t* alpha, int width, int height,
     const int num_colors = GetNumColors(alpha, width, height, width);
     // For low number of colors, NONE yields better compression.
     filter = (num_colors <= kMinColorsForFilterNone)
-        ? WEBP_FILTER_NONE
-        : WebPEstimateBestFilter(alpha, width, height, width);
+                 ? WEBP_FILTER_NONE
+                 : WebPEstimateBestFilter(alpha, width, height, width);
     bit_map |= 1 << filter;
     // For large number of colors, try FILTER_NONE in addition to the best
     // filter as well.
@@ -246,12 +245,11 @@ static int ApplyFiltersAndEncode(const uint8_t* alpha, int width, int height,
                                  WebPAuxStats* const stats) {
   int ok = 1;
   FilterTrial best;
-  uint32_t try_map =
-      GetFilterMap(alpha, width, height, filter, effort_level);
+  uint32_t try_map = GetFilterMap(alpha, width, height, filter, effort_level);
   InitFilterTrial(&best);
 
   if (try_map != FILTER_TRY_NONE) {
-    uint8_t* filtered_alpha =  (uint8_t*)WebPSafeMalloc(1ULL, data_size);
+    uint8_t* filtered_alpha = (uint8_t*)WebPSafeMalloc(1ULL, data_size);
     if (filtered_alpha == NULL) return 0;
 
     for (filter = WEBP_FILTER_NONE; ok && try_map; ++filter, try_map >>= 1) {
@@ -297,10 +295,9 @@ static int ApplyFiltersAndEncode(const uint8_t* alpha, int width, int height,
   return ok;
 }
 
-static int EncodeAlpha(VP8Encoder* const enc,
-                       int quality, int method, int filter,
-                       int effort_level,
-                       uint8_t** const output, size_t* const output_size) {
+static int EncodeAlpha(VP8Encoder* const enc, int quality, int method,
+                       int filter, int effort_level, uint8_t** const output,
+                       size_t* const output_size) {
   const WebPPicture* const pic = enc->pic;
   const int width = pic->width;
   const int height = pic->height;
@@ -344,8 +341,8 @@ static int EncodeAlpha(VP8Encoder* const enc,
     // 16 alpha levels gives quite a low MSE w.r.t original alpha plane hence
     // mapped to moderate quality 70. Hence Quality:[0, 70] -> Levels:[2, 16]
     // and Quality:]70, 100] -> Levels:]16, 256].
-    const int alpha_levels = (quality <= 70) ? (2 + quality / 5)
-                                             : (16 + (quality - 70) * 8);
+    const int alpha_levels =
+        (quality <= 70) ? (2 + quality / 5) : (16 + (quality - 70) * 8);
     ok = QuantizeLevels(quant_alpha, width, height, alpha_levels, &sse);
   }
 
@@ -379,9 +376,9 @@ static int CompressAlphaJob(void* arg1, void* unused) {
   size_t alpha_size = 0;
   const int effort_level = config->method;  // maps to [0..6]
   const WEBP_FILTER_TYPE filter =
-      (config->alpha_filtering == 0) ? WEBP_FILTER_NONE :
-      (config->alpha_filtering == 1) ? WEBP_FILTER_FAST :
-                                       WEBP_FILTER_BEST;
+      (config->alpha_filtering == 0)   ? WEBP_FILTER_NONE
+      : (config->alpha_filtering == 1) ? WEBP_FILTER_FAST
+                                       : WEBP_FILTER_BEST;
   if (!EncodeAlpha(enc, config->alpha_quality, config->alpha_compression,
                    filter, effort_level, &alpha_data, &alpha_size)) {
     return 0;
@@ -421,7 +418,7 @@ int VP8EncStartAlpha(VP8Encoder* const enc) {
       WebPGetWorkerInterface()->Launch(worker);
       return 1;
     } else {
-      return CompressAlphaJob(enc, NULL);   // just do the job right away
+      return CompressAlphaJob(enc, NULL);  // just do the job right away
     }
   }
   return 1;

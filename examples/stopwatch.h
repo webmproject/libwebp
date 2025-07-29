@@ -28,17 +28,13 @@ static WEBP_INLINE void StopwatchReset(Stopwatch* watch) {
 static WEBP_INLINE double StopwatchReadAndReset(Stopwatch* watch) {
   const LARGE_INTEGER old_value = *watch;
   LARGE_INTEGER freq;
-  if (!QueryPerformanceCounter(watch))
-    return 0.0;
-  if (!QueryPerformanceFrequency(&freq))
-    return 0.0;
-  if (freq.QuadPart == 0)
-    return 0.0;
+  if (!QueryPerformanceCounter(watch)) return 0.0;
+  if (!QueryPerformanceFrequency(&freq)) return 0.0;
+  if (freq.QuadPart == 0) return 0.0;
   return (watch->QuadPart - old_value.QuadPart) / (double)freq.QuadPart;
 }
 
-
-#else    /* !_WIN32 */
+#else                /* !_WIN32 */
 #include <string.h>  // memcpy
 #include <sys/time.h>
 
@@ -58,6 +54,6 @@ static WEBP_INLINE double StopwatchReadAndReset(Stopwatch* watch) {
   return delta_sec + delta_usec / 1000000.0;
 }
 
-#endif   /* _WIN32 */
+#endif /* _WIN32 */
 
 #endif  // WEBP_EXAMPLES_STOPWATCH_H_

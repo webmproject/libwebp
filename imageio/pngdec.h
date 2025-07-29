@@ -29,11 +29,11 @@ struct WebPPicture;
 // or YUVA. Otherwise, alpha channel is dropped and output is RGB or YUV.
 // Returns true on success.
 int ReadPNG(const uint8_t* const data, size_t data_size,
-            struct WebPPicture* const pic,
-            int keep_alpha, struct Metadata* const metadata);
+            struct WebPPicture* const pic, int keep_alpha,
+            struct Metadata* const metadata);
 
 #ifdef __cplusplus
-}    // extern "C"
+}  // extern "C"
 #endif
 
 #endif  // WEBP_IMAGEIO_PNGDEC_H_

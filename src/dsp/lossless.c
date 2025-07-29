@@ -40,8 +40,8 @@ static WEBP_INLINE uint32_t Average3(uint32_t a0, uint32_t a1, uint32_t a2) {
   return Average2(Average2(a0, a2), a1);
 }
 
-static WEBP_INLINE uint32_t Average4(uint32_t a0, uint32_t a1,
-                                     uint32_t a2, uint32_t a3) {
+static WEBP_INLINE uint32_t Average4(uint32_t a0, uint32_t a1, uint32_t a2,
+                                     uint32_t a3) {
   return Average2(Average2(a0, a1), Average2(a2, a3));
 }
 
@@ -61,11 +61,9 @@ static WEBP_INLINE int AddSubtractComponentFull(int a, int b, int c) {
 static WEBP_INLINE uint32_t ClampedAddSubtractFull(uint32_t c0, uint32_t c1,
                                                    uint32_t c2) {
   const int a = AddSubtractComponentFull(c0 >> 24, c1 >> 24, c2 >> 24);
-  const int r = AddSubtractComponentFull((c0 >> 16) & 0xff,
-                                         (c1 >> 16) & 0xff,
+  const int r = AddSubtractComponentFull((c0 >> 16) & 0xff, (c1 >> 16) & 0xff,
                                          (c2 >> 16) & 0xff);
-  const int g = AddSubtractComponentFull((c0 >> 8) & 0xff,
-                                         (c1 >> 8) & 0xff,
+  const int g = AddSubtractComponentFull((c0 >> 8) & 0xff, (c1 >> 8) & 0xff,
                                          (c2 >> 8) & 0xff);
   const int b = AddSubtractComponentFull(c0 & 0xff, c1 & 0xff, c2 & 0xff);
   return ((uint32_t)a << 24) | (r << 16) | (g << 8) | b;
@@ -88,9 +86,9 @@ static WEBP_INLINE uint32_t ClampedAddSubtractHalf(uint32_t c0, uint32_t c1,
 // gcc <= 4.9 on ARM generates incorrect code in Select() when Sub3() is
 // inlined.
 #if defined(__arm__) && defined(__GNUC__) && LOCAL_GCC_VERSION <= 0x409
-# define LOCAL_INLINE __attribute__ ((noinline))
+#define LOCAL_INLINE __attribute__((noinline))
 #else
-# define LOCAL_INLINE WEBP_INLINE
+#define LOCAL_INLINE WEBP_INLINE
 #endif
 
 static LOCAL_INLINE int Sub3(int a, int b, int c) {
@@ -103,10 +101,10 @@ static LOCAL_INLINE int Sub3(int a, int b, int c) {
 
 static WEBP_INLINE uint32_t Select(uint32_t a, uint32_t b, uint32_t c) {
   const int pa_minus_pb =
-      Sub3((a >> 24)       , (b >> 24)       , (c >> 24)       ) +
+      Sub3((a >> 24), (b >> 24), (c >> 24)) +
       Sub3((a >> 16) & 0xff, (b >> 16) & 0xff, (c >> 16) & 0xff) +
-      Sub3((a >>  8) & 0xff, (b >>  8) & 0xff, (c >>  8) & 0xff) +
-      Sub3((a      ) & 0xff, (b      ) & 0xff, (c      ) & 0xff);
+      Sub3((a >> 8) & 0xff, (b >> 8) & 0xff, (c >> 8) & 0xff) +
+      Sub3((a) & 0xff, (b) & 0xff, (c) & 0xff);
   return (pa_minus_pb <= 0) ? a : b;
 }
 
@@ -255,7 +253,7 @@ static void PredictorInverseTransform_C(const VP8LTransform* const transform,
       in += width;
       out += width;
       ++y;
-      if ((y & mask) == 0) {   // Use the same mask, since tiles are squares.
+      if ((y & mask) == 0) {  // Use the same mask, since tiles are squares.
         pred_mode_base += tiles_per_row;
       }
     }
@@ -277,16 +275,15 @@ void VP8LAddGreenToBlueAndRed_C(const uint32_t* src, int num_pixels,
   }
 }
 
-static WEBP_INLINE int ColorTransformDelta(int8_t color_pred,
-                                           int8_t color) {
+static WEBP_INLINE int ColorTransformDelta(int8_t color_pred, int8_t color) {
   return ((int)color_pred * color) >> 5;
 }
 
 static WEBP_INLINE void ColorCodeToMultipliers(uint32_t color_code,
                                                VP8LMultipliers* const m) {
-  m->green_to_red  = (color_code >>  0) & 0xff;
-  m->green_to_blue = (color_code >>  8) & 0xff;
-  m->red_to_blue   = (color_code >> 16) & 0xff;
+  m->green_to_red = (color_code >> 0) & 0xff;
+  m->green_to_blue = (color_code >> 8) & 0xff;
+  m->red_to_blue = (color_code >> 16) & 0xff;
 }
 
 void VP8LTransformColorInverse_C(const VP8LMultipliers* const m,
@@ -324,7 +321,7 @@ static void ColorSpaceInverseTransform_C(const VP8LTransform* const transform,
 
   while (y < y_end) {
     const uint32_t* pred = pred_row;
-    VP8LMultipliers m = { 0, 0, 0 };
+    VP8LMultipliers m = {0, 0, 0};
     const uint32_t* const src_safe_end = src + safe_width;
     const uint32_t* const src_end = src + width;
     while (src < src_safe_end) {
@@ -346,6 +343,7 @@ static void ColorSpaceInverseTransform_C(const VP8LTransform* const transform,
 
 // Separate out pixels packed together using pixel-bundling.
 // We define two methods for ARGB data (uint32_t) and alpha-only data (uint8_t).
+// clang-format off
 #define COLOR_INDEX_INVERSE(FUNC_NAME, F_NAME, STATIC_DECL, TYPE, BIT_SUFFIX,  \
                             GET_INDEX, GET_VALUE)                              \
 static void F_NAME(const TYPE* src, const uint32_t* const color_map,           \
@@ -386,17 +384,18 @@ STATIC_DECL void FUNC_NAME(const VP8LTransform* const transform,               \
     VP8LMapColor##BIT_SUFFIX(src, color_map, dst, y_start, y_end, width);      \
   }                                                                            \
 }
+// clang-format on
 
-COLOR_INDEX_INVERSE(ColorIndexInverseTransform_C, MapARGB_C, static,
-                    uint32_t, 32b, VP8GetARGBIndex, VP8GetARGBValue)
-COLOR_INDEX_INVERSE(VP8LColorIndexInverseTransformAlpha, MapAlpha_C, ,
-                    uint8_t, 8b, VP8GetAlphaIndex, VP8GetAlphaValue)
+COLOR_INDEX_INVERSE(ColorIndexInverseTransform_C, MapARGB_C, static, uint32_t,
+                    32b, VP8GetARGBIndex, VP8GetARGBValue)
+COLOR_INDEX_INVERSE(VP8LColorIndexInverseTransformAlpha, MapAlpha_C, , uint8_t,
+                    8b, VP8GetAlphaIndex, VP8GetAlphaValue)
 
 #undef COLOR_INDEX_INVERSE
 
-void VP8LInverseTransform(const VP8LTransform* const transform,
-                          int row_start, int row_end,
-                          const uint32_t* const in, uint32_t* const out) {
+void VP8LInverseTransform(const VP8LTransform* const transform, int row_start,
+                          int row_end, const uint32_t* const in,
+                          uint32_t* const out) {
   const int width = transform->xsize;
   assert(row_start < row_end);
   assert(row_end <= transform->ysize);
@@ -424,7 +423,8 @@ void VP8LInverseTransform(const VP8LTransform* const transform,
         // the effective width of VP8LSubSampleSize(xsize, bits). All other
         // transforms work on effective width of 'xsize'.
         const int out_stride = (row_end - row_start) * width;
-        const int in_stride = (row_end - row_start) *
+        const int in_stride =
+            (row_end - row_start) *
             VP8LSubSampleSize(transform->xsize, transform->bits);
         uint32_t* const src = out + out_stride - in_stride;
         memmove(src, out, in_stride * sizeof(*src));
@@ -443,29 +443,29 @@ static int is_big_endian(void) {
   static const union {
     uint16_t w;
     uint8_t b[2];
-  } tmp = { 1 };
+  } tmp = {1};
   return (tmp.b[0] != 1);
 }
 
-void VP8LConvertBGRAToRGB_C(const uint32_t* WEBP_RESTRICT src,
-                            int num_pixels, uint8_t* WEBP_RESTRICT dst) {
+void VP8LConvertBGRAToRGB_C(const uint32_t* WEBP_RESTRICT src, int num_pixels,
+                            uint8_t* WEBP_RESTRICT dst) {
   const uint32_t* const src_end = src + num_pixels;
   while (src < src_end) {
     const uint32_t argb = *src++;
     *dst++ = (argb >> 16) & 0xff;
-    *dst++ = (argb >>  8) & 0xff;
-    *dst++ = (argb >>  0) & 0xff;
+    *dst++ = (argb >> 8) & 0xff;
+    *dst++ = (argb >> 0) & 0xff;
   }
 }
 
-void VP8LConvertBGRAToRGBA_C(const uint32_t* WEBP_RESTRICT src,
-                             int num_pixels, uint8_t* WEBP_RESTRICT dst) {
+void VP8LConvertBGRAToRGBA_C(const uint32_t* WEBP_RESTRICT src, int num_pixels,
+                             uint8_t* WEBP_RESTRICT dst) {
   const uint32_t* const src_end = src + num_pixels;
   while (src < src_end) {
     const uint32_t argb = *src++;
     *dst++ = (argb >> 16) & 0xff;
-    *dst++ = (argb >>  8) & 0xff;
-    *dst++ = (argb >>  0) & 0xff;
+    *dst++ = (argb >> 8) & 0xff;
+    *dst++ = (argb >> 0) & 0xff;
     *dst++ = (argb >> 24) & 0xff;
   }
 }
@@ -476,7 +476,7 @@ void VP8LConvertBGRAToRGBA4444_C(const uint32_t* WEBP_RESTRICT src,
   while (src < src_end) {
     const uint32_t argb = *src++;
     const uint8_t rg = ((argb >> 16) & 0xf0) | ((argb >> 12) & 0xf);
-    const uint8_t ba = ((argb >>  0) & 0xf0) | ((argb >> 28) & 0xf);
+    const uint8_t ba = ((argb >> 0) & 0xf0) | ((argb >> 28) & 0xf);
 #if (WEBP_SWAP_16BIT_CSP == 1)
     *dst++ = ba;
     *dst++ = rg;
@@ -493,7 +493,7 @@ void VP8LConvertBGRAToRGB565_C(const uint32_t* WEBP_RESTRICT src,
   while (src < src_end) {
     const uint32_t argb = *src++;
     const uint8_t rg = ((argb >> 16) & 0xf8) | ((argb >> 13) & 0x7);
-    const uint8_t gb = ((argb >>  5) & 0xe0) | ((argb >>  3) & 0x1f);
+    const uint8_t gb = ((argb >> 5) & 0xe0) | ((argb >> 3) & 0x1f);
 #if (WEBP_SWAP_16BIT_CSP == 1)
     *dst++ = gb;
     *dst++ = rg;
@@ -504,13 +504,13 @@ void VP8LConvertBGRAToRGB565_C(const uint32_t* WEBP_RESTRICT src,
   }
 }
 
-void VP8LConvertBGRAToBGR_C(const uint32_t* WEBP_RESTRICT src,
-                            int num_pixels, uint8_t* WEBP_RESTRICT dst) {
+void VP8LConvertBGRAToBGR_C(const uint32_t* WEBP_RESTRICT src, int num_pixels,
+                            uint8_t* WEBP_RESTRICT dst) {
   const uint32_t* const src_end = src + num_pixels;
   while (src < src_end) {
     const uint32_t argb = *src++;
-    *dst++ = (argb >>  0) & 0xff;
-    *dst++ = (argb >>  8) & 0xff;
+    *dst++ = (argb >> 0) & 0xff;
+    *dst++ = (argb >> 8) & 0xff;
     *dst++ = (argb >> 16) & 0xff;
   }
 }
@@ -570,7 +570,7 @@ void VP8LConvertFromBGRA(const uint32_t* const in_data, int num_pixels,
       VP8LConvertBGRAToRGB565(in_data, num_pixels, rgba);
       break;
     default:
-      assert(0);          // Code flow should not reach here.
+      assert(0);  // Code flow should not reach here.
   }
 }
 
@@ -607,24 +607,25 @@ extern void VP8LDspInitNEON(void);
 extern void VP8LDspInitMIPSdspR2(void);
 extern void VP8LDspInitMSA(void);
 
-#define COPY_PREDICTOR_ARRAY(IN, OUT) do {                \
-  (OUT)[0] = IN##0_C;                                     \
-  (OUT)[1] = IN##1_C;                                     \
-  (OUT)[2] = IN##2_C;                                     \
-  (OUT)[3] = IN##3_C;                                     \
-  (OUT)[4] = IN##4_C;                                     \
-  (OUT)[5] = IN##5_C;                                     \
-  (OUT)[6] = IN##6_C;                                     \
-  (OUT)[7] = IN##7_C;                                     \
-  (OUT)[8] = IN##8_C;                                     \
-  (OUT)[9] = IN##9_C;                                     \
-  (OUT)[10] = IN##10_C;                                   \
-  (OUT)[11] = IN##11_C;                                   \
-  (OUT)[12] = IN##12_C;                                   \
-  (OUT)[13] = IN##13_C;                                   \
-  (OUT)[14] = IN##0_C; /* <- padding security sentinels*/ \
-  (OUT)[15] = IN##0_C;                                    \
-} while (0);
+#define COPY_PREDICTOR_ARRAY(IN, OUT)                       \
+  do {                                                      \
+    (OUT)[0] = IN##0_C;                                     \
+    (OUT)[1] = IN##1_C;                                     \
+    (OUT)[2] = IN##2_C;                                     \
+    (OUT)[3] = IN##3_C;                                     \
+    (OUT)[4] = IN##4_C;                                     \
+    (OUT)[5] = IN##5_C;                                     \
+    (OUT)[6] = IN##6_C;                                     \
+    (OUT)[7] = IN##7_C;                                     \
+    (OUT)[8] = IN##8_C;                                     \
+    (OUT)[9] = IN##9_C;                                     \
+    (OUT)[10] = IN##10_C;                                   \
+    (OUT)[11] = IN##11_C;                                   \
+    (OUT)[12] = IN##12_C;                                   \
+    (OUT)[13] = IN##13_C;                                   \
+    (OUT)[14] = IN##0_C; /* <- padding security sentinels*/ \
+    (OUT)[15] = IN##0_C;                                    \
+  } while (0);
 
 WEBP_DSP_INIT_FUNC(VP8LDspInit) {
   COPY_PREDICTOR_ARRAY(VP8LPredictor, VP8LPredictors)

@@ -18,8 +18,8 @@
 #if defined(WEBP_USE_MIPS32)
 
 #include "src/dsp/mips_macro.h"
-#include "src/enc/vp8i_enc.h"
 #include "src/enc/cost_enc.h"
+#include "src/enc/vp8i_enc.h"
 
 static const int kC1 = WEBP_TRANSFORM_AC3_C1;
 static const int kC2 = WEBP_TRANSFORM_AC3_C2;
@@ -30,6 +30,7 @@ static const int kC2 = WEBP_TRANSFORM_AC3_C2;
 // A..D - offsets in bytes to load from in buffer
 // TEMP0..TEMP3 - registers for corresponding tmp elements
 // TEMP4..TEMP5 - temporary registers
+// clang-format off
 #define VERTICAL_PASS(A, B, C, D, TEMP4, TEMP0, TEMP1, TEMP2, TEMP3) \
   "lh      %[temp16],      " #A "(%[temp20])                 \n\t"          \
   "lh      %[temp18],      " #B "(%[temp20])                 \n\t"          \
@@ -107,6 +108,7 @@ static const int kC2 = WEBP_TRANSFORM_AC3_C2;
   "sb      %[" #TEMP4 "],    1+" XSTR(BPS) "*" #A "(%[temp16]) \n\t"          \
   "sb      %[" #TEMP8 "],    2+" XSTR(BPS) "*" #A "(%[temp16]) \n\t"          \
   "sb      %[" #TEMP12 "],   3+" XSTR(BPS) "*" #A "(%[temp16]) \n\t"
+// clang-format on
 
 // Does one or two inverse transforms.
 static WEBP_INLINE void ITransformOne_MIPS32(const uint8_t* WEBP_RESTRICT ref,
@@ -118,27 +120,26 @@ static WEBP_INLINE void ITransformOne_MIPS32(const uint8_t* WEBP_RESTRICT ref,
   const int* args[3] = {(const int*)ref, (const int*)in, (const int*)dst};
 
   __asm__ volatile(
-    "lw      %[temp20],      4(%[args])                      \n\t"
-    VERTICAL_PASS(0, 16,  8, 24, temp4,  temp0,  temp1,  temp2,  temp3)
-    VERTICAL_PASS(2, 18, 10, 26, temp8,  temp4,  temp5,  temp6,  temp7)
-    VERTICAL_PASS(4, 20, 12, 28, temp12, temp8,  temp9,  temp10, temp11)
-    VERTICAL_PASS(6, 22, 14, 30, temp20, temp12, temp13, temp14, temp15)
+      "lw      %[temp20],      4(%[args])                      \n\t"        //
+      VERTICAL_PASS(0, 16, 8, 24, temp4, temp0, temp1, temp2, temp3)        //
+      VERTICAL_PASS(2, 18, 10, 26, temp8, temp4, temp5, temp6, temp7)       //
+      VERTICAL_PASS(4, 20, 12, 28, temp12, temp8, temp9, temp10, temp11)    //
+      VERTICAL_PASS(6, 22, 14, 30, temp20, temp12, temp13, temp14, temp15)  //
 
-    HORIZONTAL_PASS(0, temp0, temp4, temp8,  temp12)
-    HORIZONTAL_PASS(1, temp1, temp5, temp9,  temp13)
-    HORIZONTAL_PASS(2, temp2, temp6, temp10, temp14)
-    HORIZONTAL_PASS(3, temp3, temp7, temp11, temp15)
+      HORIZONTAL_PASS(0, temp0, temp4, temp8, temp12)   //
+      HORIZONTAL_PASS(1, temp1, temp5, temp9, temp13)   //
+      HORIZONTAL_PASS(2, temp2, temp6, temp10, temp14)  //
+      HORIZONTAL_PASS(3, temp3, temp7, temp11, temp15)  //
 
-    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
-      [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
-      [temp6]"=&r"(temp6), [temp7]"=&r"(temp7), [temp8]"=&r"(temp8),
-      [temp9]"=&r"(temp9), [temp10]"=&r"(temp10), [temp11]"=&r"(temp11),
-      [temp12]"=&r"(temp12), [temp13]"=&r"(temp13), [temp14]"=&r"(temp14),
-      [temp15]"=&r"(temp15), [temp16]"=&r"(temp16), [temp17]"=&r"(temp17),
-      [temp18]"=&r"(temp18), [temp19]"=&r"(temp19), [temp20]"=&r"(temp20)
-    : [args]"r"(args), [kC1]"r"(kC1), [kC2]"r"(kC2)
-    : "memory", "hi", "lo"
-  );
+      : [temp0] "=&r"(temp0), [temp1] "=&r"(temp1), [temp2] "=&r"(temp2),
+        [temp3] "=&r"(temp3), [temp4] "=&r"(temp4), [temp5] "=&r"(temp5),
+        [temp6] "=&r"(temp6), [temp7] "=&r"(temp7), [temp8] "=&r"(temp8),
+        [temp9] "=&r"(temp9), [temp10] "=&r"(temp10), [temp11] "=&r"(temp11),
+        [temp12] "=&r"(temp12), [temp13] "=&r"(temp13), [temp14] "=&r"(temp14),
+        [temp15] "=&r"(temp15), [temp16] "=&r"(temp16), [temp17] "=&r"(temp17),
+        [temp18] "=&r"(temp18), [temp19] "=&r"(temp19), [temp20] "=&r"(temp20)
+      : [args] "r"(args), [kC1] "r"(kC1), [kC2] "r"(kC2)
+      : "memory", "hi", "lo");
 }
 
 static void ITransform_MIPS32(const uint8_t* WEBP_RESTRICT ref,
@@ -158,6 +159,7 @@ static void ITransform_MIPS32(const uint8_t* WEBP_RESTRICT ref,
 // J - offset in bytes (kZigzag[n] * 2)
 // K - offset in bytes (kZigzag[n] * 4)
 // N - offset in bytes (n * 2)
+// clang-format off
 #define QUANTIZE_ONE(J, K, N)                                               \
   "lh           %[temp0],       " #J "(%[ppin])                     \n\t"   \
   "lhu          %[temp1],       " #J "(%[ppsharpen])                \n\t"   \
@@ -184,6 +186,7 @@ static void ITransform_MIPS32(const uint8_t* WEBP_RESTRICT ref,
 "2:                                                                 \n\t"   \
   "sh           %[temp5],       " #J "(%[ppin])                     \n\t"   \
   "sh           %[level],       " #N "(%[pout])                     \n\t"
+// clang-format on
 
 static int QuantizeBlock_MIPS32(int16_t in[16], int16_t out[16],
                                 const VP8Matrix* const mtx) {
@@ -191,43 +194,39 @@ static int QuantizeBlock_MIPS32(int16_t in[16], int16_t out[16],
   int sign, coeff, level, i;
   int max_level = MAX_LEVEL;
 
-  int16_t* ppin             = &in[0];
-  int16_t* pout             = &out[0];
+  int16_t* ppin = &in[0];
+  int16_t* pout = &out[0];
   const uint16_t* ppsharpen = &mtx->sharpen[0];
   const uint32_t* ppzthresh = &mtx->zthresh[0];
-  const uint16_t* ppq       = &mtx->q[0];
-  const uint16_t* ppiq      = &mtx->iq[0];
-  const uint32_t* ppbias    = &mtx->bias[0];
+  const uint16_t* ppq = &mtx->q[0];
+  const uint16_t* ppiq = &mtx->iq[0];
+  const uint32_t* ppbias = &mtx->bias[0];
 
   __asm__ volatile(
-    QUANTIZE_ONE( 0,  0,  0)
-    QUANTIZE_ONE( 2,  4,  2)
-    QUANTIZE_ONE( 8, 16,  4)
-    QUANTIZE_ONE(16, 32,  6)
-    QUANTIZE_ONE(10, 20,  8)
-    QUANTIZE_ONE( 4,  8, 10)
-    QUANTIZE_ONE( 6, 12, 12)
-    QUANTIZE_ONE(12, 24, 14)
-    QUANTIZE_ONE(18, 36, 16)
-    QUANTIZE_ONE(24, 48, 18)
-    QUANTIZE_ONE(26, 52, 20)
-    QUANTIZE_ONE(20, 40, 22)
-    QUANTIZE_ONE(14, 28, 24)
-    QUANTIZE_ONE(22, 44, 26)
-    QUANTIZE_ONE(28, 56, 28)
-    QUANTIZE_ONE(30, 60, 30)
+      QUANTIZE_ONE(0, 0, 0)     //
+      QUANTIZE_ONE(2, 4, 2)     //
+      QUANTIZE_ONE(8, 16, 4)    //
+      QUANTIZE_ONE(16, 32, 6)   //
+      QUANTIZE_ONE(10, 20, 8)   //
+      QUANTIZE_ONE(4, 8, 10)    //
+      QUANTIZE_ONE(6, 12, 12)   //
+      QUANTIZE_ONE(12, 24, 14)  //
+      QUANTIZE_ONE(18, 36, 16)  //
+      QUANTIZE_ONE(24, 48, 18)  //
+      QUANTIZE_ONE(26, 52, 20)  //
+      QUANTIZE_ONE(20, 40, 22)  //
+      QUANTIZE_ONE(14, 28, 24)  //
+      QUANTIZE_ONE(22, 44, 26)  //
+      QUANTIZE_ONE(28, 56, 28)  //
+      QUANTIZE_ONE(30, 60, 30)  //
 
-    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1),
-      [temp2]"=&r"(temp2), [temp3]"=&r"(temp3),
-      [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
-      [sign]"=&r"(sign), [coeff]"=&r"(coeff),
-      [level]"=&r"(level)
-    : [pout]"r"(pout), [ppin]"r"(ppin),
-      [ppiq]"r"(ppiq), [max_level]"r"(max_level),
-      [ppbias]"r"(ppbias), [ppzthresh]"r"(ppzthresh),
-      [ppsharpen]"r"(ppsharpen), [ppq]"r"(ppq)
-    : "memory", "hi", "lo"
-  );
+      : [temp0] "=&r"(temp0), [temp1] "=&r"(temp1), [temp2] "=&r"(temp2),
+        [temp3] "=&r"(temp3), [temp4] "=&r"(temp4), [temp5] "=&r"(temp5),
+        [sign] "=&r"(sign), [coeff] "=&r"(coeff), [level] "=&r"(level)
+      : [pout] "r"(pout), [ppin] "r"(ppin), [ppiq] "r"(ppiq),
+        [max_level] "r"(max_level), [ppbias] "r"(ppbias),
+        [ppzthresh] "r"(ppzthresh), [ppsharpen] "r"(ppsharpen), [ppq] "r"(ppq)
+      : "memory", "hi", "lo");
 
   // moved out from macro to increase possibility for earlier breaking
   for (i = 15; i >= 0; i--) {
@@ -239,7 +238,7 @@ static int QuantizeBlock_MIPS32(int16_t in[16], int16_t out[16],
 static int Quantize2Blocks_MIPS32(int16_t in[32], int16_t out[32],
                                   const VP8Matrix* WEBP_RESTRICT const mtx) {
   int nz;
-  nz  = QuantizeBlock_MIPS32(in + 0 * 16, out + 0 * 16, mtx) << 0;
+  nz = QuantizeBlock_MIPS32(in + 0 * 16, out + 0 * 16, mtx) << 0;
   nz |= QuantizeBlock_MIPS32(in + 1 * 16, out + 1 * 16, mtx) << 1;
   return nz;
 }
@@ -251,6 +250,7 @@ static int Quantize2Blocks_MIPS32(int16_t in[32], int16_t out[32],
 // A - offset in bytes to load from a and b buffers
 // E..H - offsets in bytes to store first results to tmp buffer
 // E1..H1 - offsets in bytes to store second results to tmp buffer
+// clang-format off
 #define HORIZONTAL_PASS(A, E, F, G, H, E1, F1, G1, H1)                  \
   "lbu    %[temp0],  0+" XSTR(BPS) "*" #A "(%[a])  \n\t"                \
   "lbu    %[temp1],  1+" XSTR(BPS) "*" #A "(%[a])  \n\t"                \
@@ -358,6 +358,7 @@ static int Quantize2Blocks_MIPS32(int16_t in[32], int16_t out[32],
   "msub   %[temp5],  %[temp8]                \n\t"                \
   "msub   %[temp6],  %[temp0]                \n\t"                \
   "msub   %[temp7],  %[temp1]                \n\t"
+// clang-format on
 
 static int Disto4x4_MIPS32(const uint8_t* WEBP_RESTRICT const a,
                            const uint8_t* WEBP_RESTRICT const b,
@@ -366,28 +367,27 @@ static int Disto4x4_MIPS32(const uint8_t* WEBP_RESTRICT const a,
   int temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8;
 
   __asm__ volatile(
-    HORIZONTAL_PASS(0,   0,  4,  8, 12,    64,  68,  72,  76)
-    HORIZONTAL_PASS(1,  16, 20, 24, 28,    80,  84,  88,  92)
-    HORIZONTAL_PASS(2,  32, 36, 40, 44,    96, 100, 104, 108)
-    HORIZONTAL_PASS(3,  48, 52, 56, 60,   112, 116, 120, 124)
-    "mthi   $zero                             \n\t"
-    "mtlo   $zero                             \n\t"
-    VERTICAL_PASS( 0, 16, 32, 48,     64, 80,  96, 112,   0,  8, 16, 24)
-    VERTICAL_PASS( 4, 20, 36, 52,     68, 84, 100, 116,   2, 10, 18, 26)
-    VERTICAL_PASS( 8, 24, 40, 56,     72, 88, 104, 120,   4, 12, 20, 28)
-    VERTICAL_PASS(12, 28, 44, 60,     76, 92, 108, 124,   6, 14, 22, 30)
-    "mflo   %[temp0]                          \n\t"
-    "sra    %[temp1],  %[temp0],  31          \n\t"
-    "xor    %[temp0],  %[temp0],  %[temp1]    \n\t"
-    "subu   %[temp0],  %[temp0],  %[temp1]    \n\t"
-    "sra    %[temp0],  %[temp0],  5           \n\t"
+      HORIZONTAL_PASS(0, 0, 4, 8, 12, 64, 68, 72, 76)         //
+      HORIZONTAL_PASS(1, 16, 20, 24, 28, 80, 84, 88, 92)      //
+      HORIZONTAL_PASS(2, 32, 36, 40, 44, 96, 100, 104, 108)   //
+      HORIZONTAL_PASS(3, 48, 52, 56, 60, 112, 116, 120, 124)  //
+      "mthi   $zero                             \n\t"
+      "mtlo   $zero                             \n\t"                 //
+      VERTICAL_PASS(0, 16, 32, 48, 64, 80, 96, 112, 0, 8, 16, 24)     //
+      VERTICAL_PASS(4, 20, 36, 52, 68, 84, 100, 116, 2, 10, 18, 26)   //
+      VERTICAL_PASS(8, 24, 40, 56, 72, 88, 104, 120, 4, 12, 20, 28)   //
+      VERTICAL_PASS(12, 28, 44, 60, 76, 92, 108, 124, 6, 14, 22, 30)  //
+      "mflo   %[temp0]                          \n\t"
+      "sra    %[temp1],  %[temp0],  31          \n\t"
+      "xor    %[temp0],  %[temp0],  %[temp1]    \n\t"
+      "subu   %[temp0],  %[temp0],  %[temp1]    \n\t"
+      "sra    %[temp0],  %[temp0],  5           \n\t"
 
-    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
-      [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
-      [temp6]"=&r"(temp6), [temp7]"=&r"(temp7), [temp8]"=&r"(temp8)
-    : [a]"r"(a), [b]"r"(b), [w]"r"(w), [tmp]"r"(tmp)
-    : "memory", "hi", "lo"
-  );
+      : [temp0] "=&r"(temp0), [temp1] "=&r"(temp1), [temp2] "=&r"(temp2),
+        [temp3] "=&r"(temp3), [temp4] "=&r"(temp4), [temp5] "=&r"(temp5),
+        [temp6] "=&r"(temp6), [temp7] "=&r"(temp7), [temp8] "=&r"(temp8)
+      : [a] "r"(a), [b] "r"(b), [w] "r"(w), [tmp] "r"(tmp)
+      : "memory", "hi", "lo");
 
   return temp0;
 }
@@ -412,6 +412,7 @@ static int Disto16x16_MIPS32(const uint8_t* WEBP_RESTRICT const a,
 // temp0..temp15 holds tmp[0]..tmp[15]
 // A - offset in bytes to load from src and ref buffers
 // TEMP0..TEMP3 - registers for corresponding tmp elements
+// clang-format off
 #define HORIZONTAL_PASS(A, TEMP0, TEMP1, TEMP2, TEMP3)                  \
   "lw     %[" #TEMP1 "],  0(%[args])                           \n\t"    \
   "lw     %[" #TEMP2 "],  4(%[args])                           \n\t"    \
@@ -477,6 +478,7 @@ static int Disto16x16_MIPS32(const uint8_t* WEBP_RESTRICT const a,
   "sh     %[" #TEMP4 "],  " #C "(%[temp20])              \n\t"    \
   "sh     %[" #TEMP8 "],  " #D "(%[temp20])              \n\t"    \
   "sh     %[" #TEMP12 "], " #B "(%[temp20])              \n\t"
+// clang-format on
 
 static void FTransform_MIPS32(const uint8_t* WEBP_RESTRICT src,
                               const uint8_t* WEBP_RESTRICT ref,
@@ -486,8 +488,8 @@ static void FTransform_MIPS32(const uint8_t* WEBP_RESTRICT src,
   int temp17, temp18, temp19, temp20;
   const int c2217 = 2217;
   const int c5352 = 5352;
-  const int* const args[3] =
-      { (const int*)src, (const int*)ref, (const int*)out };
+  const int* const args[3] = {(const int*)src, (const int*)ref,
+                              (const int*)out};
 
   __asm__ volatile(
     HORIZONTAL_PASS(0, temp0,  temp1,  temp2,  temp3)
@@ -517,6 +519,7 @@ static void FTransform_MIPS32(const uint8_t* WEBP_RESTRICT src,
 
 #if !defined(WORK_AROUND_GCC)
 
+// clang-format off
 #define GET_SSE_INNER(A, B, C, D)                               \
   "lbu     %[temp0],    " #A "(%[a])                 \n\t"      \
   "lbu     %[temp1],    " #A "(%[b])                 \n\t"      \
@@ -534,11 +537,12 @@ static void FTransform_MIPS32(const uint8_t* WEBP_RESTRICT src,
   "madd    %[temp2],    %[temp2]                     \n\t"      \
   "madd    %[temp4],    %[temp4]                     \n\t"      \
   "madd    %[temp6],    %[temp6]                     \n\t"
+// clang-format on
 
-#define GET_SSE(A, B, C, D)               \
-  GET_SSE_INNER(A, A + 1, A + 2, A + 3)   \
-  GET_SSE_INNER(B, B + 1, B + 2, B + 3)   \
-  GET_SSE_INNER(C, C + 1, C + 2, C + 3)   \
+#define GET_SSE(A, B, C, D)             \
+  GET_SSE_INNER(A, A + 1, A + 2, A + 3) \
+  GET_SSE_INNER(B, B + 1, B + 2, B + 3) \
+  GET_SSE_INNER(C, C + 1, C + 2, C + 3) \
   GET_SSE_INNER(D, D + 1, D + 2, D + 3)
 
 static int SSE16x16_MIPS32(const uint8_t* WEBP_RESTRICT a,
@@ -547,32 +551,31 @@ static int SSE16x16_MIPS32(const uint8_t* WEBP_RESTRICT a,
   int temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7;
 
   __asm__ volatile(
-     "mult   $zero,    $zero                            \n\t"
+      "mult   $zero,    $zero                            \n\t"
 
-     GET_SSE( 0 * BPS, 4 +  0 * BPS, 8 +  0 * BPS, 12 +  0 * BPS)
-     GET_SSE( 1 * BPS, 4 +  1 * BPS, 8 +  1 * BPS, 12 +  1 * BPS)
-     GET_SSE( 2 * BPS, 4 +  2 * BPS, 8 +  2 * BPS, 12 +  2 * BPS)
-     GET_SSE( 3 * BPS, 4 +  3 * BPS, 8 +  3 * BPS, 12 +  3 * BPS)
-     GET_SSE( 4 * BPS, 4 +  4 * BPS, 8 +  4 * BPS, 12 +  4 * BPS)
-     GET_SSE( 5 * BPS, 4 +  5 * BPS, 8 +  5 * BPS, 12 +  5 * BPS)
-     GET_SSE( 6 * BPS, 4 +  6 * BPS, 8 +  6 * BPS, 12 +  6 * BPS)
-     GET_SSE( 7 * BPS, 4 +  7 * BPS, 8 +  7 * BPS, 12 +  7 * BPS)
-     GET_SSE( 8 * BPS, 4 +  8 * BPS, 8 +  8 * BPS, 12 +  8 * BPS)
-     GET_SSE( 9 * BPS, 4 +  9 * BPS, 8 +  9 * BPS, 12 +  9 * BPS)
-     GET_SSE(10 * BPS, 4 + 10 * BPS, 8 + 10 * BPS, 12 + 10 * BPS)
-     GET_SSE(11 * BPS, 4 + 11 * BPS, 8 + 11 * BPS, 12 + 11 * BPS)
-     GET_SSE(12 * BPS, 4 + 12 * BPS, 8 + 12 * BPS, 12 + 12 * BPS)
-     GET_SSE(13 * BPS, 4 + 13 * BPS, 8 + 13 * BPS, 12 + 13 * BPS)
-     GET_SSE(14 * BPS, 4 + 14 * BPS, 8 + 14 * BPS, 12 + 14 * BPS)
-     GET_SSE(15 * BPS, 4 + 15 * BPS, 8 + 15 * BPS, 12 + 15 * BPS)
+      GET_SSE(0 * BPS, 4 + 0 * BPS, 8 + 0 * BPS, 12 + 0 * BPS)      //
+      GET_SSE(1 * BPS, 4 + 1 * BPS, 8 + 1 * BPS, 12 + 1 * BPS)      //
+      GET_SSE(2 * BPS, 4 + 2 * BPS, 8 + 2 * BPS, 12 + 2 * BPS)      //
+      GET_SSE(3 * BPS, 4 + 3 * BPS, 8 + 3 * BPS, 12 + 3 * BPS)      //
+      GET_SSE(4 * BPS, 4 + 4 * BPS, 8 + 4 * BPS, 12 + 4 * BPS)      //
+      GET_SSE(5 * BPS, 4 + 5 * BPS, 8 + 5 * BPS, 12 + 5 * BPS)      //
+      GET_SSE(6 * BPS, 4 + 6 * BPS, 8 + 6 * BPS, 12 + 6 * BPS)      //
+      GET_SSE(7 * BPS, 4 + 7 * BPS, 8 + 7 * BPS, 12 + 7 * BPS)      //
+      GET_SSE(8 * BPS, 4 + 8 * BPS, 8 + 8 * BPS, 12 + 8 * BPS)      //
+      GET_SSE(9 * BPS, 4 + 9 * BPS, 8 + 9 * BPS, 12 + 9 * BPS)      //
+      GET_SSE(10 * BPS, 4 + 10 * BPS, 8 + 10 * BPS, 12 + 10 * BPS)  //
+      GET_SSE(11 * BPS, 4 + 11 * BPS, 8 + 11 * BPS, 12 + 11 * BPS)  //
+      GET_SSE(12 * BPS, 4 + 12 * BPS, 8 + 12 * BPS, 12 + 12 * BPS)  //
+      GET_SSE(13 * BPS, 4 + 13 * BPS, 8 + 13 * BPS, 12 + 13 * BPS)  //
+      GET_SSE(14 * BPS, 4 + 14 * BPS, 8 + 14 * BPS, 12 + 14 * BPS)  //
+      GET_SSE(15 * BPS, 4 + 15 * BPS, 8 + 15 * BPS, 12 + 15 * BPS)  //
 
-    "mflo    %[count]                                   \n\t"
-    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
-      [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
-      [temp6]"=&r"(temp6), [temp7]"=&r"(temp7), [count]"=&r"(count)
-    : [a]"r"(a), [b]"r"(b)
-    : "memory", "hi", "lo"
-  );
+      "mflo    %[count]                                  \n\t"
+      : [temp0] "=&r"(temp0), [temp1] "=&r"(temp1), [temp2] "=&r"(temp2),
+        [temp3] "=&r"(temp3), [temp4] "=&r"(temp4), [temp5] "=&r"(temp5),
+        [temp6] "=&r"(temp6), [temp7] "=&r"(temp7), [count] "=&r"(count)
+      : [a] "r"(a), [b] "r"(b)
+      : "memory", "hi", "lo");
   return count;
 }
 
@@ -582,24 +585,23 @@ static int SSE16x8_MIPS32(const uint8_t* WEBP_RESTRICT a,
   int temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7;
 
   __asm__ volatile(
-     "mult   $zero,    $zero                            \n\t"
+      "mult   $zero,    $zero                            \n\t"
 
-     GET_SSE( 0 * BPS, 4 +  0 * BPS, 8 +  0 * BPS, 12 +  0 * BPS)
-     GET_SSE( 1 * BPS, 4 +  1 * BPS, 8 +  1 * BPS, 12 +  1 * BPS)
-     GET_SSE( 2 * BPS, 4 +  2 * BPS, 8 +  2 * BPS, 12 +  2 * BPS)
-     GET_SSE( 3 * BPS, 4 +  3 * BPS, 8 +  3 * BPS, 12 +  3 * BPS)
-     GET_SSE( 4 * BPS, 4 +  4 * BPS, 8 +  4 * BPS, 12 +  4 * BPS)
-     GET_SSE( 5 * BPS, 4 +  5 * BPS, 8 +  5 * BPS, 12 +  5 * BPS)
-     GET_SSE( 6 * BPS, 4 +  6 * BPS, 8 +  6 * BPS, 12 +  6 * BPS)
-     GET_SSE( 7 * BPS, 4 +  7 * BPS, 8 +  7 * BPS, 12 +  7 * BPS)
+      GET_SSE(0 * BPS, 4 + 0 * BPS, 8 + 0 * BPS, 12 + 0 * BPS)  //
+      GET_SSE(1 * BPS, 4 + 1 * BPS, 8 + 1 * BPS, 12 + 1 * BPS)  //
+      GET_SSE(2 * BPS, 4 + 2 * BPS, 8 + 2 * BPS, 12 + 2 * BPS)  //
+      GET_SSE(3 * BPS, 4 + 3 * BPS, 8 + 3 * BPS, 12 + 3 * BPS)  //
+      GET_SSE(4 * BPS, 4 + 4 * BPS, 8 + 4 * BPS, 12 + 4 * BPS)  //
+      GET_SSE(5 * BPS, 4 + 5 * BPS, 8 + 5 * BPS, 12 + 5 * BPS)  //
+      GET_SSE(6 * BPS, 4 + 6 * BPS, 8 + 6 * BPS, 12 + 6 * BPS)  //
+      GET_SSE(7 * BPS, 4 + 7 * BPS, 8 + 7 * BPS, 12 + 7 * BPS)  //
 
-    "mflo    %[count]                                   \n\t"
-    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
-      [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
-      [temp6]"=&r"(temp6), [temp7]"=&r"(temp7), [count]"=&r"(count)
-    : [a]"r"(a), [b]"r"(b)
-    : "memory", "hi", "lo"
-  );
+      "mflo    %[count]                                  \n\t"
+      : [temp0] "=&r"(temp0), [temp1] "=&r"(temp1), [temp2] "=&r"(temp2),
+        [temp3] "=&r"(temp3), [temp4] "=&r"(temp4), [temp5] "=&r"(temp5),
+        [temp6] "=&r"(temp6), [temp7] "=&r"(temp7), [count] "=&r"(count)
+      : [a] "r"(a), [b] "r"(b)
+      : "memory", "hi", "lo");
   return count;
 }
 
@@ -609,20 +611,19 @@ static int SSE8x8_MIPS32(const uint8_t* WEBP_RESTRICT a,
   int temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7;
 
   __asm__ volatile(
-     "mult   $zero,    $zero                            \n\t"
+      "mult   $zero,    $zero                            \n\t"
 
-     GET_SSE(0 * BPS, 4 + 0 * BPS, 1 * BPS, 4 + 1 * BPS)
-     GET_SSE(2 * BPS, 4 + 2 * BPS, 3 * BPS, 4 + 3 * BPS)
-     GET_SSE(4 * BPS, 4 + 4 * BPS, 5 * BPS, 4 + 5 * BPS)
-     GET_SSE(6 * BPS, 4 + 6 * BPS, 7 * BPS, 4 + 7 * BPS)
+      GET_SSE(0 * BPS, 4 + 0 * BPS, 1 * BPS, 4 + 1 * BPS)  //
+      GET_SSE(2 * BPS, 4 + 2 * BPS, 3 * BPS, 4 + 3 * BPS)  //
+      GET_SSE(4 * BPS, 4 + 4 * BPS, 5 * BPS, 4 + 5 * BPS)  //
+      GET_SSE(6 * BPS, 4 + 6 * BPS, 7 * BPS, 4 + 7 * BPS)  //
 
-    "mflo    %[count]                                   \n\t"
-    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
-      [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
-      [temp6]"=&r"(temp6), [temp7]"=&r"(temp7), [count]"=&r"(count)
-    : [a]"r"(a), [b]"r"(b)
-    : "memory", "hi", "lo"
-  );
+      "mflo    %[count]                                  \n\t"
+      : [temp0] "=&r"(temp0), [temp1] "=&r"(temp1), [temp2] "=&r"(temp2),
+        [temp3] "=&r"(temp3), [temp4] "=&r"(temp4), [temp5] "=&r"(temp5),
+        [temp6] "=&r"(temp6), [temp7] "=&r"(temp7), [count] "=&r"(count)
+      : [a] "r"(a), [b] "r"(b)
+      : "memory", "hi", "lo");
   return count;
 }
 
@@ -632,17 +633,16 @@ static int SSE4x4_MIPS32(const uint8_t* WEBP_RESTRICT a,
   int temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7;
 
   __asm__ volatile(
-     "mult   $zero,    $zero                            \n\t"
+      "mult   $zero,    $zero                            \n\t"
 
-     GET_SSE(0 * BPS, 1 * BPS, 2 * BPS, 3 * BPS)
+      GET_SSE(0 * BPS, 1 * BPS, 2 * BPS, 3 * BPS)  //
 
-    "mflo    %[count]                                   \n\t"
-    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
-      [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
-      [temp6]"=&r"(temp6), [temp7]"=&r"(temp7), [count]"=&r"(count)
-    : [a]"r"(a), [b]"r"(b)
-    : "memory", "hi", "lo"
-  );
+      "mflo    %[count]                                  \n\t"
+      : [temp0] "=&r"(temp0), [temp1] "=&r"(temp1), [temp2] "=&r"(temp2),
+        [temp3] "=&r"(temp3), [temp4] "=&r"(temp4), [temp5] "=&r"(temp5),
+        [temp6] "=&r"(temp6), [temp7] "=&r"(temp7), [count] "=&r"(count)
+      : [a] "r"(a), [b] "r"(b)
+      : "memory", "hi", "lo");
   return count;
 }
 

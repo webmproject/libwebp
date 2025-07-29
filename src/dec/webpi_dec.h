@@ -36,15 +36,15 @@ typedef int (*OutputRowFunc)(WebPDecParams* const p, int y_pos,
                              int max_out_lines);
 
 struct WebPDecParams {
-  WebPDecBuffer* output;             // output buffer.
-  uint8_t* tmp_y, *tmp_u, *tmp_v;    // cache for the fancy upsampler
-                                     // or used for tmp rescaling
+  WebPDecBuffer* output;           // output buffer.
+  uint8_t *tmp_y, *tmp_u, *tmp_v;  // cache for the fancy upsampler
+                                   // or used for tmp rescaling
 
-  int last_y;                 // coordinate of the line that was last output
+  int last_y;  // coordinate of the line that was last output
   const WebPDecoderOptions* options;  // if not NULL, use alt decoding features
 
-  WebPRescaler* scaler_y, *scaler_u, *scaler_v, *scaler_a;  // rescalers
-  void* memory;                  // overall scratch memory for the output work.
+  WebPRescaler *scaler_y, *scaler_u, *scaler_v, *scaler_a;  // rescalers
+  void* memory;  // overall scratch memory for the output work.
 
   OutputFunc emit;               // output RGB or YUV samples
   OutputAlphaFunc emit_alpha;    // output alpha channel
@@ -59,15 +59,15 @@ void WebPResetDecParams(WebPDecParams* const params);
 
 // Structure storing a description of the RIFF headers.
 typedef struct {
-  const uint8_t* data;         // input buffer
-  size_t data_size;            // input buffer size
-  int have_all_data;           // true if all data is known to be available
-  size_t offset;               // offset to main data chunk (VP8 or VP8L)
-  const uint8_t* alpha_data;   // points to alpha chunk (if present)
-  size_t alpha_data_size;      // alpha chunk size
-  size_t compressed_size;      // VP8/VP8L compressed data size
-  size_t riff_size;            // size of the riff payload (or 0 if absent)
-  int is_lossless;             // true if a VP8L chunk is present
+  const uint8_t* data;        // input buffer
+  size_t data_size;           // input buffer size
+  int have_all_data;          // true if all data is known to be available
+  size_t offset;              // offset to main data chunk (VP8 or VP8L)
+  const uint8_t* alpha_data;  // points to alpha chunk (if present)
+  size_t alpha_data_size;     // alpha chunk size
+  size_t compressed_size;     // VP8/VP8L compressed data size
+  size_t riff_size;           // size of the riff payload (or 0 if absent)
+  int is_lossless;            // true if a VP8L chunk is present
 } WebPHeaderStructure;
 
 // Skips over all valid chunks prior to the first VP8/VP8L frame header.
@@ -82,8 +82,8 @@ VP8StatusCode WebPParseHeaders(WebPHeaderStructure* const headers);
 // Misc utils
 
 // Returns true if crop dimensions are within image bounds.
-int WebPCheckCropDimensions(int image_width, int image_height,
-                            int x, int y, int w, int h);
+int WebPCheckCropDimensions(int image_width, int image_height, int x, int y,
+                            int w, int h);
 
 // Initializes VP8Io with custom setup, io and teardown functions. The default
 // hooks will use the supplied 'params' as io->opaque handle.
@@ -136,7 +136,7 @@ int WebPAvoidSlowMemory(const WebPDecBuffer* const output,
 //------------------------------------------------------------------------------
 
 #ifdef __cplusplus
-}    // extern "C"
+}  // extern "C"
 #endif
 
 #endif  // WEBP_DEC_WEBPI_DEC_H_

@@ -69,23 +69,22 @@ static int CostModelBuild(CostModel* const m, int xsize, int cache_bits,
 
   // The following code is similar to VP8LHistogramCreate but converts the
   // distance to plane code.
-  VP8LHistogramInit(histo, cache_bits, /*init_arrays=*/ 1);
+  VP8LHistogramInit(histo, cache_bits, /*init_arrays=*/1);
   VP8LHistogramStoreRefs(refs, VP8LDistanceToPlaneCode, xsize, histo);
 
   ConvertPopulationCountTableToBitEstimates(
       VP8LHistogramNumCodes(histo->palette_code_bits), histo->literal,
       m->literal);
-  ConvertPopulationCountTableToBitEstimates(
-      VALUES_IN_BYTE, histo->red, m->red);
-  ConvertPopulationCountTableToBitEstimates(
-      VALUES_IN_BYTE, histo->blue, m->blue);
-  ConvertPopulationCountTableToBitEstimates(
-      VALUES_IN_BYTE, histo->alpha, m->alpha);
-  ConvertPopulationCountTableToBitEstimates(
-      NUM_DISTANCE_CODES, histo->distance, m->distance);
+  ConvertPopulationCountTableToBitEstimates(VALUES_IN_BYTE, histo->red, m->red);
+  ConvertPopulationCountTableToBitEstimates(VALUES_IN_BYTE, histo->blue,
+                                            m->blue);
+  ConvertPopulationCountTableToBitEstimates(VALUES_IN_BYTE, histo->alpha,
+                                            m->alpha);
+  ConvertPopulationCountTableToBitEstimates(NUM_DISTANCE_CODES, histo->distance,
+                                            m->distance);
   ok = 1;
 
- Error:
+Error:
   VP8LFreeHistogram(histo);
   return ok;
 }
@@ -172,7 +171,7 @@ struct CostInterval {
 typedef struct {
   int64_t cost;
   int start;
-  int end;       // Exclusive.
+  int end;  // Exclusive.
 } CostCacheInterval;
 
 // This structure is in charge of managing intervals and costs.
@@ -309,8 +308,7 @@ static int CostManagerInit(CostManager* const manager,
            manager->cache_intervals_size);
   }
 
-  manager->costs =
-      (int64_t*)WebPSafeMalloc(pix_count, sizeof(*manager->costs));
+  manager->costs = (int64_t*)WebPSafeMalloc(pix_count, sizeof(*manager->costs));
   if (manager->costs == NULL) {
     CostManagerClear(manager);
     return 0;
@@ -490,14 +488,14 @@ static WEBP_INLINE void PushInterval(CostManager* const manager,
     return;
   }
 
-  for (i = 0; i < manager->cache_intervals_size &&
-              cost_cache_intervals[i].start < len;
+  for (i = 0;
+       i < manager->cache_intervals_size && cost_cache_intervals[i].start < len;
        ++i) {
     // Define the intersection of the ith interval with the new one.
     int start = position + cost_cache_intervals[i].start;
-    const int end = position + (cost_cache_intervals[i].end > len
-                                 ? len
-                                 : cost_cache_intervals[i].end);
+    const int end =
+        position +
+        (cost_cache_intervals[i].end > len ? len : cost_cache_intervals[i].end);
     const int64_t cost = distance_cost + cost_cache_intervals[i].cost;
 
     for (; interval != NULL && interval->start < end;
@@ -681,7 +679,7 @@ static int BackwardReferencesHashChainDistanceOnly(
   }
 
   ok = !refs->error;
- Error:
+Error:
   if (cc_init) VP8LColorCacheClear(&hashers);
   CostManagerClear(cost_manager);
   WebPSafeFree(cost_model);
@@ -692,8 +690,7 @@ static int BackwardReferencesHashChainDistanceOnly(
 // We pack the path at the end of *dist_array and return
 // a pointer to this part of the array. Example:
 // dist_array = [1x2xx3x2] => packed [1x2x1232], chosen_path = [1232]
-static void TraceBackwards(uint16_t* const dist_array,
-                           int dist_array_size,
+static void TraceBackwards(uint16_t* const dist_array, int dist_array_size,
                            uint16_t** const chosen_path,
                            int* const chosen_path_size) {
   uint16_t* path = dist_array + dist_array_size;
@@ -754,7 +751,7 @@ static int BackwardReferencesHashChainFollowChosenPath(
     }
   }
   ok = !refs->error;
- Error:
+Error:
   if (cc_init) VP8LColorCacheClear(&hashers);
   return ok;
 }
@@ -790,7 +787,7 @@ int VP8LBackwardReferencesTraceBackwards(int xsize, int ysize,
     goto Error;
   }
   ok = 1;
- Error:
+Error:
   WebPSafeFree(dist_array);
   return ok;
 }

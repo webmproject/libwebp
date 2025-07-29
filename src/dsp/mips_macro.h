@@ -23,6 +23,7 @@
 // O1[31..16 | 15..0] = I0[31..16 | 15..0] - I1[31..16 | 15..0]
 // O - output
 // I - input (macro doesn't change it)
+// clang-format off
 #define ADD_SUB_HALVES(O0, O1,                                                 \
                        I0, I1)                                                 \
   "addq.ph          %[" #O0 "],   %[" #I0 "],  %[" #I1 "]           \n\t"      \
@@ -206,5 +207,6 @@
   [temp11]"=&r"(temp11), [temp12]"=&r"(temp12), [temp13]"=&r"(temp13),         \
   [temp14]"=&r"(temp14), [temp15]"=&r"(temp15), [temp16]"=&r"(temp16),         \
   [temp17]"=&r"(temp17), [temp18]"=&r"(temp18)
+// clang-format on
 
 #endif  // WEBP_DSP_MIPS_MACRO_H_

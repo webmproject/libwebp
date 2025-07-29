@@ -104,7 +104,6 @@ void MuxDemuxApiTest(std::string_view data_in, bool use_mux_api) {
 }  // namespace
 
 FUZZ_TEST(MuxDemuxApi, MuxDemuxApiTest)
-    .WithDomains(
-        fuzztest::String()
-            .WithMaxSize(fuzz_utils::kMaxWebPFileSize + 1),
-        /*mux=*/fuzztest::Arbitrary<bool>());
+    .WithDomains(fuzztest::String().WithMaxSize(fuzz_utils::kMaxWebPFileSize +
+                                                1),
+                 /*mux=*/fuzztest::Arbitrary<bool>());

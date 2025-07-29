@@ -17,11 +17,10 @@
 
 #if defined(WEBP_HAVE_SDL)
 
-#include "webp_to_sdl.h"
-
 #include <stdio.h>
 
 #include "src/webp/decode.h"
+#include "webp_to_sdl.h"
 
 #if defined(WEBP_HAVE_JUST_SDL_H)
 #include <SDL.h>
@@ -67,11 +66,11 @@ int WebPToSDL(const char* data, unsigned int data_size) {
   }
 
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
-  output = WebPDecodeBGRA((const uint8_t*)data, (size_t)data_size, &width,
-                          &height);
+  output =
+      WebPDecodeBGRA((const uint8_t*)data, (size_t)data_size, &width, &height);
 #else
-  output = WebPDecodeRGBA((const uint8_t*)data, (size_t)data_size, &width,
-                          &height);
+  output =
+      WebPDecodeRGBA((const uint8_t*)data, (size_t)data_size, &width, &height);
 #endif
   if (output == NULL) {
     fprintf(stderr, "Error decoding image (%d)\n", status);
@@ -84,7 +83,7 @@ int WebPToSDL(const char* data, unsigned int data_size) {
   SDL_RenderPresent(renderer);
   ok = 1;
 
- Error:
+Error:
   // We should call SDL_DestroyWindow(window) but that makes .js fail.
   SDL_DestroyRenderer(renderer);
   SDL_DestroyTexture(texture);

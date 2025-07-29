@@ -38,41 +38,41 @@ extern "C" {
 // Chunk object.
 typedef struct WebPChunk WebPChunk;
 struct WebPChunk {
-  uint32_t        tag;
-  int             owner;   // True if *data memory is owned internally.
-                           // VP8X, ANIM, and other internally created chunks
-                           // like ANMF are always owned.
-  WebPData        data;
-  WebPChunk*      next;
+  uint32_t tag;
+  int owner;  // True if *data memory is owned internally.
+              // VP8X, ANIM, and other internally created chunks
+              // like ANMF are always owned.
+  WebPData data;
+  WebPChunk* next;
 };
 
 // MuxImage object. Store a full WebP image (including ANMF chunk, ALPH
 // chunk and VP8/VP8L chunk),
 typedef struct WebPMuxImage WebPMuxImage;
 struct WebPMuxImage {
-  WebPChunk*  header;      // Corresponds to WEBP_CHUNK_ANMF.
-  WebPChunk*  alpha;       // Corresponds to WEBP_CHUNK_ALPHA.
-  WebPChunk*  img;         // Corresponds to WEBP_CHUNK_IMAGE.
-  WebPChunk*  unknown;     // Corresponds to WEBP_CHUNK_UNKNOWN.
-  int         width;
-  int         height;
-  int         has_alpha;   // Through ALPH chunk or as part of VP8L.
-  int         is_partial;  // True if only some of the chunks are filled.
+  WebPChunk* header;   // Corresponds to WEBP_CHUNK_ANMF.
+  WebPChunk* alpha;    // Corresponds to WEBP_CHUNK_ALPHA.
+  WebPChunk* img;      // Corresponds to WEBP_CHUNK_IMAGE.
+  WebPChunk* unknown;  // Corresponds to WEBP_CHUNK_UNKNOWN.
+  int width;
+  int height;
+  int has_alpha;   // Through ALPH chunk or as part of VP8L.
+  int is_partial;  // True if only some of the chunks are filled.
   WebPMuxImage* next;
 };
 
 // Main mux object. Stores data chunks.
 struct WebPMux {
-  WebPMuxImage*   images;
-  WebPChunk*      iccp;
-  WebPChunk*      exif;
-  WebPChunk*      xmp;
-  WebPChunk*      anim;
-  WebPChunk*      vp8x;
+  WebPMuxImage* images;
+  WebPChunk* iccp;
+  WebPChunk* exif;
+  WebPChunk* xmp;
+  WebPChunk* anim;
+  WebPChunk* vp8x;
 
-  WebPChunk*      unknown;
-  int             canvas_width;
-  int             canvas_height;
+  WebPChunk* unknown;
+  int canvas_width;
+  int canvas_height;
 };
 
 // CHUNK_INDEX enum: used for indexing within 'kChunks' (defined below) only.
@@ -98,9 +98,9 @@ typedef enum {
 #define NIL_TAG 0x00000000u  // To signal void chunk.
 
 typedef struct {
-  uint32_t      tag;
-  WebPChunkId   id;
-  uint32_t      size;
+  uint32_t tag;
+  WebPChunkId id;
+  uint32_t size;
 } ChunkInfo;
 
 extern const ChunkInfo kChunks[IDX_LAST_CHUNK];
@@ -193,8 +193,10 @@ static WEBP_INLINE int IsWPI(WebPChunkId id) {
   switch (id) {
     case WEBP_CHUNK_ANMF:
     case WEBP_CHUNK_ALPHA:
-    case WEBP_CHUNK_IMAGE:  return 1;
-    default:        return 0;
+    case WEBP_CHUNK_IMAGE:
+      return 1;
+    default:
+      return 0;
   }
 }
 
@@ -232,7 +234,7 @@ WebPMuxError MuxValidate(const WebPMux* const mux);
 //------------------------------------------------------------------------------
 
 #ifdef __cplusplus
-}    // extern "C"
+}  // extern "C"
 #endif
 
 #endif  // WEBP_MUX_MUXI_H_

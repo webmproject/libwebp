@@ -34,13 +34,13 @@ typedef struct {
 
 static const uint32_t kHashMul = 0x1e35a7bdu;
 
-static WEBP_UBSAN_IGNORE_UNSIGNED_OVERFLOW WEBP_INLINE
-int VP8LHashPix(uint32_t argb, int shift) {
+static WEBP_UBSAN_IGNORE_UNSIGNED_OVERFLOW WEBP_INLINE int VP8LHashPix(
+    uint32_t argb, int shift) {
   return (int)((argb * kHashMul) >> shift);
 }
 
-static WEBP_INLINE uint32_t VP8LColorCacheLookup(
-    const VP8LColorCache* const cc, uint32_t key) {
+static WEBP_INLINE uint32_t VP8LColorCacheLookup(const VP8LColorCache* const cc,
+                                                 uint32_t key) {
   assert((key >> cc->hash_bits) == 0u);
   return cc->colors[key];
 }

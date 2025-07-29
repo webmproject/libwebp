@@ -19,7 +19,7 @@
 #include <string.h>
 
 #include "src/utils/utils.h"
-#include "src/webp/decode.h"     // WebPGetFeatures
+#include "src/webp/decode.h"  // WebPGetFeatures
 #include "src/webp/demux.h"
 #include "src/webp/format_constants.h"
 #include "src/webp/mux.h"
@@ -31,10 +31,10 @@
 #define DMUX_REV_VERSION 0
 
 typedef struct {
-  size_t start;         // start location of the data
-  size_t end;           // end location
-  size_t riff_end;      // riff chunk end location, can be > end.
-  size_t buf_size;      // size of the buffer
+  size_t start;     // start location of the data
+  size_t end;       // end location
+  size_t riff_end;  // riff chunk end location, can be > end.
+  size_t buf_size;  // size of the buffer
   const uint8_t* buf;
 } MemBuffer;
 
@@ -51,7 +51,7 @@ typedef struct Frame {
   WebPMuxAnimDispose dispose_method;
   WebPMuxAnimBlend blend_method;
   int frame_num;
-  int complete;   // img_components contains a full image.
+  int complete;                 // img_components contains a full image.
   ChunkData img_components[2];  // 0=VP8{,L} 1=ALPH
   struct Frame* next;
 } Frame;
@@ -76,11 +76,7 @@ struct WebPDemuxer {
   Chunk** chunks_tail;
 };
 
-typedef enum {
-  PARSE_OK,
-  PARSE_NEED_MORE_DATA,
-  PARSE_ERROR
-} ParseStatus;
+typedef enum { PARSE_OK, PARSE_NEED_MORE_DATA, PARSE_ERROR } ParseStatus;
 
 typedef struct ChunkParser {
   uint8_t id[4];
@@ -94,10 +90,10 @@ static int IsValidSimpleFormat(const WebPDemuxer* const dmux);
 static int IsValidExtendedFormat(const WebPDemuxer* const dmux);
 
 static const ChunkParser kMasterChunks[] = {
-  { { 'V', 'P', '8', ' ' }, ParseSingleImage, IsValidSimpleFormat },
-  { { 'V', 'P', '8', 'L' }, ParseSingleImage, IsValidSimpleFormat },
-  { { 'V', 'P', '8', 'X' }, ParseVP8X,        IsValidExtendedFormat },
-  { { '0', '0', '0', '0' }, NULL,             NULL },
+    {{'V', 'P', '8', ' '}, ParseSingleImage, IsValidSimpleFormat},
+    {{'V', 'P', '8', 'L'}, ParseSingleImage, IsValidSimpleFormat},
+    {{'V', 'P', '8', 'X'}, ParseVP8X, IsValidExtendedFormat},
+    {{'0', '0', '0', '0'}, NULL, NULL},
 };
 
 //------------------------------------------------------------------------------
@@ -109,8 +105,8 @@ int WebPGetDemuxVersion(void) {
 // -----------------------------------------------------------------------------
 // MemBuffer
 
-static int RemapMemBuffer(MemBuffer* const mem,
-                          const uint8_t* data, size_t size) {
+static int RemapMemBuffer(MemBuffer* const mem, const uint8_t* data,
+                          size_t size) {
   if (size < mem->buf_size) return 0;  // can't remap to a shorter buffer!
 
   mem->buf = data;
@@ -118,8 +114,8 @@ static int RemapMemBuffer(MemBuffer* const mem,
   return 1;
 }
 
-static int InitMemBuffer(MemBuffer* const mem,
-                         const uint8_t* data, size_t size) {
+static int InitMemBuffer(MemBuffer* const mem, const uint8_t* data,
+                         size_t size) {
   memset(mem, 0, sizeof(*mem));
   return RemapMemBuffer(mem, data, size);
 }
@@ -195,8 +191,8 @@ static int AddFrame(WebPDemuxer* const dmux, Frame* const frame) {
   return 1;
 }
 
-static void SetFrameInfo(size_t start_offset, size_t size,
-                         int frame_num, int complete,
+static void SetFrameInfo(size_t start_offset, size_t size, int frame_num,
+                         int complete,
                          const WebPBitstreamFeatures* const features,
                          Frame* const frame) {
   frame->img_components[0].offset = start_offset;
@@ -214,8 +210,8 @@ static ParseStatus StoreFrame(int frame_num, uint32_t min_size,
                               MemBuffer* const mem, Frame* const frame) {
   int alpha_chunks = 0;
   int image_chunks = 0;
-  int done = (MemDataSize(mem) < CHUNK_HEADER_SIZE ||
-              MemDataSize(mem) < min_size);
+  int done =
+      (MemDataSize(mem) < CHUNK_HEADER_SIZE || MemDataSize(mem) < min_size);
   ParseStatus status = PARSE_OK;
 
   if (done) return PARSE_NEED_MORE_DATA;
@@ -232,7 +228,8 @@ static ParseStatus StoreFrame(int frame_num, uint32_t min_size,
 
     payload_size_padded = payload_size + (payload_size & 1);
     payload_available = (payload_size_padded > MemDataSize(mem))
-                      ? MemDataSize(mem) : payload_size_padded;
+                            ? MemDataSize(mem)
+                            : payload_size_padded;
     chunk_size = CHUNK_HEADER_SIZE + payload_available;
     if (SizeIsInvalid(mem, payload_size_padded)) return PARSE_ERROR;
     if (payload_size_padded > MemDataSize(mem)) status = PARSE_NEED_MORE_DATA;
@@ -258,9 +255,8 @@ static ParseStatus StoreFrame(int frame_num, uint32_t min_size,
           // Extract the bitstream features, tolerating failures when the data
           // is incomplete.
           WebPBitstreamFeatures features;
-          const VP8StatusCode vp8_status =
-              WebPGetFeatures(mem->buf + chunk_start_offset, chunk_size,
-                              &features);
+          const VP8StatusCode vp8_status = WebPGetFeatures(
+              mem->buf + chunk_start_offset, chunk_size, &features);
           if (status == PARSE_NEED_MORE_DATA &&
               vp8_status == VP8_STATUS_NOT_ENOUGH_DATA) {
             return PARSE_NEED_MORE_DATA;
@@ -276,7 +272,7 @@ static ParseStatus StoreFrame(int frame_num, uint32_t min_size,
           goto Done;
         }
         break;
- Done:
+      Done:
       default:
         // Restore fourcc/size when moving up one level in parsing.
         Rewind(mem, CHUNK_HEADER_SIZE);
@@ -298,12 +294,11 @@ static ParseStatus StoreFrame(int frame_num, uint32_t min_size,
 // enough data ('min_size') to parse the payload.
 // Returns PARSE_OK on success with *frame pointing to the new Frame.
 // Returns PARSE_NEED_MORE_DATA with insufficient data, PARSE_ERROR otherwise.
-static ParseStatus NewFrame(const MemBuffer* const mem,
-                            uint32_t min_size, uint32_t actual_size,
-                            Frame** frame) {
+static ParseStatus NewFrame(const MemBuffer* const mem, uint32_t min_size,
+                            uint32_t actual_size, Frame** frame) {
   if (SizeIsInvalid(mem, min_size)) return PARSE_ERROR;
   if (actual_size < min_size) return PARSE_ERROR;
-  if (MemDataSize(mem) < min_size)  return PARSE_NEED_MORE_DATA;
+  if (MemDataSize(mem) < min_size) return PARSE_NEED_MORE_DATA;
 
   *frame = (Frame*)WebPSafeCalloc(1ULL, sizeof(**frame));
   return (*frame == NULL) ? PARSE_ERROR : PARSE_OK;
@@ -311,8 +306,8 @@ static ParseStatus NewFrame(const MemBuffer* const mem,
 
 // Parse a 'ANMF' chunk and any image bearing chunks that immediately follow.
 // 'frame_chunk_size' is the previously validated, padded chunk size.
-static ParseStatus ParseAnimationFrame(
-    WebPDemuxer* const dmux, uint32_t frame_chunk_size) {
+static ParseStatus ParseAnimationFrame(WebPDemuxer* const dmux,
+                                       uint32_t frame_chunk_size) {
   const int is_animation = !!(dmux->feature_flags & ANIMATION_FLAG);
   const uint32_t anmf_payload_size = frame_chunk_size - ANMF_CHUNK_SIZE;
   int added_frame = 0;
@@ -320,15 +315,14 @@ static ParseStatus ParseAnimationFrame(
   MemBuffer* const mem = &dmux->mem;
   Frame* frame;
   size_t start_offset;
-  ParseStatus status =
-      NewFrame(mem, ANMF_CHUNK_SIZE, frame_chunk_size, &frame);
+  ParseStatus status = NewFrame(mem, ANMF_CHUNK_SIZE, frame_chunk_size, &frame);
   if (status != PARSE_OK) return status;
 
-  frame->x_offset       = 2 * ReadLE24s(mem);
-  frame->y_offset       = 2 * ReadLE24s(mem);
-  frame->width          = 1 + ReadLE24s(mem);
-  frame->height         = 1 + ReadLE24s(mem);
-  frame->duration       = ReadLE24s(mem);
+  frame->x_offset = 2 * ReadLE24s(mem);
+  frame->y_offset = 2 * ReadLE24s(mem);
+  frame->width = 1 + ReadLE24s(mem);
+  frame->height = 1 + ReadLE24s(mem);
+  frame->duration = ReadLE24s(mem);
   bits = ReadByte(mem);
   frame->dispose_method =
       (bits & 1) ? WEBP_MUX_DISPOSE_BACKGROUND : WEBP_MUX_DISPOSE_NONE;
@@ -362,8 +356,8 @@ static ParseStatus ParseAnimationFrame(
 // the user to request the payload via a fourcc string. 'size' includes the
 // header and the unpadded payload size.
 // Returns true on success, false otherwise.
-static int StoreChunk(WebPDemuxer* const dmux,
-                      size_t start_offset, uint32_t size) {
+static int StoreChunk(WebPDemuxer* const dmux, size_t start_offset,
+                      uint32_t size) {
   Chunk* const chunk = (Chunk*)WebPSafeCalloc(1ULL, sizeof(*chunk));
   if (chunk == NULL) return 0;
 
@@ -512,7 +506,7 @@ static ParseStatus ParseVP8XChunks(WebPDemuxer* const dmux) {
         store_chunk = !!(dmux->feature_flags & XMP_FLAG);
         goto Skip;
       }
- Skip:
+      Skip:
       default: {
         if (chunk_size_padded <= MemDataSize(mem)) {
           if (store_chunk) {
@@ -557,7 +551,7 @@ static ParseStatus ParseVP8X(WebPDemuxer* const dmux) {
 
   dmux->feature_flags = ReadByte(mem);
   Skip(mem, 3);  // Reserved.
-  dmux->canvas_width  = 1 + ReadLE24s(mem);
+  dmux->canvas_width = 1 + ReadLE24s(mem);
   dmux->canvas_height = 1 + ReadLE24s(mem);
   if (dmux->canvas_width * (uint64_t)dmux->canvas_height >= MAX_IMAGE_AREA) {
     return PARSE_ERROR;  // image final dimension is too large
@@ -647,8 +641,8 @@ static int IsValidExtendedFormat(const WebPDemuxer* const dmux) {
       }
 
       if (f->width > 0 && f->height > 0 &&
-          !CheckFrameBounds(f, !is_animation,
-                            dmux->canvas_width, dmux->canvas_height)) {
+          !CheckFrameBounds(f, !is_animation, dmux->canvas_width,
+                            dmux->canvas_height)) {
         return 0;
       }
     }
@@ -698,7 +692,7 @@ static ParseStatus CreateRawImageDemuxer(MemBuffer* const mem,
     *demuxer = dmux;
     return PARSE_OK;
 
- Error:
+  Error:
     WebPSafeFree(dmux);
     WebPSafeFree(frame);
     return PARSE_ERROR;
@@ -788,12 +782,18 @@ uint32_t WebPDemuxGetI(const WebPDemuxer* dmux, WebPFormatFeature feature) {
   if (dmux == NULL) return 0;
 
   switch (feature) {
-    case WEBP_FF_FORMAT_FLAGS:     return dmux->feature_flags;
-    case WEBP_FF_CANVAS_WIDTH:     return (uint32_t)dmux->canvas_width;
-    case WEBP_FF_CANVAS_HEIGHT:    return (uint32_t)dmux->canvas_height;
-    case WEBP_FF_LOOP_COUNT:       return (uint32_t)dmux->loop_count;
-    case WEBP_FF_BACKGROUND_COLOR: return dmux->bgcolor;
-    case WEBP_FF_FRAME_COUNT:      return (uint32_t)dmux->num_frames;
+    case WEBP_FF_FORMAT_FLAGS:
+      return dmux->feature_flags;
+    case WEBP_FF_CANVAS_WIDTH:
+      return (uint32_t)dmux->canvas_width;
+    case WEBP_FF_CANVAS_HEIGHT:
+      return (uint32_t)dmux->canvas_height;
+    case WEBP_FF_LOOP_COUNT:
+      return (uint32_t)dmux->loop_count;
+    case WEBP_FF_BACKGROUND_COLOR:
+      return dmux->bgcolor;
+    case WEBP_FF_FRAME_COUNT:
+      return (uint32_t)dmux->num_frames;
   }
   return 0;
 }
@@ -822,11 +822,11 @@ static const uint8_t* GetFramePayload(const uint8_t* const mem_buf,
     // if alpha exists it precedes image, update the size allowing for
     // intervening chunks.
     if (alpha->size > 0) {
-      const size_t inter_size = (image->offset > 0)
-                              ? image->offset - (alpha->offset + alpha->size)
+      const size_t inter_size =
+          (image->offset > 0) ? image->offset - (alpha->offset + alpha->size)
                               : 0;
       start_offset = alpha->offset;
-      *data_size  += alpha->size + inter_size;
+      *data_size += alpha->size + inter_size;
     }
     return mem_buf + start_offset;
   }
@@ -835,27 +835,26 @@ static const uint8_t* GetFramePayload(const uint8_t* const mem_buf,
 
 // Create a whole 'frame' from VP8 (+ alpha) or lossless.
 static int SynthesizeFrame(const WebPDemuxer* const dmux,
-                           const Frame* const frame,
-                           WebPIterator* const iter) {
+                           const Frame* const frame, WebPIterator* const iter) {
   const uint8_t* const mem_buf = dmux->mem.buf;
   size_t payload_size = 0;
   const uint8_t* const payload = GetFramePayload(mem_buf, frame, &payload_size);
   if (payload == NULL) return 0;
   assert(frame != NULL);
 
-  iter->frame_num      = frame->frame_num;
-  iter->num_frames     = dmux->num_frames;
-  iter->x_offset       = frame->x_offset;
-  iter->y_offset       = frame->y_offset;
-  iter->width          = frame->width;
-  iter->height         = frame->height;
-  iter->has_alpha      = frame->has_alpha;
-  iter->duration       = frame->duration;
+  iter->frame_num = frame->frame_num;
+  iter->num_frames = dmux->num_frames;
+  iter->x_offset = frame->x_offset;
+  iter->y_offset = frame->y_offset;
+  iter->width = frame->width;
+  iter->height = frame->height;
+  iter->has_alpha = frame->has_alpha;
+  iter->duration = frame->duration;
   iter->dispose_method = frame->dispose_method;
-  iter->blend_method   = frame->blend_method;
-  iter->complete       = frame->complete;
+  iter->blend_method = frame->blend_method;
+  iter->complete = frame->complete;
   iter->fragment.bytes = payload;
-  iter->fragment.size  = payload_size;
+  iter->fragment.size = payload_size;
   return 1;
 }
 
@@ -891,9 +890,7 @@ int WebPDemuxPrevFrame(WebPIterator* iter) {
   return SetFrame(iter->frame_num - 1, iter);
 }
 
-void WebPDemuxReleaseIterator(WebPIterator* iter) {
-  (void)iter;
-}
+void WebPDemuxReleaseIterator(WebPIterator* iter) { (void)iter; }
 
 // -----------------------------------------------------------------------------
 // Chunk iteration
@@ -936,17 +933,16 @@ static int SetChunk(const char fourcc[4], int chunk_num,
     const uint8_t* const mem_buf = dmux->mem.buf;
     const Chunk* const chunk = GetChunk(dmux, fourcc, chunk_num);
     iter->chunk.bytes = mem_buf + chunk->data.offset + CHUNK_HEADER_SIZE;
-    iter->chunk.size  = chunk->data.size - CHUNK_HEADER_SIZE;
-    iter->num_chunks  = count;
-    iter->chunk_num   = chunk_num;
+    iter->chunk.size = chunk->data.size - CHUNK_HEADER_SIZE;
+    iter->num_chunks = count;
+    iter->chunk_num = chunk_num;
     return 1;
   }
   return 0;
 }
 
-int WebPDemuxGetChunk(const WebPDemuxer* dmux,
-                      const char fourcc[4], int chunk_num,
-                      WebPChunkIterator* iter) {
+int WebPDemuxGetChunk(const WebPDemuxer* dmux, const char fourcc[4],
+                      int chunk_num, WebPChunkIterator* iter) {
   if (iter == NULL) return 0;
 
   memset(iter, 0, sizeof(*iter));
@@ -972,6 +968,4 @@ int WebPDemuxPrevChunk(WebPChunkIterator* iter) {
   return 0;
 }
 
-void WebPDemuxReleaseChunkIterator(WebPChunkIterator* iter) {
-  (void)iter;
-}
+void WebPDemuxReleaseChunkIterator(WebPChunkIterator* iter) { (void)iter; }

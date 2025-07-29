@@ -20,13 +20,13 @@ extern "C" {
 
 #include "src/webp/types.h"
 
-#define WEBP_RESCALER_RFIX 32   // fixed-point precision for multiplies
+#define WEBP_RESCALER_RFIX 32  // fixed-point precision for multiplies
 #define WEBP_RESCALER_ONE (1ull << WEBP_RESCALER_RFIX)
 #define WEBP_RESCALER_FRAC(x, y) \
-    ((uint32_t)(((uint64_t)(x) << WEBP_RESCALER_RFIX) / (y)))
+  ((uint32_t)(((uint64_t)(x) << WEBP_RESCALER_RFIX) / (y)))
 
 // Structure used for on-the-fly rescaling
-typedef uint32_t rescaler_t;   // type for side-buffer
+typedef uint32_t rescaler_t;  // type for side-buffer
 typedef struct WebPRescaler WebPRescaler;
 struct WebPRescaler {
   int x_expand;               // true if we're expanding in the x direction
@@ -43,16 +43,14 @@ struct WebPRescaler {
   int src_y, dst_y;           // row counters for input and output
   uint8_t* dst;
   int dst_stride;
-  rescaler_t* irow, *frow;    // work buffer
+  rescaler_t *irow, *frow;  // work buffer
 };
 
 // Initialize a rescaler given scratch area 'work' and dimensions of src & dst.
 // Returns false in case of error.
-int WebPRescalerInit(WebPRescaler* const rescaler,
-                     int src_width, int src_height,
-                     uint8_t* const dst,
-                     int dst_width, int dst_height, int dst_stride,
-                     int num_channels,
+int WebPRescalerInit(WebPRescaler* const rescaler, int src_width,
+                     int src_height, uint8_t* const dst, int dst_width,
+                     int dst_height, int dst_stride, int num_channels,
                      rescaler_t* const work);
 
 // If either 'scaled_width' or 'scaled_height' (but not both) is 0 the value
@@ -77,26 +75,26 @@ int WebPRescalerImport(WebPRescaler* const rescaler, int num_rows,
 int WebPRescalerExport(WebPRescaler* const rescaler);
 
 // Return true if input is finished
-static WEBP_INLINE
-int WebPRescalerInputDone(const WebPRescaler* const rescaler) {
+static WEBP_INLINE int WebPRescalerInputDone(
+    const WebPRescaler* const rescaler) {
   return (rescaler->src_y >= rescaler->src_height);
 }
 // Return true if output is finished
-static WEBP_INLINE
-int WebPRescalerOutputDone(const WebPRescaler* const rescaler) {
+static WEBP_INLINE int WebPRescalerOutputDone(
+    const WebPRescaler* const rescaler) {
   return (rescaler->dst_y >= rescaler->dst_height);
 }
 
 // Return true if there are pending output rows ready.
-static WEBP_INLINE
-int WebPRescalerHasPendingOutput(const WebPRescaler* const rescaler) {
+static WEBP_INLINE int WebPRescalerHasPendingOutput(
+    const WebPRescaler* const rescaler) {
   return !WebPRescalerOutputDone(rescaler) && (rescaler->y_accum <= 0);
 }
 
 //------------------------------------------------------------------------------
 
 #ifdef __cplusplus
-}    // extern "C"
+}  // extern "C"
 #endif
 
 #endif  // WEBP_UTILS_RESCALER_UTILS_H_

@@ -15,7 +15,6 @@
 
 #if defined(WEBP_USE_SSE2)
 #include <emmintrin.h>
-
 #include <stdlib.h>
 
 #include "src/dsp/cpu.h"
@@ -45,7 +44,7 @@ static uint64_t SharpYuvUpdateY_SSE2(const uint16_t* ref, const uint16_t* src,
     const __m128i F = _mm_add_epi16(C, D);       // new_y
     const __m128i G = _mm_or_si128(E, one);      // -1 or 1
     const __m128i H = _mm_max_epi16(_mm_min_epi16(F, max), zero);
-    const __m128i I = _mm_madd_epi16(D, G);      // sum(abs(...))
+    const __m128i I = _mm_madd_epi16(D, G);  // sum(abs(...))
     _mm_storeu_si128((__m128i*)(dst + i), H);
     sum = _mm_add_epi32(sum, I);
   }
@@ -67,8 +66,8 @@ static void SharpYuvUpdateRGB_SSE2(const int16_t* ref, const int16_t* src,
     const __m128i A = _mm_loadu_si128((const __m128i*)(ref + i));
     const __m128i B = _mm_loadu_si128((const __m128i*)(src + i));
     const __m128i C = _mm_loadu_si128((const __m128i*)(dst + i));
-    const __m128i D = _mm_sub_epi16(A, B);   // diff_uv
-    const __m128i E = _mm_add_epi16(C, D);   // new_uv
+    const __m128i D = _mm_sub_epi16(A, B);  // diff_uv
+    const __m128i E = _mm_add_epi16(C, D);  // new_uv
     _mm_storeu_si128((__m128i*)(dst + i), E);
   }
   for (; i < len; ++i) {
@@ -94,8 +93,8 @@ static void SharpYuvFilterRow16_SSE2(const int16_t* A, const int16_t* B,
     const __m128i a1b0 = _mm_add_epi16(a1, b0);
     const __m128i a0a1b0b1 = _mm_add_epi16(a0b1, a1b0);  // A0+A1+B0+B1
     const __m128i a0a1b0b1_8 = _mm_add_epi16(a0a1b0b1, kCst8);
-    const __m128i a0b1_2 = _mm_add_epi16(a0b1, a0b1);    // 2*(A0+B1)
-    const __m128i a1b0_2 = _mm_add_epi16(a1b0, a1b0);    // 2*(A1+B0)
+    const __m128i a0b1_2 = _mm_add_epi16(a0b1, a0b1);  // 2*(A0+B1)
+    const __m128i a1b0_2 = _mm_add_epi16(a1b0, a1b0);  // 2*(A1+B0)
     const __m128i c0 = _mm_srai_epi16(_mm_add_epi16(a0b1_2, a0a1b0b1_8), 3);
     const __m128i c1 = _mm_srai_epi16(_mm_add_epi16(a1b0_2, a0a1b0b1_8), 3);
     const __m128i d0 = _mm_add_epi16(c1, a0);

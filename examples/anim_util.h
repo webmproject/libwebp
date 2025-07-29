@@ -22,15 +22,12 @@
 extern "C" {
 #endif
 
-typedef enum {
-  ANIM_GIF,
-  ANIM_WEBP
-} AnimatedFileFormat;
+typedef enum { ANIM_GIF, ANIM_WEBP } AnimatedFileFormat;
 
 typedef struct {
-  uint8_t* rgba;         // Decoded and reconstructed full frame.
-  int duration;          // Frame duration in milliseconds.
-  int is_key_frame;      // True if this frame is a key-frame.
+  uint8_t* rgba;     // Decoded and reconstructed full frame.
+  int duration;      // Frame duration in milliseconds.
+  int is_key_frame;  // True if this frame is a key-frame.
 } DecodedFrame;
 
 typedef struct {
@@ -67,7 +64,7 @@ void GetAnimatedImageVersions(int* const decoder_version,
                               int* const demux_version);
 
 #ifdef __cplusplus
-}    // extern "C"
+}  // extern "C"
 #endif
 
 #endif  // WEBP_EXAMPLES_ANIM_UTIL_H_

@@ -33,7 +33,7 @@ int ReadPNM(const uint8_t* const data, size_t data_size,
             struct Metadata* const metadata);
 
 #ifdef __cplusplus
-}    // extern "C"
+}  // extern "C"
 #endif
 
 #endif  // WEBP_IMAGEIO_PNMDEC_H_

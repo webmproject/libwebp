@@ -35,13 +35,12 @@ static int quiet = 0;
 extern "C" {
 #endif
 
-extern void* VP8GetCPUInfo;   // opaque forward declaration.
+extern void* VP8GetCPUInfo;  // opaque forward declaration.
 
 #ifdef __cplusplus
-}    // extern "C"
+}  // extern "C"
 #endif
 #endif  // WEBP_DLL
-
 
 static int SaveOutput(const WebPDecBuffer* const buffer,
                       WebPOutputFileFormat format, const char* const out_file) {
@@ -77,43 +76,42 @@ static int SaveOutput(const WebPDecBuffer* const buffer,
 }
 
 static void Help(void) {
-  printf("Usage: dwebp in_file [options] [-o out_file]\n\n"
-         "Decodes the WebP image file to PNG format [Default].\n"
-         "Note: Animated WebP files are not supported.\n\n"
-         "Use following options to convert into alternate image formats:\n"
-         "  -pam ......... save the raw RGBA samples as a color PAM\n"
-         "  -ppm ......... save the raw RGB samples as a color PPM\n"
-         "  -bmp ......... save as uncompressed BMP format\n"
-         "  -tiff ........ save as uncompressed TIFF format\n"
-         "  -pgm ......... save the raw YUV samples as a grayscale PGM\n"
-         "                 file with IMC4 layout\n"
-         "  -yuv ......... save the raw YUV samples in flat layout\n"
-         "\n"
-         " Other options are:\n"
-         "  -version ..... print version number and exit\n"
-         "  -nofancy ..... don't use the fancy YUV420 upscaler\n"
-         "  -nofilter .... disable in-loop filtering\n"
-         "  -nodither .... disable dithering\n"
-         "  -dither <d> .. dithering strength (in 0..100)\n"
-         "  -alpha_dither  use alpha-plane dithering if needed\n"
-         "  -mt .......... use multi-threading\n"
-         "  -crop <x> <y> <w> <h> ... crop output with the given rectangle\n"
-         "  -resize <w> <h> ......... resize output (*after* any cropping)\n"
-         "  -flip ........ flip the output vertically\n"
-         "  -alpha ....... only save the alpha plane\n"
-         "  -incremental . use incremental decoding (useful for tests)\n"
-         "  -h ........... this help message\n"
-         "  -v ........... verbose (e.g. print encoding/decoding times)\n"
-         "  -quiet ....... quiet mode, don't print anything\n"
+  printf(
+      "Usage: dwebp in_file [options] [-o out_file]\n\n"
+      "Decodes the WebP image file to PNG format [Default].\n"
+      "Note: Animated WebP files are not supported.\n\n"
+      "Use following options to convert into alternate image formats:\n"
+      "  -pam ......... save the raw RGBA samples as a color PAM\n"
+      "  -ppm ......... save the raw RGB samples as a color PPM\n"
+      "  -bmp ......... save as uncompressed BMP format\n"
+      "  -tiff ........ save as uncompressed TIFF format\n"
+      "  -pgm ......... save the raw YUV samples as a grayscale PGM\n"
+      "                 file with IMC4 layout\n"
+      "  -yuv ......... save the raw YUV samples in flat layout\n"
+      "\n"
+      " Other options are:\n"
+      "  -version ..... print version number and exit\n"
+      "  -nofancy ..... don't use the fancy YUV420 upscaler\n"
+      "  -nofilter .... disable in-loop filtering\n"
+      "  -nodither .... disable dithering\n"
+      "  -dither <d> .. dithering strength (in 0..100)\n"
+      "  -alpha_dither  use alpha-plane dithering if needed\n"
+      "  -mt .......... use multi-threading\n"
+      "  -crop <x> <y> <w> <h> ... crop output with the given rectangle\n"
+      "  -resize <w> <h> ......... resize output (*after* any cropping)\n"
+      "  -flip ........ flip the output vertically\n"
+      "  -alpha ....... only save the alpha plane\n"
+      "  -incremental . use incremental decoding (useful for tests)\n"
+      "  -h ........... this help message\n"
+      "  -v ........... verbose (e.g. print encoding/decoding times)\n"
+      "  -quiet ....... quiet mode, don't print anything\n"
 #ifndef WEBP_DLL
-         "  -noasm ....... disable all assembly optimizations\n"
+      "  -noasm ....... disable all assembly optimizations\n"
 #endif
-        );
+  );
 }
 
-static const char* const kFormatType[] = {
-  "unspecified", "lossy", "lossless"
-};
+static const char* const kFormatType[] = {"unspecified", "lossy", "lossless"};
 
 static uint8_t* AllocateExternalBuffer(WebPDecoderConfig* config,
                                        WebPOutputFileFormat format,
@@ -130,23 +128,23 @@ static uint8_t* AllocateExternalBuffer(WebPDecoderConfig* config,
     h = config->options.crop_height;
   }
   if (format >= RGB && format <= rgbA_4444) {
-    const int bpp = (format == RGB || format == BGR) ? 3
-                  : (format == RGBA_4444 || format == rgbA_4444 ||
-                     format == RGB_565) ? 2
-                  : 4;
-    uint32_t stride = bpp * w + 7;   // <- just for exercising
+    const int bpp =
+        (format == RGB || format == BGR)                                    ? 3
+        : (format == RGBA_4444 || format == rgbA_4444 || format == RGB_565) ? 2
+                                                                            : 4;
+    uint32_t stride = bpp * w + 7;  // <- just for exercising
     external_buffer = (uint8_t*)WebPMalloc(stride * h);
     if (external_buffer == NULL) return NULL;
     output_buffer->u.RGBA.stride = stride;
     output_buffer->u.RGBA.size = stride * h;
     output_buffer->u.RGBA.rgba = external_buffer;
-  } else {    // YUV and YUVA
+  } else {  // YUV and YUVA
     const int has_alpha = WebPIsAlphaMode(output_buffer->colorspace);
     uint8_t* tmp;
     uint32_t stride = w + 3;
     uint32_t uv_stride = (w + 1) / 2 + 13;
-    uint32_t total_size = stride * h * (has_alpha ? 2 : 1)
-                        + 2 * uv_stride * (h + 1) / 2;
+    uint32_t total_size =
+        stride * h * (has_alpha ? 2 : 1) + 2 * uv_stride * (h + 1) / 2;
     assert(format >= YUV && format <= YUVA);
     external_buffer = (uint8_t*)WebPMalloc(total_size);
     if (external_buffer == NULL) return NULL;
@@ -228,8 +226,8 @@ int main(int argc, const char* argv[]) {
       quiet = 1;
     } else if (!strcmp(argv[c], "-version")) {
       const int version = WebPGetDecoderVersion();
-      printf("%d.%d.%d\n",
-             (version >> 16) & 0xff, (version >> 8) & 0xff, version & 0xff);
+      printf("%d.%d.%d\n", (version >> 16) & 0xff, (version >> 8) & 0xff,
+             version & 0xff);
       FREE_WARGV_AND_RETURN(EXIT_SUCCESS);
     } else if (!strcmp(argv[c], "-pgm")) {
       format = PGM;
@@ -237,19 +235,32 @@ int main(int argc, const char* argv[]) {
       format = RAW_YUV;
     } else if (!strcmp(argv[c], "-pixel_format") && c < argc - 1) {
       const char* const fmt = argv[++c];
-      if      (!strcmp(fmt, "RGB"))  format = RGB;
-      else if (!strcmp(fmt, "RGBA")) format = RGBA;
-      else if (!strcmp(fmt, "BGR"))  format = BGR;
-      else if (!strcmp(fmt, "BGRA")) format = BGRA;
-      else if (!strcmp(fmt, "ARGB")) format = ARGB;
-      else if (!strcmp(fmt, "RGBA_4444")) format = RGBA_4444;
-      else if (!strcmp(fmt, "RGB_565")) format = RGB_565;
-      else if (!strcmp(fmt, "rgbA")) format = rgbA;
-      else if (!strcmp(fmt, "bgrA")) format = bgrA;
-      else if (!strcmp(fmt, "Argb")) format = Argb;
-      else if (!strcmp(fmt, "rgbA_4444")) format = rgbA_4444;
-      else if (!strcmp(fmt, "YUV"))  format = YUV;
-      else if (!strcmp(fmt, "YUVA")) format = YUVA;
+      if (!strcmp(fmt, "RGB"))
+        format = RGB;
+      else if (!strcmp(fmt, "RGBA"))
+        format = RGBA;
+      else if (!strcmp(fmt, "BGR"))
+        format = BGR;
+      else if (!strcmp(fmt, "BGRA"))
+        format = BGRA;
+      else if (!strcmp(fmt, "ARGB"))
+        format = ARGB;
+      else if (!strcmp(fmt, "RGBA_4444"))
+        format = RGBA_4444;
+      else if (!strcmp(fmt, "RGB_565"))
+        format = RGB_565;
+      else if (!strcmp(fmt, "rgbA"))
+        format = rgbA;
+      else if (!strcmp(fmt, "bgrA"))
+        format = bgrA;
+      else if (!strcmp(fmt, "Argb"))
+        format = Argb;
+      else if (!strcmp(fmt, "rgbA_4444"))
+        format = rgbA_4444;
+      else if (!strcmp(fmt, "YUV"))
+        format = YUV;
+      else if (!strcmp(fmt, "YUVA"))
+        format = YUVA;
       else {
         fprintf(stderr, "Can't parse pixel_format %s\n", fmt);
         parse_error = 1;
@@ -271,14 +282,14 @@ int main(int argc, const char* argv[]) {
           ExUtilGetInt(argv[++c], 0, &parse_error);
     } else if (!strcmp(argv[c], "-crop") && c < argc - 4) {
       config.options.use_cropping = 1;
-      config.options.crop_left   = ExUtilGetInt(argv[++c], 0, &parse_error);
-      config.options.crop_top    = ExUtilGetInt(argv[++c], 0, &parse_error);
-      config.options.crop_width  = ExUtilGetInt(argv[++c], 0, &parse_error);
+      config.options.crop_left = ExUtilGetInt(argv[++c], 0, &parse_error);
+      config.options.crop_top = ExUtilGetInt(argv[++c], 0, &parse_error);
+      config.options.crop_width = ExUtilGetInt(argv[++c], 0, &parse_error);
       config.options.crop_height = ExUtilGetInt(argv[++c], 0, &parse_error);
     } else if ((!strcmp(argv[c], "-scale") || !strcmp(argv[c], "-resize")) &&
                c < argc - 2) {  // '-scale' is left for compatibility
       config.options.use_scaling = 1;
-      config.options.scaled_width  = ExUtilGetInt(argv[++c], 0, &parse_error);
+      config.options.scaled_width = ExUtilGetInt(argv[++c], 0, &parse_error);
       config.options.scaled_height = ExUtilGetInt(argv[++c], 0, &parse_error);
     } else if (!strcmp(argv[c], "-flip")) {
       config.options.flip = 1;
@@ -350,25 +361,52 @@ int main(int argc, const char* argv[]) {
         output_buffer->colorspace = MODE_YUVA;
         break;
       // forced modes:
-      case RGB: output_buffer->colorspace = MODE_RGB; break;
-      case RGBA: output_buffer->colorspace = MODE_RGBA; break;
-      case BGR: output_buffer->colorspace = MODE_BGR; break;
-      case BGRA: output_buffer->colorspace = MODE_BGRA; break;
-      case ARGB: output_buffer->colorspace = MODE_ARGB; break;
-      case RGBA_4444: output_buffer->colorspace = MODE_RGBA_4444; break;
-      case RGB_565: output_buffer->colorspace = MODE_RGB_565; break;
-      case rgbA: output_buffer->colorspace = MODE_rgbA; break;
-      case bgrA: output_buffer->colorspace = MODE_bgrA; break;
-      case Argb: output_buffer->colorspace = MODE_Argb; break;
-      case rgbA_4444: output_buffer->colorspace = MODE_rgbA_4444; break;
-      case YUV: output_buffer->colorspace = MODE_YUV; break;
-      case YUVA: output_buffer->colorspace = MODE_YUVA; break;
-      default: goto Exit;
+      case RGB:
+        output_buffer->colorspace = MODE_RGB;
+        break;
+      case RGBA:
+        output_buffer->colorspace = MODE_RGBA;
+        break;
+      case BGR:
+        output_buffer->colorspace = MODE_BGR;
+        break;
+      case BGRA:
+        output_buffer->colorspace = MODE_BGRA;
+        break;
+      case ARGB:
+        output_buffer->colorspace = MODE_ARGB;
+        break;
+      case RGBA_4444:
+        output_buffer->colorspace = MODE_RGBA_4444;
+        break;
+      case RGB_565:
+        output_buffer->colorspace = MODE_RGB_565;
+        break;
+      case rgbA:
+        output_buffer->colorspace = MODE_rgbA;
+        break;
+      case bgrA:
+        output_buffer->colorspace = MODE_bgrA;
+        break;
+      case Argb:
+        output_buffer->colorspace = MODE_Argb;
+        break;
+      case rgbA_4444:
+        output_buffer->colorspace = MODE_rgbA_4444;
+        break;
+      case YUV:
+        output_buffer->colorspace = MODE_YUV;
+        break;
+      case YUVA:
+        output_buffer->colorspace = MODE_YUVA;
+        break;
+      default:
+        goto Exit;
     }
 
     if (use_external_memory > 0 && format >= RGB) {
-      external_buffer = AllocateExternalBuffer(&config, format,
-                                               use_external_memory);
+      external_buffer =
+          AllocateExternalBuffer(&config, format, use_external_memory);
       if (external_buffer == NULL) goto Exit;
     }
 
@@ -410,11 +448,12 @@ int main(int argc, const char* argv[]) {
               output_buffer->width, output_buffer->height,
               bitstream->has_alpha ? " (with alpha)" : "",
               kFormatType[bitstream->format]);
-      fprintf(stderr, "Nothing written; "
-                      "use -o flag to save the result as e.g. PNG.\n");
+      fprintf(stderr,
+              "Nothing written; "
+              "use -o flag to save the result as e.g. PNG.\n");
     }
   }
- Exit:
+Exit:
   WebPFreeDecBuffer(output_buffer);
   WebPFree((void*)external_buffer);
   WebPFree((void*)data);

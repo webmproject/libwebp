@@ -26,9 +26,7 @@ static WEBP_INLINE uint8_t clip_8b(int v) {
 }
 
 #if !WEBP_NEON_OMIT_C_CODE
-static WEBP_INLINE int clip_max(int v, int max) {
-  return (v > max) ? max : v;
-}
+static WEBP_INLINE int clip_max(int v, int max) { return (v > max) ? max : v; }
 #endif  // !WEBP_NEON_OMIT_C_CODE
 
 //------------------------------------------------------------------------------
@@ -36,14 +34,14 @@ static WEBP_INLINE int clip_max(int v, int max) {
 // the higher, the "easier" the macroblock is to compress.
 
 const int VP8DspScan[16 + 4 + 4] = {
-  // Luma
-  0 +  0 * BPS,  4 +  0 * BPS, 8 +  0 * BPS, 12 +  0 * BPS,
-  0 +  4 * BPS,  4 +  4 * BPS, 8 +  4 * BPS, 12 +  4 * BPS,
-  0 +  8 * BPS,  4 +  8 * BPS, 8 +  8 * BPS, 12 +  8 * BPS,
-  0 + 12 * BPS,  4 + 12 * BPS, 8 + 12 * BPS, 12 + 12 * BPS,
+    // Luma
+    0 + 0 * BPS,  4 + 0 * BPS,  8 + 0 * BPS,  12 + 0 * BPS,
+    0 + 4 * BPS,  4 + 4 * BPS,  8 + 4 * BPS,  12 + 4 * BPS,
+    0 + 8 * BPS,  4 + 8 * BPS,  8 + 8 * BPS,  12 + 8 * BPS,
+    0 + 12 * BPS, 4 + 12 * BPS, 8 + 12 * BPS, 12 + 12 * BPS,
 
-  0 + 0 * BPS,   4 + 0 * BPS, 0 + 4 * BPS,  4 + 4 * BPS,    // U
-  8 + 0 * BPS,  12 + 0 * BPS, 8 + 4 * BPS, 12 + 4 * BPS     // V
+    0 + 0 * BPS,  4 + 0 * BPS,  0 + 4 * BPS,  4 + 4 * BPS,  // U
+    8 + 0 * BPS,  12 + 0 * BPS, 8 + 4 * BPS,  12 + 4 * BPS  // V
 };
 
 // general-purpose util function
@@ -68,7 +66,7 @@ static void CollectHistogram_C(const uint8_t* WEBP_RESTRICT ref,
                                int start_block, int end_block,
                                VP8Histogram* WEBP_RESTRICT const histo) {
   int j;
-  int distribution[MAX_COEFF_THRESH + 1] = { 0 };
+  int distribution[MAX_COEFF_THRESH + 1] = {0};
   for (j = start_block; j < end_block; ++j) {
     int k;
     int16_t out[16];
@@ -89,7 +87,7 @@ static void CollectHistogram_C(const uint8_t* WEBP_RESTRICT ref,
 //------------------------------------------------------------------------------
 // run-time tables (~4k)
 
-static uint8_t clip1[255 + 510 + 1];    // clips [-255,510] to [0,255]
+static uint8_t clip1[255 + 510 + 1];  // clips [-255,510] to [0,255]
 
 // We declare this variable 'volatile' to prevent instruction reordering
 // and make sure it's set to true _last_ (so as to be thread-safe)
@@ -105,7 +103,6 @@ static WEBP_TSAN_IGNORE_FUNCTION void InitTables(void) {
   }
 }
 
-
 //------------------------------------------------------------------------------
 // Transforms (Paragraph 14.4)
 
@@ -120,7 +117,7 @@ static WEBP_INLINE void ITransformOne(const uint8_t* WEBP_RESTRICT ref,
   int C[4 * 4], *tmp;
   int i;
   tmp = C;
-  for (i = 0; i < 4; ++i) {    // vertical pass
+  for (i = 0; i < 4; ++i) {  // vertical pass
     const int a = in[0] + in[8];
     const int b = in[0] - in[8];
     const int c =
@@ -136,7 +133,7 @@ static WEBP_INLINE void ITransformOne(const uint8_t* WEBP_RESTRICT ref,
   }
 
   tmp = C;
-  for (i = 0; i < 4; ++i) {    // horizontal pass
+  for (i = 0; i < 4; ++i) {  // horizontal pass
     const int dc = tmp[0] + 4;
     const int a = dc + tmp[8];
     const int b = dc - tmp[8];
@@ -154,8 +151,7 @@ static WEBP_INLINE void ITransformOne(const uint8_t* WEBP_RESTRICT ref,
 
 static void ITransform_C(const uint8_t* WEBP_RESTRICT ref,
                          const int16_t* WEBP_RESTRICT in,
-                         uint8_t* WEBP_RESTRICT dst,
-                         int do_two) {
+                         uint8_t* WEBP_RESTRICT dst, int do_two) {
   ITransformOne(ref, in, dst);
   if (do_two) {
     ITransformOne(ref + 4, in + 16, dst + 4);
@@ -168,28 +164,28 @@ static void FTransform_C(const uint8_t* WEBP_RESTRICT src,
   int i;
   int tmp[16];
   for (i = 0; i < 4; ++i, src += BPS, ref += BPS) {
-    const int d0 = src[0] - ref[0];   // 9bit dynamic range ([-255,255])
+    const int d0 = src[0] - ref[0];  // 9bit dynamic range ([-255,255])
     const int d1 = src[1] - ref[1];
     const int d2 = src[2] - ref[2];
     const int d3 = src[3] - ref[3];
-    const int a0 = (d0 + d3);         // 10b                      [-510,510]
+    const int a0 = (d0 + d3);  // 10b [-510,510]
     const int a1 = (d1 + d2);
     const int a2 = (d1 - d2);
     const int a3 = (d0 - d3);
-    tmp[0 + i * 4] = (a0 + a1) * 8;   // 14b                      [-8160,8160]
-    tmp[1 + i * 4] = (a2 * 2217 + a3 * 5352 + 1812) >> 9;      // [-7536,7542]
+    tmp[0 + i * 4] = (a0 + a1) * 8;                        // 14b [-8160,8160]
+    tmp[1 + i * 4] = (a2 * 2217 + a3 * 5352 + 1812) >> 9;  // [-7536,7542]
     tmp[2 + i * 4] = (a0 - a1) * 8;
-    tmp[3 + i * 4] = (a3 * 2217 - a2 * 5352 +  937) >> 9;
+    tmp[3 + i * 4] = (a3 * 2217 - a2 * 5352 + 937) >> 9;
   }
   for (i = 0; i < 4; ++i) {
     const int a0 = (tmp[0 + i] + tmp[12 + i]);  // 15b
-    const int a1 = (tmp[4 + i] + tmp[ 8 + i]);
-    const int a2 = (tmp[4 + i] - tmp[ 8 + i]);
+    const int a1 = (tmp[4 + i] + tmp[8 + i]);
+    const int a2 = (tmp[4 + i] - tmp[8 + i]);
     const int a3 = (tmp[0 + i] - tmp[12 + i]);
-    out[0 + i] = (a0 + a1 + 7) >> 4;            // 12b
+    out[0 + i] = (a0 + a1 + 7) >> 4;  // 12b
     out[4 + i] = ((a2 * 2217 + a3 * 5352 + 12000) >> 16) + (a3 != 0);
     out[8 + i] = (a0 - a1 + 7) >> 4;
-    out[12+ i] = ((a3 * 2217 - a2 * 5352 + 51000) >> 16);
+    out[12 + i] = ((a3 * 2217 - a2 * 5352 + 51000) >> 16);
   }
 }
 #endif  // !WEBP_NEON_OMIT_C_CODE
@@ -212,23 +208,23 @@ static void FTransformWHT_C(const int16_t* WEBP_RESTRICT in,
     const int a1 = (in[1 * 16] + in[3 * 16]);
     const int a2 = (in[1 * 16] - in[3 * 16]);
     const int a3 = (in[0 * 16] - in[2 * 16]);
-    tmp[0 + i * 4] = a0 + a1;   // 14b
+    tmp[0 + i * 4] = a0 + a1;  // 14b
     tmp[1 + i * 4] = a3 + a2;
     tmp[2 + i * 4] = a3 - a2;
     tmp[3 + i * 4] = a0 - a1;
   }
   for (i = 0; i < 4; ++i) {
     const int a0 = (tmp[0 + i] + tmp[8 + i]);  // 15b
-    const int a1 = (tmp[4 + i] + tmp[12+ i]);
-    const int a2 = (tmp[4 + i] - tmp[12+ i]);
+    const int a1 = (tmp[4 + i] + tmp[12 + i]);
+    const int a2 = (tmp[4 + i] - tmp[12 + i]);
     const int a3 = (tmp[0 + i] - tmp[8 + i]);
-    const int b0 = a0 + a1;    // 16b
+    const int b0 = a0 + a1;  // 16b
     const int b1 = a3 + a2;
     const int b2 = a3 - a2;
     const int b3 = a0 - a1;
-    out[ 0 + i] = b0 >> 1;     // 15b
-    out[ 4 + i] = b1 >> 1;
-    out[ 8 + i] = b2 >> 1;
+    out[0 + i] = b0 >> 1;  // 15b
+    out[4 + i] = b1 >> 1;
+    out[8 + i] = b2 >> 1;
     out[12 + i] = b3 >> 1;
   }
 }
@@ -303,23 +299,23 @@ static WEBP_INLINE void TrueMotion(uint8_t* WEBP_RESTRICT dst,
 
 static WEBP_INLINE void DCMode(uint8_t* WEBP_RESTRICT dst,
                                const uint8_t* WEBP_RESTRICT left,
-                               const uint8_t* WEBP_RESTRICT top,
-                               int size, int round, int shift) {
+                               const uint8_t* WEBP_RESTRICT top, int size,
+                               int round, int shift) {
   int DC = 0;
   int j;
   if (top != NULL) {
     for (j = 0; j < size; ++j) DC += top[j];
-    if (left != NULL) {   // top and left present
+    if (left != NULL) {  // top and left present
       for (j = 0; j < size; ++j) DC += left[j];
-    } else {      // top, but no left
+    } else {  // top, but no left
       DC += DC;
     }
     DC = (DC + round) >> shift;
-  } else if (left != NULL) {   // left but no top
+  } else if (left != NULL) {  // left but no top
     for (j = 0; j < size; ++j) DC += left[j];
     DC += DC;
     DC = (DC + round) >> shift;
-  } else {   // no top, no left, nothing.
+  } else {  // no top, no left, nothing.
     DC = 0x80;
   }
   Fill(dst, DC, size);
@@ -372,10 +368,10 @@ static void Intra16Preds_C(uint8_t* WEBP_RESTRICT dst,
 // vertical
 static void VE4(uint8_t* WEBP_RESTRICT dst, const uint8_t* WEBP_RESTRICT top) {
   const uint8_t vals[4] = {
-    AVG3(top[-1], top[0], top[1]),
-    AVG3(top[ 0], top[1], top[2]),
-    AVG3(top[ 1], top[2], top[3]),
-    AVG3(top[ 2], top[3], top[4])
+      AVG3(top[-1], top[0], top[1]),
+      AVG3(top[0], top[1], top[2]),
+      AVG3(top[1], top[2], top[3]),
+      AVG3(top[2], top[3], top[4]),
   };
   int i;
   for (i = 0; i < 4; ++i) {
@@ -413,13 +409,13 @@ static void RD4(uint8_t* WEBP_RESTRICT dst, const uint8_t* WEBP_RESTRICT top) {
   const int B = top[1];
   const int C = top[2];
   const int D = top[3];
-  DST(0, 3)                                     = AVG3(J, K, L);
-  DST(0, 2) = DST(1, 3)                         = AVG3(I, J, K);
-  DST(0, 1) = DST(1, 2) = DST(2, 3)             = AVG3(X, I, J);
+  DST(0, 3) = AVG3(J, K, L);
+  DST(0, 2) = DST(1, 3) = AVG3(I, J, K);
+  DST(0, 1) = DST(1, 2) = DST(2, 3) = AVG3(X, I, J);
   DST(0, 0) = DST(1, 1) = DST(2, 2) = DST(3, 3) = AVG3(A, X, I);
-  DST(1, 0) = DST(2, 1) = DST(3, 2)             = AVG3(B, A, X);
-  DST(2, 0) = DST(3, 1)                         = AVG3(C, B, A);
-  DST(3, 0)                                     = AVG3(D, C, B);
+  DST(1, 0) = DST(2, 1) = DST(3, 2) = AVG3(B, A, X);
+  DST(2, 0) = DST(3, 1) = AVG3(C, B, A);
+  DST(3, 0) = AVG3(D, C, B);
 }
 
 static void LD4(uint8_t* WEBP_RESTRICT dst, const uint8_t* WEBP_RESTRICT top) {
@@ -431,13 +427,13 @@ static void LD4(uint8_t* WEBP_RESTRICT dst, const uint8_t* WEBP_RESTRICT top) {
   const int F = top[5];
   const int G = top[6];
   const int H = top[7];
-  DST(0, 0)                                     = AVG3(A, B, C);
-  DST(1, 0) = DST(0, 1)                         = AVG3(B, C, D);
-  DST(2, 0) = DST(1, 1) = DST(0, 2)             = AVG3(C, D, E);
+  DST(0, 0) = AVG3(A, B, C);
+  DST(1, 0) = DST(0, 1) = AVG3(B, C, D);
+  DST(2, 0) = DST(1, 1) = DST(0, 2) = AVG3(C, D, E);
   DST(3, 0) = DST(2, 1) = DST(1, 2) = DST(0, 3) = AVG3(D, E, F);
-  DST(3, 1) = DST(2, 2) = DST(1, 3)             = AVG3(E, F, G);
-  DST(3, 2) = DST(2, 3)                         = AVG3(F, G, H);
-  DST(3, 3)                                     = AVG3(G, H, H);
+  DST(3, 1) = DST(2, 2) = DST(1, 3) = AVG3(E, F, G);
+  DST(3, 2) = DST(2, 3) = AVG3(F, G, H);
+  DST(3, 3) = AVG3(G, H, H);
 }
 
 static void VR4(uint8_t* WEBP_RESTRICT dst, const uint8_t* WEBP_RESTRICT top) {
@@ -452,14 +448,14 @@ static void VR4(uint8_t* WEBP_RESTRICT dst, const uint8_t* WEBP_RESTRICT top) {
   DST(0, 0) = DST(1, 2) = AVG2(X, A);
   DST(1, 0) = DST(2, 2) = AVG2(A, B);
   DST(2, 0) = DST(3, 2) = AVG2(B, C);
-  DST(3, 0)             = AVG2(C, D);
+  DST(3, 0) = AVG2(C, D);
 
-  DST(0, 3) =             AVG3(K, J, I);
-  DST(0, 2) =             AVG3(J, I, X);
+  DST(0, 3) = AVG3(K, J, I);
+  DST(0, 2) = AVG3(J, I, X);
   DST(0, 1) = DST(1, 3) = AVG3(I, X, A);
   DST(1, 1) = DST(2, 3) = AVG3(X, A, B);
   DST(2, 1) = DST(3, 3) = AVG3(A, B, C);
-  DST(3, 1) =             AVG3(B, C, D);
+  DST(3, 1) = AVG3(B, C, D);
 }
 
 static void VL4(uint8_t* WEBP_RESTRICT dst, const uint8_t* WEBP_RESTRICT top) {
@@ -471,17 +467,17 @@ static void VL4(uint8_t* WEBP_RESTRICT dst, const uint8_t* WEBP_RESTRICT top) {
   const int F = top[5];
   const int G = top[6];
   const int H = top[7];
-  DST(0, 0) =             AVG2(A, B);
+  DST(0, 0) = AVG2(A, B);
   DST(1, 0) = DST(0, 2) = AVG2(B, C);
   DST(2, 0) = DST(1, 2) = AVG2(C, D);
   DST(3, 0) = DST(2, 2) = AVG2(D, E);
 
-  DST(0, 1) =             AVG3(A, B, C);
+  DST(0, 1) = AVG3(A, B, C);
   DST(1, 1) = DST(0, 3) = AVG3(B, C, D);
   DST(2, 1) = DST(1, 3) = AVG3(C, D, E);
   DST(3, 1) = DST(2, 3) = AVG3(D, E, F);
-              DST(3, 2) = AVG3(E, F, G);
-              DST(3, 3) = AVG3(F, G, H);
+  DST(3, 2) = AVG3(E, F, G);
+  DST(3, 3) = AVG3(F, G, H);
 }
 
 static void HU4(uint8_t* WEBP_RESTRICT dst, const uint8_t* WEBP_RESTRICT top) {
@@ -489,14 +485,13 @@ static void HU4(uint8_t* WEBP_RESTRICT dst, const uint8_t* WEBP_RESTRICT top) {
   const int J = top[-3];
   const int K = top[-4];
   const int L = top[-5];
-  DST(0, 0) =             AVG2(I, J);
+  DST(0, 0) = AVG2(I, J);
   DST(2, 0) = DST(0, 1) = AVG2(J, K);
   DST(2, 1) = DST(0, 2) = AVG2(K, L);
-  DST(1, 0) =             AVG3(I, J, K);
+  DST(1, 0) = AVG3(I, J, K);
   DST(3, 0) = DST(1, 1) = AVG3(J, K, L);
   DST(3, 1) = DST(1, 2) = AVG3(K, L, L);
-  DST(3, 2) = DST(2, 2) =
-  DST(0, 3) = DST(1, 3) = DST(2, 3) = DST(3, 3) = L;
+  DST(3, 2) = DST(2, 2) = DST(0, 3) = DST(1, 3) = DST(2, 3) = DST(3, 3) = L;
 }
 
 static void HD4(uint8_t* WEBP_RESTRICT dst, const uint8_t* WEBP_RESTRICT top) {
@@ -512,14 +507,14 @@ static void HD4(uint8_t* WEBP_RESTRICT dst, const uint8_t* WEBP_RESTRICT top) {
   DST(0, 0) = DST(2, 1) = AVG2(I, X);
   DST(0, 1) = DST(2, 2) = AVG2(J, I);
   DST(0, 2) = DST(2, 3) = AVG2(K, J);
-  DST(0, 3)             = AVG2(L, K);
+  DST(0, 3) = AVG2(L, K);
 
-  DST(3, 0)             = AVG3(A, B, C);
-  DST(2, 0)             = AVG3(X, A, B);
+  DST(3, 0) = AVG3(A, B, C);
+  DST(2, 0) = AVG3(X, A, B);
   DST(1, 0) = DST(3, 1) = AVG3(I, X, A);
   DST(1, 1) = DST(3, 2) = AVG3(J, I, X);
   DST(1, 2) = DST(3, 3) = AVG3(K, J, I);
-  DST(1, 3)             = AVG3(L, K, J);
+  DST(1, 3) = AVG3(L, K, J);
 }
 
 static void TM4(uint8_t* WEBP_RESTRICT dst, const uint8_t* WEBP_RESTRICT top) {
@@ -561,8 +556,7 @@ static void Intra4Preds_C(uint8_t* WEBP_RESTRICT dst,
 
 #if !WEBP_NEON_OMIT_C_CODE
 static WEBP_INLINE int GetSSE(const uint8_t* WEBP_RESTRICT a,
-                              const uint8_t* WEBP_RESTRICT b,
-                              int w, int h) {
+                              const uint8_t* WEBP_RESTRICT b, int w, int h) {
   int count = 0;
   int y, x;
   for (y = 0; y < h; ++y) {
@@ -604,7 +598,7 @@ static void Mean16x4_C(const uint8_t* WEBP_RESTRICT ref, uint32_t dc[4]) {
       }
     }
     dc[k] = avg;
-    ref += 4;   // go to next 4x4 block.
+    ref += 4;  // go to next 4x4 block.
   }
 }
 
@@ -637,17 +631,17 @@ static int TTransform(const uint8_t* WEBP_RESTRICT in,
   // vertical pass
   for (i = 0; i < 4; ++i, ++w) {
     const int a0 = tmp[0 + i] + tmp[8 + i];
-    const int a1 = tmp[4 + i] + tmp[12+ i];
-    const int a2 = tmp[4 + i] - tmp[12+ i];
+    const int a1 = tmp[4 + i] + tmp[12 + i];
+    const int a2 = tmp[4 + i] - tmp[12 + i];
     const int a3 = tmp[0 + i] - tmp[8 + i];
     const int b0 = a0 + a1;
     const int b1 = a3 + a2;
     const int b2 = a3 - a2;
     const int b3 = a0 - a1;
 
-    sum += w[ 0] * abs(b0);
-    sum += w[ 4] * abs(b1);
-    sum += w[ 8] * abs(b2);
+    sum += w[0] * abs(b0);
+    sum += w[4] * abs(b1);
+    sum += w[8] * abs(b2);
     sum += w[12] * abs(b3);
   }
   return sum;
@@ -680,9 +674,8 @@ static int Disto16x16_C(const uint8_t* WEBP_RESTRICT const a,
 //
 
 #if !WEBP_NEON_OMIT_C_CODE || WEBP_NEON_WORK_AROUND_GCC
-static const uint8_t kZigzag[16] = {
-  0, 1, 4, 8, 5, 2, 3, 6, 9, 12, 13, 10, 7, 11, 14, 15
-};
+static const uint8_t kZigzag[16] = {0, 1,  4,  8,  5, 2,  3,  6,
+                                    9, 12, 13, 10, 7, 11, 14, 15};
 
 // Simple quantization
 static int QuantizeBlock_C(int16_t in[16], int16_t out[16],
@@ -714,7 +707,7 @@ static int QuantizeBlock_C(int16_t in[16], int16_t out[16],
 static int Quantize2Blocks_C(int16_t in[32], int16_t out[32],
                              const VP8Matrix* WEBP_RESTRICT const mtx) {
   int nz;
-  nz  = VP8EncQuantizeBlock(in + 0 * 16, out + 0 * 16, mtx) << 0;
+  nz = VP8EncQuantizeBlock(in + 0 * 16, out + 0 * 16, mtx) << 0;
   nz |= VP8EncQuantizeBlock(in + 1 * 16, out + 1 * 16, mtx) << 1;
   return nz;
 }

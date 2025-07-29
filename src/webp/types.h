@@ -25,16 +25,16 @@
 #define WEBP_INLINE
 #endif
 #else
-typedef signed   char int8_t;
+typedef signed char int8_t;
 typedef unsigned char uint8_t;
-typedef signed   short int16_t;
+typedef signed short int16_t;
 typedef unsigned short uint16_t;
-typedef signed   int int32_t;
+typedef signed int int32_t;
 typedef unsigned int uint32_t;
 typedef unsigned long long int uint64_t;
 typedef long long int int64_t;
 #define WEBP_INLINE __forceinline
-#endif  /* _MSC_VER */
+#endif /* _MSC_VER */
 
 #ifndef WEBP_NODISCARD
 #if defined(WEBP_ENABLE_NODISCARD) && WEBP_ENABLE_NODISCARD
@@ -48,28 +48,28 @@ typedef long long int int64_t;
 #define WEBP_NODISCARD __attribute__((warn_unused_result))
 #else
 #define WEBP_NODISCARD
-#endif  /* __has_attribute(warn_unused_result) */
+#endif /* __has_attribute(warn_unused_result) */
 #else
 #define WEBP_NODISCARD
-#endif  /* defined(__clang__) && defined(__has_attribute) */
-#endif  /* (defined(__cplusplus) && __cplusplus >= 201700L) ||
-           (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 202311L) */
+#endif /* defined(__clang__) && defined(__has_attribute) */
+#endif /* (defined(__cplusplus) && __cplusplus >= 201700L) || \
+          (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 202311L) */
 #else
 #define WEBP_NODISCARD
-#endif  /* defined(WEBP_ENABLE_NODISCARD) && WEBP_ENABLE_NODISCARD */
-#endif  /* WEBP_NODISCARD */
+#endif /* defined(WEBP_ENABLE_NODISCARD) && WEBP_ENABLE_NODISCARD */
+#endif /* WEBP_NODISCARD */
 
 #ifndef WEBP_EXTERN
 // This explicitly marks library functions and allows for changing the
 // signature for e.g., Windows DLL builds.
-# if defined(_WIN32) && defined(WEBP_DLL)
-#  define WEBP_EXTERN __declspec(dllexport)
-# elif defined(__GNUC__) && __GNUC__ >= 4
-#  define WEBP_EXTERN extern __attribute__ ((visibility ("default")))
-# else
-#  define WEBP_EXTERN extern
-# endif  /* defined(_WIN32) && defined(WEBP_DLL) */
-#endif  /* WEBP_EXTERN */
+#if defined(_WIN32) && defined(WEBP_DLL)
+#define WEBP_EXTERN __declspec(dllexport)
+#elif defined(__GNUC__) && __GNUC__ >= 4
+#define WEBP_EXTERN extern __attribute__((visibility("default")))
+#else
+#define WEBP_EXTERN extern
+#endif /* defined(_WIN32) && defined(WEBP_DLL) */
+#endif /* WEBP_EXTERN */
 
 // Macro to check ABI compatibility (same major revision number)
 #define WEBP_ABI_IS_INCOMPATIBLE(a, b) (((a) >> 8) != ((b) >> 8))
@@ -87,7 +87,7 @@ WEBP_NODISCARD WEBP_EXTERN void* WebPMalloc(size_t size);
 WEBP_EXTERN void WebPFree(void* ptr);
 
 #ifdef __cplusplus
-}    // extern "C"
+}  // extern "C"
 #endif
 
 #endif  // WEBP_WEBP_TYPES_H_

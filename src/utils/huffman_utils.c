@@ -11,18 +11,19 @@
 //
 // Author: Urvang Joshi (urvang@google.com)
 
+#include "src/utils/huffman_utils.h"
+
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "src/utils/huffman_utils.h"
 #include "src/utils/utils.h"
 #include "src/webp/format_constants.h"
 #include "src/webp/types.h"
 
 // Huffman data read via DecodeImageStream is represented in two (red and green)
 // bytes.
-#define MAX_HTREE_GROUPS    0x10000
+#define MAX_HTREE_GROUPS 0x10000
 
 HTreeGroup* VP8LHtreeGroupsNew(int num_htree_groups) {
   HTreeGroup* const htree_groups =
@@ -52,8 +53,7 @@ static WEBP_INLINE uint32_t GetNextKey(uint32_t key, int len) {
 
 // Stores code in table[0], table[step], table[2*step], ..., table[end].
 // Assumes that end is an integer multiple of step.
-static WEBP_INLINE void ReplicateValue(HuffmanCode* table,
-                                       int step, int end,
+static WEBP_INLINE void ReplicateValue(HuffmanCode* table, int step, int end,
                                        HuffmanCode code) {
   assert(end % step == 0);
   do {
@@ -65,8 +65,8 @@ static WEBP_INLINE void ReplicateValue(HuffmanCode* table,
 // Returns the table width of the next 2nd level table. count is the histogram
 // of bit lengths for the remaining symbols, len is the code length of the next
 // processed symbol
-static WEBP_INLINE int NextTableBitSize(const int* const count,
-                                        int len, int root_bits) {
+static WEBP_INLINE int NextTableBitSize(const int* const count, int len,
+                                        int root_bits) {
   int left = 1 << (len - root_bits);
   while (len < MAX_ALLOWED_CODE_LENGTH) {
     left -= count[len];
@@ -87,7 +87,7 @@ static int BuildHuffmanTable(HuffmanCode* const root_table, int root_bits,
   int len;                          // current code length
   int symbol;                       // symbol index in original or sorted table
   // number of codes of each length:
-  int count[MAX_ALLOWED_CODE_LENGTH + 1] = { 0 };
+  int count[MAX_ALLOWED_CODE_LENGTH + 1] = {0};
   // offsets in sorted table for each length:
   int offset[MAX_ALLOWED_CODE_LENGTH + 1];
 
@@ -150,12 +150,12 @@ static int BuildHuffmanTable(HuffmanCode* const root_table, int root_bits,
   }
 
   {
-    int step;              // step size to replicate values in current table
-    uint32_t low = 0xffffffffu;        // low bits for current root entry
-    uint32_t mask = total_size - 1;    // mask for low bits
-    uint32_t key = 0;      // reversed prefix code
-    int num_nodes = 1;     // number of Huffman tree nodes
-    int num_open = 1;      // number of open branches in current tree level
+    int step;  // step size to replicate values in current table
+    uint32_t low = 0xffffffffu;      // low bits for current root entry
+    uint32_t mask = total_size - 1;  // mask for low bits
+    uint32_t key = 0;                // reversed prefix code
+    int num_nodes = 1;               // number of Huffman tree nodes
+    int num_open = 1;  // number of open branches in current tree level
     int table_bits = root_bits;        // key length of current table
     int table_size = 1 << table_bits;  // size of current table
     symbol = 0;

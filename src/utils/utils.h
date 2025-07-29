@@ -62,8 +62,8 @@ WEBP_EXTERN void WebPSafeFree(void* const ptr);
 // Alignment
 
 #define WEBP_ALIGN_CST 31
-#define WEBP_ALIGN(PTR) (((uintptr_t)(PTR) + WEBP_ALIGN_CST) & \
-                         ~(uintptr_t)WEBP_ALIGN_CST)
+#define WEBP_ALIGN(PTR) \
+  (((uintptr_t)(PTR) + WEBP_ALIGN_CST) & ~(uintptr_t)WEBP_ALIGN_CST)
 
 #include <string.h>
 // memcpy() is the safe way of moving potentially unaligned 32b memory.
@@ -129,7 +129,7 @@ static WEBP_INLINE int BitsLog2Floor(uint32_t n) {
 // counts the number of trailing zero
 static WEBP_INLINE int BitsCtz(uint32_t n) { return __builtin_ctz(n); }
 #elif defined(_MSC_VER) && _MSC_VER > 1310 && \
-      (defined(_M_X64) || defined(_M_IX86))
+    (defined(_M_X64) || defined(_M_IX86))
 #include <intrin.h>
 #pragma intrinsic(_BitScanReverse)
 #pragma intrinsic(_BitScanForward)
@@ -144,8 +144,8 @@ static WEBP_INLINE int BitsCtz(uint32_t n) {
   _BitScanForward(&first_set_bit, n);
   return first_set_bit;
 }
-#else   // default: use the (slow) C-version.
-#define WEBP_HAVE_SLOW_CLZ_CTZ   // signal that the Clz/Ctz function are slow
+#else                           // default: use the (slow) C-version.
+#define WEBP_HAVE_SLOW_CLZ_CTZ  // signal that the Clz/Ctz function are slow
 // Returns 31 ^ clz(n) = log2(n). This is the default C-implementation, either
 // based on table or not. Can be used as fallback if clz() is not available.
 #define WEBP_NEED_LOG_TABLE_8BIT
@@ -177,9 +177,8 @@ static WEBP_INLINE int BitsCtz(uint32_t n) {
 struct WebPPicture;
 
 // Copy width x height pixels from 'src' to 'dst' honoring the strides.
-WEBP_EXTERN void WebPCopyPlane(const uint8_t* src, int src_stride,
-                               uint8_t* dst, int dst_stride,
-                               int width, int height);
+WEBP_EXTERN void WebPCopyPlane(const uint8_t* src, int src_stride, uint8_t* dst,
+                               int dst_stride, int width, int height);
 
 // Copy ARGB pixels from 'src' to 'dst' honoring strides. 'src' and 'dst' are
 // assumed to be already allocated and using ARGB data.
@@ -203,7 +202,7 @@ WEBP_EXTERN int WebPGetColorPalette(const struct WebPPicture* const pic,
 //------------------------------------------------------------------------------
 
 #ifdef __cplusplus
-}    // extern "C"
+}  // extern "C"
 #endif
 
 #endif  // WEBP_UTILS_UTILS_H_

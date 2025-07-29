@@ -31,9 +31,9 @@ static const struct {
   ttag_t tag;
   size_t storage_offset;
 } kTIFFMetadataMap[] = {
-  { TIFFTAG_ICCPROFILE, METADATA_OFFSET(iccp) },
-  { TIFFTAG_XMLPACKET,  METADATA_OFFSET(xmp) },
-  { 0, 0 },
+    {TIFFTAG_ICCPROFILE, METADATA_OFFSET(iccp)},
+    {TIFFTAG_XMLPACKET, METADATA_OFFSET(xmp)},
+    {0, 0},
 };
 
 // Returns true on success. The caller must use MetadataFree() on 'metadata' in
@@ -86,9 +86,9 @@ static toff_t MySize(thandle_t opaque) {
 
 static toff_t MySeek(thandle_t opaque, toff_t offset, int whence) {
   MyData* const my_data = (MyData*)opaque;
-  offset += (whence == SEEK_CUR) ? my_data->pos
-          : (whence == SEEK_SET) ? 0
-          : my_data->size;
+  offset += (whence == SEEK_CUR)   ? my_data->pos
+            : (whence == SEEK_SET) ? 0
+                                   : my_data->size;
   if (offset > my_data->size) return (toff_t)-1;
   my_data->pos = offset;
   return offset;
@@ -120,7 +120,7 @@ static tsize_t MyRead(thandle_t opaque, void* dst, tsize_t size) {
 
 // Unmultiply Argb data. Taken from dsp/alpha_processing
 // (we don't want to force a dependency to a libdspdec library).
-#define MFIX 24    // 24bit fixed-point arithmetic
+#define MFIX 24  // 24bit fixed-point arithmetic
 #define HALF ((1u << MFIX) >> 1)
 
 static uint32_t Unmult(uint8_t x, uint32_t mult) {
@@ -128,9 +128,7 @@ static uint32_t Unmult(uint8_t x, uint32_t mult) {
   return (v > 255u) ? 255u : v;
 }
 
-static WEBP_INLINE uint32_t GetScale(uint32_t a) {
-  return (255u << MFIX) / a;
-}
+static WEBP_INLINE uint32_t GetScale(uint32_t a) { return (255u << MFIX) / a; }
 
 #undef MFIX
 #undef HALF
@@ -140,7 +138,7 @@ static void MultARGBRow(uint8_t* ptr, int width) {
   for (x = 0; x < width; ++x, ptr += 4) {
     const uint32_t alpha = ptr[3];
     if (alpha < 255) {
-      if (alpha == 0) {   // alpha == 0
+      if (alpha == 0) {  // alpha == 0
         ptr[0] = ptr[1] = ptr[2] = 0;
       } else {
         const uint32_t scale = GetScale(alpha);
@@ -153,9 +151,8 @@ static void MultARGBRow(uint8_t* ptr, int width) {
 }
 
 int ReadTIFF(const uint8_t* const data, size_t data_size,
-             WebPPicture* const pic, int keep_alpha,
-             Metadata* const metadata) {
-  MyData my_data = { data, (toff_t)data_size, 0 };
+             WebPPicture* const pic, int keep_alpha, Metadata* const metadata) {
+  MyData my_data = {data, (toff_t)data_size, 0};
   TIFF* tif;
   uint32_t image_width, image_height, tile_width, tile_height;
   uint64_t stride;
@@ -171,8 +168,7 @@ int ReadTIFF(const uint8_t* const data, size_t data_size,
     return 0;
   }
 
-  tif = TIFFClientOpen("Memory", "r", &my_data,
-                       MyRead, MyRead, MySeek, MyClose,
+  tif = TIFFClientOpen("Memory", "r", &my_data, MyRead, MyRead, MySeek, MyClose,
                        MySize, MyMapFile, MyUnmapFile);
   if (tif == NULL) {
     fprintf(stderr, "Error! Cannot parse TIFF file\n");
@@ -181,9 +177,10 @@ int ReadTIFF(const uint8_t* const data, size_t data_size,
 
   dircount = TIFFNumberOfDirectories(tif);
   if (dircount > 1) {
-    fprintf(stderr, "Warning: multi-directory TIFF files are not supported.\n"
-                    "Only the first will be used, %d will be ignored.\n",
-                    dircount - 1);
+    fprintf(stderr,
+            "Warning: multi-directory TIFF files are not supported.\n"
+            "Only the first will be used, %d will be ignored.\n",
+            dircount - 1);
   }
   if (!TIFFGetFieldDefaulted(tif, TIFFTAG_SAMPLESPERPIXEL, &samples_per_px)) {
     fprintf(stderr, "Error! Cannot retrieve TIFF samples-per-pixel info.\n");
@@ -253,9 +250,10 @@ int ReadTIFF(const uint8_t* const data, size_t data_size,
           tmp += stride;
         }
       }
-      ok = keep_alpha
-         ? WebPPictureImportRGBA(pic, (const uint8_t*)raster, (int)stride)
-         : WebPPictureImportRGBX(pic, (const uint8_t*)raster, (int)stride);
+      ok =
+          keep_alpha
+              ? WebPPictureImportRGBA(pic, (const uint8_t*)raster, (int)stride)
+              : WebPPictureImportRGBX(pic, (const uint8_t*)raster, (int)stride);
     }
     _TIFFfree(raster);
   } else {
@@ -272,11 +270,11 @@ int ReadTIFF(const uint8_t* const data, size_t data_size,
       }
     }
   }
- End:
+End:
   TIFFClose(tif);
   return ok;
 }
-#else  // !WEBP_HAVE_TIFF
+#else   // !WEBP_HAVE_TIFF
 int ReadTIFF(const uint8_t* const data, size_t data_size,
              struct WebPPicture* const pic, int keep_alpha,
              struct Metadata* const metadata) {
@@ -285,7 +283,8 @@ int ReadTIFF(const uint8_t* const data, size_t data_size,
   (void)pic;
   (void)keep_alpha;
   (void)metadata;
-  fprintf(stderr, "TIFF support not compiled. Please install the libtiff "
+  fprintf(stderr,
+          "TIFF support not compiled. Please install the libtiff "
           "development package before building.\n");
   return 0;
 }

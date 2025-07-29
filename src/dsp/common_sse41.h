@@ -44,12 +44,12 @@ static WEBP_INLINE void VP8PlanarTo24b_SSE41(
 
   // Process R.
   {
-    const __m128i shuff0 = _mm_set_epi8(
-        5, -1, -1, 4, -1, -1, 3, -1, -1, 2, -1, -1, 1, -1, -1, 0);
-    const __m128i shuff1 = _mm_set_epi8(
-        -1, 10, -1, -1, 9, -1, -1, 8, -1, -1, 7, -1, -1, 6, -1, -1);
-    const __m128i shuff2 = _mm_set_epi8(
-     -1, -1, 15, -1, -1, 14, -1, -1, 13, -1, -1, 12, -1, -1, 11, -1);
+    const __m128i shuff0 =
+        _mm_set_epi8(5, -1, -1, 4, -1, -1, 3, -1, -1, 2, -1, -1, 1, -1, -1, 0);
+    const __m128i shuff1 = _mm_set_epi8(-1, 10, -1, -1, 9, -1, -1, 8, -1, -1, 7,
+                                        -1, -1, 6, -1, -1);
+    const __m128i shuff2 = _mm_set_epi8(-1, -1, 15, -1, -1, 14, -1, -1, 13, -1,
+                                        -1, 12, -1, -1, 11, -1);
     WEBP_SSE41_SHUFF(R, in0, in1)
   }
 
@@ -57,23 +57,23 @@ static WEBP_INLINE void VP8PlanarTo24b_SSE41(
   {
     // Same as before, just shifted to the left by one and including the right
     // padding.
-    const __m128i shuff0 = _mm_set_epi8(
-        -1, -1, 4, -1, -1, 3, -1, -1, 2, -1, -1, 1, -1, -1, 0, -1);
-    const __m128i shuff1 = _mm_set_epi8(
-        10, -1, -1, 9, -1, -1, 8, -1, -1, 7, -1, -1, 6, -1, -1, 5);
-    const __m128i shuff2 = _mm_set_epi8(
-     -1, 15, -1, -1, 14, -1, -1, 13, -1, -1, 12, -1, -1, 11, -1, -1);
+    const __m128i shuff0 =
+        _mm_set_epi8(-1, -1, 4, -1, -1, 3, -1, -1, 2, -1, -1, 1, -1, -1, 0, -1);
+    const __m128i shuff1 =
+        _mm_set_epi8(10, -1, -1, 9, -1, -1, 8, -1, -1, 7, -1, -1, 6, -1, -1, 5);
+    const __m128i shuff2 = _mm_set_epi8(-1, 15, -1, -1, 14, -1, -1, 13, -1, -1,
+                                        12, -1, -1, 11, -1, -1);
     WEBP_SSE41_SHUFF(G, in2, in3)
   }
 
   // Process B.
   {
-    const __m128i shuff0 = _mm_set_epi8(
-        -1, 4, -1, -1, 3, -1, -1, 2, -1, -1, 1, -1, -1, 0, -1, -1);
-    const __m128i shuff1 = _mm_set_epi8(
-        -1, -1, 9, -1, -1, 8, -1, -1, 7, -1, -1, 6, -1, -1, 5, -1);
-    const __m128i shuff2 = _mm_set_epi8(
-      15, -1, -1, 14, -1, -1, 13, -1, -1, 12, -1, -1, 11, -1, -1, 10);
+    const __m128i shuff0 =
+        _mm_set_epi8(-1, 4, -1, -1, 3, -1, -1, 2, -1, -1, 1, -1, -1, 0, -1, -1);
+    const __m128i shuff1 =
+        _mm_set_epi8(-1, -1, 9, -1, -1, 8, -1, -1, 7, -1, -1, 6, -1, -1, 5, -1);
+    const __m128i shuff2 = _mm_set_epi8(15, -1, -1, 14, -1, -1, 13, -1, -1, 12,
+                                        -1, -1, 11, -1, -1, 10);
     WEBP_SSE41_SHUFF(B, in4, in5)
   }
 

@@ -23,10 +23,10 @@
 
 #if defined(WEBP_HAVE_SDL)
 
-#include "webp_to_sdl.h"
-#include "webp/decode.h"
-#include "imageio/imageio_util.h"
 #include "../examples/unicode.h"
+#include "imageio/imageio_util.h"
+#include "webp/decode.h"
+#include "webp_to_sdl.h"
 
 #if defined(WEBP_HAVE_JUST_SDL_H)
 #include <SDL.h>
@@ -41,11 +41,15 @@ static void ProcessEvents(void) {
     switch (event.type) {
       case SDL_KEYUP:
         switch (event.key.keysym.sym) {
-          case SDLK_q: done = 1; break;
-          default: break;
+          case SDLK_q:
+            done = 1;
+            break;
+          default:
+            break;
         }
         break;
-      default: break;
+      default:
+        break;
     }
   }
 }
@@ -93,7 +97,7 @@ int main(int argc, char* argv[]) {
   }
   ok = 1;
 
- Error:
+Error:
   SDL_Quit();
   FREE_WARGV_AND_RETURN(ok ? EXIT_SUCCESS : EXIT_FAILURE);
 }

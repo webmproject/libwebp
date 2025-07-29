@@ -54,10 +54,10 @@ int VP8EstimateQuality(const uint8_t* const data, size_t size) {
   if (data == NULL) return -1;
 
   if (WebPGetFeatures(data, size, &features) != VP8_STATUS_OK) {
-    return -1;   // invalid file
+    return -1;  // invalid file
   }
-  if (features.format == 2) return 101;  // lossless
-  if (features.format == 0 || features.has_animation) return -1;   // mixed
+  if (features.format == 2) return 101;                           // lossless
+  if (features.format == 0 || features.has_animation) return -1;  // mixed
 
   while (pos < size) {
     sig = (sig >> 8) | ((uint64_t)data[pos++] << 40);
@@ -78,29 +78,29 @@ int VP8EstimateQuality(const uint8_t* const data, size_t size) {
   GET_BIT(2);  // colorspace + clamp type
 
   // Segment header
-  if (GET_BIT(1)) {       // use_segment
+  if (GET_BIT(1)) {  // use_segment
     int s;
     const int update_map = GET_BIT(1);
-    if (GET_BIT(1)) {     // update data
+    if (GET_BIT(1)) {  // update data
       const int absolute_delta = GET_BIT(1);
-      int q[4]  = { 0, 0, 0, 0 };
+      int q[4] = {0, 0, 0, 0};
       for (s = 0; s < 4; ++s) {
         if (GET_BIT(1)) {
           q[s] = GET_BIT(7);
-          if (GET_BIT(1)) q[s] = -q[s];   // sign
+          if (GET_BIT(1)) q[s] = -q[s];  // sign
         }
       }
       if (absolute_delta) Q = q[0];  // just use the first segment's quantizer
-      for (s = 0; s < 4; ++s) CONDITIONAL_SKIP(7);   //  filter strength
+      for (s = 0; s < 4; ++s) CONDITIONAL_SKIP(7);  //  filter strength
     }
     if (update_map) {
       for (s = 0; s < 3; ++s) CONDITIONAL_SKIP(8);
     }
   }
   // Filter header
-  GET_BIT(1 + 6 + 3);     // simple + level + sharpness
-  if (GET_BIT(1)) {       // use_lf_delta
-    if (GET_BIT(1)) {     // update lf_delta?
+  GET_BIT(1 + 6 + 3);  // simple + level + sharpness
+  if (GET_BIT(1)) {    // use_lf_delta
+    if (GET_BIT(1)) {  // update lf_delta?
       int n;
       for (n = 0; n < 4 + 4; ++n) CONDITIONAL_SKIP(6);
     }

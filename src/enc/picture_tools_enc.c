@@ -92,7 +92,7 @@ void WebPReplaceTransparentPixels(WebPPicture* const pic, uint32_t color) {
   if (pic != NULL && pic->use_argb) {
     int y = pic->height;
     uint32_t* argb = pic->argb;
-    color &= 0xffffffu;   // force alpha=0
+    color &= 0xffffffu;  // force alpha=0
     WebPInitAlphaProcessing();
     while (y-- > 0) {
       WebPAlphaReplace(argb, pic->width, color);
@@ -135,22 +135,22 @@ void WebPCleanupTransparentArea(WebPPicture* pic) {
     uint8_t* u_ptr = pic->u;
     uint8_t* v_ptr = pic->v;
     const uint8_t* a_ptr = pic->a;
-    int values[3] = { 0 };
+    int values[3] = {0};
     if (a_ptr == NULL || y_ptr == NULL || u_ptr == NULL || v_ptr == NULL) {
       return;
     }
     for (y = 0; y + SIZE <= height; y += SIZE) {
       int need_reset = 1;
       for (x = 0; x + SIZE <= width; x += SIZE) {
-        if (SmoothenBlock(a_ptr + x, a_stride, y_ptr + x, y_stride,
-                          SIZE, SIZE)) {
+        if (SmoothenBlock(a_ptr + x, a_stride, y_ptr + x, y_stride, SIZE,
+                          SIZE)) {
           if (need_reset) {
             values[0] = y_ptr[x];
             values[1] = u_ptr[x >> 1];
             values[2] = v_ptr[x >> 1];
             need_reset = 0;
           }
-          Flatten(y_ptr + x,        values[0], y_stride,  SIZE);
+          Flatten(y_ptr + x, values[0], y_stride, SIZE);
           Flatten(u_ptr + (x >> 1), values[1], uv_stride, SIZE2);
           Flatten(v_ptr + (x >> 1), values[2], uv_stride, SIZE2);
         } else {
@@ -158,8 +158,8 @@ void WebPCleanupTransparentArea(WebPPicture* pic) {
         }
       }
       if (x < width) {
-        SmoothenBlock(a_ptr + x, a_stride, y_ptr + x, y_stride,
-                      width - x, SIZE);
+        SmoothenBlock(a_ptr + x, a_stride, y_ptr + x, y_stride, width - x,
+                      SIZE);
       }
       a_ptr += SIZE * a_stride;
       y_ptr += SIZE * y_stride;
@@ -169,12 +169,12 @@ void WebPCleanupTransparentArea(WebPPicture* pic) {
     if (y < height) {
       const int sub_height = height - y;
       for (x = 0; x + SIZE <= width; x += SIZE) {
-        SmoothenBlock(a_ptr + x, a_stride, y_ptr + x, y_stride,
-                      SIZE, sub_height);
+        SmoothenBlock(a_ptr + x, a_stride, y_ptr + x, y_stride, SIZE,
+                      sub_height);
       }
       if (x < width) {
-        SmoothenBlock(a_ptr + x, a_stride, y_ptr + x, y_stride,
-                      width - x, sub_height);
+        SmoothenBlock(a_ptr + x, a_stride, y_ptr + x, y_stride, width - x,
+                      sub_height);
       }
     }
   }
@@ -187,9 +187,9 @@ void WebPCleanupTransparentArea(WebPPicture* pic) {
 // Blend color and remove transparency info
 
 #define BLEND(V0, V1, ALPHA) \
-    ((((V0) * (255 - (ALPHA)) + (V1) * (ALPHA)) * 0x101 + 256) >> 16)
+  ((((V0) * (255 - (ALPHA)) + (V1) * (ALPHA)) * 0x101 + 256) >> 16)
 #define BLEND_10BIT(V0, V1, ALPHA) \
-    ((((V0) * (1020 - (ALPHA)) + (V1) * (ALPHA)) * 0x101 + 1024) >> 18)
+  ((((V0) * (1020 - (ALPHA)) + (V1) * (ALPHA)) * 0x101 + 1024) >> 18)
 
 static WEBP_INLINE uint32_t MakeARGB32(int r, int g, int b) {
   return (0xff000000u | (r << 16) | (g << 8) | b);
@@ -213,7 +213,7 @@ void WebPBlendAlpha(WebPPicture* picture, uint32_t background_rgb) {
     uint8_t* u_ptr = picture->u;
     uint8_t* v_ptr = picture->v;
     uint8_t* a_ptr = picture->a;
-    if (!has_alpha || a_ptr == NULL) return;    // nothing to do
+    if (!has_alpha || a_ptr == NULL) return;  // nothing to do
     for (y = 0; y < picture->height; ++y) {
       // Luma blending
       for (x = 0; x < picture->width; ++x) {
@@ -229,9 +229,8 @@ void WebPBlendAlpha(WebPPicture* picture, uint32_t background_rgb) {
         for (x = 0; x < uv_width; ++x) {
           // Average four alpha values into a single blending weight.
           // TODO(skal): might lead to visible contouring. Can we do better?
-          const uint32_t alpha =
-              a_ptr[2 * x + 0] + a_ptr[2 * x + 1] +
-              a_ptr2[2 * x + 0] + a_ptr2[2 * x + 1];
+          const uint32_t alpha = a_ptr[2 * x + 0] + a_ptr[2 * x + 1] +
+                                 a_ptr2[2 * x + 0] + a_ptr2[2 * x + 1];
           u_ptr[x] = BLEND_10BIT(U0, u_ptr[x], alpha);
           v_ptr[x] = BLEND_10BIT(V0, v_ptr[x], alpha);
         }
@@ -257,8 +256,8 @@ void WebPBlendAlpha(WebPPicture* picture, uint32_t background_rgb) {
         if (alpha != 0xff) {
           if (alpha > 0) {
             int r = (argb[x] >> 16) & 0xff;
-            int g = (argb[x] >>  8) & 0xff;
-            int b = (argb[x] >>  0) & 0xff;
+            int g = (argb[x] >> 8) & 0xff;
+            int b = (argb[x] >> 0) & 0xff;
             r = BLEND(red, r, alpha);
             g = BLEND(green, g, alpha);
             b = BLEND(blue, b, alpha);

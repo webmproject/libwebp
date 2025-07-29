@@ -28,14 +28,15 @@
 #endif
 
 #include <gif_lib.h>
-#include "sharpyuv/sharpyuv.h"
-#include "webp/encode.h"
-#include "webp/mux.h"
+
 #include "../examples/example_util.h"
 #include "../imageio/imageio_util.h"
 #include "./gifdec.h"
 #include "./unicode.h"
 #include "./unicode_gif.h"
+#include "sharpyuv/sharpyuv.h"
+#include "webp/encode.h"
+#include "webp/mux.h"
 
 #if !defined(STDIN_FILENO)
 #define STDIN_FILENO 0
@@ -46,9 +47,8 @@
 static int transparent_index = GIF_INDEX_INVALID;  // Opaque by default.
 
 static const char* const kErrorMessages[-WEBP_MUX_NOT_ENOUGH_DATA + 1] = {
-  "WEBP_MUX_NOT_FOUND", "WEBP_MUX_INVALID_ARGUMENT", "WEBP_MUX_BAD_DATA",
-  "WEBP_MUX_MEMORY_ERROR", "WEBP_MUX_NOT_ENOUGH_DATA"
-};
+    "WEBP_MUX_NOT_FOUND", "WEBP_MUX_INVALID_ARGUMENT", "WEBP_MUX_BAD_DATA",
+    "WEBP_MUX_MEMORY_ERROR", "WEBP_MUX_NOT_ENOUGH_DATA"};
 
 static const char* ErrorString(WebPMuxError err) {
   assert(err <= WEBP_MUX_NOT_FOUND && err >= WEBP_MUX_NOT_ENOUGH_DATA);
@@ -56,9 +56,9 @@ static const char* ErrorString(WebPMuxError err) {
 }
 
 enum {
-  METADATA_ICC  = (1 << 0),
-  METADATA_XMP  = (1 << 1),
-  METADATA_ALL  = METADATA_ICC | METADATA_XMP
+  METADATA_ICC = (1 << 0),
+  METADATA_XMP = (1 << 1),
+  METADATA_ALL = METADATA_ICC | METADATA_XMP
 };
 
 //------------------------------------------------------------------------------
@@ -69,20 +69,25 @@ static void Help(void) {
   printf("Options:\n");
   printf("  -h / -help ............. this help\n");
   printf("  -lossy ................. encode image using lossy compression\n");
-  printf("  -mixed ................. for each frame in the image, pick lossy\n"
-         "                           or lossless compression heuristically\n");
-  printf("  -near_lossless <int> ... use near-lossless image preprocessing\n"
-         "                           (0..100=off), default=100\n");
-  printf("  -sharp_yuv ............. use sharper (and slower) RGB->YUV "
-                                    "conversion\n"
-         "                           (lossy only)\n");
+  printf(
+      "  -mixed ................. for each frame in the image, pick lossy\n"
+      "                           or lossless compression heuristically\n");
+  printf(
+      "  -near_lossless <int> ... use near-lossless image preprocessing\n"
+      "                           (0..100=off), default=100\n");
+  printf(
+      "  -sharp_yuv ............. use sharper (and slower) RGB->YUV "
+      "conversion\n"
+      "                           (lossy only)\n");
   printf("  -q <float> ............. quality factor (0:small..100:big)\n");
-  printf("  -m <int> ............... compression method (0=fast, 6=slowest), "
-         "default=4\n");
-  printf("  -min_size .............. minimize output size (default:off)\n"
-         "                           lossless compression by default; can be\n"
-         "                           combined with -q, -m, -lossy or -mixed\n"
-         "                           options\n");
+  printf(
+      "  -m <int> ............... compression method (0=fast, 6=slowest), "
+      "default=4\n");
+  printf(
+      "  -min_size .............. minimize output size (default:off)\n"
+      "                           lossless compression by default; can be\n"
+      "                           combined with -q, -m, -lossy or -mixed\n"
+      "                           options\n");
   printf("  -kmin <int> ............ min distance between key frames\n");
   printf("  -kmax <int> ............ max distance between key frames\n");
   printf("  -f <int> ............... filter strength (0=off..100)\n");
@@ -109,21 +114,21 @@ int main(int argc, const char* argv[]) {
   int gif_error = GIF_ERROR;
   WebPMuxError err = WEBP_MUX_OK;
   int ok = 0;
-  const W_CHAR* in_file = NULL, *out_file = NULL;
+  const W_CHAR *in_file = NULL, *out_file = NULL;
   GifFileType* gif = NULL;
   int frame_duration = 0;
   int frame_timestamp = 0;
   GIFDisposeMethod orig_dispose = GIF_DISPOSE_NONE;
 
-  WebPPicture frame;                // Frame rectangle only (not disposed).
-  WebPPicture curr_canvas;          // Not disposed.
-  WebPPicture prev_canvas;          // Disposed.
+  WebPPicture frame;        // Frame rectangle only (not disposed).
+  WebPPicture curr_canvas;  // Not disposed.
+  WebPPicture prev_canvas;  // Disposed.
 
   WebPAnimEncoder* enc = NULL;
   WebPAnimEncoderOptions enc_options;
   WebPConfig config;
 
-  int frame_number = 0;     // Whether we are processing the first frame.
+  int frame_number = 0;  // Whether we are processing the first frame.
   int done;
   int c;
   int quiet = 0;
@@ -131,7 +136,7 @@ int main(int argc, const char* argv[]) {
 
   int keep_metadata = METADATA_XMP;  // ICC not output by default.
   WebPData icc_data;
-  int stored_icc = 0;         // Whether we have already stored an ICC profile.
+  int stored_icc = 0;  // Whether we have already stored an ICC profile.
   WebPData xmp_data;
   int stored_xmp = 0;         // Whether we have already stored an XMP profile.
   int loop_count = 0;         // default: infinite
@@ -198,10 +203,10 @@ int main(int argc, const char* argv[]) {
         const char* option;
         int flag;
       } kTokens[] = {
-        { "all",  METADATA_ALL },
-        { "none", 0 },
-        { "icc",  METADATA_ICC },
-        { "xmp",  METADATA_XMP },
+          {"all", METADATA_ALL},
+          {"none", 0},
+          {"icc", METADATA_ICC},
+          {"xmp", METADATA_XMP},
       };
       const size_t kNumTokens = sizeof(kTokens) / sizeof(*kTokens);
       const char* start = argv[++c];
@@ -319,8 +324,8 @@ int main(int argc, const char* argv[]) {
               goto End;
             }
             if (verbose) {
-              printf("Fixed canvas screen dimension to: %d x %d\n",
-                     gif->SWidth, gif->SHeight);
+              printf("Fixed canvas screen dimension to: %d x %d\n", gif->SWidth,
+                     gif->SHeight);
             }
           }
           // Allocate current buffer.
@@ -418,7 +423,7 @@ int main(int argc, const char* argv[]) {
             break;
           }
           case APPLICATION_EXT_FUNC_CODE: {
-            if (data[0] != 11) break;    // Chunk is too short
+            if (data[0] != 11) break;  // Chunk is too short
             if (!memcmp(data + 1, "NETSCAPE2.0", 11) ||
                 !memcmp(data + 1, "ANIMEXTS1.0", 11)) {
               if (!GIFReadLoopCount(gif, &data, &loop_count)) {
@@ -529,7 +534,7 @@ int main(int argc, const char* argv[]) {
       }
     }
 
-    if (stored_icc) {   // Add ICCP chunk.
+    if (stored_icc) {  // Add ICCP chunk.
       err = WebPMuxSetChunk(mux, "ICCP", &icc_data, 1);
       if (verbose) {
         fprintf(stderr, "ICC size: %d\n", (int)icc_data.size);
@@ -541,7 +546,7 @@ int main(int argc, const char* argv[]) {
       }
     }
 
-    if (stored_xmp) {   // Add XMP chunk.
+    if (stored_xmp) {  // Add XMP chunk.
       err = WebPMuxSetChunk(mux, "XMP ", &xmp_data, 1);
       if (verbose) {
         fprintf(stderr, "XMP size: %d\n", (int)xmp_data.size);
@@ -555,8 +560,10 @@ int main(int argc, const char* argv[]) {
 
     err = WebPMuxAssemble(mux, &webp_data);
     if (err != WEBP_MUX_OK) {
-      fprintf(stderr, "ERROR (%s): Could not assemble when re-muxing to add "
-              "loop count/metadata.\n", ErrorString(err));
+      fprintf(stderr,
+              "ERROR (%s): Could not assemble when re-muxing to add "
+              "loop count/metadata.\n",
+              ErrorString(err));
       goto End;
     }
   }
@@ -569,8 +576,7 @@ int main(int argc, const char* argv[]) {
     }
     if (!quiet) {
       if (!WSTRCMP(out_file, "-")) {
-        fprintf(stderr, "Saved %d bytes to STDIO\n",
-                (int)webp_data.size);
+        fprintf(stderr, "Saved %d bytes to STDIO\n", (int)webp_data.size);
       } else {
         WFPRINTF(stderr, "Saved output file (%d bytes): %s\n",
                  (int)webp_data.size, out_file);
@@ -578,8 +584,10 @@ int main(int argc, const char* argv[]) {
     }
   } else {
     if (!quiet) {
-      fprintf(stderr, "Nothing written; use -o flag to save the result "
-                      "(%d bytes).\n", (int)webp_data.size);
+      fprintf(stderr,
+              "Nothing written; use -o flag to save the result "
+              "(%d bytes).\n",
+              (int)webp_data.size);
     }
   }
 
@@ -587,7 +595,7 @@ int main(int argc, const char* argv[]) {
   ok = 1;
   gif_error = GIF_OK;
 
- End:
+End:
   WebPDataClear(&icc_data);
   WebPDataClear(&xmp_data);
   WebPMuxDelete(mux);
@@ -601,7 +609,7 @@ int main(int argc, const char* argv[]) {
     GIFDisplayError(gif, gif_error);
   }
   if (gif != NULL) {
-#if LOCAL_GIF_PREREQ(5,1)
+#if LOCAL_GIF_PREREQ(5, 1)
     DGifCloseFile(gif, &gif_error);
 #else
     DGifCloseFile(gif);

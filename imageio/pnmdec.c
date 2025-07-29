@@ -26,11 +26,11 @@
 #endif
 
 typedef enum {
-  WIDTH_FLAG      = 1 << 0,
-  HEIGHT_FLAG     = 1 << 1,
-  DEPTH_FLAG      = 1 << 2,
-  MAXVAL_FLAG     = 1 << 3,
-  TUPLE_FLAG      = 1 << 4,
+  WIDTH_FLAG = 1 << 0,
+  HEIGHT_FLAG = 1 << 1,
+  DEPTH_FLAG = 1 << 2,
+  MAXVAL_FLAG = 1 << 3,
+  TUPLE_FLAG = 1 << 4,
   ALL_NEEDED_FLAGS = WIDTH_FLAG | HEIGHT_FLAG | DEPTH_FLAG | MAXVAL_FLAG
 } PNMFlags;
 
@@ -39,9 +39,9 @@ typedef struct {
   size_t data_size;
   int width, height;
   int bytes_per_px;
-  int depth;          // 1 (grayscale), 2 (grayscale + alpha), 3 (rgb), 4 (rgba)
+  int depth;  // 1 (grayscale), 2 (grayscale + alpha), 3 (rgb), 4 (rgba)
   int max_value;
-  int type;           // 5, 6 or 7
+  int type;  // 5, 6 or 7
   int seen_flags;
 } PNMInfo;
 
@@ -55,7 +55,7 @@ static size_t ReadLine(const uint8_t* const data, size_t off, size_t data_size,
                        char out[MAX_LINE_SIZE + 1], size_t* const out_size) {
   size_t i = 0;
   *out_size = 0;
- redo:
+redo:
   for (i = 0; i < MAX_LINE_SIZE && off < data_size; ++i) {
     out[i] = data[off++];
     if (out[i] == '\n') break;
@@ -64,7 +64,7 @@ static size_t ReadLine(const uint8_t* const data, size_t off, size_t data_size,
     if (i == 0) goto redo;         // empty line
     if (out[0] == '#') goto redo;  // skip comment
   }
-  out[i] = 0;   // safety sentinel
+  out[i] = 0;  // safety sentinel
   *out_size = i;
   return off;
 }
@@ -173,9 +173,8 @@ static size_t ReadHeader(PNMInfo* const info) {
     info->depth = (info->type == 5) ? 1 : 3;
   }
   // perform some basic numerical validation
-  if (info->width <= 0 || info->height <= 0 ||
-      info->type <= 0 || info->type >= 9 ||
-      info->depth <= 0 || info->depth > 4 ||
+  if (info->width <= 0 || info->height <= 0 || info->type <= 0 ||
+      info->type >= 9 || info->depth <= 0 || info->depth > 4 ||
       info->max_value <= 0 || info->max_value >= 65536) {
     return 0;
   }
@@ -183,13 +182,12 @@ static size_t ReadHeader(PNMInfo* const info) {
   return off;
 }
 
-int ReadPNM(const uint8_t* const data, size_t data_size,
-            WebPPicture* const pic, int keep_alpha,
-            struct Metadata* const metadata) {
+int ReadPNM(const uint8_t* const data, size_t data_size, WebPPicture* const pic,
+            int keep_alpha, struct Metadata* const metadata) {
   int ok = 0;
   int i, j;
   uint64_t stride, pixel_bytes, sample_size, depth;
-  uint8_t* rgb = NULL, *tmp_rgb;
+  uint8_t *rgb = NULL, *tmp_rgb;
   size_t offset;
   PNMInfo info;
 
@@ -209,8 +207,8 @@ int ReadPNM(const uint8_t* const data, size_t data_size,
   // Some basic validations.
   if (pic == NULL) goto End;
   if (info.width > WEBP_MAX_DIMENSION || info.height > WEBP_MAX_DIMENSION) {
-    fprintf(stderr, "Invalid %dx%d dimension for PNM\n",
-                    info.width, info.height);
+    fprintf(stderr, "Invalid %dx%d dimension for PNM\n", info.width,
+            info.height);
     goto End;
   }
 
@@ -258,8 +256,8 @@ int ReadPNM(const uint8_t* const data, size_t data_size,
       const uint32_t round = info.max_value / 2;
       int k = 0;
       for (i = 0; i < info.width * info.depth; ++i) {
-        uint32_t v = (sample_size == 2) ? 256u * in[2 * i + 0] + in[2 * i + 1]
-                   : in[i];
+        uint32_t v =
+            (sample_size == 2) ? 256u * in[2 * i + 0] + in[2 * i + 1] : in[i];
         if (info.max_value != 255) v = (v * 255u + round) / info.max_value;
         if (v > 255u) v = 255u;
         if (info.depth > 2) {
@@ -291,7 +289,7 @@ int ReadPNM(const uint8_t* const data, size_t data_size,
   if (!ok) goto End;
 
   ok = 1;
- End:
+End:
   free((void*)rgb);
 
   (void)metadata;

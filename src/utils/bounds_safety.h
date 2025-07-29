@@ -12,7 +12,7 @@
 #ifndef WEBP_UTILS_BOUNDS_SAFETY_H_
 #define WEBP_UTILS_BOUNDS_SAFETY_H_
 
-#include <string.h> // For memcpy and friends
+#include <string.h>  // For memcpy and friends
 
 // There's some inherent complexity here due to the way -fbounds-safety works.
 // Some annotations (notably __indexable and __bidi_indexable) change the ABI
@@ -64,30 +64,30 @@
 #define WEBP_INDEXABLE __indexable
 #define WEBP_BIDI_INDEXABLE __bidi_indexable
 
-#define WEBP_UNSAFE_FORGE_SINGLE(typ, ptr) \
-  __unsafe_forge_single(typ, ptr)
+#define WEBP_UNSAFE_FORGE_SINGLE(typ, ptr) __unsafe_forge_single(typ, ptr)
 
 #define WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(typ, ptr, size) \
   __unsafe_forge_bidi_indexable(typ, ptr, size)
 
 // Provide memcpy/memset/memmove wrappers to make migration easier.
-#define WEBP_UNSAFE_MEMCPY(dst, src, size) do { \
-    memcpy(WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(uint8_t*, dst, size), \
-           WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(uint8_t*, src, size), \
-           size); \
+#define WEBP_UNSAFE_MEMCPY(dst, src, size)                               \
+  do {                                                                   \
+    memcpy(WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(uint8_t*, dst, size),        \
+           WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(uint8_t*, src, size), size); \
   } while (0)
 
-#define WEBP_UNSAFE_MEMSET(dst, c, size) do { \
+#define WEBP_UNSAFE_MEMSET(dst, c, size)                                    \
+  do {                                                                      \
     memset(WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(uint8_t*, dst, size), c, size); \
   } while (0)
 
-#define WEBP_UNSAFE_MEMMOVE(dst, src, size) do { \
-    memmove(WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(uint8_t*, dst, size), \
-            WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(uint8_t*, src, size), \
-            size); \
+#define WEBP_UNSAFE_MEMMOVE(dst, src, size)                               \
+  do {                                                                    \
+    memmove(WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(uint8_t*, dst, size),        \
+            WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(uint8_t*, src, size), size); \
   } while (0)
 
-#else // WEBP_SUPPORT_FBOUNDS_SAFETY
+#else  // WEBP_SUPPORT_FBOUNDS_SAFETY
 
 #define WEBP_ASSUME_UNSAFE_INDEXABLE_ABI
 
@@ -109,5 +109,5 @@
 #define WEBP_UNSAFE_FORGE_SINGLE(typ, ptr) ((typ)(ptr))
 #define WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(typ, ptr, size) ((typ)(ptr))
 
-#endif // WEBP_SUPPORT_FBOUNDS_SAFETY
-#endif // WEBP_UTILS_BOUNDS_SAFETY_H_
+#endif  // WEBP_SUPPORT_FBOUNDS_SAFETY
+#endif  // WEBP_UTILS_BOUNDS_SAFETY_H_

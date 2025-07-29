@@ -20,8 +20,8 @@
 #include "webp/config.h"
 #endif
 
-#include "webp/types.h"
 #include "webp/decode.h"
+#include "webp/types.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -38,10 +38,19 @@ typedef enum {
   RAW_YUV,
   ALPHA_PLANE_ONLY,  // this is for experimenting only
   // forced colorspace output (for testing, mostly)
-  RGB, RGBA, BGR, BGRA, ARGB,
-  RGBA_4444, RGB_565,
-  rgbA, bgrA, Argb, rgbA_4444,
-  YUV, YUVA
+  RGB,
+  RGBA,
+  BGR,
+  BGRA,
+  ARGB,
+  RGBA_4444,
+  RGB_565,
+  rgbA,
+  bgrA,
+  Argb,
+  rgbA_4444,
+  YUV,
+  YUVA
 } WebPOutputFileFormat;
 
 // General all-purpose call.
@@ -90,7 +99,7 @@ int WebPWriteYUV(FILE* fout, const struct WebPDecBuffer* const buffer);
 int WebPWrite16bAsPGM(FILE* fout, const struct WebPDecBuffer* const buffer);
 
 #ifdef __cplusplus
-}    // extern "C"
+}  // extern "C"
 #endif
 
 #endif  // WEBP_IMAGEIO_IMAGE_ENC_H_

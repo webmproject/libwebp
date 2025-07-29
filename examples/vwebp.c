@@ -38,12 +38,11 @@
 #include <qcms.h>
 #endif
 
-#include "webp/decode.h"
-#include "webp/demux.h"
-
 #include "../examples/example_util.h"
 #include "../imageio/imageio_util.h"
 #include "./unicode.h"
+#include "webp/decode.h"
+#include "webp/demux.h"
 
 #if defined(_MSC_VER) && _MSC_VER < 1900
 #define snprintf _snprintf
@@ -135,9 +134,8 @@ static int ApplyColorProfile(const WebPData* const profile,
   }
 
   qcms_profile_precache_output_transform(output_profile);
-  transform = qcms_transform_create(input_profile, input_type,
-                                    output_profile, output_type,
-                                    intent);
+  transform = qcms_transform_create(input_profile, input_type, output_profile,
+                                    output_type, intent);
   if (transform == NULL) {
     fprintf(stderr, "Error creating color transform!\n");
     goto Error;
@@ -149,7 +147,7 @@ static int ApplyColorProfile(const WebPData* const profile,
   }
   ok = 1;
 
- Error:
+Error:
   if (input_profile != NULL) qcms_profile_release(input_profile);
   if (output_profile != NULL) qcms_profile_release(output_profile);
   if (transform != NULL) qcms_transform_release(transform);
@@ -164,7 +162,7 @@ static int ApplyColorProfile(const WebPData* const profile,
 //------------------------------------------------------------------------------
 // File decoding
 
-static int Decode(void) {   // Fills kParams.curr_frame
+static int Decode(void) {  // Fills kParams.curr_frame
   const WebPIterator* const curr = &kParams.curr_frame;
   WebPDecoderConfig* const config = &kParams.config;
   WebPDecBuffer* const output_buffer = &config->output;
@@ -172,8 +170,8 @@ static int Decode(void) {   // Fills kParams.curr_frame
 
   ClearPreviousPic();
   output_buffer->colorspace = MODE_RGBA;
-  ok = (WebPDecode(curr->fragment.bytes, curr->fragment.size,
-                   config) == VP8_STATUS_OK);
+  ok = (WebPDecode(curr->fragment.bytes, curr->fragment.size, config) ==
+        VP8_STATUS_OK);
   if (!ok) {
     fprintf(stderr, "Decoding of frame #%d failed!\n", curr->frame_num);
   } else {
@@ -341,8 +339,7 @@ static void DrawBackground(void) {
     glPushMatrix();
     glLoadIdentity();
     glColor4f(GetColorf(kParams.bg_color, 16),  // BGRA from spec
-              GetColorf(kParams.bg_color, 8),
-              GetColorf(kParams.bg_color, 0),
+              GetColorf(kParams.bg_color, 8), GetColorf(kParams.bg_color, 0),
               GetColorf(kParams.bg_color, 24));
     glRecti(-1, -1, +1, +1);
     glPopMatrix();
@@ -402,8 +399,7 @@ static void HandleDisplay(void) {
 
   *prev = *curr;
 
-  glDrawPixels(pic->width, pic->height,
-               GL_RGBA, GL_UNSIGNED_BYTE,
+  glDrawPixels(pic->width, pic->height, GL_RGBA, GL_UNSIGNED_BYTE,
                (GLvoid*)pic->u.RGBA.rgba);
   if (kParams.print_info) {
     char tmp[32];
@@ -417,8 +413,8 @@ static void HandleDisplay(void) {
     glRasterPos2f(-0.95f, 0.80f);
     PrintString(tmp);
     if (curr->x_offset != 0 || curr->y_offset != 0) {
-      snprintf(tmp, sizeof(tmp), " (offset:%d,%d)",
-               curr->x_offset, curr->y_offset);
+      snprintf(tmp, sizeof(tmp), " (offset:%d,%d)", curr->x_offset,
+               curr->y_offset);
       glRasterPos2f(-0.95f, 0.70f);
       PrintString(tmp);
     }
@@ -571,8 +567,8 @@ int main(int argc, char* argv[]) {
     FREE_WARGV_AND_RETURN(EXIT_FAILURE);
   }
 
-  if (!ImgIoUtilReadFile(kParams.file_name,
-                         &kParams.data.bytes, &kParams.data.size)) {
+  if (!ImgIoUtilReadFile(kParams.file_name, &kParams.data.bytes,
+                         &kParams.data.size)) {
     goto Error;
   }
 
@@ -603,7 +599,8 @@ int main(int argc, char* argv[]) {
     if (!WebPDemuxGetChunk(kParams.dmux, "ICCP", 1, &kParams.iccp)) goto Error;
     printf("VP8X: Found color profile\n");
 #else
-    fprintf(stderr, "Warning: color profile present, but qcms is unavailable!\n"
+    fprintf(stderr,
+            "Warning: color profile present, but qcms is unavailable!\n"
             "Build libqcms from Mozilla or Chromium and define WEBP_HAVE_QCMS "
             "before building.\n");
 #endif
@@ -614,8 +611,8 @@ int main(int argc, char* argv[]) {
   kParams.has_animation = (curr->num_frames > 1);
   kParams.loop_count = (int)WebPDemuxGetI(kParams.dmux, WEBP_FF_LOOP_COUNT);
   kParams.bg_color = WebPDemuxGetI(kParams.dmux, WEBP_FF_BACKGROUND_COLOR);
-  printf("VP8X: Found %d images in file (loop count = %d)\n",
-         curr->num_frames, kParams.loop_count);
+  printf("VP8X: Found %d images in file (loop count = %d)\n", curr->num_frames,
+         kParams.loop_count);
 
   // Decode first frame
   if (!Decode()) goto Error;
@@ -645,12 +642,12 @@ int main(int argc, char* argv[]) {
   ClearParams();
   FREE_WARGV_AND_RETURN(EXIT_SUCCESS);
 
- Error:
+Error:
   ClearParams();
   FREE_WARGV_AND_RETURN(EXIT_FAILURE);
 }
 
-#else   // !WEBP_HAVE_GL
+#else  // !WEBP_HAVE_GL
 
 int main(int argc, const char* argv[]) {
   fprintf(stderr, "OpenGL support not enabled in %s.\n", argv[0]);

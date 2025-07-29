@@ -16,19 +16,20 @@
 #if defined(WEBP_USE_NEON)
 
 #include <assert.h>
+
 #include "src/dsp/neon.h"
 
 //------------------------------------------------------------------------------
 // Helpful macros.
 
-#define DCHECK(in, out)                                                        \
-  do {                                                                         \
-    assert((in) != NULL);                                                      \
-    assert((out) != NULL);                                                     \
-    assert((in) != (out));                                                     \
-    assert(width > 0);                                                         \
-    assert(height > 0);                                                        \
-    assert(stride >= width);                                                   \
+#define DCHECK(in, out)      \
+  do {                       \
+    assert((in) != NULL);    \
+    assert((out) != NULL);   \
+    assert((in) != (out));   \
+    assert(width > 0);       \
+    assert(height > 0);      \
+    assert(stride >= width); \
   } while (0)
 
 // load eight u8 and widen to s16
@@ -40,9 +41,9 @@
 #define SHIFT_LEFT_N_Q(A, N) vextq_u8(zero, (A), (16 - (N)) % 16)
 
 // rotate left by N bytes
-#define ROTATE_LEFT_N(A, N)   vext_u8((A), (A), (N))
+#define ROTATE_LEFT_N(A, N) vext_u8((A), (A), (N))
 // rotate right by N bytes
-#define ROTATE_RIGHT_N(A, N)   vext_u8((A), (A), (8 - (N)) % 8)
+#define ROTATE_RIGHT_N(A, N) vext_u8((A), (A), (8 - (N)) % 8)
 
 static void PredictLine_NEON(const uint8_t* src, const uint8_t* pred,
                              uint8_t* WEBP_RESTRICT dst, int length) {
@@ -66,9 +67,10 @@ static void PredictLineLeft_NEON(const uint8_t* WEBP_RESTRICT src,
 //------------------------------------------------------------------------------
 // Horizontal filter.
 
-static WEBP_INLINE void DoHorizontalFilter_NEON(
-    const uint8_t* WEBP_RESTRICT in, int width, int height, int stride,
-    uint8_t* WEBP_RESTRICT out) {
+static WEBP_INLINE void DoHorizontalFilter_NEON(const uint8_t* WEBP_RESTRICT in,
+                                                int width, int height,
+                                                int stride,
+                                                uint8_t* WEBP_RESTRICT out) {
   int row;
   DCHECK(in, out);
 
@@ -88,8 +90,8 @@ static WEBP_INLINE void DoHorizontalFilter_NEON(
   }
 }
 
-static void HorizontalFilter_NEON(const uint8_t* WEBP_RESTRICT data,
-                                  int width, int height, int stride,
+static void HorizontalFilter_NEON(const uint8_t* WEBP_RESTRICT data, int width,
+                                  int height, int stride,
                                   uint8_t* WEBP_RESTRICT filtered_data) {
   DoHorizontalFilter_NEON(data, width, height, stride, filtered_data);
 }
@@ -118,8 +120,8 @@ static WEBP_INLINE void DoVerticalFilter_NEON(const uint8_t* WEBP_RESTRICT in,
   }
 }
 
-static void VerticalFilter_NEON(const uint8_t* WEBP_RESTRICT data,
-                                int width, int height, int stride,
+static void VerticalFilter_NEON(const uint8_t* WEBP_RESTRICT data, int width,
+                                int height, int stride,
                                 uint8_t* WEBP_RESTRICT filtered_data) {
   DoVerticalFilter_NEON(data, width, height, stride, filtered_data);
 }
@@ -172,8 +174,8 @@ static WEBP_INLINE void DoGradientFilter_NEON(const uint8_t* WEBP_RESTRICT in,
   }
 }
 
-static void GradientFilter_NEON(const uint8_t* WEBP_RESTRICT data,
-                                int width, int height, int stride,
+static void GradientFilter_NEON(const uint8_t* WEBP_RESTRICT data, int width,
+                                int height, int stride,
                                 uint8_t* WEBP_RESTRICT filtered_data) {
   DoGradientFilter_NEON(data, width, height, stride, filtered_data);
 }
@@ -229,24 +231,25 @@ static void VerticalUnfilter_NEON(const uint8_t* prev, const uint8_t* in,
 // at least on ARM64. For armv7, it's a wash.
 // So best is to disable it for now, but keep the idea around...
 #if !defined(USE_GRADIENT_UNFILTER)
-#define USE_GRADIENT_UNFILTER 0   // ALTERNATE_CODE
+#define USE_GRADIENT_UNFILTER 0  // ALTERNATE_CODE
 #endif
 
 #if (USE_GRADIENT_UNFILTER == 1)
-#define GRAD_PROCESS_LANE(L)  do {                                             \
-  const uint8x8_t tmp1 = ROTATE_RIGHT_N(pred, 1);  /* rotate predictor in */   \
-  const int16x8_t tmp2 = vaddq_s16(BC, U8_TO_S16(tmp1));                       \
-  const uint8x8_t delta = vqmovun_s16(tmp2);                                   \
-  pred = vadd_u8(D, delta);                                                    \
-  out = vext_u8(out, ROTATE_LEFT_N(pred, (L)), 1);                             \
-} while (0)
+#define GRAD_PROCESS_LANE(L)                                                  \
+  do {                                                                        \
+    const uint8x8_t tmp1 = ROTATE_RIGHT_N(pred, 1); /* rotate predictor in */ \
+    const int16x8_t tmp2 = vaddq_s16(BC, U8_TO_S16(tmp1));                    \
+    const uint8x8_t delta = vqmovun_s16(tmp2);                                \
+    pred = vadd_u8(D, delta);                                                 \
+    out = vext_u8(out, ROTATE_LEFT_N(pred, (L)), 1);                          \
+  } while (0)
 
 static void GradientPredictInverse_NEON(const uint8_t* const in,
                                         const uint8_t* const top,
                                         uint8_t* const row, int length) {
   if (length > 0) {
     int i;
-    uint8x8_t pred = vdup_n_u8(row[-1]);   // left sample
+    uint8x8_t pred = vdup_n_u8(row[-1]);  // left sample
     uint8x8_t out = vdup_n_u8(0);
     for (i = 0; i + 8 <= length; i += 8) {
       const int16x8_t B = LOAD_U8_TO_S16(&top[i + 0]);
@@ -280,7 +283,7 @@ static void GradientUnfilter_NEON(const uint8_t* prev, const uint8_t* in,
   }
 }
 
-#endif   // USE_GRADIENT_UNFILTER
+#endif  // USE_GRADIENT_UNFILTER
 
 //------------------------------------------------------------------------------
 // Entry point

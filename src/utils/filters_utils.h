@@ -22,11 +22,11 @@ extern "C" {
 #endif
 
 // Fast estimate of a potentially good filter.
-WEBP_FILTER_TYPE WebPEstimateBestFilter(const uint8_t* data,
-                                        int width, int height, int stride);
+WEBP_FILTER_TYPE WebPEstimateBestFilter(const uint8_t* data, int width,
+                                        int height, int stride);
 
 #ifdef __cplusplus
-}    // extern "C"
+}  // extern "C"
 #endif
 
 #endif  // WEBP_UTILS_FILTERS_UTILS_H_

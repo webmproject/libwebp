@@ -28,7 +28,7 @@ int ReadPictureWithWIC(const char* const filename,
                        struct Metadata* const metadata);
 
 #ifdef __cplusplus
-}    // extern "C"
+}  // extern "C"
 #endif
 
 #endif  // WEBP_IMAGEIO_WICDEC_H_

@@ -27,14 +27,14 @@ extern "C" {
 
 typedef struct VP8BitWriter VP8BitWriter;
 struct VP8BitWriter {
-  int32_t  range;      // range-1
-  int32_t  value;
-  int      run;        // number of outstanding bits
-  int      nb_bits;    // number of pending bits
-  uint8_t* buf;        // internal buffer. Re-allocated regularly. Not owned.
-  size_t   pos;
-  size_t   max_pos;
-  int      error;      // true in case of error
+  int32_t range;  // range-1
+  int32_t value;
+  int run;       // number of outstanding bits
+  int nb_bits;   // number of pending bits
+  uint8_t* buf;  // internal buffer. Re-allocated regularly. Not owned.
+  size_t pos;
+  size_t max_pos;
+  int error;  // true in case of error
 };
 
 // Initialize the object. Allocates some initial memory based on expected_size.
@@ -51,12 +51,12 @@ void VP8PutBits(VP8BitWriter* const bw, uint32_t value, int nb_bits);
 void VP8PutSignedBits(VP8BitWriter* const bw, int value, int nb_bits);
 
 // Appends some bytes to the internal buffer. Data is copied.
-int VP8BitWriterAppend(VP8BitWriter* const bw,
-                       const uint8_t* data, size_t size);
+int VP8BitWriterAppend(VP8BitWriter* const bw, const uint8_t* data,
+                       size_t size);
 
 // return approximate write position (in bits)
 static WEBP_INLINE uint64_t VP8BitWriterPos(const VP8BitWriter* const bw) {
-  const uint64_t nb_bits = 8 + bw->nb_bits;   // bw->nb_bits is <= 0, note
+  const uint64_t nb_bits = 8 + bw->nb_bits;  // bw->nb_bits is <= 0, note
   return (bw->pos + bw->run) * 8 + nb_bits;
 }
 
@@ -72,28 +72,28 @@ static WEBP_INLINE size_t VP8BitWriterSize(const VP8BitWriter* const bw) {
 //------------------------------------------------------------------------------
 // VP8LBitWriter
 
-#if defined(__x86_64__) || defined(_M_X64)   // 64bit
-typedef uint64_t vp8l_atype_t;   // accumulator type
-typedef uint32_t vp8l_wtype_t;   // writing type
+#if defined(__x86_64__) || defined(_M_X64)  // 64bit
+typedef uint64_t vp8l_atype_t;              // accumulator type
+typedef uint32_t vp8l_wtype_t;              // writing type
 #define WSWAP HToLE32
-#define VP8L_WRITER_BYTES    4   // sizeof(vp8l_wtype_t)
-#define VP8L_WRITER_BITS     32  // 8 * sizeof(vp8l_wtype_t)
+#define VP8L_WRITER_BYTES 4      // sizeof(vp8l_wtype_t)
+#define VP8L_WRITER_BITS 32      // 8 * sizeof(vp8l_wtype_t)
 #define VP8L_WRITER_MAX_BITS 64  // 8 * sizeof(vp8l_atype_t)
 #else
 typedef uint32_t vp8l_atype_t;
 typedef uint16_t vp8l_wtype_t;
 #define WSWAP HToLE16
-#define VP8L_WRITER_BYTES    2
-#define VP8L_WRITER_BITS     16
+#define VP8L_WRITER_BYTES 2
+#define VP8L_WRITER_BITS 16
 #define VP8L_WRITER_MAX_BITS 32
 #endif
 
 typedef struct {
-  vp8l_atype_t bits;   // bit accumulator
-  int          used;   // number of bits used in accumulator
-  uint8_t*     buf;    // start of buffer
-  uint8_t*     cur;    // current write position
-  uint8_t*     end;    // end of buffer
+  vp8l_atype_t bits;  // bit accumulator
+  int used;           // number of bits used in accumulator
+  uint8_t* buf;       // start of buffer
+  uint8_t* cur;       // current write position
+  uint8_t* end;       // end of buffer
 
   // After all bits are written (VP8LBitWriterFinish()), the caller must observe
   // the state of 'error'. A value of 1 indicates that a memory allocation
@@ -132,8 +132,8 @@ void VP8LPutBitsInternal(VP8LBitWriter* const bw, uint32_t bits, int n_bits);
 // This function can write up to 32 bits in one go, but VP8LBitReader can only
 // read 24 bits max (VP8L_MAX_NUM_BIT_READ).
 // VP8LBitWriter's 'error' flag is set in case of memory allocation error.
-static WEBP_INLINE void VP8LPutBits(VP8LBitWriter* const bw,
-                                    uint32_t bits, int n_bits) {
+static WEBP_INLINE void VP8LPutBits(VP8LBitWriter* const bw, uint32_t bits,
+                                    int n_bits) {
   if (sizeof(vp8l_wtype_t) == 4) {
     if (n_bits > 0) {
       if (bw->used >= 32) {
@@ -150,7 +150,7 @@ static WEBP_INLINE void VP8LPutBits(VP8LBitWriter* const bw,
 //------------------------------------------------------------------------------
 
 #ifdef __cplusplus
-}    // extern "C"
+}  // extern "C"
 #endif
 
 #endif  // WEBP_UTILS_BIT_WRITER_UTILS_H_

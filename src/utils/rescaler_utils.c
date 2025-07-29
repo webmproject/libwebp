@@ -11,23 +11,23 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
+#include "src/utils/rescaler_utils.h"
+
 #include <assert.h>
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "src/dsp/dsp.h"
-#include "src/webp/types.h"
-#include "src/utils/rescaler_utils.h"
 #include "src/utils/utils.h"
+#include "src/webp/types.h"
 
 //------------------------------------------------------------------------------
 
-int WebPRescalerInit(WebPRescaler* const rescaler,
-                     int src_width, int src_height,
-                     uint8_t* const dst,
-                     int dst_width, int dst_height, int dst_stride,
-                     int num_channels, rescaler_t* const work) {
+int WebPRescalerInit(WebPRescaler* const rescaler, int src_width,
+                     int src_height, uint8_t* const dst, int dst_width,
+                     int dst_height, int dst_stride, int num_channels,
+                     rescaler_t* const work) {
   const int x_add = src_width, x_sub = dst_width;
   const int y_add = src_height, y_sub = dst_height;
   const uint64_t total_size = 2ull * dst_width * num_channels * sizeof(*work);
@@ -136,7 +136,7 @@ int WebPRescalerImport(WebPRescaler* const rescaler, int num_lines,
       rescaler->frow = tmp;
     }
     WebPRescalerImportRow(rescaler, src);
-    if (!rescaler->y_expand) {    // Accumulate the contribution of the new row.
+    if (!rescaler->y_expand) {  // Accumulate the contribution of the new row.
       int x;
       for (x = 0; x < rescaler->num_channels * rescaler->dst_width; ++x) {
         rescaler->irow[x] += rescaler->frow[x];

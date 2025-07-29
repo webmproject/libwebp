@@ -26,9 +26,9 @@ extern "C" {
 
 // State of the worker thread object
 typedef enum {
-  NOT_OK = 0,   // object is unusable
-  OK,           // ready to work
-  WORK          // busy finishing the current task
+  NOT_OK = 0,  // object is unusable
+  OK,          // ready to work
+  WORK         // busy finishing the current task
 } WebPWorkerStatus;
 
 // Function to be called by the worker thread. Takes two opaque pointers as
@@ -37,12 +37,12 @@ typedef int (*WebPWorkerHook)(void*, void*);
 
 // Synchronization object used to launch job in the worker thread
 typedef struct {
-  void* impl;             // platform-dependent implementation worker details
+  void* impl;  // platform-dependent implementation worker details
   WebPWorkerStatus status;
-  WebPWorkerHook hook;    // hook to call
-  void* data1;            // first argument passed to 'hook'
-  void* data2;            // second argument passed to 'hook'
-  int had_error;          // return value of the last call to 'hook'
+  WebPWorkerHook hook;  // hook to call
+  void* data1;          // first argument passed to 'hook'
+  void* data2;          // second argument passed to 'hook'
+  int had_error;        // return value of the last call to 'hook'
 } WebPWorker;
 
 // The interface for all thread-worker related functions. All these functions
@@ -84,7 +84,7 @@ WEBP_EXTERN const WebPWorkerInterface* WebPGetWorkerInterface(void);
 //------------------------------------------------------------------------------
 
 #ifdef __cplusplus
-}    // extern "C"
+}  // extern "C"
 #endif
 
 #endif  // WEBP_UTILS_THREAD_UTILS_H_

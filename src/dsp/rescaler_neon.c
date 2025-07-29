@@ -17,6 +17,7 @@
 
 #include <arm_neon.h>
 #include <assert.h>
+
 #include "src/dsp/neon.h"
 #include "src/utils/rescaler_utils.h"
 
@@ -25,22 +26,23 @@
 #define MULT_FIX_FLOOR_C(x, y) (((uint64_t)(x) * (y)) >> WEBP_RESCALER_RFIX)
 
 #define LOAD_32x4(SRC, DST) const uint32x4_t DST = vld1q_u32((SRC))
-#define LOAD_32x8(SRC, DST0, DST1)                                    \
-    LOAD_32x4(SRC + 0, DST0);                                         \
-    LOAD_32x4(SRC + 4, DST1)
+#define LOAD_32x8(SRC, DST0, DST1) \
+  LOAD_32x4(SRC + 0, DST0);        \
+  LOAD_32x4(SRC + 4, DST1)
 
-#define STORE_32x8(SRC0, SRC1, DST) do {                              \
-    vst1q_u32((DST) + 0, SRC0);                                       \
-    vst1q_u32((DST) + 4, SRC1);                                       \
-} while (0)
+#define STORE_32x8(SRC0, SRC1, DST) \
+  do {                              \
+    vst1q_u32((DST) + 0, SRC0);     \
+    vst1q_u32((DST) + 4, SRC1);     \
+  } while (0)
 
 #if (WEBP_RESCALER_RFIX == 32)
 #define MAKE_HALF_CST(C) vdupq_n_s32((int32_t)((C) >> 1))
 // note: B is actualy scale>>1. See MAKE_HALF_CST
 #define MULT_FIX(A, B) \
-    vreinterpretq_u32_s32(vqrdmulhq_s32(vreinterpretq_s32_u32((A)), (B)))
+  vreinterpretq_u32_s32(vqrdmulhq_s32(vreinterpretq_s32_u32((A)), (B)))
 #define MULT_FIX_FLOOR(A, B) \
-    vreinterpretq_u32_s32(vqdmulhq_s32(vreinterpretq_s32_u32((A)), (B)))
+  vreinterpretq_u32_s32(vqdmulhq_s32(vreinterpretq_s32_u32((A)), (B)))
 #else
 #error "MULT_FIX/WEBP_RESCALER_RFIX need some more work"
 #endif
@@ -54,9 +56,8 @@ static uint32x4_t Interpolate_NEON(const rescaler_t* WEBP_RESTRICT const frow,
   const uint64x2_t C1 = vmull_n_u32(vget_high_u32(A0), A);
   const uint64x2_t D0 = vmlal_n_u32(C0, vget_low_u32(B0), B);
   const uint64x2_t D1 = vmlal_n_u32(C1, vget_high_u32(B0), B);
-  const uint32x4_t E = vcombine_u32(
-      vrshrn_n_u64(D0, WEBP_RESCALER_RFIX),
-      vrshrn_n_u64(D1, WEBP_RESCALER_RFIX));
+  const uint32x4_t E = vcombine_u32(vrshrn_n_u64(D0, WEBP_RESCALER_RFIX),
+                                    vrshrn_n_u64(D1, WEBP_RESCALER_RFIX));
   return E;
 }
 
@@ -105,8 +106,7 @@ static void RescalerExportRowExpand_NEON(WebPRescaler* const wrk) {
       vst1_u8(dst + x_out, F);
     }
     for (; x_out < x_out_max; ++x_out) {
-      const uint64_t I = (uint64_t)A * frow[x_out]
-                       + (uint64_t)B * irow[x_out];
+      const uint64_t I = (uint64_t)A * frow[x_out] + (uint64_t)B * irow[x_out];
       const uint32_t J = (uint32_t)((I + ROUNDER) >> WEBP_RESCALER_RFIX);
       const int v = (int)MULT_FIX_C(J, fy_scale);
       dst[x_out] = (v > 255) ? 255u : (uint8_t)v;
@@ -149,7 +149,7 @@ static void RescalerExportRowShrink_NEON(WebPRescaler* const wrk) {
       const uint32_t frac = (uint32_t)MULT_FIX_FLOOR_C(frow[x_out], yscale);
       const int v = (int)MULT_FIX_C(irow[x_out] - frac, fxy_scale);
       dst[x_out] = (v > 255) ? 255u : (uint8_t)v;
-      irow[x_out] = frac;   // new fractional start
+      irow[x_out] = frac;  // new fractional start
     }
   } else {
     for (x_out = 0; x_out < max_span; x_out += 8) {
@@ -185,8 +185,8 @@ WEBP_TSAN_IGNORE_FUNCTION void WebPRescalerDspInitNEON(void) {
   WebPRescalerExportRowShrink = RescalerExportRowShrink_NEON;
 }
 
-#else     // !WEBP_USE_NEON
+#else  // !WEBP_USE_NEON
 
 WEBP_DSP_INIT_STUB(WebPRescalerDspInitNEON)
 
-#endif    // WEBP_USE_NEON
+#endif  // WEBP_USE_NEON

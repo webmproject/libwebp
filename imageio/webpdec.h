@@ -35,8 +35,7 @@ void PrintWebPError(const char* const in_file, int status);
 // Reads a WebP from 'in_file', returning the contents and size in 'data' and
 // 'data_size'. If not NULL, 'bitstream' is populated using WebPGetFeatures().
 // Returns true on success.
-int LoadWebP(const char* const in_file,
-             const uint8_t** data, size_t* data_size,
+int LoadWebP(const char* const in_file, const uint8_t** data, size_t* data_size,
              WebPBitstreamFeatures* bitstream);
 
 // Decodes the WebP contained in 'data'.
@@ -48,9 +47,8 @@ VP8StatusCode DecodeWebP(const uint8_t* const data, size_t data_size,
                          WebPDecoderConfig* const config);
 
 // Same as DecodeWebP(), but using the incremental decoder.
-VP8StatusCode DecodeWebPIncremental(
-    const uint8_t* const data, size_t data_size,
-    WebPDecoderConfig* const config);
+VP8StatusCode DecodeWebPIncremental(const uint8_t* const data, size_t data_size,
+                                    WebPDecoderConfig* const config);
 
 //------------------------------------------------------------------------------
 
@@ -60,11 +58,11 @@ VP8StatusCode DecodeWebPIncremental(
 // or YUVA. Otherwise, alpha channel is dropped and output is RGB or YUV.
 // Returns true on success.
 int ReadWebP(const uint8_t* const data, size_t data_size,
-             struct WebPPicture* const pic,
-             int keep_alpha, struct Metadata* const metadata);
+             struct WebPPicture* const pic, int keep_alpha,
+             struct Metadata* const metadata);
 
 #ifdef __cplusplus
-}    // extern "C"
+}  // extern "C"
 #endif
 
 #endif  // WEBP_IMAGEIO_WEBPDEC_H_

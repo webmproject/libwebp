@@ -17,9 +17,9 @@
 #include <stdlib.h>
 #include <string.h>  // for memcpy()
 
-#include "src/webp/types.h"
 #include "src/utils/palette.h"
 #include "src/webp/encode.h"
+#include "src/webp/types.h"
 
 // If PRINT_MEM_INFO is defined, extra info (like total memory used, number of
 // alloc/free etc) is printed. For debugging/tuning purpose only (it's slow,
@@ -58,7 +58,7 @@
 static int num_malloc_calls = 0;
 static int num_calloc_calls = 0;
 static int num_free_calls = 0;
-static int countdown_to_fail = 0;     // 0 = off
+static int countdown_to_fail = 0;  // 0 = off
 
 typedef struct MemBlock MemBlock;
 struct MemBlock {
@@ -155,8 +155,8 @@ static void SubMem(void* ptr) {
       *b = block->next;
       total_mem -= block->size;
 #if defined(PRINT_MEM_TRAFFIC)
-      fprintf(stderr, "Mem: %u (-%u)\n",
-              (uint32_t)total_mem, (uint32_t)block->size);
+      fprintf(stderr, "Mem: %u (-%u)\n", (uint32_t)total_mem,
+              (uint32_t)block->size);
 #endif
       free(block);
     }
@@ -164,9 +164,15 @@ static void SubMem(void* ptr) {
 }
 
 #else
-#define Increment(v) do {} while (0)
-#define AddMem(p, s) do {} while (0)
-#define SubMem(p)    do {} while (0)
+#define Increment(v) \
+  do {               \
+  } while (0)
+#define AddMem(p, s) \
+  do {               \
+  } while (0)
+#define SubMem(p) \
+  do {            \
+  } while (0)
 #endif
 
 // Returns 0 in case of overflow of nmemb * size.
@@ -177,15 +183,14 @@ static int CheckSizeArgumentsOverflow(uint64_t nmemb, size_t size) {
   if (!CheckSizeOverflow(total_size)) return 0;
 #if defined(PRINT_MEM_INFO) && defined(MALLOC_FAIL_AT)
   if (countdown_to_fail > 0 && --countdown_to_fail == 0) {
-    return 0;    // fake fail!
+    return 0;  // fake fail!
   }
 #endif
 #if defined(PRINT_MEM_INFO) && defined(MALLOC_LIMIT)
   if (mem_limit > 0) {
     const uint64_t new_total_mem = (uint64_t)total_mem + total_size;
-    if (!CheckSizeOverflow(new_total_mem) ||
-        new_total_mem > mem_limit) {
-      return 0;   // fake fail!
+    if (!CheckSizeOverflow(new_total_mem) || new_total_mem > mem_limit) {
+      return 0;  // fake fail!
     }
   }
 #endif
@@ -223,18 +228,14 @@ void WebPSafeFree(void* const ptr) {
 
 // Public API functions.
 
-void* WebPMalloc(size_t size) {
-  return WebPSafeMalloc(1, size);
-}
+void* WebPMalloc(size_t size) { return WebPSafeMalloc(1, size); }
 
-void WebPFree(void* ptr) {
-  WebPSafeFree(ptr);
-}
+void WebPFree(void* ptr) { WebPSafeFree(ptr); }
 
 //------------------------------------------------------------------------------
 
-void WebPCopyPlane(const uint8_t* src, int src_stride,
-                   uint8_t* dst, int dst_stride, int width, int height) {
+void WebPCopyPlane(const uint8_t* src, int src_stride, uint8_t* dst,
+                   int dst_stride, int width, int height) {
   assert(src != NULL && dst != NULL);
   assert(abs(src_stride) >= width && abs(dst_stride) >= width);
   while (height-- > 0) {
@@ -261,24 +262,18 @@ int WebPGetColorPalette(const WebPPicture* const pic, uint32_t* const palette) {
 //------------------------------------------------------------------------------
 
 #if defined(WEBP_NEED_LOG_TABLE_8BIT)
-const uint8_t WebPLogTable8bit[256] = {   // 31 ^ clz(i)
-  0, 0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3,
-  4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-  5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
-  5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
-  6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-  6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-  6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-  6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-  7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-  7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-  7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-  7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-  7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-  7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-  7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-  7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7
-};
+const uint8_t WebPLogTable8bit[256] = {  // 31 ^ clz(i)
+    0, 0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4,
+    4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
+    5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6, 6, 6,
+    6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
+    6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
+    6, 6, 6, 6, 6, 6, 6, 6, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+    7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+    7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+    7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+    7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+    7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7};
 #endif
 
 //------------------------------------------------------------------------------

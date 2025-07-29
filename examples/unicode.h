@@ -25,20 +25,20 @@
 
 #include <fcntl.h>
 #include <io.h>
+#include <shellapi.h>
 #include <wchar.h>
 #include <windows.h>
-#include <shellapi.h>
 
 // Create a wchar_t array containing Unicode parameters.
-#define INIT_WARGV(ARGC, ARGV)                                                \
-  int wargc;                                                                  \
-  const W_CHAR** const wargv =                                                \
-      (const W_CHAR**)CommandLineToArgvW(GetCommandLineW(), &wargc);          \
-  do {                                                                        \
-    if (wargv == NULL || wargc != (ARGC)) {                                   \
-      fprintf(stderr, "Error: Unable to get Unicode arguments.\n");           \
-      FREE_WARGV_AND_RETURN(-1);                                              \
-    }                                                                         \
+#define INIT_WARGV(ARGC, ARGV)                                       \
+  int wargc;                                                         \
+  const W_CHAR** const wargv =                                       \
+      (const W_CHAR**)CommandLineToArgvW(GetCommandLineW(), &wargc); \
+  do {                                                               \
+    if (wargv == NULL || wargc != (ARGC)) {                          \
+      fprintf(stderr, "Error: Unable to get Unicode arguments.\n");  \
+      FREE_WARGV_AND_RETURN(-1);                                     \
+    }                                                                \
   } while (0)
 
 // Use this to get a Unicode argument (e.g. file path).

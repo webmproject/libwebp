@@ -106,14 +106,11 @@ typedef enum {
   LAST_FEATURE
 } FeatureType;
 
-static const char* const kFourccList[LAST_FEATURE] = {
-  NULL, "EXIF", "XMP ", "ICCP", "ANMF"
-};
+static const char* const kFourccList[LAST_FEATURE] = {NULL, "EXIF", "XMP ",
+                                                      "ICCP", "ANMF"};
 
 static const char* const kDescriptions[LAST_FEATURE] = {
-  NULL, "EXIF metadata", "XMP metadata", "ICC profile",
-  "Animation frame"
-};
+    NULL, "EXIF metadata", "XMP metadata", "ICC profile", "Animation frame"};
 
 typedef struct {
   CommandLineArguments cmd_args;
@@ -143,50 +140,49 @@ static int CountOccurrences(const CommandLineArguments* const args,
 }
 
 static const char* const kErrorMessages[-WEBP_MUX_NOT_ENOUGH_DATA + 1] = {
-  "WEBP_MUX_NOT_FOUND", "WEBP_MUX_INVALID_ARGUMENT", "WEBP_MUX_BAD_DATA",
-  "WEBP_MUX_MEMORY_ERROR", "WEBP_MUX_NOT_ENOUGH_DATA"
-};
+    "WEBP_MUX_NOT_FOUND", "WEBP_MUX_INVALID_ARGUMENT", "WEBP_MUX_BAD_DATA",
+    "WEBP_MUX_MEMORY_ERROR", "WEBP_MUX_NOT_ENOUGH_DATA"};
 
 static const char* ErrorString(WebPMuxError err) {
   assert(err <= WEBP_MUX_NOT_FOUND && err >= WEBP_MUX_NOT_ENOUGH_DATA);
   return kErrorMessages[-err];
 }
 
-#define RETURN_IF_ERROR(ERR_MSG)                                     \
-  do {                                                               \
-    if (err != WEBP_MUX_OK) {                                        \
-      fprintf(stderr, ERR_MSG);                                      \
-      return err;                                                    \
-    }                                                                \
+#define RETURN_IF_ERROR(ERR_MSG) \
+  do {                           \
+    if (err != WEBP_MUX_OK) {    \
+      fprintf(stderr, ERR_MSG);  \
+      return err;                \
+    }                            \
   } while (0)
 
-#define RETURN_IF_ERROR3(ERR_MSG, FORMAT_STR1, FORMAT_STR2)          \
-  do {                                                               \
-    if (err != WEBP_MUX_OK) {                                        \
-      fprintf(stderr, ERR_MSG, FORMAT_STR1, FORMAT_STR2);            \
-      return err;                                                    \
-    }                                                                \
+#define RETURN_IF_ERROR3(ERR_MSG, FORMAT_STR1, FORMAT_STR2) \
+  do {                                                      \
+    if (err != WEBP_MUX_OK) {                               \
+      fprintf(stderr, ERR_MSG, FORMAT_STR1, FORMAT_STR2);   \
+      return err;                                           \
+    }                                                       \
   } while (0)
 
-#define ERROR_GOTO1(ERR_MSG, LABEL)                                  \
-  do {                                                               \
-    fprintf(stderr, ERR_MSG);                                        \
-    ok = 0;                                                          \
-    goto LABEL;                                                      \
+#define ERROR_GOTO1(ERR_MSG, LABEL) \
+  do {                              \
+    fprintf(stderr, ERR_MSG);       \
+    ok = 0;                         \
+    goto LABEL;                     \
   } while (0)
 
-#define ERROR_GOTO2(ERR_MSG, FORMAT_STR, LABEL)                      \
-  do {                                                               \
-    fprintf(stderr, ERR_MSG, FORMAT_STR);                            \
-    ok = 0;                                                          \
-    goto LABEL;                                                      \
+#define ERROR_GOTO2(ERR_MSG, FORMAT_STR, LABEL) \
+  do {                                          \
+    fprintf(stderr, ERR_MSG, FORMAT_STR);       \
+    ok = 0;                                     \
+    goto LABEL;                                 \
   } while (0)
 
-#define ERROR_GOTO3(ERR_MSG, FORMAT_STR1, FORMAT_STR2, LABEL)        \
-  do {                                                               \
-    fprintf(stderr, ERR_MSG, FORMAT_STR1, FORMAT_STR2);              \
-    ok = 0;                                                          \
-    goto LABEL;                                                      \
+#define ERROR_GOTO3(ERR_MSG, FORMAT_STR1, FORMAT_STR2, LABEL) \
+  do {                                                        \
+    fprintf(stderr, ERR_MSG, FORMAT_STR1, FORMAT_STR2);       \
+    ok = 0;                                                   \
+    goto LABEL;                                               \
   } while (0)
 
 static WebPMuxError DisplayInfo(const WebPMux* mux) {
@@ -208,10 +204,10 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
   // Print the features present.
   printf("Features present:");
   if (flag & ANIMATION_FLAG) printf(" animation");
-  if (flag & ICCP_FLAG)      printf(" ICC profile");
-  if (flag & EXIF_FLAG)      printf(" EXIF metadata");
-  if (flag & XMP_FLAG)       printf(" XMP metadata");
-  if (flag & ALPHA_FLAG)     printf(" transparency");
+  if (flag & ICCP_FLAG) printf(" ICC profile");
+  if (flag & EXIF_FLAG) printf(" EXIF metadata");
+  if (flag & XMP_FLAG) printf(" XMP metadata");
+  if (flag & ALPHA_FLAG) printf(" transparency");
   printf("\n");
 
   if (flag & ANIMATION_FLAG) {
@@ -222,8 +218,8 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
     WebPMuxAnimParams params;
     err = WebPMuxGetAnimationParams(mux, &params);
     assert(err == WEBP_MUX_OK);
-    printf("Background color : 0x%.8X  Loop Count : %d\n",
-           params.bgcolor, params.loop_count);
+    printf("Background color : 0x%.8X  Loop Count : %d\n", params.bgcolor,
+           params.loop_count);
 
     err = WebPMuxNumChunks(mux, id, &nFrames);
     assert(err == WEBP_MUX_OK);
@@ -255,9 +251,9 @@ static WebPMuxError DisplayInfo(const WebPMux* mux) {
             printf("%8d %10s %5s ", frame.duration, dispose, blend);
           }
           printf("%10d %11s\n", (int)frame.bitstream.size,
-                 (features.format == 1) ? "lossy" :
-                 (features.format == 2) ? "lossless" :
-                                          "undefined");
+                 (features.format == 1)   ? "lossy"
+                 : (features.format == 2) ? "lossless"
+                                          : "undefined");
         }
         WebPDataClear(&frame.bitstream);
         RETURN_IF_ERROR3("Failed to retrieve %s#%d\n", type_str, i);
@@ -305,8 +301,9 @@ static void PrintHelp(void) {
   printf("       webpmux -duration DURATION_OPTIONS [-duration ...]\n");
   printf("               INPUT -o OUTPUT\n");
   printf("       webpmux -strip STRIP_OPTIONS INPUT -o OUTPUT\n");
-  printf("       webpmux -frame FRAME_OPTIONS [-frame...] [-loop LOOP_COUNT]"
-         "\n");
+  printf(
+      "       webpmux -frame FRAME_OPTIONS [-frame...] [-loop LOOP_COUNT]"
+      "\n");
   printf("               [-bgcolor BACKGROUND_COLOR] -o OUTPUT\n");
   printf("       webpmux -info INPUT\n");
   printf("       webpmux [-h|-help]\n");
@@ -360,8 +357,9 @@ static void PrintHelp(void) {
   printf("             'di' is the pause duration before next frame,\n");
   printf("             'xi','yi' specify the image offset for this frame,\n");
   printf("             'mi' is the dispose method for this frame (0 or 1),\n");
-  printf("             'bi' is the blending method for this frame (+b or -b)"
-         "\n");
+  printf(
+      "             'bi' is the blending method for this frame (+b or -b)"
+      "\n");
 
   printf("\n");
   printf("LOOP_COUNT:\n");
@@ -372,27 +370,33 @@ static void PrintHelp(void) {
   printf("BACKGROUND_COLOR:\n");
   printf(" Background color of the canvas.\n");
   printf("  A,R,G,B\n");
-  printf("  where:    'A', 'R', 'G' and 'B' are integers in the range 0 to 255 "
-         "specifying\n");
-  printf("            the Alpha, Red, Green and Blue component values "
-         "respectively\n");
+  printf(
+      "  where:    'A', 'R', 'G' and 'B' are integers in the range 0 to 255 "
+      "specifying\n");
+  printf(
+      "            the Alpha, Red, Green and Blue component values "
+      "respectively\n");
   printf("            [Default: 255,255,255,255]\n");
 
   printf("\nINPUT & OUTPUT are in WebP format.\n");
 
   printf("\nNote: The nature of EXIF, XMP and ICC data is not checked");
   printf(" and is assumed to be\nvalid.\n");
-  printf("\nNote: if a single file name is passed as the argument, the "
-         "arguments will be\n");
-  printf("tokenized from this file. The file name must not start with "
-         "the character '-'.\n");
+  printf(
+      "\nNote: if a single file name is passed as the argument, the "
+      "arguments will be\n");
+  printf(
+      "tokenized from this file. The file name must not start with "
+      "the character '-'.\n");
 }
 
 static void WarnAboutOddOffset(const WebPMuxFrameInfo* const info) {
   if ((info->x_offset | info->y_offset) & 1) {
-    fprintf(stderr, "Warning: odd offsets will be snapped to even values"
-            " (%d, %d) -> (%d, %d)\n", info->x_offset, info->y_offset,
-            info->x_offset & ~1, info->y_offset & ~1);
+    fprintf(stderr,
+            "Warning: odd offsets will be snapped to even values"
+            " (%d, %d) -> (%d, %d)\n",
+            info->x_offset, info->y_offset, info->x_offset & ~1,
+            info->y_offset & ~1);
   }
 }
 
@@ -420,8 +424,8 @@ static int WriteData(const char* filename, const WebPData* const webpdata) {
   if (fwrite(webpdata->bytes, webpdata->size, 1, fout) != 1) {
     WFPRINTF(stderr, "Error writing file %s!\n", (const W_CHAR*)filename);
   } else {
-    WFPRINTF(stderr, "Saved file %s (%d bytes)\n",
-             (const W_CHAR*)filename, (int)webpdata->size);
+    WFPRINTF(stderr, "Saved file %s (%d bytes)\n", (const W_CHAR*)filename,
+             (int)webpdata->size);
     ok = 1;
   }
   if (fout != stdout) fclose(fout);
@@ -454,8 +458,8 @@ static WebPMux* DuplicateMuxHeader(const WebPMux* const mux) {
   if (err == WEBP_MUX_OK) {
     err = WebPMuxSetAnimationParams(new_mux, &p);
     if (err != WEBP_MUX_OK) {
-      ERROR_GOTO2("Error (%s) handling animation params.\n",
-                  ErrorString(err), End);
+      ERROR_GOTO2("Error (%s) handling animation params.\n", ErrorString(err),
+                  End);
     }
   } else {
     /* it might not be an animation. Just keep moving. */
@@ -473,7 +477,7 @@ static WebPMux* DuplicateMuxHeader(const WebPMux* const mux) {
     }
   }
 
- End:
+End:
   if (!ok) {
     WebPMuxDelete(new_mux);
     new_mux = NULL;
@@ -511,8 +515,7 @@ static int ParseFrameArgs(const char* args, WebPMuxFrameInfo* const info) {
 
   if (blend_method != 'b') return 0;
   if (plus_minus != '-' && plus_minus != '+') return 0;
-  info->blend_method =
-      (plus_minus == '+') ? WEBP_MUX_BLEND : WEBP_MUX_NO_BLEND;
+  info->blend_method = (plus_minus == '+') ? WEBP_MUX_BLEND : WEBP_MUX_NO_BLEND;
   return 1;
 }
 
@@ -584,8 +587,10 @@ static int ValidateCommandLine(const CommandLineArguments* const cmd_args,
   }
 
   if ((num_frame_args == 0) && (num_loop_args + num_bgcolor_args > 0)) {
-    ERROR_GOTO1("ERROR: Loop count and background color are relevant only in "
-                "case of animation.\n", ErrValidate);
+    ERROR_GOTO1(
+        "ERROR: Loop count and background color are relevant only in "
+        "case of animation.\n",
+        ErrValidate);
   }
   if (num_durations_args > 0 && num_frame_args != 0) {
     ERROR_GOTO1("ERROR: Can not combine -duration and -frame commands.\n",
@@ -603,7 +608,7 @@ static int ValidateCommandLine(const CommandLineArguments* const cmd_args,
     *num_feature_args = num_frame_args + num_loop_args + num_bgcolor_args;
   }
 
- ErrValidate:
+ErrValidate:
   return ok;
 }
 
@@ -611,12 +616,12 @@ static int ValidateCommandLine(const CommandLineArguments* const cmd_args,
 
 #define FEATURETYPE_IS_NIL (config->type == NIL_FEATURE)
 
-#define CHECK_NUM_ARGS_AT_LEAST(NUM, LABEL)                              \
-  do {                                                                   \
-    if (argc < i + (NUM)) {                                              \
-      fprintf(stderr, "ERROR: Too few arguments for '%s'.\n", argv[i]);  \
-      goto LABEL;                                                        \
-    }                                                                    \
+#define CHECK_NUM_ARGS_AT_LEAST(NUM, LABEL)                             \
+  do {                                                                  \
+    if (argc < i + (NUM)) {                                             \
+      fprintf(stderr, "ERROR: Too few arguments for '%s'.\n", argv[i]); \
+      goto LABEL;                                                       \
+    }                                                                   \
   } while (0)
 
 #define CHECK_NUM_ARGS_AT_MOST(NUM, LABEL)                               \
@@ -627,10 +632,10 @@ static int ValidateCommandLine(const CommandLineArguments* const cmd_args,
     }                                                                    \
   } while (0)
 
-#define CHECK_NUM_ARGS_EXACTLY(NUM, LABEL)                               \
-  do {                                                                   \
-    CHECK_NUM_ARGS_AT_LEAST(NUM, LABEL);                                 \
-    CHECK_NUM_ARGS_AT_MOST(NUM, LABEL);                                  \
+#define CHECK_NUM_ARGS_EXACTLY(NUM, LABEL) \
+  do {                                     \
+    CHECK_NUM_ARGS_AT_LEAST(NUM, LABEL);   \
+    CHECK_NUM_ARGS_AT_MOST(NUM, LABEL);    \
   } while (0)
 
 // Parses command-line arguments to fill up config object. Also performs some
@@ -739,8 +744,8 @@ static int ParseCommandLine(Config* config, const W_CHAR** const unicode_argv) {
         exit(0);
       } else if (!strcmp(argv[i], "-version")) {
         const int version = WebPGetMuxVersion();
-        printf("%d.%d.%d\n",
-               (version >> 16) & 0xff, (version >> 8) & 0xff, version & 0xff);
+        printf("%d.%d.%d\n", (version >> 16) & 0xff, (version >> 8) & 0xff,
+               version & 0xff);
         DeleteConfig(config);
         LOCAL_FREE((W_CHAR**)unicode_argv);
         exit(0);
@@ -771,8 +776,9 @@ static int ParseCommandLine(Config* config, const W_CHAR** const unicode_argv) {
         if (!strcmp(argv[i], "icc") || !strcmp(argv[i], "exif") ||
             !strcmp(argv[i], "xmp")) {
           if (FEATURETYPE_IS_NIL) {
-            config->type = (!strcmp(argv[i], "icc")) ? FEATURE_ICCP :
-                (!strcmp(argv[i], "exif")) ? FEATURE_EXIF : FEATURE_XMP;
+            config->type = (!strcmp(argv[i], "icc"))    ? FEATURE_ICCP
+                           : (!strcmp(argv[i], "exif")) ? FEATURE_EXIF
+                                                        : FEATURE_XMP;
           } else {
             ERROR_GOTO1("ERROR: Multiple features specified.\n", ErrParse);
           }
@@ -826,7 +832,7 @@ static int ParseCommandLine(Config* config, const W_CHAR** const unicode_argv) {
       }
     }
   }
- ErrParse:
+ErrParse:
   return ok;
 }
 
@@ -858,7 +864,7 @@ static int ValidateConfig(Config* const config) {
     ERROR_GOTO1("ERROR: No output file specified.\n", ErrValidate2);
   }
 
- ErrValidate2:
+ErrValidate2:
   return ok;
 }
 
@@ -889,7 +895,7 @@ static int InitializeConfig(int argc, const char* argv[], Config* const config,
     ERROR_GOTO1("Exiting due to command-line parsing error.\n", Err1);
   }
 
- Err1:
+Err1:
   return ok;
 }
 
@@ -921,8 +927,8 @@ static int GetFrame(const WebPMux* mux, const Config* config) {
   err = WebPMuxGetFrame(mux, num, &info);
   if (err == WEBP_MUX_OK && info.id != id) err = WEBP_MUX_NOT_FOUND;
   if (err != WEBP_MUX_OK) {
-    ERROR_GOTO3("ERROR (%s): Could not get frame %d.\n",
-                ErrorString(err), num, ErrGet);
+    ERROR_GOTO3("ERROR (%s): Could not get frame %d.\n", ErrorString(err), num,
+                ErrGet);
   }
 
   mux_single = WebPMuxNew();
@@ -939,7 +945,7 @@ static int GetFrame(const WebPMux* mux, const Config* config) {
 
   ok = WriteWebP(mux_single, config->output);
 
- ErrGet:
+ErrGet:
   WebPDataClear(&info.bitstream);
   WebPMuxDelete(mux_single);
   return ok && !parse_error;
@@ -966,8 +972,8 @@ static int Process(const Config* config) {
         case FEATURE_XMP:
           err = WebPMuxGetChunk(mux, kFourccList[config->type], &chunk);
           if (err != WEBP_MUX_OK) {
-            ERROR_GOTO3("ERROR (%s): Could not get the %s.\n",
-                        ErrorString(err), kDescriptions[config->type], Err2);
+            ERROR_GOTO3("ERROR (%s): Could not get the %s.\n", ErrorString(err),
+                        kDescriptions[config->type], Err2);
           }
           ok = WriteData(config->output, &chunk);
           break;
@@ -982,7 +988,7 @@ static int Process(const Config* config) {
       switch (config->type) {
         case FEATURE_ANMF: {
           int i;
-          WebPMuxAnimParams params = { 0xFFFFFFFF, 0 };
+          WebPMuxAnimParams params = {0xFFFFFFFF, 0};
           mux = WebPMuxNew();
           if (mux == NULL) {
             ERROR_GOTO2("ERROR (%s): Could not allocate a mux object.\n",
@@ -1008,8 +1014,10 @@ static int Process(const Config* config) {
                   // Note: This is only a 'necessary' condition for loop_count
                   // to be valid. The 'sufficient' conditioned in checked in
                   // WebPMuxSetAnimationParams() method called later.
-                  ERROR_GOTO1("ERROR: Loop count must be in the range 0 to "
-                              "65535.\n", Err2);
+                  ERROR_GOTO1(
+                      "ERROR: Loop count must be in the range 0 to "
+                      "65535.\n",
+                      Err2);
                 }
                 ok = !parse_error;
                 if (!ok) goto Err2;
@@ -1031,8 +1039,10 @@ static int Process(const Config* config) {
                 err = WebPMuxPushFrame(mux, &frame, 1);
                 WebPDataClear(&frame.bitstream);
                 if (err != WEBP_MUX_OK) {
-                  ERROR_GOTO3("ERROR (%s): Could not add a frame at index %d."
-                              "\n", ErrorString(err), i, Err2);
+                  ERROR_GOTO3(
+                      "ERROR (%s): Could not add a frame at index %d."
+                      "\n",
+                      ErrorString(err), i, Err2);
                 }
                 break;
               }
@@ -1060,13 +1070,13 @@ static int Process(const Config* config) {
           err = WebPMuxSetChunk(mux, kFourccList[config->type], &chunk, 1);
           WebPDataClear(&chunk);
           if (err != WEBP_MUX_OK) {
-            ERROR_GOTO3("ERROR (%s): Could not set the %s.\n",
-                        ErrorString(err), kDescriptions[config->type], Err2);
+            ERROR_GOTO3("ERROR (%s): Could not set the %s.\n", ErrorString(err),
+                        kDescriptions[config->type], Err2);
           }
           break;
         }
         case FEATURE_LOOP: {
-          WebPMuxAnimParams params = { 0xFFFFFFFF, 0 };
+          WebPMuxAnimParams params = {0xFFFFFFFF, 0};
           int parse_error = 0;
           const int loop_count =
               ExUtilGetInt(config->args[0].params, 10, &parse_error);
@@ -1091,12 +1101,11 @@ static int Process(const Config* config) {
           break;
         }
         case FEATURE_BGCOLOR: {
-          WebPMuxAnimParams params = { 0xFFFFFFFF, 0 };
+          WebPMuxAnimParams params = {0xFFFFFFFF, 0};
           uint32_t bgcolor;
           ok = ParseBgcolorArgs(config->args[0].params, &bgcolor);
           if (!ok) {
-            ERROR_GOTO1("ERROR: Could not parse the background color.\n",
-                        Err2);
+            ERROR_GOTO1("ERROR: Could not parse the background color.\n", Err2);
           }
           ok = CreateMux(config->input, &mux);
           if (!ok) goto Err2;
@@ -1132,8 +1141,9 @@ static int Process(const Config* config) {
         ERROR_GOTO1("ERROR: can not parse the number of frames.\n", Err2);
       }
       if (num_frames == 0) {
-        fprintf(stderr, "Doesn't look like the source is animated. "
-                        "Skipping duration setting.\n");
+        fprintf(stderr,
+                "Doesn't look like the source is animated. "
+                "Skipping duration setting.\n");
         ok = WriteWebP(mux, config->output);
         if (!ok) goto Err2;
       } else {
@@ -1150,8 +1160,8 @@ static int Process(const Config* config) {
           int k;
           int args[3];
           int duration, start, end;
-          const int nb_args = ExUtilGetInts(config->args[i].params,
-                                            10, 3, args);
+          const int nb_args =
+              ExUtilGetInts(config->args[i].params, 10, 3, args);
           ok = (nb_args >= 1);
           if (!ok) goto Err3;
           duration = args[0];
@@ -1159,7 +1169,7 @@ static int Process(const Config* config) {
             ERROR_GOTO1("ERROR: duration must be strictly positive.\n", Err3);
           }
 
-          if (nb_args == 1) {   // only duration is present -> use full interval
+          if (nb_args == 1) {  // only duration is present -> use full interval
             start = 1;
             end = num_frames;
           } else {
@@ -1198,7 +1208,7 @@ static int Process(const Config* config) {
         mux = new_mux;  // transfer for the WebPMuxDelete() call
         new_mux = NULL;
 
- Err3:
+      Err3:
         WebPFree(durations);
         WebPMuxDelete(new_mux);
         if (!ok) goto Err2;
@@ -1212,8 +1222,8 @@ static int Process(const Config* config) {
           config->type == FEATURE_XMP) {
         err = WebPMuxDeleteChunk(mux, kFourccList[config->type]);
         if (err != WEBP_MUX_OK) {
-          ERROR_GOTO3("ERROR (%s): Could not strip the %s.\n",
-                      ErrorString(err), kDescriptions[config->type], Err2);
+          ERROR_GOTO3("ERROR (%s): Could not strip the %s.\n", ErrorString(err),
+                      kDescriptions[config->type], Err2);
         }
       } else {
         ERROR_GOTO1("ERROR: Invalid feature for action 'strip'.\n", Err2);
@@ -1234,7 +1244,7 @@ static int Process(const Config* config) {
     }
   }
 
- Err2:
+Err2:
   WebPMuxDelete(mux);
   return ok;
 }

@@ -14,9 +14,8 @@
 #include "src/dsp/dsp.h"
 
 #if defined(WEBP_USE_SSE2)
-#include <emmintrin.h>
-
 #include <assert.h>
+#include <emmintrin.h>
 #include <stdlib.h>  // for abs()
 #include <string.h>
 
@@ -50,10 +49,10 @@ static void ITransform_One_SSE2(const uint8_t* WEBP_RESTRICT ref,
   //   variable and the multiplication of that variable by the associated
   //   constant:
   //      (x * K) >> 16 = (x * (k + (1 << 16))) >> 16 = ((x * k ) >> 16) + x
-  const __m128i k1k2 = _mm_set_epi16(-30068, -30068, -30068, -30068,
-                                     20091, 20091, 20091, 20091);
-  const __m128i k2k1 = _mm_set_epi16(20091, 20091, 20091, 20091,
-                                     -30068, -30068, -30068, -30068);
+  const __m128i k1k2 =
+      _mm_set_epi16(-30068, -30068, -30068, -30068, 20091, 20091, 20091, 20091);
+  const __m128i k2k1 =
+      _mm_set_epi16(20091, 20091, 20091, 20091, -30068, -30068, -30068, -30068);
   const __m128i zero = _mm_setzero_si128();
   const __m128i zero_four = _mm_set_epi16(0, 0, 0, 0, 4, 4, 4, 4);
   __m128i T01, T23;
@@ -172,7 +171,7 @@ static void ITransform_One_SSE2(const uint8_t* WEBP_RESTRICT ref,
     // Unsigned saturate to 8b.
     ref0123 = _mm_packus_epi16(ref01, ref23);
 
-    _mm_storeu_si128((__m128i *)buf, ref0123);
+    _mm_storeu_si128((__m128i*)buf, ref0123);
 
     // Store four bytes/pixels per line.
     WebPInt32ToMem(&dst[0 * BPS], buf[0]);
@@ -259,8 +258,8 @@ static void ITransform_Two_SSE2(const uint8_t* WEBP_RESTRICT ref,
     // multiplications.
     const __m128i four = _mm_set1_epi16(4);
     const __m128i dc = _mm_add_epi16(T0, four);
-    const __m128i a =  _mm_add_epi16(dc, T2);
-    const __m128i b =  _mm_sub_epi16(dc, T2);
+    const __m128i a = _mm_add_epi16(dc, T2);
+    const __m128i b = _mm_sub_epi16(dc, T2);
     // c = MUL(T1, K2) - MUL(T3, K1) = MUL(T1, k2) - MUL(T3, k1) + T1 - T3
     const __m128i c1 = _mm_mulhi_epi16(T1, k2);
     const __m128i c2 = _mm_mulhi_epi16(T3, k1);
@@ -325,8 +324,7 @@ static void ITransform_Two_SSE2(const uint8_t* WEBP_RESTRICT ref,
 // Does one or two inverse transforms.
 static void ITransform_SSE2(const uint8_t* WEBP_RESTRICT ref,
                             const int16_t* WEBP_RESTRICT in,
-                            uint8_t* WEBP_RESTRICT dst,
-                            int do_two) {
+                            uint8_t* WEBP_RESTRICT dst, int do_two) {
   if (do_two) {
     ITransform_Two_SSE2(ref, in, dst);
   } else {
@@ -336,17 +334,16 @@ static void ITransform_SSE2(const uint8_t* WEBP_RESTRICT ref,
 
 static void FTransformPass1_SSE2(const __m128i* const in01,
                                  const __m128i* const in23,
-                                 __m128i* const out01,
-                                 __m128i* const out32) {
+                                 __m128i* const out01, __m128i* const out32) {
   const __m128i k937 = _mm_set1_epi32(937);
   const __m128i k1812 = _mm_set1_epi32(1812);
 
   const __m128i k88p = _mm_set_epi16(8, 8, 8, 8, 8, 8, 8, 8);
   const __m128i k88m = _mm_set_epi16(-8, 8, -8, 8, -8, 8, -8, 8);
-  const __m128i k5352_2217p = _mm_set_epi16(2217, 5352, 2217, 5352,
-                                            2217, 5352, 2217, 5352);
-  const __m128i k5352_2217m = _mm_set_epi16(-5352, 2217, -5352, 2217,
-                                            -5352, 2217, -5352, 2217);
+  const __m128i k5352_2217p =
+      _mm_set_epi16(2217, 5352, 2217, 5352, 2217, 5352, 2217, 5352);
+  const __m128i k5352_2217m =
+      _mm_set_epi16(-5352, 2217, -5352, 2217, -5352, 2217, -5352, 2217);
 
   // *in01 = 00 01 10 11 02 03 12 13
   // *in23 = 20 21 30 31 22 23 32 33
@@ -363,19 +360,19 @@ static void FTransformPass1_SSE2(const __m128i* const in01,
   // [d0 + d3 | d1 + d2 | ...] = [a0 a1 | a0' a1' | ... ]
   // [d0 - d3 | d1 - d2 | ...] = [a3 a2 | a3' a2' | ... ]
 
-  const __m128i tmp0   = _mm_madd_epi16(a01, k88p);  // [ (a0 + a1) << 3, ... ]
-  const __m128i tmp2   = _mm_madd_epi16(a01, k88m);  // [ (a0 - a1) << 3, ... ]
+  const __m128i tmp0 = _mm_madd_epi16(a01, k88p);  // [ (a0 + a1) << 3, ... ]
+  const __m128i tmp2 = _mm_madd_epi16(a01, k88m);  // [ (a0 - a1) << 3, ... ]
   const __m128i tmp1_1 = _mm_madd_epi16(a32, k5352_2217p);
   const __m128i tmp3_1 = _mm_madd_epi16(a32, k5352_2217m);
   const __m128i tmp1_2 = _mm_add_epi32(tmp1_1, k1812);
   const __m128i tmp3_2 = _mm_add_epi32(tmp3_1, k937);
-  const __m128i tmp1   = _mm_srai_epi32(tmp1_2, 9);
-  const __m128i tmp3   = _mm_srai_epi32(tmp3_2, 9);
-  const __m128i s03    = _mm_packs_epi32(tmp0, tmp2);
-  const __m128i s12    = _mm_packs_epi32(tmp1, tmp3);
-  const __m128i s_lo   = _mm_unpacklo_epi16(s03, s12);   // 0 1 0 1 0 1...
-  const __m128i s_hi   = _mm_unpackhi_epi16(s03, s12);   // 2 3 2 3 2 3
-  const __m128i v23    = _mm_unpackhi_epi32(s_lo, s_hi);
+  const __m128i tmp1 = _mm_srai_epi32(tmp1_2, 9);
+  const __m128i tmp3 = _mm_srai_epi32(tmp3_2, 9);
+  const __m128i s03 = _mm_packs_epi32(tmp0, tmp2);
+  const __m128i s12 = _mm_packs_epi32(tmp1, tmp3);
+  const __m128i s_lo = _mm_unpacklo_epi16(s03, s12);  // 0 1 0 1 0 1...
+  const __m128i s_hi = _mm_unpackhi_epi16(s03, s12);  // 2 3 2 3 2 3
+  const __m128i v23 = _mm_unpackhi_epi32(s_lo, s_hi);
   *out01 = _mm_unpacklo_epi32(s_lo, s_hi);
   *out32 = _mm_shuffle_epi32(v23, _MM_SHUFFLE(1, 0, 3, 2));  // 3 2 3 2 3 2..
 }
@@ -385,10 +382,10 @@ static void FTransformPass2_SSE2(const __m128i* const v01,
                                  int16_t* WEBP_RESTRICT out) {
   const __m128i zero = _mm_setzero_si128();
   const __m128i seven = _mm_set1_epi16(7);
-  const __m128i k5352_2217 = _mm_set_epi16(5352,  2217, 5352,  2217,
-                                           5352,  2217, 5352,  2217);
-  const __m128i k2217_5352 = _mm_set_epi16(2217, -5352, 2217, -5352,
-                                           2217, -5352, 2217, -5352);
+  const __m128i k5352_2217 =
+      _mm_set_epi16(5352, 2217, 5352, 2217, 5352, 2217, 5352, 2217);
+  const __m128i k2217_5352 =
+      _mm_set_epi16(2217, -5352, 2217, -5352, 2217, -5352, 2217, -5352);
   const __m128i k12000_plus_one = _mm_set1_epi32(12000 + (1 << 16));
   const __m128i k51000 = _mm_set1_epi32(51000);
 
@@ -537,8 +534,8 @@ static void FTransformWHTRow_SSE2(const int16_t* WEBP_RESTRICT const in,
   const __m128i src3 = _mm_loadl_epi64((__m128i*)&in[3 * 16]);
   const __m128i A01 = _mm_unpacklo_epi16(src0, src1);  // A0 A1 | ...
   const __m128i A23 = _mm_unpacklo_epi16(src2, src3);  // A2 A3 | ...
-  const __m128i B0 = _mm_adds_epi16(A01, A23);    // a0 | a1 | ...
-  const __m128i B1 = _mm_subs_epi16(A01, A23);    // a3 | a2 | ...
+  const __m128i B0 = _mm_adds_epi16(A01, A23);         // a0 | a1 | ...
+  const __m128i B1 = _mm_subs_epi16(A01, A23);         // a3 | a2 | ...
   const __m128i C0 = _mm_unpacklo_epi32(B0, B1);  // a0 | a1 | a3 | a2 | ...
   const __m128i C1 = _mm_unpacklo_epi32(B1, B0);  // a3 | a2 | a0 | a1 | ...
   const __m128i D = _mm_unpacklo_epi64(C0, C1);   // a0 a1 a3 a2 a3 a2 a0 a1
@@ -586,7 +583,7 @@ static void CollectHistogram_SSE2(const uint8_t* WEBP_RESTRICT ref,
   const __m128i zero = _mm_setzero_si128();
   const __m128i max_coeff_thresh = _mm_set1_epi16(MAX_COEFF_THRESH);
   int j;
-  int distribution[MAX_COEFF_THRESH + 1] = { 0 };
+  int distribution[MAX_COEFF_THRESH + 1] = {0};
   for (j = start_block; j < end_block; ++j) {
     int16_t out[16];
     int k;
@@ -600,7 +597,7 @@ static void CollectHistogram_SSE2(const uint8_t* WEBP_RESTRICT ref,
       const __m128i out1 = _mm_loadu_si128((__m128i*)&out[8]);
       const __m128i d0 = _mm_sub_epi16(zero, out0);
       const __m128i d1 = _mm_sub_epi16(zero, out1);
-      const __m128i abs0 = _mm_max_epi16(out0, d0);   // abs(v), 16b
+      const __m128i abs0 = _mm_max_epi16(out0, d0);  // abs(v), 16b
       const __m128i abs1 = _mm_max_epi16(out1, d1);
       // v = abs(out) >> 3
       const __m128i v0 = _mm_srai_epi16(abs0, 3);
@@ -927,7 +924,7 @@ static WEBP_INLINE void LD4_SSE2(uint8_t* WEBP_RESTRICT dst,
   const __m128i lsb = _mm_and_si128(_mm_xor_si128(ABCDEFGH, CDEFGHH0), one);
   const __m128i avg2 = _mm_subs_epu8(avg1, lsb);
   const __m128i abcdefg = _mm_avg_epu8(avg2, BCDEFGH0);
-  WebPInt32ToMem(dst + 0 * BPS, _mm_cvtsi128_si32(               abcdefg    ));
+  WebPInt32ToMem(dst + 0 * BPS, _mm_cvtsi128_si32(abcdefg));
   WebPInt32ToMem(dst + 1 * BPS, _mm_cvtsi128_si32(_mm_srli_si128(abcdefg, 1)));
   WebPInt32ToMem(dst + 2 * BPS, _mm_cvtsi128_si32(_mm_srli_si128(abcdefg, 2)));
   WebPInt32ToMem(dst + 3 * BPS, _mm_cvtsi128_si32(_mm_srli_si128(abcdefg, 3)));
@@ -950,8 +947,8 @@ static WEBP_INLINE void VR4_SSE2(uint8_t* WEBP_RESTRICT dst,
   const __m128i lsb = _mm_and_si128(_mm_xor_si128(IXABCD, ABCD0), one);
   const __m128i avg2 = _mm_subs_epu8(avg1, lsb);
   const __m128i efgh = _mm_avg_epu8(avg2, XABCD);
-  WebPInt32ToMem(dst + 0 * BPS, _mm_cvtsi128_si32(               abcd    ));
-  WebPInt32ToMem(dst + 1 * BPS, _mm_cvtsi128_si32(               efgh    ));
+  WebPInt32ToMem(dst + 0 * BPS, _mm_cvtsi128_si32(abcd));
+  WebPInt32ToMem(dst + 1 * BPS, _mm_cvtsi128_si32(efgh));
   WebPInt32ToMem(dst + 2 * BPS, _mm_cvtsi128_si32(_mm_slli_si128(abcd, 1)));
   WebPInt32ToMem(dst + 3 * BPS, _mm_cvtsi128_si32(_mm_slli_si128(efgh, 1)));
 
@@ -978,8 +975,8 @@ static WEBP_INLINE void VL4_SSE2(uint8_t* WEBP_RESTRICT dst,
   const __m128i avg4 = _mm_subs_epu8(avg3, lsb2);
   const uint32_t extra_out =
       (uint32_t)_mm_cvtsi128_si32(_mm_srli_si128(avg4, 4));
-  WebPInt32ToMem(dst + 0 * BPS, _mm_cvtsi128_si32(               avg1    ));
-  WebPInt32ToMem(dst + 1 * BPS, _mm_cvtsi128_si32(               avg4    ));
+  WebPInt32ToMem(dst + 0 * BPS, _mm_cvtsi128_si32(avg1));
+  WebPInt32ToMem(dst + 1 * BPS, _mm_cvtsi128_si32(avg4));
   WebPInt32ToMem(dst + 2 * BPS, _mm_cvtsi128_si32(_mm_srli_si128(avg1, 1)));
   WebPInt32ToMem(dst + 3 * BPS, _mm_cvtsi128_si32(_mm_srli_si128(avg4, 1)));
 
@@ -1000,7 +997,7 @@ static WEBP_INLINE void RD4_SSE2(uint8_t* WEBP_RESTRICT dst,
   const __m128i lsb = _mm_and_si128(_mm_xor_si128(JIXABCD__, LKJIXABCD), one);
   const __m128i avg2 = _mm_subs_epu8(avg1, lsb);
   const __m128i abcdefg = _mm_avg_epu8(avg2, KJIXABCD_);
-  WebPInt32ToMem(dst + 3 * BPS, _mm_cvtsi128_si32(               abcdefg    ));
+  WebPInt32ToMem(dst + 3 * BPS, _mm_cvtsi128_si32(abcdefg));
   WebPInt32ToMem(dst + 2 * BPS, _mm_cvtsi128_si32(_mm_srli_si128(abcdefg, 1)));
   WebPInt32ToMem(dst + 1 * BPS, _mm_cvtsi128_si32(_mm_srli_si128(abcdefg, 2)));
   WebPInt32ToMem(dst + 0 * BPS, _mm_cvtsi128_si32(_mm_srli_si128(abcdefg, 3)));
@@ -1012,14 +1009,13 @@ static WEBP_INLINE void HU4_SSE2(uint8_t* WEBP_RESTRICT dst,
   const int J = top[-3];
   const int K = top[-4];
   const int L = top[-5];
-  DST(0, 0) =             AVG2(I, J);
+  DST(0, 0) = AVG2(I, J);
   DST(2, 0) = DST(0, 1) = AVG2(J, K);
   DST(2, 1) = DST(0, 2) = AVG2(K, L);
-  DST(1, 0) =             AVG3(I, J, K);
+  DST(1, 0) = AVG3(I, J, K);
   DST(3, 0) = DST(1, 1) = AVG3(J, K, L);
   DST(3, 1) = DST(1, 2) = AVG3(K, L, L);
-  DST(3, 2) = DST(2, 2) =
-  DST(0, 3) = DST(1, 3) = DST(2, 3) = DST(3, 3) = L;
+  DST(3, 2) = DST(2, 2) = DST(0, 3) = DST(1, 3) = DST(2, 3) = DST(3, 3) = L;
 }
 
 static WEBP_INLINE void HD4_SSE2(uint8_t* WEBP_RESTRICT dst,
@@ -1036,14 +1032,14 @@ static WEBP_INLINE void HD4_SSE2(uint8_t* WEBP_RESTRICT dst,
   DST(0, 0) = DST(2, 1) = AVG2(I, X);
   DST(0, 1) = DST(2, 2) = AVG2(J, I);
   DST(0, 2) = DST(2, 3) = AVG2(K, J);
-  DST(0, 3)             = AVG2(L, K);
+  DST(0, 3) = AVG2(L, K);
 
-  DST(3, 0)             = AVG3(A, B, C);
-  DST(2, 0)             = AVG3(X, A, B);
+  DST(3, 0) = AVG3(A, B, C);
+  DST(2, 0) = AVG3(X, A, B);
   DST(1, 0) = DST(3, 1) = AVG3(I, X, A);
   DST(1, 1) = DST(3, 2) = AVG3(J, I, X);
   DST(1, 2) = DST(3, 3) = AVG3(K, J, I);
-  DST(1, 3)             = AVG3(L, K, J);
+  DST(1, 3) = AVG3(L, K, J);
 }
 
 static WEBP_INLINE void TM4_SSE2(uint8_t* WEBP_RESTRICT dst,
@@ -1244,11 +1240,11 @@ static void Mean16x4_SSE2(const uint8_t* WEBP_RESTRICT ref, uint32_t dc[4]) {
   const __m128i a1 = _mm_loadu_si128((const __m128i*)&ref[BPS * 1]);
   const __m128i a2 = _mm_loadu_si128((const __m128i*)&ref[BPS * 2]);
   const __m128i a3 = _mm_loadu_si128((const __m128i*)&ref[BPS * 3]);
-  const __m128i b0 = _mm_srli_epi16(a0, 8);     // hi byte
+  const __m128i b0 = _mm_srli_epi16(a0, 8);  // hi byte
   const __m128i b1 = _mm_srli_epi16(a1, 8);
   const __m128i b2 = _mm_srli_epi16(a2, 8);
   const __m128i b3 = _mm_srli_epi16(a3, 8);
-  const __m128i c0 = _mm_and_si128(a0, mask);   // lo byte
+  const __m128i c0 = _mm_and_si128(a0, mask);  // lo byte
   const __m128i c1 = _mm_and_si128(a1, mask);
   const __m128i c2 = _mm_and_si128(a2, mask);
   const __m128i c3 = _mm_and_si128(a3, mask);
@@ -1357,7 +1353,7 @@ static int TTransform_SSE2(const uint8_t* WEBP_RESTRICT inA,
       const __m128i d1 = _mm_sub_epi16(zero, A_b2);
       const __m128i d2 = _mm_sub_epi16(zero, B_b0);
       const __m128i d3 = _mm_sub_epi16(zero, B_b2);
-      A_b0 = _mm_max_epi16(A_b0, d0);   // abs(v), 16b
+      A_b0 = _mm_max_epi16(A_b0, d0);  // abs(v), 16b
       A_b2 = _mm_max_epi16(A_b2, d1);
       B_b0 = _mm_max_epi16(B_b0, d2);
       B_b2 = _mm_max_epi16(B_b2, d3);
@@ -1494,11 +1490,11 @@ static WEBP_INLINE int DoQuantizeBlock_SSE2(
   // position instead of twelfth) and 8th values.
   {
     __m128i outZ0, outZ8;
-    outZ0 = _mm_shufflehi_epi16(out0,  _MM_SHUFFLE(2, 1, 3, 0));
-    outZ0 = _mm_shuffle_epi32  (outZ0, _MM_SHUFFLE(3, 1, 2, 0));
+    outZ0 = _mm_shufflehi_epi16(out0, _MM_SHUFFLE(2, 1, 3, 0));
+    outZ0 = _mm_shuffle_epi32(outZ0, _MM_SHUFFLE(3, 1, 2, 0));
     outZ0 = _mm_shufflehi_epi16(outZ0, _MM_SHUFFLE(3, 1, 0, 2));
-    outZ8 = _mm_shufflelo_epi16(out8,  _MM_SHUFFLE(3, 0, 2, 1));
-    outZ8 = _mm_shuffle_epi32  (outZ8, _MM_SHUFFLE(3, 1, 2, 0));
+    outZ8 = _mm_shufflelo_epi16(out8, _MM_SHUFFLE(3, 0, 2, 1));
+    outZ8 = _mm_shuffle_epi32(outZ8, _MM_SHUFFLE(3, 1, 2, 0));
     outZ8 = _mm_shufflelo_epi16(outZ8, _MM_SHUFFLE(1, 3, 2, 0));
     _mm_storeu_si128((__m128i*)&out[0], outZ0);
     _mm_storeu_si128((__m128i*)&out[8], outZ8);
@@ -1529,7 +1525,7 @@ static int Quantize2Blocks_SSE2(int16_t in[32], int16_t out[32],
                                 const VP8Matrix* WEBP_RESTRICT const mtx) {
   int nz;
   const uint16_t* const sharpen = &mtx->sharpen[0];
-  nz  = DoQuantizeBlock_SSE2(in + 0 * 16, out + 0 * 16, sharpen, mtx) << 0;
+  nz = DoQuantizeBlock_SSE2(in + 0 * 16, out + 0 * 16, sharpen, mtx) << 0;
   nz |= DoQuantizeBlock_SSE2(in + 1 * 16, out + 1 * 16, sharpen, mtx) << 1;
   return nz;
 }

@@ -15,8 +15,8 @@
 
 #if defined(WEBP_USE_AVX2)
 
-#include <stddef.h>
 #include <immintrin.h>
+#include <stddef.h>
 
 #include "src/dsp/cpu.h"
 #include "src/dsp/lossless.h"
@@ -90,20 +90,20 @@ static void PredictorAdd1_AVX2(const uint32_t* in, const uint32_t* upper,
 
 // Macro that adds 32-bit integers from IN using mod 256 arithmetic
 // per 8 bit channel.
-#define GENERATE_PREDICTOR_1(X, IN)                                         \
-  static void PredictorAdd##X##_AVX2(const uint32_t* in,                    \
-                                     const uint32_t* upper, int num_pixels, \
-                                     uint32_t* WEBP_RESTRICT out) {         \
-    int i;                                                                  \
-    for (i = 0; i + 8 <= num_pixels; i += 8) {                              \
-      const __m256i src = _mm256_loadu_si256((const __m256i*)&in[i]);       \
-      const __m256i other = _mm256_loadu_si256((const __m256i*)&(IN));      \
-      const __m256i res = _mm256_add_epi8(src, other);                      \
-      _mm256_storeu_si256((__m256i*)&out[i], res);                          \
-    }                                                                       \
-    if (i != num_pixels) {                                                  \
+#define GENERATE_PREDICTOR_1(X, IN)                                           \
+  static void PredictorAdd##X##_AVX2(const uint32_t* in,                      \
+                                     const uint32_t* upper, int num_pixels,   \
+                                     uint32_t* WEBP_RESTRICT out) {           \
+    int i;                                                                    \
+    for (i = 0; i + 8 <= num_pixels; i += 8) {                                \
+      const __m256i src = _mm256_loadu_si256((const __m256i*)&in[i]);         \
+      const __m256i other = _mm256_loadu_si256((const __m256i*)&(IN));        \
+      const __m256i res = _mm256_add_epi8(src, other);                        \
+      _mm256_storeu_si256((__m256i*)&out[i], res);                            \
+    }                                                                         \
+    if (i != num_pixels) {                                                    \
       VP8LPredictorsAdd_SSE[(X)](in + i, upper + i, num_pixels - i, out + i); \
-    }                                                                       \
+    }                                                                         \
   }
 
 // Predictor2: Top.
@@ -117,23 +117,23 @@ GENERATE_PREDICTOR_1(4, upper[i - 1])
 // Due to averages with integers, values cannot be accumulated in parallel for
 // predictors 5 to 7.
 
-#define GENERATE_PREDICTOR_2(X, IN)                                         \
-  static void PredictorAdd##X##_AVX2(const uint32_t* in,                    \
-                                     const uint32_t* upper, int num_pixels, \
-                                     uint32_t* WEBP_RESTRICT out) {         \
-    int i;                                                                  \
-    for (i = 0; i + 8 <= num_pixels; i += 8) {                              \
-      const __m256i Tother = _mm256_loadu_si256((const __m256i*)&(IN));     \
-      const __m256i T = _mm256_loadu_si256((const __m256i*)&upper[i]);      \
-      const __m256i src = _mm256_loadu_si256((const __m256i*)&in[i]);       \
-      __m256i avg, res;                                                     \
-      Average2_m256i(&T, &Tother, &avg);                                    \
-      res = _mm256_add_epi8(avg, src);                                      \
-      _mm256_storeu_si256((__m256i*)&out[i], res);                          \
-    }                                                                       \
-    if (i != num_pixels) {                                                  \
+#define GENERATE_PREDICTOR_2(X, IN)                                           \
+  static void PredictorAdd##X##_AVX2(const uint32_t* in,                      \
+                                     const uint32_t* upper, int num_pixels,   \
+                                     uint32_t* WEBP_RESTRICT out) {           \
+    int i;                                                                    \
+    for (i = 0; i + 8 <= num_pixels; i += 8) {                                \
+      const __m256i Tother = _mm256_loadu_si256((const __m256i*)&(IN));       \
+      const __m256i T = _mm256_loadu_si256((const __m256i*)&upper[i]);        \
+      const __m256i src = _mm256_loadu_si256((const __m256i*)&in[i]);         \
+      __m256i avg, res;                                                       \
+      Average2_m256i(&T, &Tother, &avg);                                      \
+      res = _mm256_add_epi8(avg, src);                                        \
+      _mm256_storeu_si256((__m256i*)&out[i], res);                            \
+    }                                                                         \
+    if (i != num_pixels) {                                                    \
       VP8LPredictorsAdd_SSE[(X)](in + i, upper + i, num_pixels - i, out + i); \
-    }                                                                       \
+    }                                                                         \
   }
 // Predictor8: average TL T.
 GENERATE_PREDICTOR_2(8, upper[i - 1])
@@ -361,10 +361,9 @@ static void TransformColorInverse_AVX2(const VP8LMultipliers* const m,
                                        const uint32_t* const src,
                                        int num_pixels, uint32_t* dst) {
 // sign-extended multiplying constants, pre-shifted by 5.
-#define CST(X)  (((int16_t)(m->X << 8)) >> 5)   // sign-extend
-  const __m256i mults_rb =
-      _mm256_set1_epi32((int)((uint32_t)CST(green_to_red) << 16 |
-                              (CST(green_to_blue) & 0xffff)));
+#define CST(X) (((int16_t)(m->X << 8)) >> 5)  // sign-extend
+  const __m256i mults_rb = _mm256_set1_epi32(
+      (int)((uint32_t)CST(green_to_red) << 16 | (CST(green_to_blue) & 0xffff)));
   const __m256i mults_b2 = _mm256_set1_epi32(CST(red_to_blue));
 #undef CST
   const __m256i mask_ag = _mm256_set1_epi32((int)0xff00ff00);

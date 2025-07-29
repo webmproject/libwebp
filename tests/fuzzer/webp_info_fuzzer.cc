@@ -38,6 +38,5 @@ void WebPInfoTest(std::string_view data) {
 }
 
 FUZZ_TEST(WebPInfo, WebPInfoTest)
-    .WithDomains(
-        fuzztest::String()
-            .WithMaxSize(fuzz_utils::kMaxWebPFileSize + 1));
+    .WithDomains(fuzztest::String().WithMaxSize(fuzz_utils::kMaxWebPFileSize +
+                                                1));

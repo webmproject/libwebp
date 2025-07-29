@@ -119,7 +119,7 @@
 // inclusion of arm64_neon.h; Visual Studio 2019 includes this file in
 // arm_neon.h. Compile errors were seen with Visual Studio 2019 16.4 with
 // vtbl4_u8(); a fix was made in 16.6.
-#if defined(_MSC_VER) && \
+#if defined(_MSC_VER) &&                      \
     ((_MSC_VER >= 1700 && defined(_M_ARM)) || \
      (_MSC_VER >= 1926 && (defined(_M_ARM64) || defined(_M_ARM64EC))))
 #define WEBP_USE_NEON
@@ -192,6 +192,7 @@
 #if defined(WEBP_USE_THREAD) && !defined(_WIN32)
 #include <pthread.h>  // NOLINT
 
+// clang-format off
 #define WEBP_DSP_INIT(func)                                         \
   do {                                                              \
     static volatile VP8CPUInfo func##_last_cpuinfo_used =           \
@@ -202,7 +203,9 @@
     func##_last_cpuinfo_used = VP8GetCPUInfo;                       \
     (void)pthread_mutex_unlock(&func##_lock);                       \
   } while (0)
-#else  // !(defined(WEBP_USE_THREAD) && !defined(_WIN32))
+// clang-format on
+#else   // !(defined(WEBP_USE_THREAD) && !defined(_WIN32))
+// clang-format off
 #define WEBP_DSP_INIT(func)                               \
   do {                                                    \
     static volatile VP8CPUInfo func##_last_cpuinfo_used = \
@@ -211,6 +214,7 @@
     func();                                               \
     func##_last_cpuinfo_used = VP8GetCPUInfo;             \
   } while (0)
+// clang-format on
 #endif  // defined(WEBP_USE_THREAD) && !defined(_WIN32)
 
 // Defines an Init + helper function that control multiple initialization of

@@ -18,18 +18,17 @@
 #include <assert.h>
 #include <stddef.h>
 
-#include "src/webp/types.h"
 #include "src/dsp/cpu.h"
 #include "src/utils/bit_reader_inl_utils.h"
 #include "src/utils/bit_reader_utils.h"
 #include "src/utils/endian_inl_utils.h"
 #include "src/utils/utils.h"
+#include "src/webp/types.h"
 
 //------------------------------------------------------------------------------
 // VP8BitReader
 
-void VP8BitReaderSetBuffer(VP8BitReader* const br,
-                           const uint8_t* const start,
+void VP8BitReaderSetBuffer(VP8BitReader* const br, const uint8_t* const start,
                            size_t size) {
   assert(start != NULL);
   br->buf = start;
@@ -38,15 +37,15 @@ void VP8BitReaderSetBuffer(VP8BitReader* const br,
       (size >= sizeof(lbit_t)) ? start + size - sizeof(lbit_t) + 1 : start;
 }
 
-void VP8InitBitReader(VP8BitReader* const br,
-                      const uint8_t* const start, size_t size) {
+void VP8InitBitReader(VP8BitReader* const br, const uint8_t* const start,
+                      size_t size) {
   assert(br != NULL);
   assert(start != NULL);
-  assert(size < (1u << 31));   // limit ensured by format and upstream checks
-  br->range   = 255 - 1;
-  br->value   = 0;
-  br->bits    = -8;   // to load the very first 8bits
-  br->eof     = 0;
+  assert(size < (1u << 31));  // limit ensured by format and upstream checks
+  br->range = 255 - 1;
+  br->value = 0;
+  br->bits = -8;  // to load the very first 8bits
+  br->eof = 0;
   VP8BitReaderSetBuffer(br, start, size);
   VP8LoadNewBytes(br);
 }
@@ -60,36 +59,24 @@ void VP8RemapBitReader(VP8BitReader* const br, ptrdiff_t offset) {
 }
 
 const uint8_t kVP8Log2Range[128] = {
-     7, 6, 6, 5, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4,
-  3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-  2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-  2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-  0
-};
+    7, 6, 6, 5, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4, 3, 3, 3, 3, 3, 3, 3,
+    3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0};
 
 // range = ((range - 1) << kVP8Log2Range[range]) + 1
 const uint8_t kVP8NewRange[128] = {
-  127, 127, 191, 127, 159, 191, 223, 127,
-  143, 159, 175, 191, 207, 223, 239, 127,
-  135, 143, 151, 159, 167, 175, 183, 191,
-  199, 207, 215, 223, 231, 239, 247, 127,
-  131, 135, 139, 143, 147, 151, 155, 159,
-  163, 167, 171, 175, 179, 183, 187, 191,
-  195, 199, 203, 207, 211, 215, 219, 223,
-  227, 231, 235, 239, 243, 247, 251, 127,
-  129, 131, 133, 135, 137, 139, 141, 143,
-  145, 147, 149, 151, 153, 155, 157, 159,
-  161, 163, 165, 167, 169, 171, 173, 175,
-  177, 179, 181, 183, 185, 187, 189, 191,
-  193, 195, 197, 199, 201, 203, 205, 207,
-  209, 211, 213, 215, 217, 219, 221, 223,
-  225, 227, 229, 231, 233, 235, 237, 239,
-  241, 243, 245, 247, 249, 251, 253, 127
-};
+    127, 127, 191, 127, 159, 191, 223, 127, 143, 159, 175, 191, 207, 223, 239,
+    127, 135, 143, 151, 159, 167, 175, 183, 191, 199, 207, 215, 223, 231, 239,
+    247, 127, 131, 135, 139, 143, 147, 151, 155, 159, 163, 167, 171, 175, 179,
+    183, 187, 191, 195, 199, 203, 207, 211, 215, 219, 223, 227, 231, 235, 239,
+    243, 247, 251, 127, 129, 131, 133, 135, 137, 139, 141, 143, 145, 147, 149,
+    151, 153, 155, 157, 159, 161, 163, 165, 167, 169, 171, 173, 175, 177, 179,
+    181, 183, 185, 187, 189, 191, 193, 195, 197, 199, 201, 203, 205, 207, 209,
+    211, 213, 215, 217, 219, 221, 223, 225, 227, 229, 231, 233, 235, 237, 239,
+    241, 243, 245, 247, 249, 251, 253, 127};
 
 void VP8LoadFinalBytes(VP8BitReader* const br) {
   assert(br != NULL && br->buf != NULL);
@@ -128,22 +115,17 @@ int32_t VP8GetSignedValue(VP8BitReader* const br, int bits,
 
 #define VP8L_LOG8_WBITS 4  // Number of bytes needed to store VP8L_WBITS bits.
 
-#if defined(__arm__) || defined(_M_ARM) || WEBP_AARCH64 || \
-    defined(__i386__) || defined(_M_IX86) || \
-    defined(__x86_64__) || defined(_M_X64) || \
-    defined(__wasm__)
+#if defined(__arm__) || defined(_M_ARM) || WEBP_AARCH64 ||          \
+    defined(__i386__) || defined(_M_IX86) || defined(__x86_64__) || \
+    defined(_M_X64) || defined(__wasm__)
 #define VP8L_USE_FAST_LOAD
 #endif
 
 static const uint32_t kBitMask[VP8L_MAX_NUM_BIT_READ + 1] = {
-  0,
-  0x000001, 0x000003, 0x000007, 0x00000f,
-  0x00001f, 0x00003f, 0x00007f, 0x0000ff,
-  0x0001ff, 0x0003ff, 0x0007ff, 0x000fff,
-  0x001fff, 0x003fff, 0x007fff, 0x00ffff,
-  0x01ffff, 0x03ffff, 0x07ffff, 0x0fffff,
-  0x1fffff, 0x3fffff, 0x7fffff, 0xffffff
-};
+    0,        0x000001, 0x000003, 0x000007, 0x00000f, 0x00001f, 0x00003f,
+    0x00007f, 0x0000ff, 0x0001ff, 0x0003ff, 0x0007ff, 0x000fff, 0x001fff,
+    0x003fff, 0x007fff, 0x00ffff, 0x01ffff, 0x03ffff, 0x07ffff, 0x0fffff,
+    0x1fffff, 0x3fffff, 0x7fffff, 0xffffff};
 
 void VP8LInitBitReader(VP8LBitReader* const br, const uint8_t* const start,
                        size_t length) {
@@ -151,7 +133,7 @@ void VP8LInitBitReader(VP8LBitReader* const br, const uint8_t* const start,
   vp8l_val_t value = 0;
   assert(br != NULL);
   assert(start != NULL);
-  assert(length < 0xfffffff8u);   // can't happen with a RIFF chunk.
+  assert(length < 0xfffffff8u);  // can't happen with a RIFF chunk.
 
   br->len = length;
   br->val = 0;
@@ -169,11 +151,11 @@ void VP8LInitBitReader(VP8LBitReader* const br, const uint8_t* const start,
   br->buf = start;
 }
 
-void VP8LBitReaderSetBuffer(VP8LBitReader* const br,
-                            const uint8_t* const buf, size_t len) {
+void VP8LBitReaderSetBuffer(VP8LBitReader* const br, const uint8_t* const buf,
+                            size_t len) {
   assert(br != NULL);
   assert(buf != NULL);
-  assert(len < 0xfffffff8u);   // can't happen with a RIFF chunk.
+  assert(len < 0xfffffff8u);  // can't happen with a RIFF chunk.
   br->buf = buf;
   br->len = len;
   // 'pos' > 'len' should be considered a param error.
@@ -204,13 +186,13 @@ void VP8LDoFillBitWindow(VP8LBitReader* const br) {
   if (br->pos + sizeof(br->val) < br->len) {
     br->val >>= VP8L_WBITS;
     br->bit_pos -= VP8L_WBITS;
-    br->val |= (vp8l_val_t)HToLE32(WebPMemToUint32(br->buf + br->pos)) <<
-               (VP8L_LBITS - VP8L_WBITS);
+    br->val |= (vp8l_val_t)HToLE32(WebPMemToUint32(br->buf + br->pos))
+               << (VP8L_LBITS - VP8L_WBITS);
     br->pos += VP8L_LOG8_WBITS;
     return;
   }
 #endif
-  ShiftBytes(br);       // Slow path.
+  ShiftBytes(br);  // Slow path.
 }
 
 uint32_t VP8LReadBits(VP8LBitReader* const br, int n_bits) {
@@ -233,8 +215,8 @@ uint32_t VP8LReadBits(VP8LBitReader* const br, int n_bits) {
 
 #if (BITTRACE > 0)
 
-#include <stdlib.h>   // for atexit()
 #include <stdio.h>
+#include <stdlib.h>  // for atexit()
 #include <string.h>
 
 #define MAX_NUM_LABELS 32
@@ -259,15 +241,14 @@ static void PrintBitTraces(void) {
   units = "bytes";
 #endif
   for (i = 0; i < last_label; ++i) total += kLabels[i].size;
-  if (total < 1) total = 1;   // avoid rounding errors
+  if (total < 1) total = 1;  // avoid rounding errors
   printf("=== Bit traces ===\n");
   for (i = 0; i < last_label; ++i) {
     const int skip = 16 - (int)strlen(kLabels[i].label);
     const int value = (kLabels[i].size + scale - 1) / scale;
     assert(skip > 0);
-    printf("%s \%*s: %6d %s   \t[%5.2f%%] [count: %7d]\n",
-           kLabels[i].label, skip, "", value, units,
-           100.f * kLabels[i].size / total,
+    printf("%s \%*s: %6d %s   \t[%5.2f%%] [count: %7d]\n", kLabels[i].label,
+           skip, "", value, units, 100.f * kLabels[i].size / total,
            kLabels[i].count);
   }
   total = (total + scale - 1) / scale;
@@ -293,7 +274,7 @@ void BitTrace(const struct VP8BitReader* const br, const char label[]) {
   for (i = 0; i < last_label; ++i) {
     if (!strcmp(label, kLabels[i].label)) break;
   }
-  if (i == MAX_NUM_LABELS) abort();   // overflow!
+  if (i == MAX_NUM_LABELS) abort();  // overflow!
   kLabels[i].label = label;
   kLabels[i].size += pos - last_pos;
   kLabels[i].count += 1;

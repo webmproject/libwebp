@@ -46,7 +46,7 @@ int ExUtilGetInts(const char* v, int base, int max_output, int output[]) {
     if (error) return -1;
     output[n] = value;
     v = strchr(v, ',');
-    if (v != NULL) ++v;   // skip over the trailing ','
+    if (v != NULL) ++v;  // skip over the trailing ','
   }
   return n;
 }
@@ -110,8 +110,7 @@ int ExUtilInitCommandLineArguments(int argc, const char* argv[],
     }
 
     argc = 0;
-    for (cur = strtok((char*)args->argv_data.bytes, sep);
-         cur != NULL;
+    for (cur = strtok((char*)args->argv_data.bytes, sep); cur != NULL;
          cur = strtok(NULL, sep)) {
       if (argc == MAX_ARGC) {
         fprintf(stderr, "ERROR: Arguments limit %d reached\n", MAX_ARGC);

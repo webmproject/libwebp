@@ -19,22 +19,21 @@
 #include <string.h>
 
 #include "webp/encode.h"
-#include "webp/types.h"
 #include "webp/mux_types.h"
+#include "webp/types.h"
 
 #define GIF_TRANSPARENT_COLOR 0x00000000u
-#define GIF_WHITE_COLOR       0xffffffffu
-#define GIF_TRANSPARENT_MASK  0x01
-#define GIF_DISPOSE_MASK      0x07
-#define GIF_DISPOSE_SHIFT     2
+#define GIF_WHITE_COLOR 0xffffffffu
+#define GIF_TRANSPARENT_MASK 0x01
+#define GIF_DISPOSE_MASK 0x07
+#define GIF_DISPOSE_SHIFT 2
 
 // from utils/utils.h
 #ifdef __cplusplus
 extern "C" {
 #endif
-extern void WebPCopyPlane(const uint8_t* src, int src_stride,
-                          uint8_t* dst, int dst_stride,
-                          int width, int height);
+extern void WebPCopyPlane(const uint8_t* src, int src_stride, uint8_t* dst,
+                          int dst_stride, int width, int height);
 extern void WebPCopyPixels(const WebPPicture* const src,
                            WebPPicture* const dst);
 #ifdef __cplusplus
@@ -47,18 +46,16 @@ void GIFGetBackgroundColor(const ColorMapObject* const color_map,
   if (transparent_index != GIF_INDEX_INVALID &&
       bgcolor_index == transparent_index) {
     *bgcolor = GIF_TRANSPARENT_COLOR;  // Special case.
-  } else if (color_map == NULL || color_map->Colors == NULL
-             || bgcolor_index >= color_map->ColorCount) {
+  } else if (color_map == NULL || color_map->Colors == NULL ||
+             bgcolor_index >= color_map->ColorCount) {
     *bgcolor = GIF_WHITE_COLOR;
     fprintf(stderr,
             "GIF decode warning: invalid background color index. Assuming "
             "white background.\n");
   } else {
     const GifColorType color = color_map->Colors[bgcolor_index];
-    *bgcolor = (0xffu       << 24)
-             | (color.Red   << 16)
-             | (color.Green <<  8)
-             | (color.Blue  <<  0);
+    *bgcolor = (0xffu << 24) | (color.Red << 16) | (color.Green << 8) |
+               (color.Blue << 0);
   }
 }
 
@@ -117,9 +114,8 @@ int GIFReadFrame(GifFileType* const gif, int transparent_index,
   const GifImageDesc* const image_desc = &gif->Image;
   uint32_t* dst = NULL;
   uint8_t* tmp = NULL;
-  const GIFFrameRect rect = {
-      image_desc->Left, image_desc->Top, image_desc->Width, image_desc->Height
-  };
+  const GIFFrameRect rect = {image_desc->Left, image_desc->Top,
+                             image_desc->Width, image_desc->Height};
   const uint64_t memory_needed = 4 * rect.width * (uint64_t)rect.height;
   int ok = 0;
   *gif_rect = rect;
@@ -130,8 +126,8 @@ int GIFReadFrame(GifFileType* const gif, int transparent_index,
   }
 
   // Use a view for the sub-picture:
-  if (!WebPPictureView(picture, rect.x_offset, rect.y_offset,
-                       rect.width, rect.height, &sub_image)) {
+  if (!WebPPictureView(picture, rect.x_offset, rect.y_offset, rect.width,
+                       rect.height, &sub_image)) {
     fprintf(stderr, "Sub-image %dx%d at position %d,%d is invalid!\n",
             rect.width, rect.height, rect.x_offset, rect.y_offset);
     return 0;
@@ -143,8 +139,8 @@ int GIFReadFrame(GifFileType* const gif, int transparent_index,
 
   if (image_desc->Interlace) {  // Interlaced image.
     // We need 4 passes, with the following offsets and jumps.
-    const int interlace_offsets[] = { 0, 4, 2, 1 };
-    const int interlace_jumps[]   = { 8, 8, 4, 2 };
+    const int interlace_offsets[] = {0, 4, 2, 1};
+    const int interlace_jumps[] = {8, 8, 4, 2};
     int pass;
     for (pass = 0; pass < 4; ++pass) {
       const size_t stride = (size_t)sub_image.argb_stride;
@@ -166,7 +162,7 @@ int GIFReadFrame(GifFileType* const gif, int transparent_index,
   }
   ok = 1;
 
- End:
+End:
   if (!ok) picture->error_code = sub_image.error_code;
   WebPPictureFree(&sub_image);
   WebPFree(tmp);
@@ -184,7 +180,7 @@ int GIFReadLoopCount(GifFileType* const gif, GifByteType** const buf,
     return 0;  // Loop count sub-block missing.
   }
   if ((*buf)[0] < 3 || (*buf)[1] != 1) {
-    return 0;   // wrong size/marker
+    return 0;  // wrong size/marker
   }
   *loop_count = (*buf)[2] | ((*buf)[3] << 8);
   return 1;
@@ -220,8 +216,7 @@ int GIFReadMetadata(GifFileType* const gif, GifByteType** const buf,
     if (tmp == NULL) {
       return 0;
     }
-    memcpy((void*)(tmp + metadata->size),
-           subblock.bytes, subblock.size);
+    memcpy((void*)(tmp + metadata->size), subblock.bytes, subblock.size);
     metadata->bytes = tmp;
     metadata->size += subblock.size;
   }
@@ -235,8 +230,8 @@ int GIFReadMetadata(GifFileType* const gif, GifByteType** const buf,
   return 1;
 }
 
-static void ClearRectangle(WebPPicture* const picture,
-                           int left, int top, int width, int height) {
+static void ClearRectangle(WebPPicture* const picture, int left, int top,
+                           int width, int height) {
   int i, j;
   const size_t stride = picture->argb_stride;
   uint32_t* dst = picture->argb + top * stride + left;
@@ -247,8 +242,8 @@ static void ClearRectangle(WebPPicture* const picture,
 
 void GIFClearPic(WebPPicture* const pic, const GIFFrameRect* const rect) {
   if (rect != NULL) {
-    ClearRectangle(pic, rect->x_offset, rect->y_offset,
-                   rect->width, rect->height);
+    ClearRectangle(pic, rect->x_offset, rect->y_offset, rect->width,
+                   rect->height);
   } else {
     ClearRectangle(pic, 0, 0, pic->width, pic->height);
   }
@@ -266,15 +261,14 @@ void GIFDisposeFrame(GIFDisposeMethod dispose, const GIFFrameRect* const rect,
     GIFClearPic(curr_canvas, rect);
   } else if (dispose == GIF_DISPOSE_RESTORE_PREVIOUS) {
     const size_t src_stride = prev_canvas->argb_stride;
-    const uint32_t* const src = prev_canvas->argb + rect->x_offset
-                              + rect->y_offset * src_stride;
+    const uint32_t* const src =
+        prev_canvas->argb + rect->x_offset + rect->y_offset * src_stride;
     const size_t dst_stride = curr_canvas->argb_stride;
-    uint32_t* const dst = curr_canvas->argb + rect->x_offset
-                        + rect->y_offset * dst_stride;
+    uint32_t* const dst =
+        curr_canvas->argb + rect->x_offset + rect->y_offset * dst_stride;
     assert(prev_canvas != NULL);
-    WebPCopyPlane((uint8_t*)src, (int)(4 * src_stride),
-                  (uint8_t*)dst, (int)(4 * dst_stride),
-                  4 * rect->width, rect->height);
+    WebPCopyPlane((uint8_t*)src, (int)(4 * src_stride), (uint8_t*)dst,
+                  (int)(4 * dst_stride), 4 * rect->width, rect->height);
   }
 }
 
@@ -297,11 +291,11 @@ void GIFBlendFrames(const WebPPicture* const src,
 
 void GIFDisplayError(const GifFileType* const gif, int gif_error) {
   // libgif 4.2.0 has retired PrintGifError() and added GifErrorString().
-#if LOCAL_GIF_PREREQ(4,2)
-#if LOCAL_GIF_PREREQ(5,0)
+#if LOCAL_GIF_PREREQ(4, 2)
+#if LOCAL_GIF_PREREQ(5, 0)
   // Static string actually, hence the const char* cast.
-  const char* error_str = (const char*)GifErrorString(
-      (gif == NULL) ? gif_error : gif->Error);
+  const char* error_str =
+      (const char*)GifErrorString((gif == NULL) ? gif_error : gif->Error);
 #else
   const char* error_str = (const char*)GifErrorString();
   (void)gif;
@@ -319,7 +313,8 @@ void GIFDisplayError(const GifFileType* const gif, int gif_error) {
 #else  // !WEBP_HAVE_GIF
 
 static void ErrorGIFNotAvailable(void) {
-  fprintf(stderr, "GIF support not compiled. Please install the libgif-dev "
+  fprintf(stderr,
+          "GIF support not compiled. Please install the libgif-dev "
           "package before building.\n");
 }
 

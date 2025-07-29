@@ -11,14 +11,15 @@
 //
 // Entropy encoding (Huffman) for webp lossless.
 
+#include "src/utils/huffman_encode_utils.h"
+
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "src/utils/huffman_encode_utils.h"
-#include "src/webp/types.h"
 #include "src/utils/utils.h"
 #include "src/webp/format_constants.h"
+#include "src/webp/types.h"
 
 // -----------------------------------------------------------------------------
 // Util function to optimize the symbol map for RLE coding
@@ -53,8 +54,7 @@ static void OptimizeHuffmanForRle(int length, uint8_t* const good_for_rle,
     int stride = 0;
     for (i = 0; i < length + 1; ++i) {
       if (i == length || counts[i] != symbol) {
-        if ((symbol == 0 && stride >= 5) ||
-            (symbol != 0 && stride >= 7)) {
+        if ((symbol == 0 && stride >= 5) || (symbol != 0 && stride >= 7)) {
           int k;
           for (k = 0; k < stride; ++k) {
             good_for_rle[i - k - 1] = 1;
@@ -75,8 +75,7 @@ static void OptimizeHuffmanForRle(int length, uint8_t* const good_for_rle,
     uint32_t limit = counts[0];
     uint32_t sum = 0;
     for (i = 0; i < length + 1; ++i) {
-      if (i == length || good_for_rle[i] ||
-          (i != 0 && good_for_rle[i - 1]) ||
+      if (i == length || good_for_rle[i] || (i != 0 && good_for_rle[i - 1]) ||
           !ValuesShouldBeCollapsedToStrideAverage(counts[i], limit)) {
         if (stride >= 4 || (stride >= 3 && sum == 0)) {
           uint32_t k;
@@ -100,8 +99,9 @@ static void OptimizeHuffmanForRle(int length, uint8_t* const good_for_rle,
         if (i < length - 3) {
           // All interesting strides have a count of at least 4,
           // at least when non-zeros.
-          limit = (counts[i] + counts[i + 1] +
-                   counts[i + 2] + counts[i + 3] + 2) / 4;
+          limit =
+              (counts[i] + counts[i + 1] + counts[i + 2] + counts[i + 3] + 2) /
+              4;
         } else if (i < length) {
           limit = counts[i];
         } else {
@@ -165,8 +165,8 @@ static void SetBitDepths(const HuffmanTree* const tree,
 //
 // See https://en.wikipedia.org/wiki/Huffman_coding
 static void GenerateOptimalTree(const uint32_t* const histogram,
-                                int histogram_size,
-                                HuffmanTree* tree, int tree_depth_limit,
+                                int histogram_size, HuffmanTree* tree,
+                                int tree_depth_limit,
                                 uint8_t* const bit_depths) {
   uint32_t count_min;
   HuffmanTree* tree_pool;
@@ -179,7 +179,7 @@ static void GenerateOptimalTree(const uint32_t* const histogram,
     }
   }
 
-  if (tree_size_orig == 0) {   // pretty optimal already!
+  if (tree_size_orig == 0) {  // pretty optimal already!
     return;
   }
 
@@ -190,7 +190,7 @@ static void GenerateOptimalTree(const uint32_t* const histogram,
   // If we actually start running inside this loop a lot, we would perhaps
   // be better off with the Katajainen algorithm.
   assert(tree_size_orig <= (1 << (tree_depth_limit - 1)));
-  for (count_min = 1; ; count_min *= 2) {
+  for (count_min = 1;; count_min *= 2) {
     int tree_size = tree_size_orig;
     // We need to pack the Huffman tree in tree_depth_limit bits.
     // So, we try by faking histogram entries to be at least 'count_min'.
@@ -261,8 +261,8 @@ static void GenerateOptimalTree(const uint32_t* const histogram,
 // Coding of the Huffman tree values
 
 static HuffmanTreeToken* CodeRepeatedValues(int repetitions,
-                                            HuffmanTreeToken* tokens,
-                                            int value, int prev_value) {
+                                            HuffmanTreeToken* tokens, int value,
+                                            int prev_value) {
   assert(value <= MAX_ALLOWED_CODE_LENGTH);
   if (value != prev_value) {
     tokens->code = value;
@@ -300,7 +300,7 @@ static HuffmanTreeToken* CodeRepeatedZeros(int repetitions,
     if (repetitions < 3) {
       int i;
       for (i = 0; i < repetitions; ++i) {
-        tokens->code = 0;   // 0-value
+        tokens->code = 0;  // 0-value
         tokens->extra_bits = 0;
         ++tokens;
       }
@@ -348,17 +348,16 @@ int VP8LCreateCompressedHuffmanTree(const HuffmanTreeCode* const tree,
     i += runs;
     assert(tokens <= ending_token);
   }
-  (void)ending_token;    // suppress 'unused variable' warning
+  (void)ending_token;  // suppress 'unused variable' warning
   return (int)(tokens - starting_token);
 }
 
 // -----------------------------------------------------------------------------
 
 // Pre-reversed 4-bit values.
-static const uint8_t kReversedBits[16] = {
-  0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe,
-  0x1, 0x9, 0x5, 0xd, 0x3, 0xb, 0x7, 0xf
-};
+static const uint8_t kReversedBits[16] = {0x0, 0x8, 0x4, 0xc, 0x2, 0xa,
+                                          0x6, 0xe, 0x1, 0x9, 0x5, 0xd,
+                                          0x3, 0xb, 0x7, 0xf};
 
 static uint32_t ReverseBits(int num_bits, uint32_t bits) {
   uint32_t retval = 0;
@@ -378,7 +377,7 @@ static void ConvertBitDepthsToSymbols(HuffmanTreeCode* const tree) {
   int i;
   int len;
   uint32_t next_code[MAX_ALLOWED_CODE_LENGTH + 1];
-  int depth_count[MAX_ALLOWED_CODE_LENGTH + 1] = { 0 };
+  int depth_count[MAX_ALLOWED_CODE_LENGTH + 1] = {0};
 
   assert(tree != NULL);
   len = tree->num_symbols;

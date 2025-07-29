@@ -20,8 +20,8 @@ extern "C" {
 
 // Range of YUV values.
 typedef enum {
-  kSharpYuvRangeFull,     // YUV values between [0;255] (for 8 bit)
-  kSharpYuvRangeLimited   // Y in [16;235], YUV in [16;240] (for 8 bit)
+  kSharpYuvRangeFull,    // YUV values between [0;255] (for 8 bit)
+  kSharpYuvRangeLimited  // Y in [16;235], YUV in [16;240] (for 8 bit)
 } SharpYuvRange;
 
 // Constants that define a YUV color space.

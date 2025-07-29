@@ -48,7 +48,7 @@ static size_t ReadPicture(const char* const filename, WebPPicture* const pic,
   reader = WebPGuessImageReader(data, data_size);
   ok = reader(data, data_size, pic, keep_alpha, NULL);
 
- End:
+End:
   if (!ok) {
     WFPRINTF(stderr, "Error! Could not process file %s\n",
              (const W_CHAR*)filename);
@@ -57,8 +57,8 @@ static size_t ReadPicture(const char* const filename, WebPPicture* const pic,
   return ok ? data_size : 0;
 }
 
-static void RescalePlane(uint8_t* plane, int width, int height,
-                         int x_stride, int y_stride, int max) {
+static void RescalePlane(uint8_t* plane, int width, int height, int x_stride,
+                         int y_stride, int max) {
   const uint32_t factor = (max > 0) ? (255u << 16) / max : 0;
   int x, y;
   for (y = 0; y < height; ++y) {
@@ -71,9 +71,9 @@ static void RescalePlane(uint8_t* plane, int width, int height,
 }
 
 // Return the max absolute difference.
-static int DiffScaleChannel(uint8_t* src1, int stride1,
-                            const uint8_t* src2, int stride2,
-                            int x_stride, int w, int h, int do_scaling) {
+static int DiffScaleChannel(uint8_t* src1, int stride1, const uint8_t* src2,
+                            int stride2, int x_stride, int w, int h,
+                            int do_scaling) {
   int x, y;
   int max = 0;
   for (y = 0; y < h; ++y) {
@@ -95,7 +95,7 @@ static int DiffScaleChannel(uint8_t* src1, int stride1,
 // breaking the library's hidden visibility. This code duplication avoids the
 // bigger annoyance of having to open up internal details of libdsp...
 
-#define SSIM_KERNEL 3   // total size of the kernel: 2 * SSIM_KERNEL + 1
+#define SSIM_KERNEL 3  // total size of the kernel: 2 * SSIM_KERNEL + 1
 
 // struct for accumulating statistical moments
 typedef struct {
@@ -105,19 +105,19 @@ typedef struct {
 } DistoStats;
 
 // hat-shaped filter. Sum of coefficients is equal to 16.
-static const uint32_t kWeight[2 * SSIM_KERNEL + 1] = { 1, 2, 3, 4, 3, 2, 1 };
+static const uint32_t kWeight[2 * SSIM_KERNEL + 1] = {1, 2, 3, 4, 3, 2, 1};
 
 static WEBP_INLINE double SSIMCalculation(const DistoStats* const stats) {
   const uint32_t N = stats->w;
-  const uint32_t w2 =  N * N;
+  const uint32_t w2 = N * N;
   const uint32_t C1 = 20 * w2;
   const uint32_t C2 = 60 * w2;
-  const uint32_t C3 = 8 * 8 * w2;   // 'dark' limit ~= 6
+  const uint32_t C3 = 8 * 8 * w2;  // 'dark' limit ~= 6
   const uint64_t xmxm = (uint64_t)stats->xm * stats->xm;
   const uint64_t ymym = (uint64_t)stats->ym * stats->ym;
   if (xmxm + ymym >= C3) {
     const int64_t xmym = (int64_t)stats->xm * stats->ym;
-    const int64_t sxy = (int64_t)stats->xym * N - xmym;    // can be negative
+    const int64_t sxy = (int64_t)stats->xym * N - xmym;  // can be negative
     const uint64_t sxx = (uint64_t)stats->xxm * N - xmxm;
     const uint64_t syy = (uint64_t)stats->yym * N - ymym;
     // we descale by 8 to prevent overflow during the fnum/fden multiply.
@@ -129,13 +129,13 @@ static WEBP_INLINE double SSIMCalculation(const DistoStats* const stats) {
     assert(r >= 0. && r <= 1.0);
     return r;
   }
-  return 1.;   // area is too dark to contribute meaningfully
+  return 1.;  // area is too dark to contribute meaningfully
 }
 
 static double SSIMGetClipped(const uint8_t* src1, int stride1,
-                             const uint8_t* src2, int stride2,
-                             int xo, int yo, int W, int H) {
-  DistoStats stats = { 0, 0, 0, 0, 0, 0 };
+                             const uint8_t* src2, int stride2, int xo, int yo,
+                             int W, int H) {
+  DistoStats stats = {0, 0, 0, 0, 0, 0};
   const int ymin = (yo - SSIM_KERNEL < 0) ? 0 : yo - SSIM_KERNEL;
   const int ymax = (yo + SSIM_KERNEL > H - 1) ? H - 1 : yo + SSIM_KERNEL;
   const int xmin = (xo - SSIM_KERNEL < 0) ? 0 : xo - SSIM_KERNEL;
@@ -145,13 +145,13 @@ static double SSIMGetClipped(const uint8_t* src1, int stride1,
   src2 += ymin * stride2;
   for (y = ymin; y <= ymax; ++y, src1 += stride1, src2 += stride2) {
     for (x = xmin; x <= xmax; ++x) {
-      const uint32_t w = kWeight[SSIM_KERNEL + x - xo]
-                       * kWeight[SSIM_KERNEL + y - yo];
+      const uint32_t w =
+          kWeight[SSIM_KERNEL + x - xo] * kWeight[SSIM_KERNEL + y - yo];
       const uint32_t s1 = src1[x];
       const uint32_t s2 = src2[x];
-      stats.w   += w;
-      stats.xm  += w * s1;
-      stats.ym  += w * s2;
+      stats.w += w;
+      stats.xm += w * s1;
+      stats.ym += w * s2;
       stats.xxm += w * s1 * s1;
       stats.xym += w * s1 * s2;
       stats.yym += w * s2 * s2;
@@ -161,9 +161,9 @@ static double SSIMGetClipped(const uint8_t* src1, int stride1,
 }
 
 // Compute SSIM-score map. Return -1 in case of error, max diff otherwise.
-static int SSIMScaleChannel(uint8_t* src1, int stride1,
-                            const uint8_t* src2, int stride2,
-                            int x_stride, int w, int h, int do_scaling) {
+static int SSIMScaleChannel(uint8_t* src1, int stride1, const uint8_t* src2,
+                            int stride2, int x_stride, int w, int h,
+                            int do_scaling) {
   int x, y;
   int max = 0;
   uint8_t* const plane1 = (uint8_t*)malloc(2 * w * h * sizeof(*plane1));
@@ -205,8 +205,8 @@ static void ConvertToGray(WebPPicture* const pic) {
     for (x = 0; x < pic->width; ++x) {
       const uint32_t argb = row[x];
       const uint32_t r = (argb >> 16) & 0xff;
-      const uint32_t g = (argb >>  8) & 0xff;
-      const uint32_t b = (argb >>  0) & 0xff;
+      const uint32_t g = (argb >> 8) & 0xff;
+      const uint32_t b = (argb >> 0) & 0xff;
       // We use BT.709 for converting to luminance.
       const uint32_t Y = (uint32_t)(0.2126 * r + 0.7152 * g + 0.0722 * b + .5);
       row[x] = (argb & 0xff000000u) | (Y * 0x010101u);
@@ -297,8 +297,7 @@ int main(int argc, const char* argv[]) {
     fprintf(stderr, "Error while computing the distortion.\n");
     goto End;
   }
-  printf("%u %.2f    %.2f %.2f %.2f %.2f [ %.2f bpp ]\n",
-         (unsigned int)size1,
+  printf("%u %.2f    %.2f %.2f %.2f %.2f [ %.2f bpp ]\n", (unsigned int)size1,
          disto[4], disto[0], disto[1], disto[2], disto[3],
          8.f * size1 / pic1.width / pic1.height);
 
@@ -306,21 +305,25 @@ int main(int argc, const char* argv[]) {
     uint8_t* data = NULL;
     size_t data_size = 0;
     if (pic1.use_argb != pic2.use_argb) {
-      fprintf(stderr, "Pictures are not in the same argb format. "
-                      "Can't save the difference map.\n");
+      fprintf(stderr,
+              "Pictures are not in the same argb format. "
+              "Can't save the difference map.\n");
       goto End;
     }
     if (pic1.use_argb) {
       int n;
       fprintf(stderr, "max differences per channel: ");
-      for (n = 0; n < 3; ++n) {    // skip the alpha channel
-        const int range = (type == 1) ?
-          SSIMScaleChannel((uint8_t*)pic1.argb + n, pic1.argb_stride * 4,
-                           (const uint8_t*)pic2.argb + n, pic2.argb_stride * 4,
-                           4, pic1.width, pic1.height, scale) :
-          DiffScaleChannel((uint8_t*)pic1.argb + n, pic1.argb_stride * 4,
-                           (const uint8_t*)pic2.argb + n, pic2.argb_stride * 4,
-                           4, pic1.width, pic1.height, scale);
+      for (n = 0; n < 3; ++n) {  // skip the alpha channel
+        const int range =
+            (type == 1)
+                ? SSIMScaleChannel(
+                      (uint8_t*)pic1.argb + n, pic1.argb_stride * 4,
+                      (const uint8_t*)pic2.argb + n, pic2.argb_stride * 4, 4,
+                      pic1.width, pic1.height, scale)
+                : DiffScaleChannel(
+                      (uint8_t*)pic1.argb + n, pic1.argb_stride * 4,
+                      (const uint8_t*)pic2.argb + n, pic2.argb_stride * 4, 4,
+                      pic1.width, pic1.height, scale);
         if (range < 0) fprintf(stderr, "\nError computing diff map\n");
         fprintf(stderr, "[%d]", range);
       }
@@ -331,10 +334,9 @@ int main(int argc, const char* argv[]) {
       goto End;
     }
 #if !defined(WEBP_REDUCE_CSP)
-    data_size = WebPEncodeLosslessBGRA((const uint8_t*)pic1.argb,
-                                       pic1.width, pic1.height,
-                                       pic1.argb_stride * 4,
-                                       &data);
+    data_size =
+        WebPEncodeLosslessBGRA((const uint8_t*)pic1.argb, pic1.width,
+                               pic1.height, pic1.argb_stride * 4, &data);
     if (data_size == 0) {
       fprintf(stderr, "Error during lossless encoding.\n");
       goto End;
@@ -346,14 +348,15 @@ int main(int argc, const char* argv[]) {
 #else
     (void)data;
     (void)data_size;
-    fprintf(stderr, "Cannot save the difference map. Please recompile "
-                    "without the WEBP_REDUCE_CSP flag.\n");
+    fprintf(stderr,
+            "Cannot save the difference map. Please recompile "
+            "without the WEBP_REDUCE_CSP flag.\n");
     goto End;
 #endif  // WEBP_REDUCE_CSP
   }
   ret = EXIT_SUCCESS;
 
- End:
+End:
   WebPPictureFree(&pic1);
   WebPPictureFree(&pic2);
   FREE_WARGV_AND_RETURN(ret);

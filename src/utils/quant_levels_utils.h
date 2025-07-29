@@ -30,7 +30,7 @@ int QuantizeLevels(uint8_t* const data, int width, int height, int num_levels,
                    uint64_t* const sse);
 
 #ifdef __cplusplus
-}    // extern "C"
+}  // extern "C"
 #endif
 
 #endif  // WEBP_UTILS_QUANT_LEVELS_UTILS_H_

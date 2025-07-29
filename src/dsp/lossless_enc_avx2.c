@@ -14,10 +14,9 @@
 #include "src/dsp/dsp.h"
 
 #if defined(WEBP_USE_AVX2)
+#include <assert.h>
 #include <emmintrin.h>
 #include <immintrin.h>
-
-#include <assert.h>
 #include <stddef.h>
 
 #include "src/dsp/cpu.h"
@@ -329,7 +328,7 @@ static uint64_t CombinedShannonEntropy_AVX2(const uint32_t X[256],
 
 #else
 
-#define DONT_USE_COMBINED_SHANNON_ENTROPY_SSE2_FUNC   // won't be faster
+#define DONT_USE_COMBINED_SHANNON_ENTROPY_SSE2_FUNC  // won't be faster
 
 #endif
 
@@ -512,10 +511,10 @@ static void PredictorSub0_AVX2(const uint32_t* in, const uint32_t* upper,
     }                                                                        \
   }
 
-GENERATE_PREDICTOR_1(1, in[i - 1])       // Predictor1: L
-GENERATE_PREDICTOR_1(2, upper[i])        // Predictor2: T
-GENERATE_PREDICTOR_1(3, upper[i + 1])    // Predictor3: TR
-GENERATE_PREDICTOR_1(4, upper[i - 1])    // Predictor4: TL
+GENERATE_PREDICTOR_1(1, in[i - 1])     // Predictor1: L
+GENERATE_PREDICTOR_1(2, upper[i])      // Predictor2: T
+GENERATE_PREDICTOR_1(3, upper[i + 1])  // Predictor3: TR
+GENERATE_PREDICTOR_1(4, upper[i - 1])  // Predictor4: TL
 #undef GENERATE_PREDICTOR_1
 
 // Predictor5: avg2(avg2(L, TR), T)
@@ -557,10 +556,10 @@ static void PredictorSub5_AVX2(const uint32_t* in, const uint32_t* upper,
     }                                                                         \
   }
 
-GENERATE_PREDICTOR_2(6, in[i - 1], upper[i - 1])   // Predictor6: avg(L, TL)
-GENERATE_PREDICTOR_2(7, in[i - 1], upper[i])       // Predictor7: avg(L, T)
-GENERATE_PREDICTOR_2(8, upper[i - 1], upper[i])    // Predictor8: avg(TL, T)
-GENERATE_PREDICTOR_2(9, upper[i], upper[i + 1])    // Predictor9: average(T, TR)
+GENERATE_PREDICTOR_2(6, in[i - 1], upper[i - 1])  // Predictor6: avg(L, TL)
+GENERATE_PREDICTOR_2(7, in[i - 1], upper[i])      // Predictor7: avg(L, T)
+GENERATE_PREDICTOR_2(8, upper[i - 1], upper[i])   // Predictor8: avg(TL, T)
+GENERATE_PREDICTOR_2(9, upper[i], upper[i + 1])   // Predictor9: average(T, TR)
 #undef GENERATE_PREDICTOR_2
 
 // Predictor10: avg(avg(L,TL), avg(T, TR)).

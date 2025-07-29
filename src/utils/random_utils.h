@@ -22,7 +22,7 @@
 extern "C" {
 #endif
 
-#define VP8_RANDOM_DITHER_FIX 8   // fixed-point precision for dithering
+#define VP8_RANDOM_DITHER_FIX 8  // fixed-point precision for dithering
 #define VP8_RANDOM_TABLE_SIZE 55
 
 typedef struct {
@@ -58,7 +58,7 @@ static WEBP_INLINE int VP8RandomBits(VP8Random* const rg, int num_bits) {
 }
 
 #ifdef __cplusplus
-}    // extern "C"
+}  // extern "C"
 #endif
 
 #endif  // WEBP_UTILS_RANDOM_UTILS_H_

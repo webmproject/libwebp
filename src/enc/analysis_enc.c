@@ -23,7 +23,7 @@
 #include "src/webp/encode.h"
 #include "src/webp/types.h"
 
-#define MAX_ITERS_K_MEANS  6
+#define MAX_ITERS_K_MEANS 6
 
 //------------------------------------------------------------------------------
 // Smooth the segment map by replacing isolated block by the majority of its
@@ -35,23 +35,23 @@ static void SmoothSegmentMap(VP8Encoder* const enc) {
   const int h = enc->mb_h;
   const int majority_cnt_3_x_3_grid = 5;
   uint8_t* const tmp = (uint8_t*)WebPSafeMalloc(w * h, sizeof(*tmp));
-  assert((uint64_t)(w * h) == (uint64_t)w * h);   // no overflow, as per spec
+  assert((uint64_t)(w * h) == (uint64_t)w * h);  // no overflow, as per spec
 
   if (tmp == NULL) return;
   for (y = 1; y < h - 1; ++y) {
     for (x = 1; x < w - 1; ++x) {
-      int cnt[NUM_MB_SEGMENTS] = { 0 };
+      int cnt[NUM_MB_SEGMENTS] = {0};
       const VP8MBInfo* const mb = &enc->mb_info[x + w * y];
       int majority_seg = mb->segment;
       // Check the 8 neighbouring segment values.
       cnt[mb[-w - 1].segment]++;  // top-left
       cnt[mb[-w + 0].segment]++;  // top
       cnt[mb[-w + 1].segment]++;  // top-right
-      cnt[mb[   - 1].segment]++;  // left
-      cnt[mb[   + 1].segment]++;  // right
-      cnt[mb[ w - 1].segment]++;  // bottom-left
-      cnt[mb[ w + 0].segment]++;  // bottom
-      cnt[mb[ w + 1].segment]++;  // bottom-right
+      cnt[mb[-1].segment]++;      // left
+      cnt[mb[+1].segment]++;      // right
+      cnt[mb[w - 1].segment]++;   // bottom-left
+      cnt[mb[w + 0].segment]++;   // bottom
+      cnt[mb[w + 1].segment]++;   // bottom-right
       for (n = 0; n < NUM_MB_SEGMENTS; ++n) {
         if (cnt[n] >= majority_cnt_3_x_3_grid) {
           majority_seg = n;
@@ -78,8 +78,7 @@ static WEBP_INLINE int clip(int v, int m, int M) {
 }
 
 static void SetSegmentAlphas(VP8Encoder* const enc,
-                             const int centers[NUM_MB_SEGMENTS],
-                             int mid) {
+                             const int centers[NUM_MB_SEGMENTS], int mid) {
   const int nb = enc->segment_hdr.num_segments;
   int min = centers[0], max = centers[0];
   int n;
@@ -138,8 +137,9 @@ static void AssignSegments(VP8Encoder* const enc,
   // 'num_segments' is previously validated and <= NUM_MB_SEGMENTS, but an
   // explicit check is needed to avoid spurious warning about 'n + 1' exceeding
   // array bounds of 'centers' with some compilers (noticed with gcc-4.9).
-  const int nb = (enc->segment_hdr.num_segments < NUM_MB_SEGMENTS) ?
-                 enc->segment_hdr.num_segments : NUM_MB_SEGMENTS;
+  const int nb = (enc->segment_hdr.num_segments < NUM_MB_SEGMENTS)
+                     ? enc->segment_hdr.num_segments
+                     : NUM_MB_SEGMENTS;
   int centers[NUM_MB_SEGMENTS];
   int weighted_average = 0;
   int map[MAX_ALPHA + 1];
@@ -152,9 +152,11 @@ static void AssignSegments(VP8Encoder* const enc,
   assert(nb <= NUM_MB_SEGMENTS);
 
   // bracket the input
-  for (n = 0; n <= MAX_ALPHA && alphas[n] == 0; ++n) {}
+  for (n = 0; n <= MAX_ALPHA && alphas[n] == 0; ++n) {
+  }
   min_a = n;
-  for (n = MAX_ALPHA; n > min_a && alphas[n] == 0; --n) {}
+  for (n = MAX_ALPHA; n > min_a && alphas[n] == 0; --n) {
+  }
   max_a = n;
   range_a = max_a - min_a;
 
@@ -164,7 +166,7 @@ static void AssignSegments(VP8Encoder* const enc,
     centers[k] = min_a + (n * range_a) / (2 * nb);
   }
 
-  for (k = 0; k < MAX_ITERS_K_MEANS; ++k) {     // few iters are enough
+  for (k = 0; k < MAX_ITERS_K_MEANS; ++k) {  // few iters are enough
     int total_weight;
     int displaced;
     // Reset stats
@@ -173,7 +175,7 @@ static void AssignSegments(VP8Encoder* const enc,
       dist_accum[n] = 0;
     }
     // Assign nearest center for each 'a'
-    n = 0;    // track the nearest center for current 'a'
+    n = 0;  // track the nearest center for current 'a'
     for (a = min_a; a <= max_a; ++a) {
       if (alphas[a]) {
         while (n + 1 < nb && abs(a - centers[n + 1]) < abs(a - centers[n])) {
@@ -200,7 +202,7 @@ static void AssignSegments(VP8Encoder* const enc,
       }
     }
     weighted_average = (weighted_average + total_weight / 2) / total_weight;
-    if (displaced < 5) break;   // no need to keep on looping...
+    if (displaced < 5) break;  // no need to keep on looping...
   }
 
   // Map each original value to the closest centroid
@@ -228,8 +230,8 @@ static void AssignSegments(VP8Encoder* const enc,
 // the possible modes during the analysis phase: we risk falling into a local
 // optimum, or be subject to boundary effect
 #define MAX_INTRA16_MODE 2
-#define MAX_INTRA4_MODE  2
-#define MAX_UV_MODE      2
+#define MAX_INTRA4_MODE 2
+#define MAX_UV_MODE 2
 
 static int MBAnalyzeBestIntra16Mode(VP8EncIterator* const it) {
   const int max_mode = MAX_INTRA16_MODE;
@@ -244,8 +246,7 @@ static int MBAnalyzeBestIntra16Mode(VP8EncIterator* const it) {
 
     InitHistogram(&histo);
     VP8CollectHistogram(it->yuv_in + Y_OFF_ENC,
-                        it->yuv_p + VP8I16ModeOffsets[mode],
-                        0, 16, &histo);
+                        it->yuv_p + VP8I16ModeOffsets[mode], 0, 16, &histo);
     alpha = GetAlpha(&histo);
     if (IS_BETTER_ALPHA(alpha, best_alpha)) {
       best_alpha = alpha;
@@ -271,9 +272,9 @@ static int FastMBAnalyze(VP8EncIterator* const it) {
     m2 += dc[k] * dc[k];
   }
   if (kThreshold * m2 < m * m) {
-    VP8SetIntra16Mode(it, 0);   // DC16
+    VP8SetIntra16Mode(it, 0);  // DC16
   } else {
-    const uint8_t modes[16] = { 0 };  // DC4
+    const uint8_t modes[16] = {0};  // DC4
     VP8SetIntra4Mode(it, modes);
   }
   return 0;
@@ -292,8 +293,8 @@ static int MBAnalyzeBestUVMode(VP8EncIterator* const it) {
     int alpha;
     InitHistogram(&histo);
     VP8CollectHistogram(it->yuv_in + U_OFF_ENC,
-                        it->yuv_p + VP8UVModeOffsets[mode],
-                        16, 16 + 4 + 4, &histo);
+                        it->yuv_p + VP8UVModeOffsets[mode], 16, 16 + 4 + 4,
+                        &histo);
     alpha = GetAlpha(&histo);
     if (IS_BETTER_ALPHA(alpha, best_alpha)) {
       best_alpha = alpha;
@@ -308,8 +309,7 @@ static int MBAnalyzeBestUVMode(VP8EncIterator* const it) {
   return best_alpha;
 }
 
-static void MBAnalyze(VP8EncIterator* const it,
-                      int alphas[MAX_ALPHA + 1],
+static void MBAnalyze(VP8EncIterator* const it, int alphas[MAX_ALPHA + 1],
                       int* const alpha, int* const uv_alpha) {
   const VP8Encoder* const enc = it->enc;
   int best_alpha, best_uv_alpha;
@@ -329,15 +329,15 @@ static void MBAnalyze(VP8EncIterator* const it,
   best_alpha = (3 * best_alpha + best_uv_alpha + 2) >> 2;
   best_alpha = FinalAlphaValue(best_alpha);
   alphas[best_alpha]++;
-  it->mb->alpha = best_alpha;   // for later remapping.
+  it->mb->alpha = best_alpha;  // for later remapping.
 
   // Accumulate for later complexity analysis.
-  *alpha += best_alpha;   // mixed susceptibility (not just luma)
+  *alpha += best_alpha;  // mixed susceptibility (not just luma)
   *uv_alpha += best_uv_alpha;
 }
 
 static void DefaultMBInfo(VP8MBInfo* const mb) {
-  mb->type = 1;     // I16x16
+  mb->type = 1;  // I16x16
   mb->uv_mode = 0;
   mb->skip = 0;     // not skipped
   mb->segment = 0;  // default segment
@@ -426,7 +426,7 @@ static void InitSegmentJob(VP8Encoder* const enc, SegmentJob* const job,
 int VP8EncAnalyze(VP8Encoder* const enc) {
   int ok = 1;
   const int do_segments =
-      enc->config->emulate_jpeg_size ||   // We need the complexity evaluation.
+      enc->config->emulate_jpeg_size ||  // We need the complexity evaluation.
       (enc->segment_hdr.num_segments > 1) ||
       (enc->method <= 1);  // for method 0 - 1, we need preds[] to be filled.
   if (do_segments) {
@@ -462,7 +462,7 @@ int VP8EncAnalyze(VP8Encoder* const enc) {
       }
       worker_interface->End(&side_job.worker);
       if (ok) MergeJobs(&side_job, &main_job);  // merge results together
-#endif  // WEBP_USE_THREAD
+#endif                                          // WEBP_USE_THREAD
     } else {
       // Even for single-thread case, we use the generic Worker tools.
       InitSegmentJob(enc, &main_job, 0, last_row);
@@ -475,7 +475,7 @@ int VP8EncAnalyze(VP8Encoder* const enc) {
       enc->uv_alpha = main_job.uv_alpha / total_mb;
       AssignSegments(enc, main_job.alphas);
     }
-  } else {   // Use only one default segment.
+  } else {  // Use only one default segment.
     ResetAllMBInfo(enc);
   }
   if (!ok) {

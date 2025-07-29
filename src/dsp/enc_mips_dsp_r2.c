@@ -25,6 +25,7 @@ static const int kC2 = WEBP_TRANSFORM_AC3_C2;
 
 // O - output
 // I - input (macro doesn't change it)
+// clang-format off
 #define ADD_SUB_HALVES_X4(O0, O1, O2, O3, O4, O5, O6, O7,                      \
                           I0, I1, I2, I3, I4, I5, I6, I7)                      \
   "addq.ph          %[" #O0 "],   %[" #I0 "],  %[" #I1 "]     \n\t"            \
@@ -140,6 +141,7 @@ static const int kC2 = WEBP_TRANSFORM_AC3_C2;
   "sh              %[" #TEMP4 "],   " #C "(%[temp20])               \n\t"      \
   "sh              %[" #TEMP8 "],   " #D "(%[temp20])               \n\t"      \
   "sh              %[" #TEMP12 "],  " #B "(%[temp20])               \n\t"
+// clang-format on
 
 static void FTransform_MIPSdspR2(const uint8_t* WEBP_RESTRICT src,
                                  const uint8_t* WEBP_RESTRICT ref,
@@ -149,10 +151,10 @@ static void FTransform_MIPSdspR2(const uint8_t* WEBP_RESTRICT src,
   int temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8;
   int temp9, temp10, temp11, temp12, temp13, temp14, temp15, temp16;
   int temp17, temp18, temp19, temp20;
-  const int* const args[3] =
-      { (const int*)src, (const int*)ref, (const int*)out };
+  const int* const args[3] = {(const int*)src, (const int*)ref,
+                              (const int*)out};
 
-  __asm__ volatile (
+  __asm__ volatile(
     HORIZONTAL_PASS(0, temp0,  temp1,  temp2,  temp3)
     HORIZONTAL_PASS(1, temp4,  temp5,  temp6,  temp7)
     HORIZONTAL_PASS(2, temp8,  temp9,  temp10, temp11)
@@ -178,7 +180,7 @@ static WEBP_INLINE void ITransformOne(const uint8_t* WEBP_RESTRICT ref,
   int temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9;
   int temp10, temp11, temp12, temp13, temp14, temp15, temp16, temp17, temp18;
 
-  __asm__ volatile (
+  __asm__ volatile(
     "ulw              %[temp1],   0(%[in])                 \n\t"
     "ulw              %[temp2],   16(%[in])                \n\t"
     LOAD_IN_X2(temp5, temp6, 24, 26)
@@ -250,13 +252,14 @@ static void ITransform_MIPSdspR2(const uint8_t* WEBP_RESTRICT ref,
   }
 }
 
+// clang-format off
 static int Disto4x4_MIPSdspR2(const uint8_t* WEBP_RESTRICT const a,
                               const uint8_t* WEBP_RESTRICT const b,
                               const uint16_t* WEBP_RESTRICT const w) {
   int temp1, temp2, temp3, temp4, temp5, temp6, temp7, temp8, temp9;
   int temp10, temp11, temp12, temp13, temp14, temp15, temp16, temp17;
 
-  __asm__ volatile (
+  __asm__ volatile(
     LOAD_WITH_OFFSET_X4(temp1, temp2, temp3, temp4, a,
                         0, 0, 0, 0,
                         0, 1, 2, 3,
@@ -317,6 +320,7 @@ static int Disto4x4_MIPSdspR2(const uint8_t* WEBP_RESTRICT const a,
   );
   return abs(temp3 - temp17) >> 5;
 }
+// clang-format on
 
 static int Disto16x16_MIPSdspR2(const uint8_t* WEBP_RESTRICT const a,
                                 const uint8_t* WEBP_RESTRICT const b,
@@ -334,6 +338,7 @@ static int Disto16x16_MIPSdspR2(const uint8_t* WEBP_RESTRICT const a,
 //------------------------------------------------------------------------------
 // Intra predictions
 
+// clang-format off
 #define FILL_PART(J, SIZE)                                            \
     "usw        %[value],  0+" #J "*" XSTR(BPS) "(%[dst])  \n\t"      \
     "usw        %[value],  4+" #J "*" XSTR(BPS) "(%[dst])  \n\t"      \
@@ -342,118 +347,125 @@ static int Disto16x16_MIPSdspR2(const uint8_t* WEBP_RESTRICT const a,
     "usw        %[value], 12+" #J "*" XSTR(BPS) "(%[dst])  \n\t"      \
   ".endif                                                  \n\t"
 
-#define FILL_8_OR_16(DST, VALUE, SIZE) do {                         \
-  int value = (VALUE);                                              \
-  __asm__ volatile (                                                \
-    "replv.qb   %[value],  %[value]                      \n\t"      \
-    FILL_PART( 0, SIZE)                                             \
-    FILL_PART( 1, SIZE)                                             \
-    FILL_PART( 2, SIZE)                                             \
-    FILL_PART( 3, SIZE)                                             \
-    FILL_PART( 4, SIZE)                                             \
-    FILL_PART( 5, SIZE)                                             \
-    FILL_PART( 6, SIZE)                                             \
-    FILL_PART( 7, SIZE)                                             \
-  ".if " #SIZE " == 16                                   \n\t"      \
-    FILL_PART( 8, 16)                                               \
-    FILL_PART( 9, 16)                                               \
-    FILL_PART(10, 16)                                               \
-    FILL_PART(11, 16)                                               \
-    FILL_PART(12, 16)                                               \
-    FILL_PART(13, 16)                                               \
-    FILL_PART(14, 16)                                               \
-    FILL_PART(15, 16)                                               \
-  ".endif                                                \n\t"      \
-    : [value]"+&r"(value)                                           \
-    : [dst]"r"((DST))                                               \
-    : "memory"                                                      \
-  );                                                                \
-} while (0)
+#define FILL_8_OR_16(DST, VALUE, SIZE)                                \
+  do {                                                                \
+    int value = (VALUE);                                              \
+    __asm__ volatile(                                                 \
+      "replv.qb   %[value],  %[value]                      \n\t"      \
+      FILL_PART( 0, SIZE)                                             \
+      FILL_PART( 1, SIZE)                                             \
+      FILL_PART( 2, SIZE)                                             \
+      FILL_PART( 3, SIZE)                                             \
+      FILL_PART( 4, SIZE)                                             \
+      FILL_PART( 5, SIZE)                                             \
+      FILL_PART( 6, SIZE)                                             \
+      FILL_PART( 7, SIZE)                                             \
+    ".if " #SIZE " == 16                                   \n\t"      \
+      FILL_PART( 8, 16)                                               \
+      FILL_PART( 9, 16)                                               \
+      FILL_PART(10, 16)                                               \
+      FILL_PART(11, 16)                                               \
+      FILL_PART(12, 16)                                               \
+      FILL_PART(13, 16)                                               \
+      FILL_PART(14, 16)                                               \
+      FILL_PART(15, 16)                                               \
+    ".endif                                                \n\t"      \
+      : [value]"+&r"(value)                                           \
+      : [dst]"r"((DST))                                               \
+      : "memory"                                                      \
+    );                                                                \
+  } while (0)
+// clang-format on
 
-#define VERTICAL_PRED(DST, TOP, SIZE)                                          \
-static WEBP_INLINE void VerticalPred##SIZE(                                    \
-    uint8_t* WEBP_RESTRICT (DST), const uint8_t* WEBP_RESTRICT (TOP)) {        \
-  int j;                                                                       \
-  if ((TOP)) {                                                                 \
-    for (j = 0; j < (SIZE); ++j) memcpy((DST) + j * BPS, (TOP), (SIZE));       \
-  } else {                                                                     \
-    FILL_8_OR_16((DST), 127, (SIZE));                                          \
-  }                                                                            \
-}
+#define VERTICAL_PRED(DST, TOP, SIZE)                                      \
+  static WEBP_INLINE void VerticalPred##SIZE(                              \
+      uint8_t* WEBP_RESTRICT(DST), const uint8_t* WEBP_RESTRICT(TOP)) {    \
+    int j;                                                                 \
+    if ((TOP)) {                                                           \
+      for (j = 0; j < (SIZE); ++j) memcpy((DST) + j * BPS, (TOP), (SIZE)); \
+    } else {                                                               \
+      FILL_8_OR_16((DST), 127, (SIZE));                                    \
+    }                                                                      \
+  }
 
 VERTICAL_PRED(dst, top, 8)
 VERTICAL_PRED(dst, top, 16)
 
 #undef VERTICAL_PRED
 
-#define HORIZONTAL_PRED(DST, LEFT, SIZE)                                       \
-static WEBP_INLINE void HorizontalPred##SIZE(                                  \
-    uint8_t* WEBP_RESTRICT (DST), const uint8_t* WEBP_RESTRICT (LEFT)) {       \
-  if (LEFT) {                                                                  \
-    int j;                                                                     \
-    for (j = 0; j < (SIZE); ++j) {                                             \
-      memset((DST) + j * BPS, (LEFT)[j], (SIZE));                              \
-    }                                                                          \
-  } else {                                                                     \
-    FILL_8_OR_16((DST), 129, (SIZE));                                          \
-  }                                                                            \
-}
+#define HORIZONTAL_PRED(DST, LEFT, SIZE)                                 \
+  static WEBP_INLINE void HorizontalPred##SIZE(                          \
+      uint8_t* WEBP_RESTRICT(DST), const uint8_t* WEBP_RESTRICT(LEFT)) { \
+    if (LEFT) {                                                          \
+      int j;                                                             \
+      for (j = 0; j < (SIZE); ++j) {                                     \
+        memset((DST) + j * BPS, (LEFT)[j], (SIZE));                      \
+      }                                                                  \
+    } else {                                                             \
+      FILL_8_OR_16((DST), 129, (SIZE));                                  \
+    }                                                                    \
+  }
 
 HORIZONTAL_PRED(dst, left, 8)
 HORIZONTAL_PRED(dst, left, 16)
 
 #undef HORIZONTAL_PRED
 
-#define CLIPPING()                                                             \
-  "preceu.ph.qbl   %[temp2],   %[temp0]                  \n\t"                 \
-  "preceu.ph.qbr   %[temp0],   %[temp0]                  \n\t"                 \
-  "preceu.ph.qbl   %[temp3],   %[temp1]                  \n\t"                 \
-  "preceu.ph.qbr   %[temp1],   %[temp1]                  \n\t"                 \
-  "addu.ph         %[temp2],   %[temp2],   %[leftY_1]    \n\t"                 \
-  "addu.ph         %[temp0],   %[temp0],   %[leftY_1]    \n\t"                 \
-  "addu.ph         %[temp3],   %[temp3],   %[leftY_1]    \n\t"                 \
-  "addu.ph         %[temp1],   %[temp1],   %[leftY_1]    \n\t"                 \
-  "shll_s.ph       %[temp2],   %[temp2],   7             \n\t"                 \
-  "shll_s.ph       %[temp0],   %[temp0],   7             \n\t"                 \
-  "shll_s.ph       %[temp3],   %[temp3],   7             \n\t"                 \
-  "shll_s.ph       %[temp1],   %[temp1],   7             \n\t"                 \
-  "precrqu_s.qb.ph %[temp0],   %[temp2],   %[temp0]      \n\t"                 \
+#define CLIPPING()                                             \
+  "preceu.ph.qbl   %[temp2],   %[temp0]                  \n\t" \
+  "preceu.ph.qbr   %[temp0],   %[temp0]                  \n\t" \
+  "preceu.ph.qbl   %[temp3],   %[temp1]                  \n\t" \
+  "preceu.ph.qbr   %[temp1],   %[temp1]                  \n\t" \
+  "addu.ph         %[temp2],   %[temp2],   %[leftY_1]    \n\t" \
+  "addu.ph         %[temp0],   %[temp0],   %[leftY_1]    \n\t" \
+  "addu.ph         %[temp3],   %[temp3],   %[leftY_1]    \n\t" \
+  "addu.ph         %[temp1],   %[temp1],   %[leftY_1]    \n\t" \
+  "shll_s.ph       %[temp2],   %[temp2],   7             \n\t" \
+  "shll_s.ph       %[temp0],   %[temp0],   7             \n\t" \
+  "shll_s.ph       %[temp3],   %[temp3],   7             \n\t" \
+  "shll_s.ph       %[temp1],   %[temp1],   7             \n\t" \
+  "precrqu_s.qb.ph %[temp0],   %[temp2],   %[temp0]      \n\t" \
   "precrqu_s.qb.ph %[temp1],   %[temp3],   %[temp1]      \n\t"
 
-#define CLIP_8B_TO_DST(DST, LEFT, TOP, SIZE) do {                              \
-  int leftY_1 = ((int)(LEFT)[y] << 16) + (LEFT)[y];                            \
-  int temp0, temp1, temp2, temp3;                                              \
-  __asm__ volatile (                                                           \
-    "replv.ph        %[leftY_1], %[leftY_1]              \n\t"                 \
-    "ulw             %[temp0],   0(%[top])               \n\t"                 \
-    "ulw             %[temp1],   4(%[top])               \n\t"                 \
-    "subu.ph         %[leftY_1], %[leftY_1], %[left_1]   \n\t"                 \
-    CLIPPING()                                                                 \
-    "usw             %[temp0],   0(%[dst])               \n\t"                 \
-    "usw             %[temp1],   4(%[dst])               \n\t"                 \
-  ".if " #SIZE " == 16                                   \n\t"                 \
-    "ulw             %[temp0],   8(%[top])               \n\t"                 \
-    "ulw             %[temp1],   12(%[top])              \n\t"                 \
-    CLIPPING()                                                                 \
-    "usw             %[temp0],   8(%[dst])               \n\t"                 \
-    "usw             %[temp1],   12(%[dst])              \n\t"                 \
-  ".endif                                                \n\t"                 \
-    : [leftY_1]"+&r"(leftY_1), [temp0]"=&r"(temp0), [temp1]"=&r"(temp1),       \
-      [temp2]"=&r"(temp2), [temp3]"=&r"(temp3)                                 \
-    : [left_1]"r"(left_1), [top]"r"((TOP)), [dst]"r"((DST))                    \
-    : "memory"                                                                 \
-  );                                                                           \
-} while (0)
+// clang-format off
+#define CLIP_8B_TO_DST(DST, LEFT, TOP, SIZE)                                   \
+  do {                                                                         \
+    int leftY_1 = ((int)(LEFT)[y] << 16) + (LEFT)[y];                          \
+    int temp0, temp1, temp2, temp3;                                            \
+    __asm__ volatile(                                                          \
+      "replv.ph        %[leftY_1], %[leftY_1]              \n\t"               \
+      "ulw             %[temp0],   0(%[top])               \n\t"               \
+      "ulw             %[temp1],   4(%[top])               \n\t"               \
+      "subu.ph         %[leftY_1], %[leftY_1], %[left_1]   \n\t"               \
+      CLIPPING()                                                               \
+      "usw             %[temp0],   0(%[dst])               \n\t"               \
+      "usw             %[temp1],   4(%[dst])               \n\t"               \
+    ".if " #SIZE " == 16                                   \n\t"               \
+      "ulw             %[temp0],   8(%[top])               \n\t"               \
+      "ulw             %[temp1],   12(%[top])              \n\t"               \
+      CLIPPING()                                                               \
+      "usw             %[temp0],   8(%[dst])               \n\t"               \
+      "usw             %[temp1],   12(%[dst])              \n\t"               \
+    ".endif                                                \n\t"               \
+      : [leftY_1]"+&r"(leftY_1), [temp0]"=&r"(temp0), [temp1]"=&r"(temp1),     \
+        [temp2]"=&r"(temp2), [temp3]"=&r"(temp3)                               \
+      : [left_1]"r"(left_1), [top]"r"((TOP)), [dst]"r"((DST))                  \
+      : "memory"                                                               \
+    );                                                                         \
+  } while (0)
+// clang-format on
 
-#define CLIP_TO_DST(DST, LEFT, TOP, SIZE) do {                                 \
-  int y;                                                                       \
-  const int left_1 = ((int)(LEFT)[-1] << 16) + (LEFT)[-1];                     \
-  for (y = 0; y < (SIZE); ++y) {                                               \
-    CLIP_8B_TO_DST((DST), (LEFT), (TOP), (SIZE));                              \
-    (DST) += BPS;                                                              \
-  }                                                                            \
-} while (0)
+#define CLIP_TO_DST(DST, LEFT, TOP, SIZE)                    \
+  do {                                                       \
+    int y;                                                   \
+    const int left_1 = ((int)(LEFT)[-1] << 16) + (LEFT)[-1]; \
+    for (y = 0; y < (SIZE); ++y) {                           \
+      CLIP_8B_TO_DST((DST), (LEFT), (TOP), (SIZE));          \
+      (DST) += BPS;                                          \
+    }                                                        \
+  } while (0)
 
+// clang-format off
 #define TRUE_MOTION(DST, LEFT, TOP, SIZE)                                      \
 static WEBP_INLINE void TrueMotion##SIZE(uint8_t* WEBP_RESTRICT (DST),         \
                                          const uint8_t* WEBP_RESTRICT (LEFT),  \
@@ -476,6 +488,7 @@ static WEBP_INLINE void TrueMotion##SIZE(uint8_t* WEBP_RESTRICT (DST),         \
     }                                                                          \
   }                                                                            \
 }
+// clang-format on
 
 TRUE_MOTION(dst, left, top, 8)
 TRUE_MOTION(dst, left, top, 16)
@@ -556,41 +569,40 @@ static WEBP_INLINE void DCMode8(uint8_t* WEBP_RESTRICT dst,
   int temp0, temp1, temp2, temp3;
 
   __asm__ volatile(
-    "beqz        %[top],   2f                  \n\t"
-    "ulw         %[temp0], 0(%[top])           \n\t"
-    "ulw         %[temp1], 4(%[top])           \n\t"
-    "raddu.w.qb  %[temp0], %[temp0]            \n\t"
-    "raddu.w.qb  %[temp1], %[temp1]            \n\t"
-    "addu        %[DC],    %[temp0], %[temp1]  \n\t"
-    "move        %[DC1],   %[DC]               \n\t"
-    "beqz        %[left],  1f                  \n\t"
-    "ulw         %[temp2], 0(%[left])          \n\t"
-    "ulw         %[temp3], 4(%[left])          \n\t"
-    "raddu.w.qb  %[temp2], %[temp2]            \n\t"
-    "raddu.w.qb  %[temp3], %[temp3]            \n\t"
-    "addu        %[DC1],   %[temp2], %[temp3]  \n\t"
-  "1:                                          \n\t"
-    "addu        %[DC],    %[DC],    %[DC1]    \n\t"
-    "j           3f                            \n\t"
-  "2:                                          \n\t"
-    "beqz        %[left],  4f                  \n\t"
-    "ulw         %[temp2], 0(%[left])          \n\t"
-    "ulw         %[temp3], 4(%[left])          \n\t"
-    "raddu.w.qb  %[temp2], %[temp2]            \n\t"
-    "raddu.w.qb  %[temp3], %[temp3]            \n\t"
-    "addu        %[DC],    %[temp2], %[temp3]  \n\t"
-    "addu        %[DC],    %[DC],    %[DC]     \n\t"
-  "3:                                          \n\t"
-    "shra_r.w    %[DC], %[DC], 4               \n\t"
-    "j           5f                            \n\t"
-  "4:                                          \n\t"
-    "li          %[DC], 0x80                   \n\t"
-  "5:                                          \n\t"
-    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [DC]"=&r"(DC),
-      [temp2]"=&r"(temp2), [temp3]"=&r"(temp3), [DC1]"=&r"(DC1)
-    : [left]"r"(left), [top]"r"(top)
-    : "memory"
-  );
+      "beqz        %[top],   2f                  \n\t"
+      "ulw         %[temp0], 0(%[top])           \n\t"
+      "ulw         %[temp1], 4(%[top])           \n\t"
+      "raddu.w.qb  %[temp0], %[temp0]            \n\t"
+      "raddu.w.qb  %[temp1], %[temp1]            \n\t"
+      "addu        %[DC],    %[temp0], %[temp1]  \n\t"
+      "move        %[DC1],   %[DC]               \n\t"
+      "beqz        %[left],  1f                  \n\t"
+      "ulw         %[temp2], 0(%[left])          \n\t"
+      "ulw         %[temp3], 4(%[left])          \n\t"
+      "raddu.w.qb  %[temp2], %[temp2]            \n\t"
+      "raddu.w.qb  %[temp3], %[temp3]            \n\t"
+      "addu        %[DC1],   %[temp2], %[temp3]  \n\t"
+      "1:                                          \n\t"
+      "addu        %[DC],    %[DC],    %[DC1]    \n\t"
+      "j           3f                            \n\t"
+      "2:                                          \n\t"
+      "beqz        %[left],  4f                  \n\t"
+      "ulw         %[temp2], 0(%[left])          \n\t"
+      "ulw         %[temp3], 4(%[left])          \n\t"
+      "raddu.w.qb  %[temp2], %[temp2]            \n\t"
+      "raddu.w.qb  %[temp3], %[temp3]            \n\t"
+      "addu        %[DC],    %[temp2], %[temp3]  \n\t"
+      "addu        %[DC],    %[DC],    %[DC]     \n\t"
+      "3:                                          \n\t"
+      "shra_r.w    %[DC], %[DC], 4               \n\t"
+      "j           5f                            \n\t"
+      "4:                                          \n\t"
+      "li          %[DC], 0x80                   \n\t"
+      "5:                                          \n\t"
+      : [temp0] "=&r"(temp0), [temp1] "=&r"(temp1), [DC] "=&r"(DC),
+        [temp2] "=&r"(temp2), [temp3] "=&r"(temp3), [DC1] "=&r"(DC1)
+      : [left] "r"(left), [top] "r"(top)
+      : "memory");
 
   FILL_8_OR_16(dst, DC, 8);
 }
@@ -619,7 +631,7 @@ static void DC4(uint8_t* WEBP_RESTRICT dst, const uint8_t* WEBP_RESTRICT top) {
 static void TM4(uint8_t* WEBP_RESTRICT dst, const uint8_t* WEBP_RESTRICT top) {
   int a10, a32, temp0, temp1, temp2, temp3, temp4, temp5;
   const int c35 = 0xff00ff;
-  __asm__ volatile (
+  __asm__ volatile(
     "lbu              %[temp1],  0(%[top])                     \n\t"
     "lbu              %[a10],    1(%[top])                     \n\t"
     "lbu              %[temp2],  2(%[top])                     \n\t"
@@ -790,7 +802,7 @@ static void RD4(uint8_t* WEBP_RESTRICT dst, const uint8_t* WEBP_RESTRICT top) {
 static void VR4(uint8_t* WEBP_RESTRICT dst, const uint8_t* WEBP_RESTRICT top) {
   int temp0, temp1, temp2, temp3, temp4;
   int temp5, temp6, temp7, temp8, temp9;
-  __asm__ volatile (
+  __asm__ volatile(
     "ulw              %[temp0],   -4(%[top])              \n\t"
     "ulw              %[temp1],   0(%[top])               \n\t"
     "preceu.ph.qbl    %[temp2],   %[temp0]                \n\t"
@@ -887,7 +899,7 @@ static void LD4(uint8_t* WEBP_RESTRICT dst, const uint8_t* WEBP_RESTRICT top) {
 static void VL4(uint8_t* WEBP_RESTRICT dst, const uint8_t* WEBP_RESTRICT top) {
   int temp0, temp1, temp2, temp3, temp4;
   int temp5, temp6, temp7, temp8, temp9;
-  __asm__ volatile (
+  __asm__ volatile(
     "ulw              %[temp0],   0(%[top])               \n\t"
     "ulw              %[temp1],   4(%[top])               \n\t"
     "preceu.ph.qbla   %[temp2],   %[temp0]                \n\t"
@@ -936,7 +948,7 @@ static void VL4(uint8_t* WEBP_RESTRICT dst, const uint8_t* WEBP_RESTRICT top) {
 static void HD4(uint8_t* WEBP_RESTRICT dst, const uint8_t* WEBP_RESTRICT top) {
   int temp0, temp1, temp2, temp3, temp4;
   int temp5, temp6, temp7, temp8, temp9;
-  __asm__ volatile (
+  __asm__ volatile(
     "ulw              %[temp0],   -5(%[top])              \n\t"
     "ulw              %[temp1],   -1(%[top])              \n\t"
     "preceu.ph.qbla   %[temp2],   %[temp0]                \n\t"
@@ -983,7 +995,7 @@ static void HD4(uint8_t* WEBP_RESTRICT dst, const uint8_t* WEBP_RESTRICT top) {
 
 static void HU4(uint8_t* WEBP_RESTRICT dst, const uint8_t* WEBP_RESTRICT top) {
   int temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7;
-  __asm__ volatile (
+  __asm__ volatile(
     "ulw             %[temp0],   -5(%[top])              \n\t"
     "preceu.ph.qbl   %[temp1],   %[temp0]                \n\t"
     "preceu.ph.qbr   %[temp2],   %[temp0]                \n\t"
@@ -1071,6 +1083,7 @@ static void Intra4Preds_MIPSdspR2(uint8_t* WEBP_RESTRICT dst,
 
 #if !defined(WORK_AROUND_GCC)
 
+// clang-format off
 #define GET_SSE_INNER(A)                                                  \
   "lw               %[temp0],    " #A "(%[a])                  \n\t"      \
   "lw               %[temp1],    " #A "(%[b])                  \n\t"      \
@@ -1082,41 +1095,41 @@ static void Intra4Preds_MIPSdspR2(uint8_t* WEBP_RESTRICT dst,
   "subq.ph          %[temp0],    %[temp0],    %[temp1]         \n\t"      \
   "dpa.w.ph         $ac0,        %[temp2],    %[temp2]         \n\t"      \
   "dpa.w.ph         $ac0,        %[temp0],    %[temp0]         \n\t"
+// clang-format on
 
-#define GET_SSE(A, B, C, D)               \
-  GET_SSE_INNER(A)                        \
-  GET_SSE_INNER(B)                        \
-  GET_SSE_INNER(C)                        \
+#define GET_SSE(A, B, C, D) \
+  GET_SSE_INNER(A)          \
+  GET_SSE_INNER(B)          \
+  GET_SSE_INNER(C)          \
   GET_SSE_INNER(D)
 
 static int SSE16x16_MIPSdspR2(const uint8_t* WEBP_RESTRICT a,
                               const uint8_t* WEBP_RESTRICT b) {
   int count;
   int temp0, temp1, temp2, temp3;
-  __asm__ volatile (
-    "mult   $zero,    $zero                            \n\t"
-    GET_SSE( 0 * BPS, 4 +  0 * BPS, 8 +  0 * BPS, 12 +  0 * BPS)
-    GET_SSE( 1 * BPS, 4 +  1 * BPS, 8 +  1 * BPS, 12 +  1 * BPS)
-    GET_SSE( 2 * BPS, 4 +  2 * BPS, 8 +  2 * BPS, 12 +  2 * BPS)
-    GET_SSE( 3 * BPS, 4 +  3 * BPS, 8 +  3 * BPS, 12 +  3 * BPS)
-    GET_SSE( 4 * BPS, 4 +  4 * BPS, 8 +  4 * BPS, 12 +  4 * BPS)
-    GET_SSE( 5 * BPS, 4 +  5 * BPS, 8 +  5 * BPS, 12 +  5 * BPS)
-    GET_SSE( 6 * BPS, 4 +  6 * BPS, 8 +  6 * BPS, 12 +  6 * BPS)
-    GET_SSE( 7 * BPS, 4 +  7 * BPS, 8 +  7 * BPS, 12 +  7 * BPS)
-    GET_SSE( 8 * BPS, 4 +  8 * BPS, 8 +  8 * BPS, 12 +  8 * BPS)
-    GET_SSE( 9 * BPS, 4 +  9 * BPS, 8 +  9 * BPS, 12 +  9 * BPS)
-    GET_SSE(10 * BPS, 4 + 10 * BPS, 8 + 10 * BPS, 12 + 10 * BPS)
-    GET_SSE(11 * BPS, 4 + 11 * BPS, 8 + 11 * BPS, 12 + 11 * BPS)
-    GET_SSE(12 * BPS, 4 + 12 * BPS, 8 + 12 * BPS, 12 + 12 * BPS)
-    GET_SSE(13 * BPS, 4 + 13 * BPS, 8 + 13 * BPS, 12 + 13 * BPS)
-    GET_SSE(14 * BPS, 4 + 14 * BPS, 8 + 14 * BPS, 12 + 14 * BPS)
-    GET_SSE(15 * BPS, 4 + 15 * BPS, 8 + 15 * BPS, 12 + 15 * BPS)
-    "mflo   %[count]                                   \n\t"
-    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
-      [temp3]"=&r"(temp3), [count]"=&r"(count)
-    : [a]"r"(a), [b]"r"(b)
-    : "memory", "hi", "lo"
-  );
+  __asm__ volatile(
+      "mult   $zero,    $zero                            \n\t"      //
+      GET_SSE(0 * BPS, 4 + 0 * BPS, 8 + 0 * BPS, 12 + 0 * BPS)      //
+      GET_SSE(1 * BPS, 4 + 1 * BPS, 8 + 1 * BPS, 12 + 1 * BPS)      //
+      GET_SSE(2 * BPS, 4 + 2 * BPS, 8 + 2 * BPS, 12 + 2 * BPS)      //
+      GET_SSE(3 * BPS, 4 + 3 * BPS, 8 + 3 * BPS, 12 + 3 * BPS)      //
+      GET_SSE(4 * BPS, 4 + 4 * BPS, 8 + 4 * BPS, 12 + 4 * BPS)      //
+      GET_SSE(5 * BPS, 4 + 5 * BPS, 8 + 5 * BPS, 12 + 5 * BPS)      //
+      GET_SSE(6 * BPS, 4 + 6 * BPS, 8 + 6 * BPS, 12 + 6 * BPS)      //
+      GET_SSE(7 * BPS, 4 + 7 * BPS, 8 + 7 * BPS, 12 + 7 * BPS)      //
+      GET_SSE(8 * BPS, 4 + 8 * BPS, 8 + 8 * BPS, 12 + 8 * BPS)      //
+      GET_SSE(9 * BPS, 4 + 9 * BPS, 8 + 9 * BPS, 12 + 9 * BPS)      //
+      GET_SSE(10 * BPS, 4 + 10 * BPS, 8 + 10 * BPS, 12 + 10 * BPS)  //
+      GET_SSE(11 * BPS, 4 + 11 * BPS, 8 + 11 * BPS, 12 + 11 * BPS)  //
+      GET_SSE(12 * BPS, 4 + 12 * BPS, 8 + 12 * BPS, 12 + 12 * BPS)  //
+      GET_SSE(13 * BPS, 4 + 13 * BPS, 8 + 13 * BPS, 12 + 13 * BPS)  //
+      GET_SSE(14 * BPS, 4 + 14 * BPS, 8 + 14 * BPS, 12 + 14 * BPS)  //
+      GET_SSE(15 * BPS, 4 + 15 * BPS, 8 + 15 * BPS, 12 + 15 * BPS)  //
+      "mflo   %[count]                                   \n\t"
+      : [temp0] "=&r"(temp0), [temp1] "=&r"(temp1), [temp2] "=&r"(temp2),
+        [temp3] "=&r"(temp3), [count] "=&r"(count)
+      : [a] "r"(a), [b] "r"(b)
+      : "memory", "hi", "lo");
   return count;
 }
 
@@ -1124,22 +1137,21 @@ static int SSE16x8_MIPSdspR2(const uint8_t* WEBP_RESTRICT a,
                              const uint8_t* WEBP_RESTRICT b) {
   int count;
   int temp0, temp1, temp2, temp3;
-  __asm__ volatile (
-    "mult   $zero,    $zero                            \n\t"
-    GET_SSE( 0 * BPS, 4 +  0 * BPS, 8 +  0 * BPS, 12 +  0 * BPS)
-    GET_SSE( 1 * BPS, 4 +  1 * BPS, 8 +  1 * BPS, 12 +  1 * BPS)
-    GET_SSE( 2 * BPS, 4 +  2 * BPS, 8 +  2 * BPS, 12 +  2 * BPS)
-    GET_SSE( 3 * BPS, 4 +  3 * BPS, 8 +  3 * BPS, 12 +  3 * BPS)
-    GET_SSE( 4 * BPS, 4 +  4 * BPS, 8 +  4 * BPS, 12 +  4 * BPS)
-    GET_SSE( 5 * BPS, 4 +  5 * BPS, 8 +  5 * BPS, 12 +  5 * BPS)
-    GET_SSE( 6 * BPS, 4 +  6 * BPS, 8 +  6 * BPS, 12 +  6 * BPS)
-    GET_SSE( 7 * BPS, 4 +  7 * BPS, 8 +  7 * BPS, 12 +  7 * BPS)
-    "mflo   %[count]                                   \n\t"
-    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
-      [temp3]"=&r"(temp3), [count]"=&r"(count)
-    : [a]"r"(a), [b]"r"(b)
-    : "memory", "hi", "lo"
-  );
+  __asm__ volatile(
+      "mult   $zero,    $zero                            \n\t"  //
+      GET_SSE(0 * BPS, 4 + 0 * BPS, 8 + 0 * BPS, 12 + 0 * BPS)  //
+      GET_SSE(1 * BPS, 4 + 1 * BPS, 8 + 1 * BPS, 12 + 1 * BPS)  //
+      GET_SSE(2 * BPS, 4 + 2 * BPS, 8 + 2 * BPS, 12 + 2 * BPS)  //
+      GET_SSE(3 * BPS, 4 + 3 * BPS, 8 + 3 * BPS, 12 + 3 * BPS)  //
+      GET_SSE(4 * BPS, 4 + 4 * BPS, 8 + 4 * BPS, 12 + 4 * BPS)  //
+      GET_SSE(5 * BPS, 4 + 5 * BPS, 8 + 5 * BPS, 12 + 5 * BPS)  //
+      GET_SSE(6 * BPS, 4 + 6 * BPS, 8 + 6 * BPS, 12 + 6 * BPS)  //
+      GET_SSE(7 * BPS, 4 + 7 * BPS, 8 + 7 * BPS, 12 + 7 * BPS)  //
+      "mflo   %[count]                                   \n\t"
+      : [temp0] "=&r"(temp0), [temp1] "=&r"(temp1), [temp2] "=&r"(temp2),
+        [temp3] "=&r"(temp3), [count] "=&r"(count)
+      : [a] "r"(a), [b] "r"(b)
+      : "memory", "hi", "lo");
   return count;
 }
 
@@ -1147,18 +1159,17 @@ static int SSE8x8_MIPSdspR2(const uint8_t* WEBP_RESTRICT a,
                             const uint8_t* WEBP_RESTRICT b) {
   int count;
   int temp0, temp1, temp2, temp3;
-  __asm__ volatile (
-    "mult   $zero,    $zero                            \n\t"
-    GET_SSE(0 * BPS, 4 + 0 * BPS, 1 * BPS, 4 + 1 * BPS)
-    GET_SSE(2 * BPS, 4 + 2 * BPS, 3 * BPS, 4 + 3 * BPS)
-    GET_SSE(4 * BPS, 4 + 4 * BPS, 5 * BPS, 4 + 5 * BPS)
-    GET_SSE(6 * BPS, 4 + 6 * BPS, 7 * BPS, 4 + 7 * BPS)
-    "mflo   %[count]                                   \n\t"
-    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
-      [temp3]"=&r"(temp3), [count]"=&r"(count)
-    : [a]"r"(a), [b]"r"(b)
-    : "memory", "hi", "lo"
-  );
+  __asm__ volatile(
+      "mult   $zero,    $zero                            \n\t"  //
+      GET_SSE(0 * BPS, 4 + 0 * BPS, 1 * BPS, 4 + 1 * BPS)       //
+      GET_SSE(2 * BPS, 4 + 2 * BPS, 3 * BPS, 4 + 3 * BPS)       //
+      GET_SSE(4 * BPS, 4 + 4 * BPS, 5 * BPS, 4 + 5 * BPS)       //
+      GET_SSE(6 * BPS, 4 + 6 * BPS, 7 * BPS, 4 + 7 * BPS)       //
+      "mflo   %[count]                                   \n\t"
+      : [temp0] "=&r"(temp0), [temp1] "=&r"(temp1), [temp2] "=&r"(temp2),
+        [temp3] "=&r"(temp3), [count] "=&r"(count)
+      : [a] "r"(a), [b] "r"(b)
+      : "memory", "hi", "lo");
   return count;
 }
 
@@ -1166,15 +1177,14 @@ static int SSE4x4_MIPSdspR2(const uint8_t* WEBP_RESTRICT a,
                             const uint8_t* WEBP_RESTRICT b) {
   int count;
   int temp0, temp1, temp2, temp3;
-  __asm__ volatile (
-    "mult   $zero,    $zero                            \n\t"
-    GET_SSE(0 * BPS, 1 * BPS, 2 * BPS, 3 * BPS)
-    "mflo   %[count]                                   \n\t"
-    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
-      [temp3]"=&r"(temp3), [count]"=&r"(count)
-    : [a]"r"(a), [b]"r"(b)
-    : "memory", "hi", "lo"
-  );
+  __asm__ volatile(
+      "mult   $zero,    $zero                            \n\t"  //
+      GET_SSE(0 * BPS, 1 * BPS, 2 * BPS, 3 * BPS)               //
+      "mflo   %[count]                                   \n\t"
+      : [temp0] "=&r"(temp0), [temp1] "=&r"(temp1), [temp2] "=&r"(temp2),
+        [temp3] "=&r"(temp3), [count] "=&r"(count)
+      : [a] "r"(a), [b] "r"(b)
+      : "memory", "hi", "lo");
   return count;
 }
 
@@ -1200,6 +1210,7 @@ static int SSE4x4_MIPSdspR2(const uint8_t* WEBP_RESTRICT a,
 // K - offset in bytes (kZigzag[n] * 4)
 // N - offset in bytes (n * 2)
 // N1 - offset in bytes ((n + 1) * 2)
+// clang-format off
 #define QUANTIZE_ONE(J, K, N, N1)                                         \
   "ulw         %[temp1],     " #J "(%[ppin])                 \n\t"        \
   "ulw         %[temp2],     " #J "(%[ppsharpen])            \n\t"        \
@@ -1285,44 +1296,42 @@ static int SSE4x4_MIPSdspR2(const uint8_t* WEBP_RESTRICT a,
   "sh          $0,           " #N1 "(%[pout])                \n\t"        \
   "usw         $0,           " #J "(%[ppin])                 \n\t"        \
 "3:                                                          \n\t"
+// clang-format on
 
 static int QuantizeBlock_MIPSdspR2(int16_t in[16], int16_t out[16],
                                    const VP8Matrix* WEBP_RESTRICT const mtx) {
-  int temp0, temp1, temp2, temp3, temp4, temp5,temp6;
+  int temp0, temp1, temp2, temp3, temp4, temp5, temp6;
   int sign, coeff, level;
   int max_level = MAX_LEVEL;
   int max_level1 = max_level << 16 | max_level;
   int ret = 0;
 
-  int16_t* ppin             = &in[0];
-  int16_t* pout             = &out[0];
+  int16_t* ppin = &in[0];
+  int16_t* pout = &out[0];
   const uint16_t* ppsharpen = &mtx->sharpen[0];
   const uint32_t* ppzthresh = &mtx->zthresh[0];
-  const uint16_t* ppq       = &mtx->q[0];
-  const uint16_t* ppiq      = &mtx->iq[0];
-  const uint32_t* ppbias    = &mtx->bias[0];
+  const uint16_t* ppq = &mtx->q[0];
+  const uint16_t* ppiq = &mtx->iq[0];
+  const uint32_t* ppbias = &mtx->bias[0];
 
-  __asm__ volatile (
-    QUANTIZE_ONE( 0,  0,  0,  2)
-    QUANTIZE_ONE( 4,  8, 10, 12)
-    QUANTIZE_ONE( 8, 16,  4,  8)
-    QUANTIZE_ONE(12, 24, 14, 24)
-    QUANTIZE_ONE(16, 32,  6, 16)
-    QUANTIZE_ONE(20, 40, 22, 26)
-    QUANTIZE_ONE(24, 48, 18, 20)
-    QUANTIZE_ONE(28, 56, 28, 30)
+  __asm__ volatile(
+      QUANTIZE_ONE(0, 0, 0, 2)      //
+      QUANTIZE_ONE(4, 8, 10, 12)    //
+      QUANTIZE_ONE(8, 16, 4, 8)     //
+      QUANTIZE_ONE(12, 24, 14, 24)  //
+      QUANTIZE_ONE(16, 32, 6, 16)   //
+      QUANTIZE_ONE(20, 40, 22, 26)  //
+      QUANTIZE_ONE(24, 48, 18, 20)  //
+      QUANTIZE_ONE(28, 56, 28, 30)  //
 
-    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1),
-      [temp2]"=&r"(temp2), [temp3]"=&r"(temp3),
-      [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
-      [sign]"=&r"(sign), [coeff]"=&r"(coeff),
-      [level]"=&r"(level), [temp6]"=&r"(temp6), [ret]"+&r"(ret)
-    : [ppin]"r"(ppin), [pout]"r"(pout), [max_level1]"r"(max_level1),
-      [ppiq]"r"(ppiq), [max_level]"r"(max_level),
-      [ppbias]"r"(ppbias), [ppzthresh]"r"(ppzthresh),
-      [ppsharpen]"r"(ppsharpen), [ppq]"r"(ppq)
-    : "memory", "hi", "lo"
-  );
+      : [temp0] "=&r"(temp0), [temp1] "=&r"(temp1), [temp2] "=&r"(temp2),
+        [temp3] "=&r"(temp3), [temp4] "=&r"(temp4), [temp5] "=&r"(temp5),
+        [sign] "=&r"(sign), [coeff] "=&r"(coeff), [level] "=&r"(level),
+        [temp6] "=&r"(temp6), [ret] "+&r"(ret)
+      : [ppin] "r"(ppin), [pout] "r"(pout), [max_level1] "r"(max_level1),
+        [ppiq] "r"(ppiq), [max_level] "r"(max_level), [ppbias] "r"(ppbias),
+        [ppzthresh] "r"(ppzthresh), [ppsharpen] "r"(ppsharpen), [ppq] "r"(ppq)
+      : "memory", "hi", "lo");
 
   return (ret != 0);
 }
@@ -1330,7 +1339,7 @@ static int QuantizeBlock_MIPSdspR2(int16_t in[16], int16_t out[16],
 static int Quantize2Blocks_MIPSdspR2(int16_t in[32], int16_t out[32],
                                      const VP8Matrix* WEBP_RESTRICT const mtx) {
   int nz;
-  nz  = QuantizeBlock_MIPSdspR2(in + 0 * 16, out + 0 * 16, mtx) << 0;
+  nz = QuantizeBlock_MIPSdspR2(in + 0 * 16, out + 0 * 16, mtx) << 0;
   nz |= QuantizeBlock_MIPSdspR2(in + 1 * 16, out + 1 * 16, mtx) << 1;
   return nz;
 }
@@ -1341,6 +1350,7 @@ static int Quantize2Blocks_MIPSdspR2(int16_t in[32], int16_t out[32],
 // temp0..temp7 holds tmp[0]..tmp[15]
 // A, B, C, D - offset in bytes to load from in buffer
 // TEMP0, TEMP1 - registers for corresponding tmp elements
+// clang-format off
 #define HORIZONTAL_PASS_WHT(A, B, C, D, TEMP0, TEMP1)                          \
   "lh              %[" #TEMP0 "],  " #A "(%[in])            \n\t"              \
   "lh              %[" #TEMP1 "],  " #B "(%[in])            \n\t"              \
@@ -1373,26 +1383,26 @@ static int Quantize2Blocks_MIPSdspR2(int16_t in[32], int16_t out[32],
   "usw             %[" #TEMP2 "],  " #B "(%[out])                 \n\t"        \
   "usw             %[" #TEMP4 "],  " #C "(%[out])                 \n\t"        \
   "usw             %[" #TEMP6 "],  " #D "(%[out])                 \n\t"
+// clang-format on
 
 static void FTransformWHT_MIPSdspR2(const int16_t* WEBP_RESTRICT in,
                                     int16_t* WEBP_RESTRICT out) {
   int temp0, temp1, temp2, temp3, temp4;
   int temp5, temp6, temp7, temp8, temp9;
 
-  __asm__ volatile (
-    HORIZONTAL_PASS_WHT(  0,  32,  64,  96, temp0, temp1)
-    HORIZONTAL_PASS_WHT(128, 160, 192, 224, temp2, temp3)
-    HORIZONTAL_PASS_WHT(256, 288, 320, 352, temp4, temp5)
-    HORIZONTAL_PASS_WHT(384, 416, 448, 480, temp6, temp7)
-    VERTICAL_PASS_WHT(0,  8, 16, 24, temp0, temp2, temp4, temp6)
-    VERTICAL_PASS_WHT(4, 12, 20, 28, temp1, temp3, temp5, temp7)
-    : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
-      [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
-      [temp6]"=&r"(temp6), [temp7]"=&r"(temp7), [temp8]"=&r"(temp8),
-      [temp9]"=&r"(temp9)
-    : [in]"r"(in), [out]"r"(out)
-    : "memory"
-  );
+  __asm__ volatile(
+      HORIZONTAL_PASS_WHT(0, 32, 64, 96, temp0, temp1)              //
+      HORIZONTAL_PASS_WHT(128, 160, 192, 224, temp2, temp3)         //
+      HORIZONTAL_PASS_WHT(256, 288, 320, 352, temp4, temp5)         //
+      HORIZONTAL_PASS_WHT(384, 416, 448, 480, temp6, temp7)         //
+      VERTICAL_PASS_WHT(0, 8, 16, 24, temp0, temp2, temp4, temp6)   //
+      VERTICAL_PASS_WHT(4, 12, 20, 28, temp1, temp3, temp5, temp7)  //
+      : [temp0] "=&r"(temp0), [temp1] "=&r"(temp1), [temp2] "=&r"(temp2),
+        [temp3] "=&r"(temp3), [temp4] "=&r"(temp4), [temp5] "=&r"(temp5),
+        [temp6] "=&r"(temp6), [temp7] "=&r"(temp7), [temp8] "=&r"(temp8),
+        [temp9] "=&r"(temp9)
+      : [in] "r"(in), [out] "r"(out)
+      : "memory");
 }
 
 #undef VERTICAL_PASS_WHT
@@ -1401,6 +1411,7 @@ static void FTransformWHT_MIPSdspR2(const int16_t* WEBP_RESTRICT in,
 // macro for converting coefficients to bin
 // convert 8 coeffs at time
 // A, B, C, D - offsets in bytes to load from out buffer
+// clang-format off
 #define CONVERT_COEFFS_TO_BIN(A, B, C, D)                                      \
   "ulw        %[temp0],  " #A "(%[out])                \n\t"                   \
   "ulw        %[temp1],  " #B "(%[out])                \n\t"                   \
@@ -1466,12 +1477,13 @@ static void FTransformWHT_MIPSdspR2(const int16_t* WEBP_RESTRICT in,
   "lw         %[temp8],  0(%[temp3])                   \n\t"                   \
   "addiu      %[temp8],  %[temp8],    1                \n\t"                   \
   "sw         %[temp8],  0(%[temp3])                   \n\t"
+// clang-format on
 
 static void CollectHistogram_MIPSdspR2(const uint8_t* ref, const uint8_t* pred,
                                        int start_block, int end_block,
                                        VP8Histogram* const histo) {
   int j;
-  int distribution[MAX_COEFF_THRESH + 1] = { 0 };
+  int distribution[MAX_COEFF_THRESH + 1] = {0};
   const int max_coeff = (MAX_COEFF_THRESH << 16) + MAX_COEFF_THRESH;
   for (j = start_block; j < end_block; ++j) {
     int16_t out[16];
@@ -1480,15 +1492,14 @@ static void CollectHistogram_MIPSdspR2(const uint8_t* ref, const uint8_t* pred,
     VP8FTransform(ref + VP8DspScan[j], pred + VP8DspScan[j], out);
 
     // Convert coefficients to bin.
-    __asm__ volatile (
-      CONVERT_COEFFS_TO_BIN( 0,  4,  8, 12)
-      CONVERT_COEFFS_TO_BIN(16, 20, 24, 28)
-      : [temp0]"=&r"(temp0), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2),
-        [temp3]"=&r"(temp3), [temp4]"=&r"(temp4), [temp5]"=&r"(temp5),
-        [temp6]"=&r"(temp6), [temp7]"=&r"(temp7), [temp8]"=&r"(temp8)
-      : [dist]"r"(distribution), [out]"r"(out), [max_coeff]"r"(max_coeff)
-      : "memory"
-    );
+    __asm__ volatile(
+        CONVERT_COEFFS_TO_BIN(0, 4, 8, 12)     //
+        CONVERT_COEFFS_TO_BIN(16, 20, 24, 28)  //
+        : [temp0] "=&r"(temp0), [temp1] "=&r"(temp1), [temp2] "=&r"(temp2),
+          [temp3] "=&r"(temp3), [temp4] "=&r"(temp4), [temp5] "=&r"(temp5),
+          [temp6] "=&r"(temp6), [temp7] "=&r"(temp7), [temp8] "=&r"(temp8)
+        : [dist] "r"(distribution), [out] "r"(out), [max_coeff] "r"(max_coeff)
+        : "memory");
   }
   VP8SetHistogramData(distribution, histo);
 }

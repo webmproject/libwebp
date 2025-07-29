@@ -13,8 +13,8 @@
 #ifndef WEBP_EXAMPLES_EXAMPLE_UTIL_H_
 #define WEBP_EXAMPLES_EXAMPLE_UTIL_H_
 
-#include "webp/types.h"
 #include "webp/mux_types.h"
+#include "webp/types.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -64,7 +64,7 @@ int ExUtilInitCommandLineArguments(int argc, const char* argv[],
 void ExUtilDeleteCommandLineArguments(CommandLineArguments* const args);
 
 #ifdef __cplusplus
-}    // extern "C"
+}  // extern "C"
 #endif
 
 #endif  // WEBP_EXAMPLES_EXAMPLE_UTIL_H_

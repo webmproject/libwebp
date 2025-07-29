@@ -99,6 +99,5 @@ void SimpleApiTest(std::string_view data_in) {
 }  // namespace
 
 FUZZ_TEST(SimpleApi, SimpleApiTest)
-    .WithDomains(
-        fuzztest::String()
-            .WithMaxSize(fuzz_utils::kMaxWebPFileSize + 1));
+    .WithDomains(fuzztest::String().WithMaxSize(fuzz_utils::kMaxWebPFileSize +
+                                                1));

@@ -11,10 +11,11 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
-#include <assert.h>
-#include <string.h>   // for memset()
-
 #include "src/utils/thread_utils.h"
+
+#include <assert.h>
+#include <string.h>  // for memset()
+
 #include "src/utils/utils.h"
 
 #ifdef WEBP_USE_THREAD
@@ -53,8 +54,8 @@ typedef struct {
 
 typedef struct {
   pthread_mutex_t mutex;
-  pthread_cond_t  condition;
-  pthread_t       thread;
+  pthread_cond_t condition;
+  pthread_t thread;
 } WebPWorkerImpl;
 
 #if defined(_WIN32)
@@ -70,26 +71,21 @@ typedef struct {
 
 #if _WIN32_WINNT >= 0x0501  // Windows XP or greater
 #define WaitForSingleObject(obj, timeout) \
-  WaitForSingleObjectEx(obj, timeout, FALSE /*bAlertable*/)
+  WaitForSingleObjectEx(obj, timeout, /*bAlertable=*/FALSE)
 #endif
 
 static int pthread_create(pthread_t* const thread, const void* attr,
-                          unsigned int (__stdcall* start)(void*), void* arg) {
+                          unsigned int(__stdcall* start)(void*), void* arg) {
   (void)attr;
 #ifdef USE_CREATE_THREAD
-  *thread = CreateThread(NULL,   /* lpThreadAttributes */
-                         0,      /* dwStackSize */
-                         start,
-                         arg,
-                         0,      /* dwStackSize */
-                         NULL);  /* lpThreadId */
+  *thread = CreateThread(/*lpThreadAttributes=*/NULL,
+                         /*dwStackSize=*/0, start, arg, /*dwStackSize=*/0,
+                         /*lpThreadId=*/NULL);
 #else
-  *thread = (pthread_t)_beginthreadex(NULL,   /* void *security */
-                                      0,      /* unsigned stack_size */
-                                      start,
-                                      arg,
-                                      0,      /* unsigned initflag */
-                                      NULL);  /* unsigned *thrdaddr */
+  *thread =
+      (pthread_t)_beginthreadex(/*security=*/NULL,
+                                /*stack_size=*/0, start, arg, /*initflag=*/0,
+                                /*thrdaddr=*/NULL);
 #endif
   if (*thread == NULL) return 1;
   SetThreadPriority(*thread, THREAD_PRIORITY_ABOVE_NORMAL);
@@ -106,7 +102,7 @@ static int pthread_join(pthread_t thread, void** value_ptr) {
 static int pthread_mutex_init(pthread_mutex_t* const mutex, void* mutexattr) {
   (void)mutexattr;
 #if _WIN32_WINNT >= 0x0600  // Windows Vista / Server 2008 or greater
-  InitializeCriticalSectionEx(mutex, 0 /*dwSpinCount*/, 0 /*Flags*/);
+  InitializeCriticalSectionEx(mutex, /*dwSpinCount=*/0, /*Flags=*/0);
 #else
   InitializeCriticalSection(mutex);
 #endif
@@ -149,8 +145,7 @@ static int pthread_cond_init(pthread_cond_t* const condition, void* cond_attr) {
   condition->waiting_sem = CreateSemaphore(NULL, 0, 1, NULL);
   condition->received_sem = CreateSemaphore(NULL, 0, 1, NULL);
   condition->signal_event = CreateEvent(NULL, FALSE, FALSE, NULL);
-  if (condition->waiting_sem == NULL ||
-      condition->received_sem == NULL ||
+  if (condition->waiting_sem == NULL || condition->received_sem == NULL ||
       condition->signal_event == NULL) {
     pthread_cond_destroy(condition);
     return 1;
@@ -187,8 +182,8 @@ static int pthread_cond_wait(pthread_cond_t* const condition,
   if (!ReleaseSemaphore(condition->waiting_sem, 1, NULL)) return 1;
   // now unlock the mutex so pthread_cond_signal may be issued
   pthread_mutex_unlock(mutex);
-  ok = (WaitForSingleObject(condition->signal_event, INFINITE) ==
-        WAIT_OBJECT_0);
+  ok =
+      (WaitForSingleObject(condition->signal_event, INFINITE) == WAIT_OBJECT_0);
   ok &= ReleaseSemaphore(condition->received_sem, 1, NULL);
   pthread_mutex_lock(mutex);
 #endif
@@ -196,8 +191,8 @@ static int pthread_cond_wait(pthread_cond_t* const condition,
 }
 
 #else  // !_WIN32
-# define THREADFN void*
-# define THREAD_RETURN(val) val
+#define THREADFN void*
+#define THREAD_RETURN(val) val
 #endif  // _WIN32
 
 //------------------------------------------------------------------------------
@@ -208,13 +203,13 @@ static THREADFN ThreadLoop(void* ptr) {
   int done = 0;
   while (!done) {
     pthread_mutex_lock(&impl->mutex);
-    while (worker->status == OK) {   // wait in idling mode
+    while (worker->status == OK) {  // wait in idling mode
       pthread_cond_wait(&impl->condition, &impl->mutex);
     }
     if (worker->status == WORK) {
       WebPGetWorkerInterface()->Execute(worker);
       worker->status = OK;
-    } else if (worker->status == NOT_OK) {   // finish the worker
+    } else if (worker->status == NOT_OK) {  // finish the worker
       done = 1;
     }
     // signal to the main thread that we're done (for Sync())
@@ -225,7 +220,7 @@ static THREADFN ThreadLoop(void* ptr) {
     pthread_mutex_unlock(&impl->mutex);
     pthread_cond_signal(&impl->condition);
   }
-  return THREAD_RETURN(NULL);    // Thread is finished
+  return THREAD_RETURN(NULL);  // Thread is finished
 }
 
 // main thread state control
@@ -299,7 +294,7 @@ static int Reset(WebPWorker* const worker) {
     if (!ok) {
       pthread_mutex_destroy(&impl->mutex);
       pthread_cond_destroy(&impl->condition);
- Error:
+    Error:
       WebPSafeFree(impl);
       worker->impl = NULL;
       return 0;
@@ -348,15 +343,14 @@ static void End(WebPWorker* const worker) {
 
 //------------------------------------------------------------------------------
 
-static WebPWorkerInterface g_worker_interface = {
-  Init, Reset, Sync, Launch, Execute, End
-};
+static WebPWorkerInterface g_worker_interface = {Init,   Reset,   Sync,
+                                                 Launch, Execute, End};
 
 int WebPSetWorkerInterface(const WebPWorkerInterface* const winterface) {
-  if (winterface == NULL ||
-      winterface->Init == NULL || winterface->Reset == NULL ||
-      winterface->Sync == NULL || winterface->Launch == NULL ||
-      winterface->Execute == NULL || winterface->End == NULL) {
+  if (winterface == NULL || winterface->Init == NULL ||
+      winterface->Reset == NULL || winterface->Sync == NULL ||
+      winterface->Launch == NULL || winterface->Execute == NULL ||
+      winterface->End == NULL) {
     return 0;
   }
   g_worker_interface = *winterface;

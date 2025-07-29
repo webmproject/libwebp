@@ -61,9 +61,9 @@ static WEBP_INLINE int IsFlat(const int16_t* levels, int num_blocks,
 static WEBP_INLINE int IsFlat(const int16_t* levels, int num_blocks,
                               int thresh) {
   int score = 0;
-  while (num_blocks-- > 0) {      // TODO(skal): refine positional scoring?
+  while (num_blocks-- > 0) {  // TODO(skal): refine positional scoring?
     int i;
-    for (i = 1; i < 16; ++i) {    // omit DC, we're only interested in AC
+    for (i = 1; i < 16; ++i) {  // omit DC, we're only interested in AC
       score += (levels[i] != 0);
       if (score > thresh) return 0;
     }
@@ -79,7 +79,7 @@ static WEBP_INLINE int IsFlatSource16(const uint8_t* src) {
   const uint32_t v = src[0] * 0x01010101u;
   int i;
   for (i = 0; i < 16; ++i) {
-    if (memcmp(src + 0, &v, 4) || memcmp(src +  4, &v, 4) ||
+    if (memcmp(src + 0, &v, 4) || memcmp(src + 4, &v, 4) ||
         memcmp(src + 8, &v, 4) || memcmp(src + 12, &v, 4)) {
       return 0;
     }

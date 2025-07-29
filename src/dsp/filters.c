@@ -22,14 +22,14 @@
 //------------------------------------------------------------------------------
 // Helpful macro.
 
-#define DCHECK(in, out)                                                        \
-  do {                                                                         \
-    assert((in) != NULL);                                                      \
-    assert((out) != NULL);                                                     \
-    assert((in) != (out));                                                     \
-    assert(width > 0);                                                         \
-    assert(height > 0);                                                        \
-    assert(stride >= width);                                                   \
+#define DCHECK(in, out)      \
+  do {                       \
+    assert((in) != NULL);    \
+    assert((out) != NULL);   \
+    assert((in) != (out));   \
+    assert(width > 0);       \
+    assert(height > 0);      \
+    assert(stride >= width); \
   } while (0)
 
 #if !WEBP_NEON_OMIT_C_CODE
@@ -124,8 +124,7 @@ static WEBP_INLINE void DoGradientFilter_C(const uint8_t* WEBP_RESTRICT in,
     // leftmost pixel: predict from above.
     PredictLine_C(in, preds - stride, out, 1);
     for (w = 1; w < width; ++w) {
-      const int pred = GradientPredictor_C(preds[w - 1],
-                                           preds[w - stride],
+      const int pred = GradientPredictor_C(preds[w - 1], preds[w - stride],
                                            preds[w - stride - 1]);
       out[w] = (uint8_t)(in[w] - pred);
     }
@@ -141,20 +140,20 @@ static WEBP_INLINE void DoGradientFilter_C(const uint8_t* WEBP_RESTRICT in,
 //------------------------------------------------------------------------------
 
 #if !WEBP_NEON_OMIT_C_CODE
-static void HorizontalFilter_C(const uint8_t* WEBP_RESTRICT data,
-                               int width, int height, int stride,
+static void HorizontalFilter_C(const uint8_t* WEBP_RESTRICT data, int width,
+                               int height, int stride,
                                uint8_t* WEBP_RESTRICT filtered_data) {
   DoHorizontalFilter_C(data, width, height, stride, filtered_data);
 }
 
-static void VerticalFilter_C(const uint8_t* WEBP_RESTRICT data,
-                             int width, int height, int stride,
+static void VerticalFilter_C(const uint8_t* WEBP_RESTRICT data, int width,
+                             int height, int stride,
                              uint8_t* WEBP_RESTRICT filtered_data) {
   DoVerticalFilter_C(data, width, height, stride, filtered_data);
 }
 
-static void GradientFilter_C(const uint8_t* WEBP_RESTRICT data,
-                             int width, int height, int stride,
+static void GradientFilter_C(const uint8_t* WEBP_RESTRICT data, int width,
+                             int height, int stride,
                              uint8_t* WEBP_RESTRICT filtered_data) {
   DoGradientFilter_C(data, width, height, stride, filtered_data);
 }
@@ -162,8 +161,8 @@ static void GradientFilter_C(const uint8_t* WEBP_RESTRICT data,
 
 //------------------------------------------------------------------------------
 
-static void NoneUnfilter_C(const uint8_t* prev, const uint8_t* in,
-                           uint8_t* out, int width) {
+static void NoneUnfilter_C(const uint8_t* prev, const uint8_t* in, uint8_t* out,
+                           int width) {
   (void)prev;
   if (out != in) memcpy(out, in, width * sizeof(*out));
 }

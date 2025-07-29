@@ -12,25 +12,26 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
+#include "src/utils/quant_levels_utils.h"
+
 #include <assert.h>
 #include <stddef.h>
 
 #include "src/webp/types.h"
-#include "src/utils/quant_levels_utils.h"
 
-#define NUM_SYMBOLS     256
+#define NUM_SYMBOLS 256
 
-#define MAX_ITER  6             // Maximum number of convergence steps.
-#define ERROR_THRESHOLD 1e-4    // MSE stopping criterion.
+#define MAX_ITER 6            // Maximum number of convergence steps.
+#define ERROR_THRESHOLD 1e-4  // MSE stopping criterion.
 
 // -----------------------------------------------------------------------------
 // Quantize levels.
 
-int QuantizeLevels(uint8_t* const data, int width, int height,
-                   int num_levels, uint64_t* const sse) {
-  int freq[NUM_SYMBOLS] = { 0 };
-  int q_level[NUM_SYMBOLS] = { 0 };
-  double inv_q_level[NUM_SYMBOLS] = { 0 };
+int QuantizeLevels(uint8_t* const data, int width, int height, int num_levels,
+                   uint64_t* const sse) {
+  int freq[NUM_SYMBOLS] = {0};
+  int q_level[NUM_SYMBOLS] = {0};
+  double inv_q_level[NUM_SYMBOLS] = {0};
   int min_s = 255, max_s = 0;
   const size_t data_size = height * width;
   int i, num_levels_in, iter;
@@ -75,8 +76,8 @@ int QuantizeLevels(uint8_t* const data, int width, int height,
 
   // k-Means iterations.
   for (iter = 0; iter < MAX_ITER; ++iter) {
-    double q_sum[NUM_SYMBOLS] = { 0 };
-    double q_count[NUM_SYMBOLS] = { 0 };
+    double q_sum[NUM_SYMBOLS] = {0};
+    double q_count[NUM_SYMBOLS] = {0};
     int s, slot = 0;
 
     // Assign classes to representatives.
@@ -133,7 +134,7 @@ int QuantizeLevels(uint8_t* const data, int width, int height,
       data[n] = map[data[n]];
     }
   }
- End:
+End:
   // Store sum of squared error if needed.
   if (sse != NULL) *sse = (uint64_t)err;
 

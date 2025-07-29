@@ -159,23 +159,22 @@ void AdvancedApiTest(std::string_view blob, uint8_t factor_u8, bool flip,
 }  // namespace
 
 FUZZ_TEST(AdvancedApi, AdvancedApiTest)
-    .WithDomains(
-        fuzztest::String()
-            .WithMaxSize(fuzz_utils::kMaxWebPFileSize + 1),
-        /*factor_u8=*/fuzztest::Arbitrary<uint8_t>(),
-        /*flip=*/fuzztest::Arbitrary<bool>(),
-        /*bypass_filtering=*/fuzztest::Arbitrary<bool>(),
-        /*no_fancy_upsampling=*/fuzztest::Arbitrary<bool>(),
-        /*use_threads=*/fuzztest::Arbitrary<bool>(),
-        /*use_cropping=*/fuzztest::Arbitrary<bool>(),
-        /*use_scaling=*/fuzztest::Arbitrary<bool>(),
-        /*use_dithering=*/fuzztest::Arbitrary<bool>(),
+    .WithDomains(fuzztest::String().WithMaxSize(fuzz_utils::kMaxWebPFileSize +
+                                                1),
+                 /*factor_u8=*/fuzztest::Arbitrary<uint8_t>(),
+                 /*flip=*/fuzztest::Arbitrary<bool>(),
+                 /*bypass_filtering=*/fuzztest::Arbitrary<bool>(),
+                 /*no_fancy_upsampling=*/fuzztest::Arbitrary<bool>(),
+                 /*use_threads=*/fuzztest::Arbitrary<bool>(),
+                 /*use_cropping=*/fuzztest::Arbitrary<bool>(),
+                 /*use_scaling=*/fuzztest::Arbitrary<bool>(),
+                 /*use_dithering=*/fuzztest::Arbitrary<bool>(),
 #if defined(WEBP_REDUCE_CSP)
-        fuzztest::ElementOf<int>({static_cast<int>(MODE_RGBA),
-                                  static_cast<int>(MODE_BGRA),
-                                  static_cast<int>(MODE_rgbA),
-                                  static_cast<int>(MODE_bgrA)}),
+                 fuzztest::ElementOf<int>({static_cast<int>(MODE_RGBA),
+                                           static_cast<int>(MODE_BGRA),
+                                           static_cast<int>(MODE_rgbA),
+                                           static_cast<int>(MODE_bgrA)}),
 #else
-        fuzztest::InRange<int>(0, static_cast<int>(MODE_LAST) - 1),
+                 fuzztest::InRange<int>(0, static_cast<int>(MODE_LAST) - 1),
 #endif
-        /*incremental=*/fuzztest::Arbitrary<bool>());
+                 /*incremental=*/fuzztest::Arbitrary<bool>());

@@ -13,15 +13,15 @@
 #include "./imageio_util.h"
 
 #if defined(_WIN32)
-#include <fcntl.h>   // for _O_BINARY
-#include <io.h>      // for _setmode()
+#include <fcntl.h>  // for _O_BINARY
+#include <io.h>     // for _setmode()
 #endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "webp/types.h"
 #include "../examples/unicode.h"
+#include "webp/types.h"
 
 // -----------------------------------------------------------------------------
 // File I/O
@@ -65,14 +65,14 @@ int ImgIoUtilReadFromStdin(const uint8_t** data, size_t* data_size) {
   *data_size = size;
   return 1;
 
- Error:
+Error:
   free(input);
   fprintf(stderr, "Could not read from stdin\n");
   return 0;
 }
 
-int ImgIoUtilReadFile(const char* const file_name,
-                      const uint8_t** data, size_t* data_size) {
+int ImgIoUtilReadFile(const char* const file_name, const uint8_t** data,
+                      size_t* data_size) {
   int ok;
   uint8_t* file_data;
   size_t file_size;
@@ -123,8 +123,8 @@ int ImgIoUtilReadFile(const char* const file_name,
 
 // -----------------------------------------------------------------------------
 
-int ImgIoUtilWriteFile(const char* const file_name,
-                       const uint8_t* data, size_t data_size) {
+int ImgIoUtilWriteFile(const char* const file_name, const uint8_t* data,
+                       size_t data_size) {
   int ok;
   FILE* out;
   const int to_stdout = (file_name == NULL) || !WSTRCMP(file_name, "-");
@@ -145,8 +145,8 @@ int ImgIoUtilWriteFile(const char* const file_name,
 
 // -----------------------------------------------------------------------------
 
-void ImgIoUtilCopyPlane(const uint8_t* src, int src_stride,
-                        uint8_t* dst, int dst_stride, int width, int height) {
+void ImgIoUtilCopyPlane(const uint8_t* src, int src_stride, uint8_t* dst,
+                        int dst_stride, int width, int height) {
   while (height-- > 0) {
     memcpy(dst, src, width * sizeof(*dst));
     src += src_stride;

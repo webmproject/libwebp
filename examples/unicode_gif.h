@@ -28,6 +28,7 @@
 
 #include <gif_lib.h>
 #include <string.h>
+
 #include "./gifdec.h"
 
 #if !defined(STDIN_FILENO)

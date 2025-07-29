@@ -43,7 +43,7 @@ int MetadataCopy(const char* metadata, size_t metadata_len,
                  MetadataPayload* const payload);
 
 #ifdef __cplusplus
-}    // extern "C"
+}  // extern "C"
 #endif
 
 #endif  // WEBP_IMAGEIO_METADATA_H_

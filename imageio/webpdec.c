@@ -31,9 +31,14 @@
 // WebP decoding
 
 static const char* const kStatusMessages[VP8_STATUS_NOT_ENOUGH_DATA + 1] = {
-  "OK", "OUT_OF_MEMORY", "INVALID_PARAM", "BITSTREAM_ERROR",
-  "UNSUPPORTED_FEATURE", "SUSPENDED", "USER_ABORT", "NOT_ENOUGH_DATA"
-};
+    "OK",
+    "OUT_OF_MEMORY",
+    "INVALID_PARAM",
+    "BITSTREAM_ERROR",
+    "UNSUPPORTED_FEATURE",
+    "SUSPENDED",
+    "USER_ABORT",
+    "NOT_ENOUGH_DATA"};
 
 static void PrintAnimationWarning(const WebPDecoderConfig* const config) {
   if (config->input.has_animation) {
@@ -53,8 +58,7 @@ void PrintWebPError(const char* const in_file, int status) {
   fprintf(stderr, "\n");
 }
 
-int LoadWebP(const char* const in_file,
-             const uint8_t** data, size_t* data_size,
+int LoadWebP(const char* const in_file, const uint8_t** data, size_t* data_size,
              WebPBitstreamFeatures* bitstream) {
   VP8StatusCode status;
   WebPBitstreamFeatures local_features;
@@ -84,9 +88,8 @@ VP8StatusCode DecodeWebP(const uint8_t* const data, size_t data_size,
   return WebPDecode(data, data_size, config);
 }
 
-VP8StatusCode DecodeWebPIncremental(
-    const uint8_t* const data, size_t data_size,
-    WebPDecoderConfig* const config) {
+VP8StatusCode DecodeWebPIncremental(const uint8_t* const data, size_t data_size,
+                                    WebPDecoderConfig* const config) {
   VP8StatusCode status = VP8_STATUS_OK;
   if (config == NULL) return VP8_STATUS_INVALID_PARAM;
 
@@ -111,7 +114,7 @@ VP8StatusCode DecodeWebPIncremental(
 
 static int ExtractMetadata(const uint8_t* const data, size_t data_size,
                            Metadata* const metadata) {
-  WebPData webp_data = { data, data_size };
+  WebPData webp_data = {data, data_size};
   WebPDemuxer* const demux = WebPDemux(&webp_data);
   WebPChunkIterator chunk_iter;
   uint32_t flags;
@@ -143,8 +146,7 @@ static int ExtractMetadata(const uint8_t* const data, size_t data_size,
 // -----------------------------------------------------------------------------
 
 int ReadWebP(const uint8_t* const data, size_t data_size,
-             WebPPicture* const pic,
-             int keep_alpha, Metadata* const metadata) {
+             WebPPicture* const pic, int keep_alpha, Metadata* const metadata) {
   int ok = 0;
   VP8StatusCode status = VP8_STATUS_OK;
   WebPDecoderConfig config;
@@ -223,7 +225,7 @@ int ReadWebP(const uint8_t* const data, size_t data_size,
         argb += pic->argb_stride;
       }
     }
-  } while (0);   // <- so we can 'break' out of the loop
+  } while (0);  // <- so we can 'break' out of the loop
 
   if (status != VP8_STATUS_OK) {
     PrintWebPError("input data", status);

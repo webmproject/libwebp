@@ -15,10 +15,10 @@
 #define WEBP_DEC_ALPHAI_DEC_H_
 
 #include "src/dec/vp8_dec.h"
-#include "src/webp/types.h"
 #include "src/dec/webpi_dec.h"
 #include "src/dsp/dsp.h"
 #include "src/utils/filters_utils.h"
+#include "src/webp/types.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -35,11 +35,11 @@ struct ALPHDecoder {
   int pre_processing;
   struct VP8LDecoder* vp8l_dec;
   VP8Io io;
-  int use_8b_decode;   // Although alpha channel requires only 1 byte per
-                       // pixel, sometimes VP8LDecoder may need to allocate
-                       // 4 bytes per pixel internally during decode.
+  int use_8b_decode;  // Although alpha channel requires only 1 byte per
+                      // pixel, sometimes VP8LDecoder may need to allocate
+                      // 4 bytes per pixel internally during decode.
   uint8_t* output;
-  const uint8_t* prev_line;   // last output row (or NULL)
+  const uint8_t* prev_line;  // last output row (or NULL)
 };
 
 //------------------------------------------------------------------------------
@@ -51,7 +51,7 @@ void WebPDeallocateAlphaMemory(VP8Decoder* const dec);
 //------------------------------------------------------------------------------
 
 #ifdef __cplusplus
-}    // extern "C"
+}  // extern "C"
 #endif
 
 #endif  // WEBP_DEC_ALPHAI_DEC_H_

@@ -47,25 +47,13 @@
     ++webp_info->num_warnings;                   \
   } while (0)
 
-static const char* const kFormats[3] = {
-  "Unknown",
-  "Lossy",
-  "Lossless"
-};
+static const char* const kFormats[3] = {"Unknown", "Lossy", "Lossless"};
 
 static const char* const kLosslessTransforms[4] = {
-  "Predictor",
-  "Cross Color",
-  "Subtract Green",
-  "Color Indexing"
-};
+    "Predictor", "Cross Color", "Subtract Green", "Color Indexing"};
 
-static const char* const kAlphaFilterMethods[4] = {
-  "None",
-  "Horizontal",
-  "Vertical",
-  "Gradient"
-};
+static const char* const kAlphaFilterMethods[4] = {"None", "Horizontal",
+                                                   "Vertical", "Gradient"};
 
 typedef enum {
   WEBP_INFO_OK = 0,
@@ -129,15 +117,15 @@ static void WebPInfoInit(WebPInfo* const webp_info) {
 }
 
 static const uint32_t kWebPChunkTags[CHUNK_TYPES] = {
-  MKFOURCC('V', 'P', '8', ' '),
-  MKFOURCC('V', 'P', '8', 'L'),
-  MKFOURCC('V', 'P', '8', 'X'),
-  MKFOURCC('A', 'L', 'P', 'H'),
-  MKFOURCC('A', 'N', 'I', 'M'),
-  MKFOURCC('A', 'N', 'M', 'F'),
-  MKFOURCC('I', 'C', 'C', 'P'),
-  MKFOURCC('E', 'X', 'I', 'F'),
-  MKFOURCC('X', 'M', 'P', ' '),
+    MKFOURCC('V', 'P', '8', ' '),  //
+    MKFOURCC('V', 'P', '8', 'L'),  //
+    MKFOURCC('V', 'P', '8', 'X'),  //
+    MKFOURCC('A', 'L', 'P', 'H'),  //
+    MKFOURCC('A', 'N', 'I', 'M'),  //
+    MKFOURCC('A', 'N', 'M', 'F'),  //
+    MKFOURCC('I', 'C', 'C', 'P'),  //
+    MKFOURCC('E', 'X', 'I', 'F'),  //
+    MKFOURCC('X', 'M', 'P', ' '),  //
 };
 
 // -----------------------------------------------------------------------------
@@ -200,9 +188,7 @@ static const uint8_t* GetBuffer(MemBuffer* const mem) {
   return mem->buf + mem->start;
 }
 
-static void Skip(MemBuffer* const mem, size_t size) {
-  mem->start += size;
-}
+static void Skip(MemBuffer* const mem, size_t size) { mem->start += size; }
 
 static uint32_t ReadMemBufLE32(MemBuffer* const mem) {
   const uint8_t* const data = mem->buf + mem->start;
@@ -266,9 +252,10 @@ static WebPInfoStatus ParseLossySegmentHeader(const WebPInfo* const webp_info,
     int update_map, update_data;
     GET_BITS(update_map, 1);
     GET_BITS(update_data, 1);
-    printf("  Update map:       %d\n"
-           "  Update data:      %d\n",
-           update_map, update_data);
+    printf(
+        "  Update map:       %d\n"
+        "  Update data:      %d\n",
+        update_map, update_data);
     if (update_data) {
       int i, a_delta;
       int quantizer[4] = {0, 0, 0, 0};
@@ -298,8 +285,8 @@ static WebPInfoStatus ParseLossySegmentHeader(const WebPInfo* const webp_info,
         GET_BITS(bit, 1);
         if (bit) GET_BITS(prob_segment[i], 8);
       }
-      printf("  Prob segment:     %d %d %d\n",
-             prob_segment[0], prob_segment[1], prob_segment[2]);
+      printf("  Prob segment:     %d %d %d\n", prob_segment[0], prob_segment[1],
+             prob_segment[2]);
     }
   }
   return WEBP_INFO_OK;
@@ -371,12 +358,13 @@ static WebPInfoStatus ParseLossyHeader(const ChunkData* const chunk_data,
       LOG_ERROR("Invalid lossy bitstream signature.");
       return WEBP_INFO_BITSTREAM_ERROR;
     }
-    printf("  Width:            %d\n"
-           "  X scale:          %d\n"
-           "  Height:           %d\n"
-           "  Y scale:          %d\n",
-           ((data[4] << 8) | data[3]) & 0x3fff, data[4] >> 6,
-           ((data[6] << 8) | data[5]) & 0x3fff, data[6] >> 6);
+    printf(
+        "  Width:            %d\n"
+        "  X scale:          %d\n"
+        "  Height:           %d\n"
+        "  Y scale:          %d\n",
+        ((data[4] << 8) | data[3]) & 0x3fff, data[4] >> 6,
+        ((data[6] << 8) | data[5]) & 0x3fff, data[6] >> 6);
     data += 7;
     data_size -= 7;
   } else {
@@ -479,7 +467,7 @@ static int LLGetBits(const uint8_t* const data, size_t data_size, size_t nb,
 static WebPInfoStatus ParseLosslessTransform(WebPInfo* const webp_info,
                                              const uint8_t* const data,
                                              size_t data_size,
-                                             uint64_t* const  bit_pos) {
+                                             uint64_t* const bit_pos) {
   int use_transform, block_size, n_colors;
   LL_GET_BITS(use_transform, 1);
   printf("  Use transform:    %s\n", use_transform ? "Yes" : "No");
@@ -499,7 +487,8 @@ static WebPInfoStatus ParseLosslessTransform(WebPInfo* const webp_info,
         n_colors += 1;
         printf("  No. of colors:    %d\n", n_colors);
         break;
-      default: break;
+      default:
+        break;
     }
   }
   return WEBP_INFO_OK;
@@ -556,8 +545,8 @@ static WebPInfoStatus ParseAlphaHeader(const ChunkData* const chunk_data,
     const int pre_processing = (data[0] >> 4) & 0x03;
     const int reserved_bits = (data[0] >> 6) & 0x03;
     printf("  Compression:      %d\n", compression_method);
-    printf("  Filter:           %s (%d)\n",
-           kAlphaFilterMethods[filter], filter);
+    printf("  Filter:           %s (%d)\n", kAlphaFilterMethods[filter],
+           filter);
     printf("  Pre-processing:   %d\n", pre_processing);
     if (compression_method > ALPHA_LOSSLESS_COMPRESSION) {
       LOG_ERROR("Invalid Alpha compression method.");
@@ -642,7 +631,7 @@ static WebPInfoStatus ParseChunk(const WebPInfo* const webp_info,
       LOG_ERROR("Size of chunk payload is over limit.");
       return WEBP_INFO_INVALID_PARAM;
     }
-    if (payload_size_padded > MemDataSize(mem)){
+    if (payload_size_padded > MemDataSize(mem)) {
       LOG_ERROR("Truncated data detected when parsing chunk payload.");
       return WEBP_INFO_TRUNCATED_DATA;
     }
@@ -695,8 +684,8 @@ static WebPInfoStatus ProcessVP8XChunk(const ChunkData* const chunk_data,
            (webp_info->feature_flags & EXIF_FLAG) != 0,
            (webp_info->feature_flags & XMP_FLAG) != 0,
            (webp_info->feature_flags & ANIMATION_FLAG) != 0);
-    printf("  Canvas size %d x %d\n",
-           webp_info->canvas_width, webp_info->canvas_height);
+    printf("  Canvas size %d x %d\n", webp_info->canvas_width,
+           webp_info->canvas_height);
   }
   if (webp_info->canvas_width > MAX_CANVAS_SIZE) {
     LOG_WARN("Canvas width is out of range in VP8X chunk.");
@@ -727,10 +716,8 @@ static WebPInfoStatus ProcessANIMChunk(const ChunkData* const chunk_data,
   ++webp_info->chunk_counts[CHUNK_ANIM];
   if (!webp_info->quiet) {
     printf("  Background color:(ARGB) %02x %02x %02x %02x\n",
-           (webp_info->bgcolor >> 24) & 0xff,
-           (webp_info->bgcolor >> 16) & 0xff,
-           (webp_info->bgcolor >> 8) & 0xff,
-           webp_info->bgcolor & 0xff);
+           (webp_info->bgcolor >> 24) & 0xff, (webp_info->bgcolor >> 16) & 0xff,
+           (webp_info->bgcolor >> 8) & 0xff, webp_info->bgcolor & 0xff);
     printf("  Loop count      : %d\n", webp_info->loop_count);
   }
   if (webp_info->loop_count > MAX_LOOP_COUNT) {
@@ -765,9 +752,10 @@ static WebPInfoStatus ProcessANMFChunk(const ChunkData* const chunk_data,
   blend = (temp >> 1) & 1;
   ++webp_info->chunk_counts[CHUNK_ANMF];
   if (!webp_info->quiet) {
-    printf("  Offset_X: %d\n  Offset_Y: %d\n  Width: %d\n  Height: %d\n"
-           "  Duration: %d\n  Dispose: %d\n  Blend: %d\n",
-           offset_x, offset_y, width, height, duration, dispose, blend);
+    printf(
+        "  Offset_X: %d\n  Offset_Y: %d\n  Width: %d\n  Height: %d\n"
+        "  Duration: %d\n  Dispose: %d\n  Blend: %d\n",
+        offset_x, offset_y, width, height, duration, dispose, blend);
   }
   if (duration > MAX_DURATION) {
     LOG_ERROR("Invalid duration parameter in ANMF chunk.");
@@ -804,10 +792,11 @@ static WebPInfoStatus ProcessImageChunk(const ChunkData* const chunk_data,
   }
   if (!webp_info->quiet) {
     assert(features.format >= 0 && features.format <= 2);
-    printf("  Width: %d\n  Height: %d\n  Alpha: %d\n  Animation: %d\n"
-           "  Format: %s (%d)\n",
-           features.width, features.height, features.has_alpha,
-           features.has_animation, kFormats[features.format], features.format);
+    printf(
+        "  Width: %d\n  Height: %d\n  Alpha: %d\n  Animation: %d\n"
+        "  Format: %s (%d)\n",
+        features.width, features.height, features.has_alpha,
+        features.has_animation, kFormats[features.format], features.format);
   }
   if (webp_info->is_processing_anim_frame) {
     ++webp_info->anmf_subchunk_counts[chunk_data->id == CHUNK_VP8 ? 0 : 1];
@@ -831,8 +820,7 @@ static WebPInfoStatus ProcessImageChunk(const ChunkData* const chunk_data,
       LOG_ERROR("Multiple VP8/VP8L chunks detected.");
       return WEBP_INFO_PARSE_ERROR;
     }
-    if (chunk_data->id == CHUNK_VP8L &&
-        webp_info->chunk_counts[CHUNK_ALPHA]) {
+    if (chunk_data->id == CHUNK_VP8L && webp_info->chunk_counts[CHUNK_ALPHA]) {
       LOG_WARN("Both VP8L and ALPH chunks are detected.");
     }
     if (webp_info->chunk_counts[CHUNK_ANIM] ||
@@ -882,8 +870,9 @@ static WebPInfoStatus ProcessALPHChunk(const ChunkData* const chunk_data,
     webp_info->seen_alpha_subchunk = 1;
 
     if (webp_info->seen_image_subchunk) {
-      LOG_ERROR("ALPHA sub-chunk detected after VP8 sub-chunk "
-                "in an ANMF chunk.");
+      LOG_ERROR(
+          "ALPHA sub-chunk detected after VP8 sub-chunk "
+          "in an ANMF chunk.");
       return WEBP_INFO_PARSE_ERROR;
     }
   } else {
@@ -938,7 +927,7 @@ static WebPInfoStatus ProcessChunk(const ChunkData* const chunk_data,
   if (chunk_data->id == CHUNK_UNKNOWN) {
     char error_message[50];
     snprintf(error_message, 50, "Unknown chunk at offset %6d, length %6d",
-            (int)chunk_data->offset, (int)chunk_data->size);
+             (int)chunk_data->offset, (int)chunk_data->size);
     LOG_WARN(error_message);
   } else {
     if (!webp_info->quiet) {
@@ -949,9 +938,8 @@ static WebPInfoStatus ProcessChunk(const ChunkData* const chunk_data,
                ((fourcc << 8) & 0xff0000) | (fourcc << 24);
 #endif
       memcpy(tag, &fourcc, sizeof(tag));
-      printf("Chunk %c%c%c%c at offset %6d, length %6d\n",
-             tag[0], tag[1], tag[2], tag[3], (int)chunk_data->offset,
-             (int)chunk_data->size);
+      printf("Chunk %c%c%c%c at offset %6d, length %6d\n", tag[0], tag[1],
+             tag[2], tag[3], (int)chunk_data->offset, (int)chunk_data->size);
     }
   }
   switch (id) {
@@ -1048,7 +1036,7 @@ static WebPInfoStatus Validate(WebPInfo* const webp_info) {
       return WEBP_INFO_PARSE_ERROR;
     }
     if (animation && (!webp_info->chunk_counts[CHUNK_ANIM] ||
-        !webp_info->chunk_counts[CHUNK_ANMF])) {
+                      !webp_info->chunk_counts[CHUNK_ANMF])) {
       LOG_ERROR("No ANIM/ANMF chunk detected in animation file.");
       return WEBP_INFO_PARSE_ERROR;
     }
@@ -1060,14 +1048,14 @@ static void ShowSummary(const WebPInfo* const webp_info) {
   int i;
   printf("Summary:\n");
   printf("Number of frames: %d\n", webp_info->num_frames);
-  printf("Chunk type  :  VP8 VP8L VP8X ALPH ANIM ANMF(VP8 /VP8L/ALPH) ICCP "
+  printf(
+      "Chunk type  :  VP8 VP8L VP8X ALPH ANIM ANMF(VP8 /VP8L/ALPH) ICCP "
       "EXIF  XMP\n");
   printf("Chunk counts: ");
   for (i = 0; i < CHUNK_TYPES; ++i) {
     printf("%4d ", webp_info->chunk_counts[i]);
     if (i == CHUNK_ANMF) {
-      printf("%4d %4d %4d  ",
-             webp_info->anmf_subchunk_counts[0],
+      printf("%4d %4d %4d  ", webp_info->anmf_subchunk_counts[0],
              webp_info->anmf_subchunk_counts[1],
              webp_info->anmf_subchunk_counts[2]);
     }
@@ -1097,7 +1085,7 @@ static WebPInfoStatus AnalyzeWebP(WebPInfo* const webp_info,
   //  Final check.
   webp_info_status = Validate(webp_info);
 
- Error:
+Error:
   if (!webp_info->quiet) {
     if (webp_info_status == WEBP_INFO_OK) {
       printf("No error detected.\n");
@@ -1112,15 +1100,16 @@ static WebPInfoStatus AnalyzeWebP(WebPInfo* const webp_info,
 }
 
 static void Help(void) {
-  printf("Usage: webpinfo [options] in_files\n"
-         "Note: there could be multiple input files;\n"
-         "      options must come before input files.\n"
-         "Options:\n"
-         "  -version ........... Print version number and exit.\n"
-         "  -quiet ............. Do not show chunk parsing information.\n"
-         "  -diag .............. Show parsing error diagnosis.\n"
-         "  -summary ........... Show chunk stats summary.\n"
-         "  -bitstream_info .... Parse bitstream header.\n");
+  printf(
+      "Usage: webpinfo [options] in_files\n"
+      "Note: there could be multiple input files;\n"
+      "      options must come before input files.\n"
+      "Options:\n"
+      "  -version ........... Print version number and exit.\n"
+      "  -quiet ............. Do not show chunk parsing information.\n"
+      "  -diag .............. Show parsing error diagnosis.\n"
+      "  -summary ........... Show chunk stats summary.\n"
+      "  -bitstream_info .... Parse bitstream header.\n");
 }
 
 // Returns EXIT_SUCCESS on success, EXIT_FAILURE on failure.
@@ -1153,8 +1142,8 @@ int main(int argc, const char* argv[]) {
       parse_bitstream = 1;
     } else if (!strcmp(argv[c], "-version")) {
       const int version = WebPGetDecoderVersion();
-      printf("WebP Decoder version: %d.%d.%d\n",
-             (version >> 16) & 0xff, (version >> 8) & 0xff, version & 0xff);
+      printf("WebP Decoder version: %d.%d.%d\n", (version >> 16) & 0xff,
+             (version >> 8) & 0xff, version & 0xff);
       FREE_WARGV_AND_RETURN(EXIT_SUCCESS);
     } else {  // Assume the remaining are all input files.
       break;

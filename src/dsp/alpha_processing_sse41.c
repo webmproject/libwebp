@@ -12,8 +12,8 @@
 // Author: Skal (pascal.massimino@gmail.com)
 
 #include "src/dsp/cpu.h"
-#include "src/webp/types.h"
 #include "src/dsp/dsp.h"
+#include "src/webp/types.h"
 
 #if defined(WEBP_USE_SSE41)
 #include <emmintrin.h>
@@ -35,14 +35,14 @@ static int ExtractAlpha_SSE41(const uint8_t* WEBP_RESTRICT argb,
   // 'src[4 * width - 4]', because we don't know if alpha is the first or the
   // last byte of the quadruplet.
   const int limit = (width - 1) & ~15;
-  const __m128i kCstAlpha0 = _mm_set_epi8(-1, -1, -1, -1, -1, -1, -1, -1,
-                                          -1, -1, -1, -1, 12, 8, 4, 0);
-  const __m128i kCstAlpha1 = _mm_set_epi8(-1, -1, -1, -1, -1, -1, -1, -1,
-                                          12, 8, 4, 0, -1, -1, -1, -1);
-  const __m128i kCstAlpha2 = _mm_set_epi8(-1, -1, -1, -1, 12, 8, 4, 0,
-                                          -1, -1, -1, -1, -1, -1, -1, -1);
-  const __m128i kCstAlpha3 = _mm_set_epi8(12, 8, 4, 0, -1, -1, -1, -1,
-                                          -1, -1, -1, -1, -1, -1, -1, -1);
+  const __m128i kCstAlpha0 =
+      _mm_set_epi8(-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 12, 8, 4, 0);
+  const __m128i kCstAlpha1 =
+      _mm_set_epi8(-1, -1, -1, -1, -1, -1, -1, -1, 12, 8, 4, 0, -1, -1, -1, -1);
+  const __m128i kCstAlpha2 =
+      _mm_set_epi8(-1, -1, -1, -1, 12, 8, 4, 0, -1, -1, -1, -1, -1, -1, -1, -1);
+  const __m128i kCstAlpha3 =
+      _mm_set_epi8(12, 8, 4, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1);
   for (j = 0; j < height; ++j) {
     const __m128i* src = (const __m128i*)argb;
     for (i = 0; i < limit; i += 16) {

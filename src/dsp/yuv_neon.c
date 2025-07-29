@@ -23,8 +23,7 @@
 
 //-----------------------------------------------------------------------------
 
-static uint8x8_t ConvertRGBToYImpl_NEON(const uint8x8_t R,
-                                        const uint8x8_t G,
+static uint8x8_t ConvertRGBToYImpl_NEON(const uint8x8_t R, const uint8x8_t G,
                                         const uint8x8_t B) {
   const uint16x8_t r = vmovl_u8(R);
   const uint16x8_t g = vmovl_u8(G);
@@ -35,14 +34,14 @@ static uint8x8_t ConvertRGBToYImpl_NEON(const uint8x8_t R,
   const uint16x4_t g_hi = vget_high_u16(g);
   const uint16x4_t b_lo = vget_low_u16(b);
   const uint16x4_t b_hi = vget_high_u16(b);
-  const uint32x4_t tmp0_lo = vmull_n_u16(         r_lo, 16839u);
-  const uint32x4_t tmp0_hi = vmull_n_u16(         r_hi, 16839u);
+  const uint32x4_t tmp0_lo = vmull_n_u16(r_lo, 16839u);
+  const uint32x4_t tmp0_hi = vmull_n_u16(r_hi, 16839u);
   const uint32x4_t tmp1_lo = vmlal_n_u16(tmp0_lo, g_lo, 33059u);
   const uint32x4_t tmp1_hi = vmlal_n_u16(tmp0_hi, g_hi, 33059u);
   const uint32x4_t tmp2_lo = vmlal_n_u16(tmp1_lo, b_lo, 6420u);
   const uint32x4_t tmp2_hi = vmlal_n_u16(tmp1_hi, b_hi, 6420u);
-  const uint16x8_t Y1 = vcombine_u16(vrshrn_n_u32(tmp2_lo, 16),
-                                     vrshrn_n_u32(tmp2_hi, 16));
+  const uint16x8_t Y1 =
+      vcombine_u16(vrshrn_n_u32(tmp2_lo, 16), vrshrn_n_u32(tmp2_hi, 16));
   const uint16x8_t Y2 = vaddq_u16(Y1, vdupq_n_u16(16));
   return vqmovn_u16(Y2);
 }
@@ -102,10 +101,10 @@ static void ConvertARGBToY_NEON(const uint32_t* WEBP_RESTRICT argb,
         ConvertRGBToYImpl_NEON(RGB.val[2], RGB.val[1], RGB.val[0]);
     vst1_u8(y + i, Y);
   }
-  for (; i < width; ++i) {   // left-over
+  for (; i < width; ++i) {  // left-over
     const uint32_t p = argb[i];
-    y[i] = VP8RGBToY((p >> 16) & 0xff, (p >> 8) & 0xff, (p >>  0) & 0xff,
-                     YUV_HALF);
+    y[i] =
+        VP8RGBToY((p >> 16) & 0xff, (p >> 8) & 0xff, (p >> 0) & 0xff, YUV_HALF);
   }
 }
 
@@ -120,24 +119,26 @@ static void ConvertARGBToY_NEON(const uint32_t* WEBP_RESTRICT argb,
   const int16x4_t b_lo = vreinterpret_s16_u16(vget_low_u16(b));  \
   const int16x4_t b_hi = vreinterpret_s16_u16(vget_high_u16(b))
 
-#define MULTIPLY_16b(C0, C1, C2, CST, DST_s16) do {              \
-  const int32x4_t tmp0_lo = vmull_n_s16(         r_lo, C0);      \
-  const int32x4_t tmp0_hi = vmull_n_s16(         r_hi, C0);      \
-  const int32x4_t tmp1_lo = vmlal_n_s16(tmp0_lo, g_lo, C1);      \
-  const int32x4_t tmp1_hi = vmlal_n_s16(tmp0_hi, g_hi, C1);      \
-  const int32x4_t tmp2_lo = vmlal_n_s16(tmp1_lo, b_lo, C2);      \
-  const int32x4_t tmp2_hi = vmlal_n_s16(tmp1_hi, b_hi, C2);      \
-  const int16x8_t tmp3 = vcombine_s16(vshrn_n_s32(tmp2_lo, 16),  \
-                                      vshrn_n_s32(tmp2_hi, 16)); \
-  DST_s16 = vaddq_s16(tmp3, vdupq_n_s16(CST));                   \
-} while (0)
+#define MULTIPLY_16b(C0, C1, C2, CST, DST_s16)                            \
+  do {                                                                    \
+    const int32x4_t tmp0_lo = vmull_n_s16(r_lo, C0);                      \
+    const int32x4_t tmp0_hi = vmull_n_s16(r_hi, C0);                      \
+    const int32x4_t tmp1_lo = vmlal_n_s16(tmp0_lo, g_lo, C1);             \
+    const int32x4_t tmp1_hi = vmlal_n_s16(tmp0_hi, g_hi, C1);             \
+    const int32x4_t tmp2_lo = vmlal_n_s16(tmp1_lo, b_lo, C2);             \
+    const int32x4_t tmp2_hi = vmlal_n_s16(tmp1_hi, b_hi, C2);             \
+    const int16x8_t tmp3 =                                                \
+        vcombine_s16(vshrn_n_s32(tmp2_lo, 16), vshrn_n_s32(tmp2_hi, 16)); \
+    DST_s16 = vaddq_s16(tmp3, vdupq_n_s16(CST));                          \
+  } while (0)
 
 // This needs to be a macro, since (128 << SHIFT) needs to be an immediate.
-#define CONVERT_RGB_TO_UV(r, g, b, SHIFT, U_DST, V_DST) do {     \
-  MULTIPLY_16b_PREAMBLE(r, g, b);                                \
-  MULTIPLY_16b(-9719, -19081, 28800, 128 << SHIFT, U_DST);       \
-  MULTIPLY_16b(28800, -24116, -4684, 128 << SHIFT, V_DST);       \
-} while (0)
+#define CONVERT_RGB_TO_UV(r, g, b, SHIFT, U_DST, V_DST)      \
+  do {                                                       \
+    MULTIPLY_16b_PREAMBLE(r, g, b);                          \
+    MULTIPLY_16b(-9719, -19081, 28800, 128 << SHIFT, U_DST); \
+    MULTIPLY_16b(28800, -24116, -4684, 128 << SHIFT, V_DST); \
+  } while (0)
 
 static void ConvertRGBA32ToUV_NEON(const uint16_t* WEBP_RESTRICT rgb,
                                    uint8_t* WEBP_RESTRICT u,
@@ -159,8 +160,8 @@ static void ConvertRGBA32ToUV_NEON(const uint16_t* WEBP_RESTRICT rgb,
 
 static void ConvertARGBToUV_NEON(const uint32_t* WEBP_RESTRICT argb,
                                  uint8_t* WEBP_RESTRICT u,
-                                 uint8_t* WEBP_RESTRICT v,
-                                 int src_width, int do_store) {
+                                 uint8_t* WEBP_RESTRICT v, int src_width,
+                                 int do_store) {
   int i;
   for (i = 0; i + 16 <= src_width; i += 16, u += 8, v += 8) {
     const uint8x16x4_t RGB = vld4q_u8((const uint8_t*)&argb[i]);
@@ -187,7 +188,6 @@ static void ConvertARGBToUV_NEON(const uint32_t* WEBP_RESTRICT argb,
     WebPConvertARGBToUV_C(argb + i, u, v, src_width - i, do_store);
   }
 }
-
 
 //------------------------------------------------------------------------------
 

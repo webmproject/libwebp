@@ -17,109 +17,114 @@
 
 #include <assert.h>
 
-#include "src/utils/rescaler_utils.h"
 #include "src/dsp/msa_macro.h"
+#include "src/utils/rescaler_utils.h"
 
 #define ROUNDER (WEBP_RESCALER_ONE >> 1)
 #define MULT_FIX(x, y) (((uint64_t)(x) * (y) + ROUNDER) >> WEBP_RESCALER_RFIX)
 #define MULT_FIX_FLOOR(x, y) (((uint64_t)(x) * (y)) >> WEBP_RESCALER_RFIX)
 
-#define CALC_MULT_FIX_16(in0, in1, in2, in3, scale, shift, dst) do {  \
-  v4u32 tmp0, tmp1, tmp2, tmp3;                                       \
-  v16u8 t0, t1, t2, t3, t4, t5;                                       \
-  v2u64 out0, out1, out2, out3;                                       \
-  ILVRL_W2_UW(zero, in0, tmp0, tmp1);                                 \
-  ILVRL_W2_UW(zero, in1, tmp2, tmp3);                                 \
-  DOTP_UW2_UD(tmp0, tmp1, scale, scale, out0, out1);                  \
-  DOTP_UW2_UD(tmp2, tmp3, scale, scale, out2, out3);                  \
-  SRAR_D4_UD(out0, out1, out2, out3, shift);                          \
-  PCKEV_B2_UB(out1, out0, out3, out2, t0, t1);                        \
-  ILVRL_W2_UW(zero, in2, tmp0, tmp1);                                 \
-  ILVRL_W2_UW(zero, in3, tmp2, tmp3);                                 \
-  DOTP_UW2_UD(tmp0, tmp1, scale, scale, out0, out1);                  \
-  DOTP_UW2_UD(tmp2, tmp3, scale, scale, out2, out3);                  \
-  SRAR_D4_UD(out0, out1, out2, out3, shift);                          \
-  PCKEV_B2_UB(out1, out0, out3, out2, t2, t3);                        \
-  PCKEV_B2_UB(t1, t0, t3, t2, t4, t5);                                \
-  dst = (v16u8)__msa_pckev_b((v16i8)t5, (v16i8)t4);                   \
-} while (0)
+#define CALC_MULT_FIX_16(in0, in1, in2, in3, scale, shift, dst) \
+  do {                                                          \
+    v4u32 tmp0, tmp1, tmp2, tmp3;                               \
+    v16u8 t0, t1, t2, t3, t4, t5;                               \
+    v2u64 out0, out1, out2, out3;                               \
+    ILVRL_W2_UW(zero, in0, tmp0, tmp1);                         \
+    ILVRL_W2_UW(zero, in1, tmp2, tmp3);                         \
+    DOTP_UW2_UD(tmp0, tmp1, scale, scale, out0, out1);          \
+    DOTP_UW2_UD(tmp2, tmp3, scale, scale, out2, out3);          \
+    SRAR_D4_UD(out0, out1, out2, out3, shift);                  \
+    PCKEV_B2_UB(out1, out0, out3, out2, t0, t1);                \
+    ILVRL_W2_UW(zero, in2, tmp0, tmp1);                         \
+    ILVRL_W2_UW(zero, in3, tmp2, tmp3);                         \
+    DOTP_UW2_UD(tmp0, tmp1, scale, scale, out0, out1);          \
+    DOTP_UW2_UD(tmp2, tmp3, scale, scale, out2, out3);          \
+    SRAR_D4_UD(out0, out1, out2, out3, shift);                  \
+    PCKEV_B2_UB(out1, out0, out3, out2, t2, t3);                \
+    PCKEV_B2_UB(t1, t0, t3, t2, t4, t5);                        \
+    dst = (v16u8)__msa_pckev_b((v16i8)t5, (v16i8)t4);           \
+  } while (0)
 
-#define CALC_MULT_FIX_4(in0, scale, shift, dst) do {  \
-  v4u32 tmp0, tmp1;                                   \
-  v16i8 t0, t1;                                       \
-  v2u64 out0, out1;                                   \
-  ILVRL_W2_UW(zero, in0, tmp0, tmp1);                 \
-  DOTP_UW2_UD(tmp0, tmp1, scale, scale, out0, out1);  \
-  SRAR_D2_UD(out0, out1, shift);                      \
-  t0 = __msa_pckev_b((v16i8)out1, (v16i8)out0);       \
-  t1 = __msa_pckev_b(t0, t0);                         \
-  t0 = __msa_pckev_b(t1, t1);                         \
-  dst = __msa_copy_s_w((v4i32)t0, 0);                 \
-} while (0)
+#define CALC_MULT_FIX_4(in0, scale, shift, dst)        \
+  do {                                                 \
+    v4u32 tmp0, tmp1;                                  \
+    v16i8 t0, t1;                                      \
+    v2u64 out0, out1;                                  \
+    ILVRL_W2_UW(zero, in0, tmp0, tmp1);                \
+    DOTP_UW2_UD(tmp0, tmp1, scale, scale, out0, out1); \
+    SRAR_D2_UD(out0, out1, shift);                     \
+    t0 = __msa_pckev_b((v16i8)out1, (v16i8)out0);      \
+    t1 = __msa_pckev_b(t0, t0);                        \
+    t0 = __msa_pckev_b(t1, t1);                        \
+    dst = __msa_copy_s_w((v4i32)t0, 0);                \
+  } while (0)
 
-#define CALC_MULT_FIX1_16(in0, in1, in2, in3, fyscale, shift,  \
-                          dst0, dst1, dst2, dst3) do {         \
-  v4u32 tmp0, tmp1, tmp2, tmp3;                                \
-  v2u64 out0, out1, out2, out3;                                \
-  ILVRL_W2_UW(zero, in0, tmp0, tmp1);                          \
-  ILVRL_W2_UW(zero, in1, tmp2, tmp3);                          \
-  DOTP_UW2_UD(tmp0, tmp1, fyscale, fyscale, out0, out1);       \
-  DOTP_UW2_UD(tmp2, tmp3, fyscale, fyscale, out2, out3);       \
-  SRAR_D4_UD(out0, out1, out2, out3, shift);                   \
-  PCKEV_W2_UW(out1, out0, out3, out2, dst0, dst1);             \
-  ILVRL_W2_UW(zero, in2, tmp0, tmp1);                          \
-  ILVRL_W2_UW(zero, in3, tmp2, tmp3);                          \
-  DOTP_UW2_UD(tmp0, tmp1, fyscale, fyscale, out0, out1);       \
-  DOTP_UW2_UD(tmp2, tmp3, fyscale, fyscale, out2, out3);       \
-  SRAR_D4_UD(out0, out1, out2, out3, shift);                   \
-  PCKEV_W2_UW(out1, out0, out3, out2, dst2, dst3);             \
-} while (0)
+#define CALC_MULT_FIX1_16(in0, in1, in2, in3, fyscale, shift, dst0, dst1, \
+                          dst2, dst3)                                     \
+  do {                                                                    \
+    v4u32 tmp0, tmp1, tmp2, tmp3;                                         \
+    v2u64 out0, out1, out2, out3;                                         \
+    ILVRL_W2_UW(zero, in0, tmp0, tmp1);                                   \
+    ILVRL_W2_UW(zero, in1, tmp2, tmp3);                                   \
+    DOTP_UW2_UD(tmp0, tmp1, fyscale, fyscale, out0, out1);                \
+    DOTP_UW2_UD(tmp2, tmp3, fyscale, fyscale, out2, out3);                \
+    SRAR_D4_UD(out0, out1, out2, out3, shift);                            \
+    PCKEV_W2_UW(out1, out0, out3, out2, dst0, dst1);                      \
+    ILVRL_W2_UW(zero, in2, tmp0, tmp1);                                   \
+    ILVRL_W2_UW(zero, in3, tmp2, tmp3);                                   \
+    DOTP_UW2_UD(tmp0, tmp1, fyscale, fyscale, out0, out1);                \
+    DOTP_UW2_UD(tmp2, tmp3, fyscale, fyscale, out2, out3);                \
+    SRAR_D4_UD(out0, out1, out2, out3, shift);                            \
+    PCKEV_W2_UW(out1, out0, out3, out2, dst2, dst3);                      \
+  } while (0)
 
-#define CALC_MULT_FIX1_4(in0, scale, shift, dst) do {    \
-  v4u32 tmp0, tmp1;                                      \
-  v2u64 out0, out1;                                      \
-  ILVRL_W2_UW(zero, in0, tmp0, tmp1);                    \
-  DOTP_UW2_UD(tmp0, tmp1, scale, scale, out0, out1);     \
-  SRAR_D2_UD(out0, out1, shift);                         \
-  dst = (v4u32)__msa_pckev_w((v4i32)out1, (v4i32)out0);  \
-} while (0)
+#define CALC_MULT_FIX1_4(in0, scale, shift, dst)          \
+  do {                                                    \
+    v4u32 tmp0, tmp1;                                     \
+    v2u64 out0, out1;                                     \
+    ILVRL_W2_UW(zero, in0, tmp0, tmp1);                   \
+    DOTP_UW2_UD(tmp0, tmp1, scale, scale, out0, out1);    \
+    SRAR_D2_UD(out0, out1, shift);                        \
+    dst = (v4u32)__msa_pckev_w((v4i32)out1, (v4i32)out0); \
+  } while (0)
 
-#define CALC_MULT_FIX2_16(in0, in1, in2, in3, mult, scale, shift,  \
-                          dst0, dst1) do {                         \
-  v4u32 tmp0, tmp1, tmp2, tmp3;                                    \
-  v2u64 out0, out1, out2, out3;                                    \
-  ILVRL_W2_UW(in0, in2, tmp0, tmp1);                               \
-  ILVRL_W2_UW(in1, in3, tmp2, tmp3);                               \
-  DOTP_UW2_UD(tmp0, tmp1, mult, mult, out0, out1);                 \
-  DOTP_UW2_UD(tmp2, tmp3, mult, mult, out2, out3);                 \
-  SRAR_D4_UD(out0, out1, out2, out3, shift);                       \
-  DOTP_UW2_UD(out0, out1, scale, scale, out0, out1);               \
-  DOTP_UW2_UD(out2, out3, scale, scale, out2, out3);               \
-  SRAR_D4_UD(out0, out1, out2, out3, shift);                       \
-  PCKEV_B2_UB(out1, out0, out3, out2, dst0, dst1);                 \
-} while (0)
+#define CALC_MULT_FIX2_16(in0, in1, in2, in3, mult, scale, shift, dst0, dst1) \
+  do {                                                                        \
+    v4u32 tmp0, tmp1, tmp2, tmp3;                                             \
+    v2u64 out0, out1, out2, out3;                                             \
+    ILVRL_W2_UW(in0, in2, tmp0, tmp1);                                        \
+    ILVRL_W2_UW(in1, in3, tmp2, tmp3);                                        \
+    DOTP_UW2_UD(tmp0, tmp1, mult, mult, out0, out1);                          \
+    DOTP_UW2_UD(tmp2, tmp3, mult, mult, out2, out3);                          \
+    SRAR_D4_UD(out0, out1, out2, out3, shift);                                \
+    DOTP_UW2_UD(out0, out1, scale, scale, out0, out1);                        \
+    DOTP_UW2_UD(out2, out3, scale, scale, out2, out3);                        \
+    SRAR_D4_UD(out0, out1, out2, out3, shift);                                \
+    PCKEV_B2_UB(out1, out0, out3, out2, dst0, dst1);                          \
+  } while (0)
 
-#define CALC_MULT_FIX2_4(in0, in1, mult, scale, shift, dst) do {  \
-  v4u32 tmp0, tmp1;                                               \
-  v2u64 out0, out1;                                               \
-  v16i8 t0, t1;                                                   \
-  ILVRL_W2_UW(in0, in1, tmp0, tmp1);                              \
-  DOTP_UW2_UD(tmp0, tmp1, mult, mult, out0, out1);                \
-  SRAR_D2_UD(out0, out1, shift);                                  \
-  DOTP_UW2_UD(out0, out1, scale, scale, out0, out1);              \
-  SRAR_D2_UD(out0, out1, shift);                                  \
-  t0 = __msa_pckev_b((v16i8)out1, (v16i8)out0);                   \
-  t1 = __msa_pckev_b(t0, t0);                                     \
-  t0 = __msa_pckev_b(t1, t1);                                     \
-  dst = __msa_copy_s_w((v4i32)t0, 0);                             \
-} while (0)
+#define CALC_MULT_FIX2_4(in0, in1, mult, scale, shift, dst) \
+  do {                                                      \
+    v4u32 tmp0, tmp1;                                       \
+    v2u64 out0, out1;                                       \
+    v16i8 t0, t1;                                           \
+    ILVRL_W2_UW(in0, in1, tmp0, tmp1);                      \
+    DOTP_UW2_UD(tmp0, tmp1, mult, mult, out0, out1);        \
+    SRAR_D2_UD(out0, out1, shift);                          \
+    DOTP_UW2_UD(out0, out1, scale, scale, out0, out1);      \
+    SRAR_D2_UD(out0, out1, shift);                          \
+    t0 = __msa_pckev_b((v16i8)out1, (v16i8)out0);           \
+    t1 = __msa_pckev_b(t0, t0);                             \
+    t0 = __msa_pckev_b(t1, t1);                             \
+    dst = __msa_copy_s_w((v4i32)t0, 0);                     \
+  } while (0)
 
 static WEBP_INLINE void ExportRowExpand_0(
     const uint32_t* WEBP_RESTRICT frow, uint8_t* WEBP_RESTRICT dst, int length,
     WebPRescaler* WEBP_RESTRICT const wrk) {
   const v4u32 scale = (v4u32)__msa_fill_w(wrk->fy_scale);
   const v4u32 shift = (v4u32)__msa_fill_w(WEBP_RESCALER_RFIX);
-  const v4i32 zero = { 0 };
+  const v4i32 zero = {0};
 
   while (length >= 16) {
     v4u32 src0, src1, src2, src3;
@@ -128,8 +133,8 @@ static WEBP_INLINE void ExportRowExpand_0(
     CALC_MULT_FIX_16(src0, src1, src2, src3, scale, shift, out);
     ST_UB(out, dst);
     length -= 16;
-    frow   += 16;
-    dst    += 16;
+    frow += 16;
+    dst += 16;
   }
   if (length > 0) {
     int x_out;
@@ -142,8 +147,8 @@ static WEBP_INLINE void ExportRowExpand_0(
       CALC_MULT_FIX_4(src2, scale, shift, val2_m);
       SW3(val0_m, val1_m, val2_m, dst, 4);
       length -= 12;
-      frow   += 12;
-      dst    += 12;
+      frow += 12;
+      dst += 12;
     } else if (length >= 8) {
       uint32_t val0_m, val1_m;
       v4u32 src0, src1;
@@ -152,16 +157,16 @@ static WEBP_INLINE void ExportRowExpand_0(
       CALC_MULT_FIX_4(src1, scale, shift, val1_m);
       SW2(val0_m, val1_m, dst, 4);
       length -= 8;
-      frow   += 8;
-      dst    += 8;
+      frow += 8;
+      dst += 8;
     } else if (length >= 4) {
       uint32_t val0_m;
       const v4u32 src0 = LD_UW(frow);
       CALC_MULT_FIX_4(src0, scale, shift, val0_m);
       SW(val0_m, dst);
       length -= 4;
-      frow   += 4;
-      dst    += 4;
+      frow += 4;
+      dst += 4;
     }
     for (x_out = 0; x_out < length; ++x_out) {
       const uint32_t J = frow[x_out];
@@ -193,9 +198,9 @@ static WEBP_INLINE void ExportRowExpand_1(
     PCKEV_B2_UB(t1, t0, t3, t2, t4, t5);
     t0 = (v16u8)__msa_pckev_b((v16i8)t5, (v16i8)t4);
     ST_UB(t0, dst);
-    frow   += 16;
-    irow   += 16;
-    dst    += 16;
+    frow += 16;
+    irow += 16;
+    dst += 16;
     length -= 16;
   }
   if (length > 0) {
@@ -209,9 +214,9 @@ static WEBP_INLINE void ExportRowExpand_1(
       CALC_MULT_FIX2_4(frow1, irow1, AB, scale, shift, val1_m);
       CALC_MULT_FIX2_4(frow2, irow2, AB, scale, shift, val2_m);
       SW3(val0_m, val1_m, val2_m, dst, 4);
-      frow   += 12;
-      irow   += 12;
-      dst    += 12;
+      frow += 12;
+      irow += 12;
+      dst += 12;
       length -= 12;
     } else if (length >= 8) {
       uint32_t val0_m, val1_m;
@@ -221,9 +226,9 @@ static WEBP_INLINE void ExportRowExpand_1(
       CALC_MULT_FIX2_4(frow0, irow0, AB, scale, shift, val0_m);
       CALC_MULT_FIX2_4(frow1, irow1, AB, scale, shift, val1_m);
       SW2(val0_m, val1_m, dst, 4);
-      frow   += 4;
-      irow   += 4;
-      dst    += 4;
+      frow += 4;
+      irow += 4;
+      dst += 4;
       length -= 4;
     } else if (length >= 4) {
       uint32_t val0_m;
@@ -231,14 +236,13 @@ static WEBP_INLINE void ExportRowExpand_1(
       const v4u32 irow0 = LD_UW(irow + 0);
       CALC_MULT_FIX2_4(frow0, irow0, AB, scale, shift, val0_m);
       SW(val0_m, dst);
-      frow   += 4;
-      irow   += 4;
-      dst    += 4;
+      frow += 4;
+      irow += 4;
+      dst += 4;
       length -= 4;
     }
     for (x_out = 0; x_out < length; ++x_out) {
-      const uint64_t I = (uint64_t)A * frow[x_out]
-                       + (uint64_t)B * irow[x_out];
+      const uint64_t I = (uint64_t)A * frow[x_out] + (uint64_t)B * irow[x_out];
       const uint32_t J = (uint32_t)((I + ROUNDER) >> WEBP_RESCALER_RFIX);
       const int v = (int)MULT_FIX(J, wrk->fy_scale);
       dst[x_out] = (v > 255) ? 255u : (uint8_t)v;
@@ -262,7 +266,7 @@ static void RescalerExportRowExpand_MIPSdspR2(WebPRescaler* const wrk) {
   }
 }
 
-#if 0  // disabled for now. TODO(skal): make match the C-code
+#if 0   // disabled for now. TODO(skal): make match the C-code
 static WEBP_INLINE void ExportRowShrink_0(
     const uint32_t* WEBP_RESTRICT frow, uint32_t* WEBP_RESTRICT irow,
     uint8_t* WEBP_RESTRICT dst, int length, const uint32_t yscale,
@@ -434,11 +438,11 @@ extern void WebPRescalerDspInitMSA(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void WebPRescalerDspInitMSA(void) {
   WebPRescalerExportRowExpand = RescalerExportRowExpand_MIPSdspR2;
-//  WebPRescalerExportRowShrink = RescalerExportRowShrink_MIPSdspR2;
+  //  WebPRescalerExportRowShrink = RescalerExportRowShrink_MIPSdspR2;
 }
 
-#else     // !WEBP_USE_MSA
+#else  // !WEBP_USE_MSA
 
 WEBP_DSP_INIT_STUB(WebPRescalerDspInitMSA)
 
-#endif    // WEBP_USE_MSA
+#endif  // WEBP_USE_MSA

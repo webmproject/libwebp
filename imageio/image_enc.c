@@ -17,7 +17,7 @@
 
 #ifdef WEBP_HAVE_PNG
 #include <png.h>
-#include <setjmp.h>   // note: this must be included *after* png.h
+#include <setjmp.h>  // note: this must be included *after* png.h
 #endif
 
 #ifdef HAVE_WINCODEC_H
@@ -26,13 +26,14 @@
 #endif
 #define CINTERFACE
 #define COBJMACROS
-#define _WIN32_IE 0x500  // Workaround bug in shlwapi.h when compiling C++
-                         // code with COBJMACROS.
+#define _WIN32_IE \
+  0x500            // Workaround bug in shlwapi.h when compiling C++
+                   // code with COBJMACROS.
 #include <ole2.h>  // CreateStreamOnHGlobal()
 #include <shlwapi.h>
 #include <tchar.h>
-#include <windows.h>
 #include <wincodec.h>
+#include <windows.h>
 #endif
 
 #include "../examples/unicode.h"
@@ -45,12 +46,12 @@
 
 #ifdef HAVE_WINCODEC_H
 
-#define IFS(fn)                                                     \
-  do {                                                              \
-    if (SUCCEEDED(hr)) {                                            \
-      hr = (fn);                                                    \
-      if (FAILED(hr)) fprintf(stderr, #fn " failed %08lx\n", hr);   \
-    }                                                               \
+#define IFS(fn)                                                   \
+  do {                                                            \
+    if (SUCCEEDED(hr)) {                                          \
+      hr = (fn);                                                  \
+      if (FAILED(hr)) fprintf(stderr, #fn " failed %08lx\n", hr); \
+    }                                                             \
   } while (0)
 
 #ifdef __cplusplus
@@ -59,8 +60,8 @@
 #define MAKE_REFGUID(x) &(x)
 #endif
 
-static HRESULT CreateOutputStream(const char* out_file_name,
-                                  int write_to_mem, IStream** stream) {
+static HRESULT CreateOutputStream(const char* out_file_name, int write_to_mem,
+                                  IStream** stream) {
   HRESULT hr = S_OK;
   if (write_to_mem) {
     // Output to a memory buffer. This is freed when 'stream' is released.
@@ -77,24 +78,22 @@ static HRESULT CreateOutputStream(const char* out_file_name,
 }
 
 static HRESULT WriteUsingWIC(const char* out_file_name, int use_stdout,
-                             REFGUID container_guid,
-                             uint8_t* rgb, int stride,
+                             REFGUID container_guid, uint8_t* rgb, int stride,
                              uint32_t width, uint32_t height, int has_alpha) {
   HRESULT hr = S_OK;
   IWICImagingFactory* factory = NULL;
   IWICBitmapFrameEncode* frame = NULL;
   IWICBitmapEncoder* encoder = NULL;
   IStream* stream = NULL;
-  WICPixelFormatGUID pixel_format = has_alpha ? GUID_WICPixelFormat32bppBGRA
-                                              : GUID_WICPixelFormat24bppBGR;
+  WICPixelFormatGUID pixel_format =
+      has_alpha ? GUID_WICPixelFormat32bppBGRA : GUID_WICPixelFormat24bppBGR;
 
   if (out_file_name == NULL || rgb == NULL) return E_INVALIDARG;
 
   IFS(CoInitialize(NULL));
-  IFS(CoCreateInstance(MAKE_REFGUID(CLSID_WICImagingFactory), NULL,
-                       CLSCTX_INPROC_SERVER,
-                       MAKE_REFGUID(IID_IWICImagingFactory),
-                       (LPVOID*)&factory));
+  IFS(CoCreateInstance(
+      MAKE_REFGUID(CLSID_WICImagingFactory), NULL, CLSCTX_INPROC_SERVER,
+      MAKE_REFGUID(IID_IWICImagingFactory), (LPVOID*)&factory));
   if (hr == REGDB_E_CLASSNOTREG) {
     fprintf(stderr,
             "Couldn't access Windows Imaging Component (are you running "
@@ -104,14 +103,13 @@ static HRESULT WriteUsingWIC(const char* out_file_name, int use_stdout,
   IFS(CreateOutputStream(out_file_name, use_stdout, &stream));
   IFS(IWICImagingFactory_CreateEncoder(factory, container_guid, NULL,
                                        &encoder));
-  IFS(IWICBitmapEncoder_Initialize(encoder, stream,
-                                   WICBitmapEncoderNoCache));
+  IFS(IWICBitmapEncoder_Initialize(encoder, stream, WICBitmapEncoderNoCache));
   IFS(IWICBitmapEncoder_CreateNewFrame(encoder, &frame, NULL));
   IFS(IWICBitmapFrameEncode_Initialize(frame, NULL));
   IFS(IWICBitmapFrameEncode_SetSize(frame, width, height));
   IFS(IWICBitmapFrameEncode_SetPixelFormat(frame, &pixel_format));
-  IFS(IWICBitmapFrameEncode_WritePixels(frame, height, stride,
-                                        height * stride, rgb));
+  IFS(IWICBitmapFrameEncode_WritePixels(frame, height, stride, height * stride,
+                                        rgb));
   IFS(IWICBitmapFrameEncode_Commit(frame));
   IFS(IWICBitmapEncoder_Commit(encoder));
 
@@ -153,11 +151,11 @@ int WebPWritePNG(const char* out_file_name, int use_stdout,
   const int has_alpha = WebPIsAlphaMode(buffer->colorspace);
 
   return SUCCEEDED(WriteUsingWIC(out_file_name, use_stdout,
-                                 MAKE_REFGUID(GUID_ContainerFormatPng),
-                                 rgb, stride, width, height, has_alpha));
+                                 MAKE_REFGUID(GUID_ContainerFormatPng), rgb,
+                                 stride, width, height, has_alpha));
 }
 
-#elif defined(WEBP_HAVE_PNG)    // !HAVE_WINCODEC_H
+#elif defined(WEBP_HAVE_PNG)  // !HAVE_WINCODEC_H
 static void PNGAPI PNGErrorFunction(png_structp png, png_const_charp unused) {
   (void)unused;  // remove variable-unused warning
   longjmp(png_jmpbuf(png), 1);
@@ -169,8 +167,8 @@ int WebPWritePNG(FILE* out_file, const WebPDecBuffer* const buffer) {
 
   if (out_file == NULL || buffer == NULL) return 0;
 
-  png = png_create_write_struct(PNG_LIBPNG_VER_STRING,
-                                NULL, PNGErrorFunction, NULL);
+  png = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, PNGErrorFunction,
+                                NULL);
   if (png == NULL) {
     return 0;
   }
@@ -206,11 +204,12 @@ int WebPWritePNG(FILE* out_file, const WebPDecBuffer* const buffer) {
   png_destroy_write_struct((png_structpp)&png, (png_infopp)&info);
   return 1;
 }
-#else    // !HAVE_WINCODEC_H && !WEBP_HAVE_PNG
+#else                         // !HAVE_WINCODEC_H && !WEBP_HAVE_PNG
 int WebPWritePNG(FILE* fout, const WebPDecBuffer* const buffer) {
   if (fout == NULL || buffer == NULL) return 0;
 
-  fprintf(stderr, "PNG support not compiled. Please install the libpng "
+  fprintf(stderr,
+          "PNG support not compiled. Please install the libpng "
           "development package before building.\n");
   fprintf(stderr, "You can run with -ppm flag to decode in PPM format.\n");
   return 0;
@@ -235,8 +234,10 @@ static int WritePPMPAM(FILE* fout, const WebPDecBuffer* const buffer,
     if (row == NULL) return 0;
 
     if (alpha) {
-      fprintf(fout, "P7\nWIDTH %u\nHEIGHT %u\nDEPTH 4\nMAXVAL 255\n"
-                    "TUPLTYPE RGB_ALPHA\nENDHDR\n", width, height);
+      fprintf(fout,
+              "P7\nWIDTH %u\nHEIGHT %u\nDEPTH 4\nMAXVAL 255\n"
+              "TUPLTYPE RGB_ALPHA\nENDHDR\n",
+              width, height);
     } else {
       fprintf(fout, "P6\n%u %u\n255\n", width, height);
     }
@@ -297,7 +298,7 @@ static void PutLE16(uint8_t* const dst, uint32_t value) {
 }
 
 static void PutLE32(uint8_t* const dst, uint32_t value) {
-  PutLE16(dst + 0, (value >>  0) & 0xffff);
+  PutLE16(dst + 0, (value >> 0) & 0xffff);
   PutLE16(dst + 2, (value >> 16) & 0xffff);
 }
 
@@ -310,7 +311,7 @@ int WebPWriteBMP(FILE* fout, const WebPDecBuffer* const buffer) {
   int stride;
   uint32_t y;
   uint32_t bytes_per_px, line_size, image_size, bmp_stride, total_size;
-  uint8_t bmp_header[BMP_HEADER_SIZE + BMP_HEADER_ALPHA_EXTRA_SIZE] = { 0 };
+  uint8_t bmp_header[BMP_HEADER_SIZE + BMP_HEADER_ALPHA_EXTRA_SIZE] = {0};
 
   if (fout == NULL || buffer == NULL) return 0;
 
@@ -329,27 +330,27 @@ int WebPWriteBMP(FILE* fout, const WebPDecBuffer* const buffer) {
   if (rgba == NULL) return 0;
 
   // bitmap file header
-  PutLE16(bmp_header + 0, 0x4d42);                // signature 'BM'
-  PutLE32(bmp_header + 2, total_size);            // size including header
-  PutLE32(bmp_header + 6, 0);                     // reserved
-  PutLE32(bmp_header + 10, header_size);          // offset to pixel array
+  PutLE16(bmp_header + 0, 0x4d42);        // signature 'BM'
+  PutLE32(bmp_header + 2, total_size);    // size including header
+  PutLE32(bmp_header + 6, 0);             // reserved
+  PutLE32(bmp_header + 10, header_size);  // offset to pixel array
   // bitmap info header
-  PutLE32(bmp_header + 14, header_size - 14);     // DIB header size
-  PutLE32(bmp_header + 18, width);                // dimensions
-  PutLE32(bmp_header + 22, height);               // no vertical flip
-  PutLE16(bmp_header + 26, 1);                    // number of planes
-  PutLE16(bmp_header + 28, bytes_per_px * 8);     // bits per pixel
-  PutLE32(bmp_header + 30, has_alpha ? 3 : 0);    // BI_BITFIELDS or BI_RGB
+  PutLE32(bmp_header + 14, header_size - 14);   // DIB header size
+  PutLE32(bmp_header + 18, width);              // dimensions
+  PutLE32(bmp_header + 22, height);             // no vertical flip
+  PutLE16(bmp_header + 26, 1);                  // number of planes
+  PutLE16(bmp_header + 28, bytes_per_px * 8);   // bits per pixel
+  PutLE32(bmp_header + 30, has_alpha ? 3 : 0);  // BI_BITFIELDS or BI_RGB
   PutLE32(bmp_header + 34, image_size);
-  PutLE32(bmp_header + 38, 2400);                 // x pixels/meter
-  PutLE32(bmp_header + 42, 2400);                 // y pixels/meter
-  PutLE32(bmp_header + 46, 0);                    // number of palette colors
-  PutLE32(bmp_header + 50, 0);                    // important color count
-  if (has_alpha) {  // BITMAPV3INFOHEADER complement
-    PutLE32(bmp_header + 54, 0x00ff0000);         // red mask
-    PutLE32(bmp_header + 58, 0x0000ff00);         // green mask
-    PutLE32(bmp_header + 62, 0x000000ff);         // blue mask
-    PutLE32(bmp_header + 66, 0xff000000);         // alpha mask
+  PutLE32(bmp_header + 38, 2400);          // x pixels/meter
+  PutLE32(bmp_header + 42, 2400);          // y pixels/meter
+  PutLE32(bmp_header + 46, 0);             // number of palette colors
+  PutLE32(bmp_header + 50, 0);             // important color count
+  if (has_alpha) {                         // BITMAPV3INFOHEADER complement
+    PutLE32(bmp_header + 54, 0x00ff0000);  // red mask
+    PutLE32(bmp_header + 58, 0x0000ff00);  // green mask
+    PutLE32(bmp_header + 62, 0x000000ff);  // blue mask
+    PutLE32(bmp_header + 66, 0xff000000);  // alpha mask
   }
 
   // TODO(skal): color profile
@@ -367,7 +368,7 @@ int WebPWriteBMP(FILE* fout, const WebPDecBuffer* const buffer) {
     }
     // write padding zeroes
     if (bmp_stride != line_size) {
-      const uint8_t zeroes[3] = { 0 };
+      const uint8_t zeroes[3] = {0};
       if (fwrite(zeroes, bmp_stride - line_size, 1, fout) != 1) {
         return 0;
       }
@@ -397,35 +398,35 @@ int WebPWriteTIFF(FILE* fout, const WebPDecBuffer* const buffer) {
   // For non-alpha case, we omit tag 0x152 (ExtraSamples).
   const uint8_t num_ifd_entries = 0;
   uint8_t tiff_header[TIFF_HEADER_SIZE] = {
-    0x49, 0x49, 0x2a, 0x00,   // little endian signature
-    8, 0, 0, 0,               // offset to the unique IFD that follows
-    // IFD (offset = 8). Entries must be written in increasing tag order.
-    num_ifd_entries, 0,       // Number of entries in the IFD (12 bytes each).
-    0x00, 0x01, 3, 0, 1, 0, 0, 0, 0, 0, 0, 0,    //  10: Width  (TBD)
-    0x01, 0x01, 3, 0, 1, 0, 0, 0, 0, 0, 0, 0,    //  22: Height (TBD)
-    0x02, 0x01, 3, 0, bytes_per_px, 0, 0, 0,     //  34: BitsPerSample: 8888
-        EXTRA_DATA_OFFSET + 0, 0, 0, 0,
-    0x03, 0x01, 3, 0, 1, 0, 0, 0, 1, 0, 0, 0,    //  46: Compression: none
-    0x06, 0x01, 3, 0, 1, 0, 0, 0, 2, 0, 0, 0,    //  58: Photometric: RGB
-    0x11, 0x01, 4, 0, 1, 0, 0, 0,                //  70: Strips offset:
-        TIFF_HEADER_SIZE, 0, 0, 0,               //      data follows header
-    0x12, 0x01, 3, 0, 1, 0, 0, 0, 1, 0, 0, 0,    //  82: Orientation: topleft
-    0x15, 0x01, 3, 0, 1, 0, 0, 0,                //  94: SamplesPerPixels
-        bytes_per_px, 0, 0, 0,
-    0x16, 0x01, 3, 0, 1, 0, 0, 0, 0, 0, 0, 0,    // 106: Rows per strip (TBD)
-    0x17, 0x01, 4, 0, 1, 0, 0, 0, 0, 0, 0, 0,    // 118: StripByteCount (TBD)
-    0x1a, 0x01, 5, 0, 1, 0, 0, 0,                // 130: X-resolution
-        EXTRA_DATA_OFFSET + 8, 0, 0, 0,
-    0x1b, 0x01, 5, 0, 1, 0, 0, 0,                // 142: Y-resolution
-        EXTRA_DATA_OFFSET + 8, 0, 0, 0,
-    0x1c, 0x01, 3, 0, 1, 0, 0, 0, 1, 0, 0, 0,    // 154: PlanarConfiguration
-    0x28, 0x01, 3, 0, 1, 0, 0, 0, 2, 0, 0, 0,    // 166: ResolutionUnit (inch)
-    0x52, 0x01, 3, 0, 1, 0, 0, 0,
-        assoc_alpha, 0, 0, 0,                    // 178: ExtraSamples: rgbA/RGBA
-    0, 0, 0, 0,                                  // 190: IFD terminator
-    // EXTRA_DATA_OFFSET:
-    8, 0, 8, 0, 8, 0, 8, 0,      // BitsPerSample
-    72, 0, 0, 0, 1, 0, 0, 0      // 72 pixels/inch, for X/Y-resolution
+      0x49, 0x49, 0x2a, 0x00,  // little endian signature
+      8, 0, 0, 0,              // offset to the unique IFD that follows
+      // IFD (offset = 8). Entries must be written in increasing tag order.
+      num_ifd_entries, 0,  // Number of entries in the IFD (12 bytes each).
+      0x00, 0x01, 3, 0, 1, 0, 0, 0, 0, 0, 0, 0,  //  10: Width  (TBD)
+      0x01, 0x01, 3, 0, 1, 0, 0, 0, 0, 0, 0, 0,  //  22: Height (TBD)
+      0x02, 0x01, 3, 0, bytes_per_px, 0, 0, 0,   //  34: BitsPerSample: 8888
+      EXTRA_DATA_OFFSET + 0, 0, 0, 0, 0x03, 0x01, 3, 0, 1, 0, 0, 0, 1, 0, 0,
+      0,                                         //  46: Compression: none
+      0x06, 0x01, 3, 0, 1, 0, 0, 0, 2, 0, 0, 0,  //  58: Photometric: RGB
+      0x11, 0x01, 4, 0, 1, 0, 0, 0,              //  70: Strips offset:
+      TIFF_HEADER_SIZE, 0, 0, 0,                 //      data follows header
+      0x12, 0x01, 3, 0, 1, 0, 0, 0, 1, 0, 0, 0,  //  82: Orientation: topleft
+      0x15, 0x01, 3, 0, 1, 0, 0, 0,              //  94: SamplesPerPixels
+      bytes_per_px, 0, 0, 0, 0x16, 0x01, 3, 0, 1, 0, 0, 0, 0, 0, 0,
+      0,                                         // 106: Rows per strip (TBD)
+      0x17, 0x01, 4, 0, 1, 0, 0, 0, 0, 0, 0, 0,  // 118: StripByteCount (TBD)
+      0x1a, 0x01, 5, 0, 1, 0, 0, 0,              // 130: X-resolution
+      EXTRA_DATA_OFFSET + 8, 0, 0, 0, 0x1b, 0x01, 5, 0, 1, 0, 0,
+      0,  // 142: Y-resolution
+      EXTRA_DATA_OFFSET + 8, 0, 0, 0, 0x1c, 0x01, 3, 0, 1, 0, 0, 0, 1, 0, 0,
+      0,                                         // 154: PlanarConfiguration
+      0x28, 0x01, 3, 0, 1, 0, 0, 0, 2, 0, 0, 0,  // 166: ResolutionUnit (inch)
+      0x52, 0x01, 3, 0, 1, 0, 0, 0, assoc_alpha, 0, 0,
+      0,           // 178: ExtraSamples: rgbA/RGBA
+      0, 0, 0, 0,  // 190: IFD terminator
+      // EXTRA_DATA_OFFSET:
+      8, 0, 8, 0, 8, 0, 8, 0,  // BitsPerSample
+      72, 0, 0, 0, 1, 0, 0, 0  // 72 pixels/inch, for X/Y-resolution
   };
   uint32_t y;
 
@@ -517,11 +518,11 @@ int WebPWritePGM(FILE* fout, const WebPDecBuffer* const buffer) {
 
     if (src_y == NULL || src_u == NULL || src_v == NULL) return 0;
 
-    fprintf(fout, "P5\n%d %d\n255\n",
-            (width + 1) & ~1, height + uv_height + a_height);
+    fprintf(fout, "P5\n%d %d\n255\n", (width + 1) & ~1,
+            height + uv_height + a_height);
     for (y = 0; ok && y < height; ++y) {
       ok &= (fwrite(src_y, width, 1, fout) == 1);
-      if (width & 1) fputc(0, fout);    // padding byte
+      if (width & 1) fputc(0, fout);  // padding byte
       src_y += yuv->y_stride;
     }
     for (y = 0; ok && y < uv_height; ++y) {
@@ -532,7 +533,7 @@ int WebPWritePGM(FILE* fout, const WebPDecBuffer* const buffer) {
     }
     for (y = 0; ok && y < a_height; ++y) {
       ok &= (fwrite(src_a, width, 1, fout) == 1);
-      if (width & 1) fputc(0, fout);    // padding byte
+      if (width & 1) fputc(0, fout);  // padding byte
       src_a += yuv->a_stride;
     }
     return ok;
@@ -609,8 +610,7 @@ int WebPSaveImage(const WebPDecBuffer* const buffer,
     }
   }
 
-  if (format == PNG ||
-      format == RGBA || format == BGRA || format == ARGB ||
+  if (format == PNG || format == RGBA || format == BGRA || format == ARGB ||
       format == rgbA || format == bgrA || format == Argb) {
 #ifdef HAVE_WINCODEC_H
     ok &= WebPWritePNG(out_file_name, use_stdout, buffer);

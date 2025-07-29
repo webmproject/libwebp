@@ -19,15 +19,15 @@
 #include <string.h>
 
 #include "src/dsp/lossless_common.h"
-#include "src/webp/types.h"
 #include "src/enc/vp8li_enc.h"
 #include "src/utils/utils.h"
 #include "src/webp/encode.h"
+#include "src/webp/types.h"
 
 #if (WEBP_NEAR_LOSSLESS == 1)
 
 #define MIN_DIM_FOR_NEAR_LOSSLESS 64
-#define MAX_LIMIT_BITS             5
+#define MAX_LIMIT_BITS 5
 
 // Quantizes the value up or down to a multiple of 1<<bits (or to 255),
 // choosing the closer one, resolving ties using bankers' rounding.
@@ -41,11 +41,10 @@ static uint32_t FindClosestDiscretized(uint32_t a, int bits) {
 
 // Applies FindClosestDiscretized to all channels of pixel.
 static uint32_t ClosestDiscretizedArgb(uint32_t a, int bits) {
-  return
-      (FindClosestDiscretized(a >> 24, bits) << 24) |
-      (FindClosestDiscretized((a >> 16) & 0xff, bits) << 16) |
-      (FindClosestDiscretized((a >> 8) & 0xff, bits) << 8) |
-      (FindClosestDiscretized(a & 0xff, bits));
+  return (FindClosestDiscretized(a >> 24, bits) << 24) |
+         (FindClosestDiscretized((a >> 16) & 0xff, bits) << 16) |
+         (FindClosestDiscretized((a >> 8) & 0xff, bits) << 8) |
+         (FindClosestDiscretized(a & 0xff, bits));
 }
 
 // Checks if distance between corresponding channel values of pixels a and b
@@ -64,8 +63,7 @@ static int IsNear(uint32_t a, uint32_t b, int limit) {
 
 static int IsSmooth(const uint32_t* const prev_row,
                     const uint32_t* const curr_row,
-                    const uint32_t* const next_row,
-                    int ix, int limit) {
+                    const uint32_t* const next_row, int ix, int limit) {
   // Check that all pixels in 4-connected neighborhood are smooth.
   return (IsNear(curr_row[ix], curr_row[ix - 1], limit) &&
           IsNear(curr_row[ix], curr_row[ix + 1], limit) &&

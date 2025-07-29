@@ -428,8 +428,7 @@ static void ComputeResidualsForTile(
       // pixel to the right in all cases except at the bottom right corner of
       // the image (wrapping to the leftmost pixel of the next row if it does
       // not exist in the current row).
-      memcpy(current_row + context_start_x,
-             argb + y * width + context_start_x,
+      memcpy(current_row + context_start_x, argb + y * width + context_start_x,
              sizeof(*argb) * (max_x + have_left + (y + 1 < height)));
 #if (WEBP_NEAR_LOSSLESS == 1)
       if (max_quantization > 1 && y >= 1 && y + 1 < height) {
@@ -838,17 +837,15 @@ static WEBP_INLINE void MultipliersClear(VP8LMultipliers* const m) {
 
 static WEBP_INLINE void ColorCodeToMultipliers(uint32_t color_code,
                                                VP8LMultipliers* const m) {
-  m->green_to_red  = (color_code >>  0) & 0xff;
-  m->green_to_blue = (color_code >>  8) & 0xff;
-  m->red_to_blue   = (color_code >> 16) & 0xff;
+  m->green_to_red = (color_code >> 0) & 0xff;
+  m->green_to_blue = (color_code >> 8) & 0xff;
+  m->red_to_blue = (color_code >> 16) & 0xff;
 }
 
-static WEBP_INLINE uint32_t MultipliersToColorCode(
-    const VP8LMultipliers* const m) {
-  return 0xff000000u |
-         ((uint32_t)(m->red_to_blue) << 16) |
-         ((uint32_t)(m->green_to_blue) << 8) |
-         m->green_to_red;
+static WEBP_INLINE uint32_t
+MultipliersToColorCode(const VP8LMultipliers* const m) {
+  return 0xff000000u | ((uint32_t)(m->red_to_blue) << 16) |
+         ((uint32_t)(m->green_to_blue) << 8) | m->green_to_red;
 }
 
 static int64_t PredictionCostCrossColor(const uint32_t accumulated[256],
@@ -864,7 +861,7 @@ static int64_t GetPredictionCostCrossColorRed(
     const uint32_t* argb, int stride, int tile_width, int tile_height,
     VP8LMultipliers prev_x, VP8LMultipliers prev_y, int green_to_red,
     const uint32_t accumulated_red_histo[256]) {
-  uint32_t histo[256] = { 0 };
+  uint32_t histo[256] = {0};
   int64_t cur_diff;
 
   VP8LCollectColorRedTransforms(argb, stride, tile_width, tile_height,
@@ -920,7 +917,7 @@ static int64_t GetPredictionCostCrossColorBlue(
     const uint32_t* argb, int stride, int tile_width, int tile_height,
     VP8LMultipliers prev_x, VP8LMultipliers prev_y, int green_to_blue,
     int red_to_blue, const uint32_t accumulated_blue_histo[256]) {
-  uint32_t histo[256] = { 0 };
+  uint32_t histo[256] = {0};
   int64_t cur_diff;
 
   VP8LCollectColorBlueTransforms(argb, stride, tile_width, tile_height,
@@ -960,11 +957,12 @@ static void GetBestGreenRedToBlue(const uint32_t* argb, int stride,
                                   VP8LMultipliers prev_y, int quality,
                                   const uint32_t accumulated_blue_histo[256],
                                   VP8LMultipliers* const best_tx) {
-  const int8_t offset[kGreenRedToBlueNumAxis][2] =
-      {{0, -1}, {0, 1}, {-1, 0}, {1, 0}, {-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
-  const int8_t delta_lut[kGreenRedToBlueMaxIters] = { 16, 16, 8, 4, 2, 2, 2 };
-  const int iters =
-      (quality < 25) ? 1 : (quality > 50) ? kGreenRedToBlueMaxIters : 4;
+  const int8_t offset[kGreenRedToBlueNumAxis][2] = {
+      {0, -1}, {0, 1}, {-1, 0}, {1, 0}, {-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
+  const int8_t delta_lut[kGreenRedToBlueMaxIters] = {16, 16, 8, 4, 2, 2, 2};
+  const int iters = (quality < 25)   ? 1
+                    : (quality > 50) ? kGreenRedToBlueMaxIters
+                                     : 4;
   int green_to_blue_best = 0;
   int red_to_blue_best = 0;
   int iter;
@@ -1015,22 +1013,20 @@ static VP8LMultipliers GetBestColorTransformForTile(
   const int all_y_max = GetMin(tile_y_offset + max_tile_size, ysize);
   const int tile_width = all_x_max - tile_x_offset;
   const int tile_height = all_y_max - tile_y_offset;
-  const uint32_t* const tile_argb = argb + tile_y_offset * xsize
-                                  + tile_x_offset;
+  const uint32_t* const tile_argb =
+      argb + tile_y_offset * xsize + tile_x_offset;
   VP8LMultipliers best_tx;
   MultipliersClear(&best_tx);
 
-  GetBestGreenToRed(tile_argb, xsize, tile_width, tile_height,
-                    prev_x, prev_y, quality, accumulated_red_histo, &best_tx);
-  GetBestGreenRedToBlue(tile_argb, xsize, tile_width, tile_height,
-                        prev_x, prev_y, quality, accumulated_blue_histo,
-                        &best_tx);
+  GetBestGreenToRed(tile_argb, xsize, tile_width, tile_height, prev_x, prev_y,
+                    quality, accumulated_red_histo, &best_tx);
+  GetBestGreenRedToBlue(tile_argb, xsize, tile_width, tile_height, prev_x,
+                        prev_y, quality, accumulated_blue_histo, &best_tx);
   return best_tx;
 }
 
-static void CopyTileWithColorTransform(int xsize, int ysize,
-                                       int tile_x, int tile_y,
-                                       int max_tile_size,
+static void CopyTileWithColorTransform(int xsize, int ysize, int tile_x,
+                                       int tile_y, int max_tile_size,
                                        VP8LMultipliers color_transform,
                                        uint32_t* argb) {
   const int xscan = GetMin(max_tile_size, xsize - tile_x);
@@ -1050,8 +1046,8 @@ int VP8LColorSpaceTransform(int width, int height, int bits, int quality,
   const int tile_xsize = VP8LSubSampleSize(width, bits);
   const int tile_ysize = VP8LSubSampleSize(height, bits);
   int percent_start = *percent;
-  uint32_t accumulated_red_histo[256] = { 0 };
-  uint32_t accumulated_blue_histo[256] = { 0 };
+  uint32_t accumulated_red_histo[256] = {0};
+  uint32_t accumulated_blue_histo[256] = {0};
   int tile_x, tile_y;
   VP8LMultipliers prev_x, prev_y;
   MultipliersClear(&prev_y);
@@ -1067,12 +1063,9 @@ int VP8LColorSpaceTransform(int width, int height, int bits, int quality,
       if (tile_y != 0) {
         ColorCodeToMultipliers(image[offset - tile_xsize], &prev_y);
       }
-      prev_x = GetBestColorTransformForTile(tile_x, tile_y, bits,
-                                            prev_x, prev_y,
-                                            quality, width, height,
-                                            accumulated_red_histo,
-                                            accumulated_blue_histo,
-                                            argb);
+      prev_x = GetBestColorTransformForTile(
+          tile_x, tile_y, bits, prev_x, prev_y, quality, width, height,
+          accumulated_red_histo, accumulated_blue_histo, argb);
       image[offset] = MultipliersToColorCode(&prev_x);
       CopyTileWithColorTransform(width, height, tile_x_offset, tile_y_offset,
                                  max_tile_size, prev_x, argb);
@@ -1083,15 +1076,11 @@ int VP8LColorSpaceTransform(int width, int height, int bits, int quality,
         const int ix_end = ix + all_x_max - tile_x_offset;
         for (; ix < ix_end; ++ix) {
           const uint32_t pix = argb[ix];
-          if (ix >= 2 &&
-              pix == argb[ix - 2] &&
-              pix == argb[ix - 1]) {
+          if (ix >= 2 && pix == argb[ix - 2] && pix == argb[ix - 1]) {
             continue;  // repeated pixels are handled by backward references
           }
-          if (ix >= width + 2 &&
-              argb[ix - 2] == argb[ix - width - 2] &&
-              argb[ix - 1] == argb[ix - width - 1] &&
-              pix == argb[ix - width]) {
+          if (ix >= width + 2 && argb[ix - 2] == argb[ix - width - 2] &&
+              argb[ix - 1] == argb[ix - width - 1] && pix == argb[ix - width]) {
             continue;  // repeated pixels are handled by backward references
           }
           ++accumulated_red_histo[(pix >> 16) & 0xff];
@@ -1099,9 +1088,9 @@ int VP8LColorSpaceTransform(int width, int height, int bits, int quality,
         }
       }
     }
-    if (!WebPReportProgress(
-            pic, percent_start + percent_range * tile_y / tile_ysize,
-            percent)) {
+    if (!WebPReportProgress(pic,
+                            percent_start + percent_range * tile_y / tile_ysize,
+                            percent)) {
       return 0;
     }
   }

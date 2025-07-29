@@ -36,13 +36,7 @@
 #define MAX_HISTO_GREEDY 100
 
 // Enum to meaningfully access the elements of the Histogram arrays.
-typedef enum {
-  LITERAL = 0,
-  RED,
-  BLUE,
-  ALPHA,
-  DISTANCE
-} HistogramIndex;
+typedef enum { LITERAL = 0, RED, BLUE, ALPHA, DISTANCE } HistogramIndex;
 
 // Return the size of the histogram for a given cache_bits.
 static int GetHistogramSize(int cache_bits) {
@@ -127,7 +121,7 @@ VP8LHistogram* VP8LAllocateHistogram(int cache_bits) {
   histo = (VP8LHistogram*)memory;
   // 'literal' won't necessary be aligned.
   histo->literal = (uint32_t*)(memory + sizeof(VP8LHistogram));
-  VP8LHistogramInit(histo, cache_bits, /*init_arrays=*/ 0);
+  VP8LHistogramInit(histo, cache_bits, /*init_arrays=*/0);
   return histo;
 }
 
@@ -136,11 +130,11 @@ static void HistogramSetResetPointers(VP8LHistogramSet* const set,
                                       int cache_bits) {
   int i;
   const int histo_size = GetHistogramSize(cache_bits);
-  uint8_t* memory = (uint8_t*) (set->histograms);
+  uint8_t* memory = (uint8_t*)(set->histograms);
   memory += set->max_size * sizeof(*set->histograms);
   for (i = 0; i < set->max_size; ++i) {
-    memory = (uint8_t*) WEBP_ALIGN(memory);
-    set->histograms[i] = (VP8LHistogram*) memory;
+    memory = (uint8_t*)WEBP_ALIGN(memory);
+    set->histograms[i] = (VP8LHistogram*)memory;
     // 'literal' won't necessary be aligned.
     set->histograms[i]->literal = (uint32_t*)(memory + sizeof(VP8LHistogram));
     memory += histo_size;
@@ -150,8 +144,8 @@ static void HistogramSetResetPointers(VP8LHistogramSet* const set,
 // Returns the total size of the VP8LHistogramSet.
 static size_t HistogramSetTotalSize(int size, int cache_bits) {
   const int histo_size = GetHistogramSize(cache_bits);
-  return (sizeof(VP8LHistogramSet) + size * (sizeof(VP8LHistogram*) +
-          histo_size + WEBP_ALIGN_CST));
+  return (sizeof(VP8LHistogramSet) +
+          size * (sizeof(VP8LHistogram*) + histo_size + WEBP_ALIGN_CST));
 }
 
 VP8LHistogramSet* VP8LAllocateHistogramSet(int size, int cache_bits) {
@@ -168,7 +162,7 @@ VP8LHistogramSet* VP8LAllocateHistogramSet(int size, int cache_bits) {
   set->size = size;
   HistogramSetResetPointers(set, cache_bits);
   for (i = 0; i < size; ++i) {
-    VP8LHistogramInit(set->histograms[i], cache_bits, /*init_arrays=*/ 0);
+    VP8LHistogramInit(set->histograms[i], cache_bits, /*init_arrays=*/0);
   }
   return set;
 }
@@ -563,8 +557,8 @@ static void DominantCostRangeInit(DominantCostRange* const c) {
   c->blue_min = WEBP_UINT64_MAX;
 }
 
-static void UpdateDominantCostRange(
-    const VP8LHistogram* const h, DominantCostRange* const c) {
+static void UpdateDominantCostRange(const VP8LHistogram* const h,
+                                    DominantCostRange* const c) {
   if (c->literal_max < h->costs[LITERAL]) c->literal_max = h->costs[LITERAL];
   if (c->literal_min > h->costs[LITERAL]) c->literal_min = h->costs[LITERAL];
   if (c->red_max < h->costs[RED]) c->red_max = h->costs[RED];
@@ -614,9 +608,9 @@ static int GetHistoBinIndex(const VP8LHistogram* const h,
 }
 
 // Construct the histograms from backward references.
-static void HistogramBuild(
-    int xsize, int histo_bits, const VP8LBackwardRefs* const backward_refs,
-    VP8LHistogramSet* const image_histo) {
+static void HistogramBuild(int xsize, int histo_bits,
+                           const VP8LBackwardRefs* const backward_refs,
+                           VP8LHistogramSet* const image_histo) {
   int x = 0, y = 0;
   const int histo_xsize = VP8LSubSampleSize(xsize, histo_bits);
   VP8LHistogram** const histograms = image_histo->histograms;
@@ -697,9 +691,9 @@ static void HistogramCombineEntropyBin(VP8LHistogramSet* const image_histo,
   VP8LHistogram** const histograms = image_histo->histograms;
   int idx;
   struct {
-    int16_t first;    // position of the histogram that accumulates all
-                      // histograms with the same bin_id
-    uint16_t num_combine_failures;   // number of combine failures per bin_id
+    int16_t first;  // position of the histogram that accumulates all
+                    // histograms with the same bin_id
+    uint16_t num_combine_failures;  // number of combine failures per bin_id
   } bin_info[BIN_SIZE];
 
   assert(num_bins <= BIN_SIZE);
@@ -940,8 +934,8 @@ static int HistogramCombineGreedy(VP8LHistogramSet* const image_histo) {
     // Remove pairs intersecting the just combined best pair.
     for (i = 0; i < histo_queue.size;) {
       HistogramPair* const p = histo_queue.queue + i;
-      if (p->idx1 == idx1 || p->idx2 == idx1 ||
-          p->idx1 == idx2 || p->idx2 == idx2) {
+      if (p->idx1 == idx1 || p->idx2 == idx1 || p->idx1 == idx2 ||
+          p->idx2 == idx2) {
         HistoQueuePopPair(&histo_queue, p);
       } else {
         HistoQueueFixPair(image_histo->size, idx2, p);
@@ -959,7 +953,7 @@ static int HistogramCombineGreedy(VP8LHistogramSet* const image_histo) {
 
   ok = 1;
 
- End:
+End:
   HistoQueueClear(&histo_queue);
   return ok;
 }
@@ -992,8 +986,8 @@ static int HistogramCombineStochastic(VP8LHistogramSet* const image_histo,
 
   // Collapse similar histograms in 'image_histo'.
   for (iter = 0; iter < outer_iters && image_histo->size >= min_cluster_size &&
-                ++tries_with_no_success < num_tries_no_success;
-      ++iter) {
+                 ++tries_with_no_success < num_tries_no_success;
+       ++iter) {
     int64_t best_cost =
         (histo_queue.size == 0) ? 0 : histo_queue.queue[0].cost_diff;
     int best_idx1 = -1, best_idx2 = 1;
@@ -1064,7 +1058,7 @@ static int HistogramCombineStochastic(VP8LHistogramSet* const image_histo,
   *do_greedy = (image_histo->size <= min_cluster_size);
   ok = 1;
 
- End:
+End:
   HistoQueueClear(&histo_queue);
   return ok;
 }
@@ -1201,7 +1195,7 @@ int VP8LGetHistoImageSymbols(int xsize, int ysize,
     goto Error;
   }
 
- Error:
+Error:
   VP8LFreeHistogramSet(orig_histo);
   return (pic->error_code == VP8_ENC_OK);
 }

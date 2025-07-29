@@ -64,13 +64,12 @@ void Decode(std::string_view arbitrary_bytes, WebPInputFileFormat format,
 }
 
 FUZZ_TEST(ImageIOSuite, Decode)
-    .WithDomains(
-        fuzztest::String()
-            .WithMaxSize(fuzz_utils::kMaxWebPFileSize + 1),
-        fuzztest::ElementOf<WebPInputFileFormat>(
-            {WEBP_PNG_FORMAT, WEBP_JPEG_FORMAT, WEBP_TIFF_FORMAT,
-             WEBP_WEBP_FORMAT, WEBP_PNM_FORMAT, kUnknown}),
-        /*keep_alpha=*/fuzztest::Arbitrary<bool>(),
-        /*use_argb=*/fuzztest::Arbitrary<bool>());
+    .WithDomains(fuzztest::String().WithMaxSize(fuzz_utils::kMaxWebPFileSize +
+                                                1),
+                 fuzztest::ElementOf<WebPInputFileFormat>(
+                     {WEBP_PNG_FORMAT, WEBP_JPEG_FORMAT, WEBP_TIFF_FORMAT,
+                      WEBP_WEBP_FORMAT, WEBP_PNM_FORMAT, kUnknown}),
+                 /*keep_alpha=*/fuzztest::Arbitrary<bool>(),
+                 /*use_argb=*/fuzztest::Arbitrary<bool>());
 
 }  // namespace

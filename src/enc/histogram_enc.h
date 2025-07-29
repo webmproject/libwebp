@@ -30,7 +30,7 @@ extern "C" {
 typedef struct {
   // 'literal' contains green literal, palette-code and
   // copy-length-prefix histogram
-  uint32_t* literal;        // Pointer to the allocated buffer for literal.
+  uint32_t* literal;  // Pointer to the allocated buffer for literal.
   uint32_t red[NUM_LITERAL_CODES];
   uint32_t blue[NUM_LITERAL_CODES];
   uint32_t alpha[NUM_LITERAL_CODES];
@@ -42,18 +42,18 @@ typedef struct {
   // Index of the unique value of a histogram if any, VP8L_NON_TRIVIAL_SYM
   // otherwise.
   uint16_t trivial_symbol[5];
-  uint64_t bit_cost;        // Cached value of total bit cost.
+  uint64_t bit_cost;  // Cached value of total bit cost.
   // Cached values of entropy costs: literal, red, blue, alpha, distance
   uint64_t costs[5];
-  uint8_t is_used[5];       // 5 for literal, red, blue, alpha, distance
-  uint16_t bin_id;          // entropy bin index.
+  uint8_t is_used[5];  // 5 for literal, red, blue, alpha, distance
+  uint16_t bin_id;     // entropy bin index.
 } VP8LHistogram;
 
 // Collection of histograms with fixed capacity, allocated as one
 // big memory chunk. Can be destroyed by calling WebPSafeFree().
 typedef struct {
-  int size;         // number of slots currently in use
-  int max_size;     // maximum capacity
+  int size;      // number of slots currently in use
+  int max_size;  // maximum capacity
   VP8LHistogram** histograms;
 } VP8LHistogramSet;
 
@@ -99,7 +99,7 @@ VP8LHistogram* VP8LAllocateHistogram(int cache_bits);
 
 static WEBP_INLINE int VP8LHistogramNumCodes(int palette_code_bits) {
   return NUM_LITERAL_CODES + NUM_LENGTH_CODES +
-      ((palette_code_bits > 0) ? (1 << palette_code_bits) : 0);
+         ((palette_code_bits > 0) ? (1 << palette_code_bits) : 0);
 }
 
 // Builds the histogram image. pic and percent are for progress.

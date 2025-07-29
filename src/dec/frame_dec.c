@@ -30,11 +30,10 @@
 // Main reconstruction function.
 
 static const uint16_t kScan[16] = {
-  0 +  0 * BPS,  4 +  0 * BPS, 8 +  0 * BPS, 12 +  0 * BPS,
-  0 +  4 * BPS,  4 +  4 * BPS, 8 +  4 * BPS, 12 +  4 * BPS,
-  0 +  8 * BPS,  4 +  8 * BPS, 8 +  8 * BPS, 12 +  8 * BPS,
-  0 + 12 * BPS,  4 + 12 * BPS, 8 + 12 * BPS, 12 + 12 * BPS
-};
+    0 + 0 * BPS,  4 + 0 * BPS,  8 + 0 * BPS,  12 + 0 * BPS,
+    0 + 4 * BPS,  4 + 4 * BPS,  8 + 4 * BPS,  12 + 4 * BPS,
+    0 + 8 * BPS,  4 + 8 * BPS,  8 + 8 * BPS,  12 + 8 * BPS,
+    0 + 12 * BPS, 4 + 12 * BPS, 8 + 12 * BPS, 12 + 12 * BPS};
 
 static int CheckMode(int mb_x, int mb_y, int mode) {
   if (mode == B_DC_PRED) {
@@ -70,9 +69,9 @@ static WEBP_INLINE void DoTransform(uint32_t bits, const int16_t* const src,
 
 static void DoUVTransform(uint32_t bits, const int16_t* const src,
                           uint8_t* const dst) {
-  if (bits & 0xff) {    // any non-zero coeff at all?
-    if (bits & 0xaa) {  // any non-zero AC coefficient?
-      VP8TransformUV(src, dst);   // note we don't use the AC3 variant for U/V
+  if (bits & 0xff) {             // any non-zero coeff at all?
+    if (bits & 0xaa) {           // any non-zero AC coefficient?
+      VP8TransformUV(src, dst);  // note we don't use the AC3 variant for U/V
     } else {
       VP8TransformDCUV(src, dst);
     }
@@ -138,11 +137,11 @@ static void ReconstructRow(const VP8Decoder* const dec,
       }
 
       // predict and add residuals
-      if (block->is_i4x4) {   // 4x4
+      if (block->is_i4x4) {  // 4x4
         uint32_t* const top_right = (uint32_t*)(y_dst - BPS + 16);
 
         if (mb_y > 0) {
-          if (mb_x >= dec->mb_w - 1) {    // on rightmost border
+          if (mb_x >= dec->mb_w - 1) {  // on rightmost border
             memset(top_right, top_yuv[0].y[15], sizeof(*top_right));
           } else {
             memcpy(top_right, top_yuv[1].y, sizeof(*top_right));
@@ -157,7 +156,7 @@ static void ReconstructRow(const VP8Decoder* const dec,
           VP8PredLuma4[block->imodes[n]](dst);
           DoTransform(bits, coeffs + n * 16, dst);
         }
-      } else {    // 16x16
+      } else {  // 16x16
         const int pred_func = CheckMode(mb_x, mb_y, block->imodes[0]);
         VP8PredLuma16[pred_func](y_dst);
         if (bits != 0) {
@@ -179,8 +178,8 @@ static void ReconstructRow(const VP8Decoder* const dec,
       // stash away top samples for next block
       if (mb_y < dec->mb_h - 1) {
         memcpy(top_yuv[0].y, y_dst + 15 * BPS, 16);
-        memcpy(top_yuv[0].u, u_dst +  7 * BPS,  8);
-        memcpy(top_yuv[0].v, v_dst +  7 * BPS,  8);
+        memcpy(top_yuv[0].u, u_dst + 7 * BPS, 8);
+        memcpy(top_yuv[0].v, v_dst + 7 * BPS, 8);
       }
     }
     // Transfer reconstructed samples from yuv_b cache to final destination.
@@ -209,7 +208,7 @@ static void ReconstructRow(const VP8Decoder* const dec,
 // Simple filter:  up to 2 luma samples are read and 1 is written.
 // Complex filter: up to 4 luma samples are read and 3 are written. Same for
 //                 U/V, so it's 8 samples total (because of the 2x upsampling).
-static const uint8_t kFilterExtraRows[3] = { 0, 2, 8 };
+static const uint8_t kFilterExtraRows[3] = {0, 2, 8};
 
 static void DoFilter(const VP8Decoder* const dec, int mb_x, int mb_y) {
   const VP8ThreadContext* const ctx = &dec->thread_ctx;
@@ -223,7 +222,7 @@ static void DoFilter(const VP8Decoder* const dec, int mb_x, int mb_y) {
     return;
   }
   assert(limit >= 3);
-  if (dec->filter_type == 1) {   // simple
+  if (dec->filter_type == 1) {  // simple
     if (mb_x > 0) {
       VP8SimpleHFilter16(y_dst, y_bps, limit + 4);
     }
@@ -236,7 +235,7 @@ static void DoFilter(const VP8Decoder* const dec, int mb_x, int mb_y) {
     if (f_info->f_inner) {
       VP8SimpleVFilter16i(y_dst, y_bps, limit);
     }
-  } else {    // complex
+  } else {  // complex
     const int uv_bps = dec->cache_uv_stride;
     uint8_t* const u_dst = dec->cache_u + cache_id * 8 * uv_bps + mb_x * 8;
     uint8_t* const v_dst = dec->cache_v + cache_id * 8 * uv_bps + mb_x * 8;
@@ -332,9 +331,8 @@ static void PrecomputeFilterStrengths(VP8Decoder* const dec) {
 
 #define DITHER_AMP_TAB_SIZE 12
 static const uint8_t kQuantToDitherAmp[DITHER_AMP_TAB_SIZE] = {
-  // roughly, it's dqm->uv_mat[1]
-  8, 7, 6, 4, 4, 2, 2, 2, 1, 1, 1, 1
-};
+    // roughly, it's dqm->uv_mat[1]
+    8, 7, 6, 4, 4, 2, 2, 2, 1, 1, 1, 1};
 
 void VP8InitDithering(const WebPDecoderOptions* const options,
                       VP8Decoder* const dec) {
@@ -407,7 +405,7 @@ static void DitherRow(VP8Decoder* const dec) {
 //  * we must clip the remaining pixels against the cropping area. The VP8Io
 //    struct must have the following fields set correctly before calling put():
 
-#define MACROBLOCK_VPOS(mb_y)  ((mb_y) * 16)    // vertical position of a MB
+#define MACROBLOCK_VPOS(mb_y) ((mb_y) * 16)  // vertical position of a MB
 
 // Finalize and transmit a complete row. Return false in case of user-abort.
 static int FinishRow(void* arg1, void* arg2) {
@@ -458,7 +456,7 @@ static int FinishRow(void* arg1, void* arg2) {
       y_end -= extra_y_rows;
     }
     if (y_end > io->crop_bottom) {
-      y_end = io->crop_bottom;    // make sure we don't overflow on last row.
+      y_end = io->crop_bottom;  // make sure we don't overflow on last row.
     }
     // If dec->alpha_data is not NULL, we have some alpha plane present.
     io->a = NULL;
@@ -512,9 +510,9 @@ static int FinishRow(void* arg1, void* arg2) {
 int VP8ProcessRow(VP8Decoder* const dec, VP8Io* const io) {
   int ok = 1;
   VP8ThreadContext* const ctx = &dec->thread_ctx;
-  const int filter_row =
-      (dec->filter_type > 0) &&
-      (dec->mb_y >= dec->tl_mb_y) && (dec->mb_y <= dec->br_mb_y);
+  const int filter_row = (dec->filter_type > 0) &&
+                         (dec->mb_y >= dec->tl_mb_y) &&
+                         (dec->mb_y <= dec->br_mb_y);
   if (dec->mt_method == 0) {
     // ctx->id and ctx->f_info are already set
     ctx->mb_y = dec->mb_y;
@@ -526,7 +524,7 @@ int VP8ProcessRow(VP8Decoder* const dec, VP8Io* const io) {
     // Finish previous job *before* updating context
     ok &= WebPGetWorkerInterface()->Sync(worker);
     assert(worker->status == OK);
-    if (ok) {   // spawn a new deblocking/output job
+    if (ok) {  // spawn a new deblocking/output job
       ctx->io = *io;
       ctx->id = dec->cache_id;
       ctx->mb_y = dec->mb_y;
@@ -539,7 +537,7 @@ int VP8ProcessRow(VP8Decoder* const dec, VP8Io* const io) {
         // perform reconstruction directly in main thread
         ReconstructRow(dec, ctx);
       }
-      if (filter_row) {            // swap filter info
+      if (filter_row) {  // swap filter info
         VP8FInfo* const tmp = ctx->f_info;
         ctx->f_info = dec->f_info;
         dec->f_info = tmp;
@@ -646,7 +644,7 @@ int VP8ExitCritical(VP8Decoder* const dec, VP8Io* const io) {
 // io->put:         [ 0..15][16..31][ 0..15][...
 
 #define MT_CACHE_LINES 3
-#define ST_CACHE_LINES 1   // 1 cache row only for single-threaded case
+#define ST_CACHE_LINES 1  // 1 cache row only for single-threaded case
 
 // Initialize multi/single-thread worker
 static int InitThreadContext(VP8Decoder* const dec) {
@@ -669,8 +667,8 @@ static int InitThreadContext(VP8Decoder* const dec) {
 }
 
 int VP8GetThreadMethod(const WebPDecoderOptions* const options,
-                       const WebPHeaderStructure* const headers,
-                       int width, int height) {
+                       const WebPHeaderStructure* const headers, int width,
+                       int height) {
   if (options == NULL || options->use_threads == 0) {
     return 0;
   }
@@ -698,22 +696,23 @@ static int AllocateMemory(VP8Decoder* const dec) {
   const size_t top_size = sizeof(VP8TopSamples) * mb_w;
   const size_t mb_info_size = (mb_w + 1) * sizeof(VP8MB);
   const size_t f_info_size =
-      (dec->filter_type > 0) ?
-          mb_w * (dec->mt_method > 0 ? 2 : 1) * sizeof(VP8FInfo)
-        : 0;
+      (dec->filter_type > 0)
+          ? mb_w * (dec->mt_method > 0 ? 2 : 1) * sizeof(VP8FInfo)
+          : 0;
   const size_t yuv_size = YUV_SIZE * sizeof(*dec->yuv_b);
   const size_t mb_data_size =
       (dec->mt_method == 2 ? 2 : 1) * mb_w * sizeof(*dec->mb_data);
-  const size_t cache_height = (16 * num_caches
-                            + kFilterExtraRows[dec->filter_type]) * 3 / 2;
+  const size_t cache_height =
+      (16 * num_caches + kFilterExtraRows[dec->filter_type]) * 3 / 2;
   const size_t cache_size = top_size * cache_height;
   // alpha_size is the only one that scales as width x height.
-  const uint64_t alpha_size = (dec->alpha_data != NULL) ?
-      (uint64_t)dec->pic_hdr.width * dec->pic_hdr.height : 0ULL;
-  const uint64_t needed = (uint64_t)intra_pred_mode_size
-                        + top_size + mb_info_size + f_info_size
-                        + yuv_size + mb_data_size
-                        + cache_size + alpha_size + WEBP_ALIGN_CST;
+  const uint64_t alpha_size =
+      (dec->alpha_data != NULL)
+          ? (uint64_t)dec->pic_hdr.width * dec->pic_hdr.height
+          : 0ULL;
+  const uint64_t needed = (uint64_t)intra_pred_mode_size + top_size +
+                          mb_info_size + f_info_size + yuv_size + mb_data_size +
+                          cache_size + alpha_size + WEBP_ALIGN_CST;
   uint8_t* mem;
 
   if (!CheckSizeOverflow(needed)) return 0;  // check for overflow
@@ -769,10 +768,10 @@ static int AllocateMemory(VP8Decoder* const dec) {
     const int extra_y = extra_rows * dec->cache_y_stride;
     const int extra_uv = (extra_rows / 2) * dec->cache_uv_stride;
     dec->cache_y = mem + extra_y;
-    dec->cache_u = dec->cache_y
-                  + 16 * num_caches * dec->cache_y_stride + extra_uv;
-    dec->cache_v = dec->cache_u
-                  + 8 * num_caches * dec->cache_uv_stride + extra_uv;
+    dec->cache_u =
+        dec->cache_y + 16 * num_caches * dec->cache_y_stride + extra_uv;
+    dec->cache_v =
+        dec->cache_u + 8 * num_caches * dec->cache_uv_stride + extra_uv;
     dec->cache_id = 0;
   }
   mem += cache_size;
@@ -784,7 +783,7 @@ static int AllocateMemory(VP8Decoder* const dec) {
 
   // note: left/top-info is initialized once for all.
   memset(dec->mb_info - 1, 0, mb_info_size);
-  VP8InitScanline(dec);   // initialize left too.
+  VP8InitScanline(dec);  // initialize left too.
 
   // initialize top
   memset(dec->intra_t, B_DC_PRED, intra_pred_mode_size);

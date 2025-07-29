@@ -57,8 +57,8 @@ static WEBP_INLINE int PixelsAreSimilar(uint32_t src, uint32_t dst,
 }
 
 static int FramesAreSimilar(const uint8_t* const rgba1,
-                            const uint8_t* const rgba2,
-                            int width, int height, int max_allowed_diff) {
+                            const uint8_t* const rgba2, int width, int height,
+                            int max_allowed_diff) {
   int i, j;
   assert(max_allowed_diff > 0);
   for (j = 0; j < height; ++j) {
@@ -120,8 +120,7 @@ static int CompareBackgroundColor(uint32_t bg1, uint32_t bg2, int premultiply) {
     if (alpha1 == 0 && alpha2 == 0) return 1;
   }
   if (bg1 != bg2) {
-    fprintf(stderr, "Background color mismatch: 0x%08x vs 0x%08x\n",
-            bg1, bg2);
+    fprintf(stderr, "Background color mismatch: 0x%08x vs 0x%08x\n", bg1, bg2);
     return 0;
   }
   return 1;
@@ -131,8 +130,7 @@ static int CompareBackgroundColor(uint32_t bg1, uint32_t bg2, int premultiply) {
 // is OK for other aspects like offsets, dispose/blend method to vary.
 static int CompareAnimatedImagePair(const AnimatedImage* const img1,
                                     const AnimatedImage* const img2,
-                                    int premultiply,
-                                    double min_psnr) {
+                                    int premultiply, double min_psnr) {
   int ok = 1;
   const int is_multi_frame_image = (img1->num_frames > 1);
   uint32_t i;
@@ -141,8 +139,8 @@ static int CompareAnimatedImagePair(const AnimatedImage* const img1,
                       "Canvas width mismatch");
   ok &= CompareValues(img1->canvas_height, img2->canvas_height,
                       "Canvas height mismatch");
-  ok &= CompareValues(img1->num_frames, img2->num_frames,
-                      "Frame count mismatch");
+  ok &=
+      CompareValues(img1->num_frames, img2->num_frames, "Frame count mismatch");
   if (!ok) return 0;  // These are fatal failures, can't proceed.
 
   if (is_multi_frame_image) {  // Checks relevant for multi-frame images only.
@@ -178,8 +176,8 @@ static int CompareAnimatedImagePair(const AnimatedImage* const img1,
                    premultiply, &max_diff, &psnr);
     if (min_psnr > 0.) {
       if (psnr < min_psnr) {
-        fprintf(stderr, "Frame #%d, psnr = %.2lf (min_psnr = %f)\n", i,
-                psnr, min_psnr);
+        fprintf(stderr, "Frame #%d, psnr = %.2lf (min_psnr = %f)\n", i, psnr,
+                min_psnr);
         ok = 0;
       }
     } else {
@@ -199,9 +197,10 @@ static void Help(void) {
   printf("  -min_psnr <float> ... minimum per-frame PSNR\n");
   printf("  -raw_comparison ..... if this flag is not used, RGB is\n");
   printf("                        premultiplied before comparison\n");
-  printf("  -max_diff <int> ..... maximum allowed difference per channel\n"
-         "                        between corresponding pixels in subsequent\n"
-         "                        frames\n");
+  printf(
+      "  -max_diff <int> ..... maximum allowed difference per channel\n"
+      "                        between corresponding pixels in subsequent\n"
+      "                        frames\n");
   printf("  -h .................. this help\n");
   printf("  -version ............ print version number and exit\n");
 }
@@ -217,7 +216,7 @@ int main(int argc, const char* argv[]) {
   int premultiply = 1;
   int max_diff = 0;
   int i, c;
-  const char* files[2] = { NULL, NULL };
+  const char* files[2] = {NULL, NULL};
   AnimatedImage images[2];
 
   INIT_WARGV(argc, argv);
@@ -253,9 +252,8 @@ int main(int argc, const char* argv[]) {
       GetAnimatedImageVersions(&dec_version, &demux_version);
       printf("WebP Decoder version: %d.%d.%d\nWebP Demux version: %d.%d.%d\n",
              (dec_version >> 16) & 0xff, (dec_version >> 8) & 0xff,
-             (dec_version >> 0) & 0xff,
-             (demux_version >> 16) & 0xff, (demux_version >> 8) & 0xff,
-             (demux_version >> 0) & 0xff);
+             (dec_version >> 0) & 0xff, (demux_version >> 16) & 0xff,
+             (demux_version >> 8) & 0xff, (demux_version >> 0) & 0xff);
       FREE_WARGV_AND_RETURN(0);
     } else {
       if (!got_input1) {
@@ -277,7 +275,6 @@ int main(int argc, const char* argv[]) {
     Help();
     FREE_WARGV_AND_RETURN(return_code);
   }
-
 
   if (!got_input2) {
     Help();
@@ -301,8 +298,8 @@ int main(int argc, const char* argv[]) {
     }
   }
 
-  if (!CompareAnimatedImagePair(&images[0], &images[1],
-                                premultiply, min_psnr)) {
+  if (!CompareAnimatedImagePair(&images[0], &images[1], premultiply,
+                                min_psnr)) {
     WFPRINTF(stderr, "\nFiles %s and %s differ.\n", (const W_CHAR*)files[0],
              (const W_CHAR*)files[1]);
     return_code = 1;
@@ -311,7 +308,7 @@ int main(int argc, const char* argv[]) {
             (const W_CHAR*)files[1]);
     return_code = 0;
   }
- End:
+End:
   ClearAnimatedImage(&images[0]);
   ClearAnimatedImage(&images[1]);
   FREE_WARGV_AND_RETURN(return_code);

@@ -82,10 +82,9 @@ void AnimationApiTest(std::string_view blob, bool use_threads,
 }  // namespace
 
 FUZZ_TEST(AnimationApi, AnimationApiTest)
-    .WithDomains(
-        fuzztest::String()
-            .WithMaxSize(fuzz_utils::kMaxWebPFileSize + 1),
-        /*use_threads=*/fuzztest::Arbitrary<bool>(),
-        // Animations only support 4 (out of 12) modes.
-        fuzztest::ElementOf<WEBP_CSP_MODE>({MODE_RGBA, MODE_BGRA, MODE_rgbA,
-                                            MODE_bgrA}));
+    .WithDomains(fuzztest::String().WithMaxSize(fuzz_utils::kMaxWebPFileSize +
+                                                1),
+                 /*use_threads=*/fuzztest::Arbitrary<bool>(),
+                 // Animations only support 4 (out of 12) modes.
+                 fuzztest::ElementOf<WEBP_CSP_MODE>({MODE_RGBA, MODE_BGRA,
+                                                     MODE_rgbA, MODE_bgrA}));

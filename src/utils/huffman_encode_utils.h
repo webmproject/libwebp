@@ -22,23 +22,23 @@ extern "C" {
 
 // Struct for holding the tree header in coded form.
 typedef struct {
-  uint8_t code;         // value (0..15) or escape code (16,17,18)
-  uint8_t extra_bits;   // extra bits for escape codes
+  uint8_t code;        // value (0..15) or escape code (16,17,18)
+  uint8_t extra_bits;  // extra bits for escape codes
 } HuffmanTreeToken;
 
 // Struct to represent the tree codes (depth and bits array).
 typedef struct {
-  int       num_symbols;   // Number of symbols.
-  uint8_t*  code_lengths;  // Code lengths of the symbols.
-  uint16_t* codes;         // Symbol Codes.
+  int num_symbols;        // Number of symbols.
+  uint8_t* code_lengths;  // Code lengths of the symbols.
+  uint16_t* codes;        // Symbol Codes.
 } HuffmanTreeCode;
 
 // Struct to represent the Huffman tree.
 typedef struct {
-  uint32_t total_count;   // Symbol frequency.
-  int value;              // Symbol value.
-  int pool_index_left;    // Index for the left sub-tree.
-  int pool_index_right;   // Index for the right sub-tree.
+  uint32_t total_count;  // Symbol frequency.
+  int value;             // Symbol value.
+  int pool_index_left;   // Index for the left sub-tree.
+  int pool_index_right;  // Index for the right sub-tree.
 } HuffmanTree;
 
 // Turn the Huffman tree into a token sequence.

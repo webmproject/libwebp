@@ -16,44 +16,43 @@
 
 #include "src/utils/quant_levels_dec_utils.h"
 
-#include <string.h>   // for memset
+#include <string.h>  // for memset
 
 #include "src/utils/utils.h"
 #include "src/webp/types.h"
 
 // #define USE_DITHERING   // uncomment to enable ordered dithering (not vital)
 
-#define FIX 16     // fix-point precision for averaging
-#define LFIX 2     // extra precision for look-up table
+#define FIX 16                            // fix-point precision for averaging
+#define LFIX 2                            // extra precision for look-up table
 #define LUT_SIZE ((1 << (8 + LFIX)) - 1)  // look-up table size
 
 #if defined(USE_DITHERING)
 
-#define DFIX 4           // extra precision for ordered dithering
-#define DSIZE 4          // dithering size (must be a power of two)
+#define DFIX 4   // extra precision for ordered dithering
+#define DSIZE 4  // dithering size (must be a power of two)
 // cf. https://en.wikipedia.org/wiki/Ordered_dithering
 static const uint8_t kOrderedDither[DSIZE][DSIZE] = {
-  {  0,  8,  2, 10 },     // coefficients are in DFIX fixed-point precision
-  { 12,  4, 14,  6 },
-  {  3, 11,  1,  9 },
-  { 15,  7, 13,  5 }
-};
+    {0, 8, 2, 10},  // coefficients are in DFIX fixed-point precision
+    {12, 4, 14, 6},
+    {3, 11, 1, 9},
+    {15, 7, 13, 5}};
 
 #else
 #define DFIX 0
 #endif
 
 typedef struct {
-  int width, height;   // dimension
-  int stride;          // stride in bytes
-  int row;             // current input row being processed
-  uint8_t* src;        // input pointer
-  uint8_t* dst;        // output pointer
+  int width, height;  // dimension
+  int stride;         // stride in bytes
+  int row;            // current input row being processed
+  uint8_t* src;       // input pointer
+  uint8_t* dst;       // output pointer
 
-  int radius;          // filter radius (=delay)
-  int scale;           // normalization factor, in FIX bits precision
+  int radius;  // filter radius (=delay)
+  int scale;   // normalization factor, in FIX bits precision
 
-  void* mem;           // all memory
+  void* mem;  // all memory
 
   // various scratch buffers
   uint16_t* start;
@@ -63,9 +62,9 @@ typedef struct {
   uint16_t* average;
 
   // input levels distribution
-  int num_levels;       // number of quantized levels
-  int min, max;         // min and max level values
-  int min_level_dist;   // smallest distance between two consecutive levels
+  int num_levels;      // number of quantized levels
+  int min, max;        // min and max level values
+  int min_level_dist;  // smallest distance between two consecutive levels
 
   int16_t* correction;  // size = 1 + 2*LUT_SIZE  -> ~4k memory
 } SmoothParams;
@@ -85,7 +84,7 @@ static void VFilter(SmoothParams* const p) {
   uint16_t* const cur = p->cur;
   const uint16_t* const top = p->top;
   uint16_t* const out = p->end;
-  uint16_t sum = 0;               // all arithmetic is modulo 16bit
+  uint16_t sum = 0;  // all arithmetic is modulo 16bit
   int x;
 
   for (x = 0; x < w; ++x) {
@@ -116,15 +115,15 @@ static void HFilter(SmoothParams* const p) {
   const int r = p->radius;
 
   int x;
-  for (x = 0; x <= r; ++x) {   // left mirroring
+  for (x = 0; x <= r; ++x) {  // left mirroring
     const uint16_t delta = in[x + r - 1] + in[r - x];
     out[x] = (delta * scale) >> FIX;
   }
-  for (; x < w - r; ++x) {     // bulk middle run
+  for (; x < w - r; ++x) {  // bulk middle run
     const uint16_t delta = in[x + r] - in[x - r - 1];
     out[x] = (delta * scale) >> FIX;
   }
-  for (; x < w; ++x) {         // right mirroring
+  for (; x < w; ++x) {  // right mirroring
     const uint16_t delta =
         2 * in[w - 1] - in[2 * w - 2 - r - x] - in[x - r - 1];
     out[x] = (delta * scale) >> FIX;
@@ -171,9 +170,9 @@ static void InitCorrectionLUT(int16_t* const lut, int min_dist) {
   const int delta = threshold1 - threshold2;
   int i;
   for (i = 1; i <= LUT_SIZE; ++i) {
-    int c = (i <= threshold2) ? (i << DFIX)
-          : (i < threshold1) ? max_threshold * (threshold1 - i) / delta
-          : 0;
+    int c = (i <= threshold2)  ? (i << DFIX)
+            : (i < threshold1) ? max_threshold * (threshold1 - i) / delta
+                               : 0;
     c >>= LFIX;
     lut[+i] = +c;
     lut[-i] = -c;
@@ -183,7 +182,7 @@ static void InitCorrectionLUT(int16_t* const lut, int min_dist) {
 
 static void CountLevels(SmoothParams* const p) {
   int i, j, last_level;
-  uint8_t used_levels[256] = { 0 };
+  uint8_t used_levels[256] = {0};
   const uint8_t* data = p->src;
   p->min = 255;
   p->max = 0;
@@ -219,7 +218,7 @@ static int InitParams(uint8_t* const data, int width, int height, int stride,
   const int R = 2 * radius + 1;  // total size of the kernel
 
   const size_t size_scratch_m = (R + 1) * width * sizeof(*p->start);
-  const size_t size_m =  width * sizeof(*p->average);
+  const size_t size_m = width * sizeof(*p->average);
   const size_t size_lut = (1 + 2 * LUT_SIZE) * sizeof(*p->correction);
   const size_t total_size = size_scratch_m + size_m + size_lut;
   uint8_t* mem = (uint8_t*)WebPSafeMalloc(1U, total_size);
@@ -256,9 +255,7 @@ static int InitParams(uint8_t* const data, int width, int height, int stride,
   return 1;
 }
 
-static void CleanupParams(SmoothParams* const p) {
-  WebPSafeFree(p->mem);
-}
+static void CleanupParams(SmoothParams* const p) { WebPSafeFree(p->mem); }
 
 int WebPDequantizeLevels(uint8_t* const data, int width, int height, int stride,
                          int strength) {

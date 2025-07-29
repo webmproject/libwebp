@@ -25,31 +25,31 @@
 #endif
 #define CINTERFACE
 #define COBJMACROS
-#define _WIN32_IE 0x500  // Workaround bug in shlwapi.h when compiling C++
-                         // code with COBJMACROS.
+#define _WIN32_IE \
+  0x500            // Workaround bug in shlwapi.h when compiling C++
+                   // code with COBJMACROS.
 #include <ole2.h>  // CreateStreamOnHGlobal()
 #include <shlwapi.h>
 #include <tchar.h>
-#include <windows.h>
 #include <wincodec.h>
+#include <windows.h>
 
 #include "../examples/unicode.h"
 #include "./imageio_util.h"
 #include "./metadata.h"
 #include "webp/encode.h"
 
-#define IFS(fn)                                                     \
-  do {                                                              \
-    if (SUCCEEDED(hr)) {                                            \
-      hr = (fn);                                                    \
-      if (FAILED(hr)) fprintf(stderr, #fn " failed %08lx\n", hr);   \
-    }                                                               \
+#define IFS(fn)                                                   \
+  do {                                                            \
+    if (SUCCEEDED(hr)) {                                          \
+      hr = (fn);                                                  \
+      if (FAILED(hr)) fprintf(stderr, #fn " failed %08lx\n", hr); \
+    }                                                             \
   } while (0)
 
 // modified version of DEFINE_GUID from guiddef.h.
 #define WEBP_DEFINE_GUID(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
-  static const GUID name = \
-      { l, w1, w2, { b1, b2,  b3,  b4,  b5,  b6,  b7,  b8 } }
+  static const GUID name = {l, w1, w2, {b1, b2, b3, b4, b5, b6, b7, b8}}
 
 #ifdef __cplusplus
 #define MAKE_REFGUID(x) (x)
@@ -66,23 +66,17 @@ typedef struct WICFormatImporter {
 // From Microsoft SDK 7.0a -- wincodec.h
 // Create local copies for compatibility when building against earlier
 // versions of the SDK.
-WEBP_DEFINE_GUID(GUID_WICPixelFormat24bppBGR_,
-                 0x6fddc324, 0x4e03, 0x4bfe,
-                 0xb1, 0x85, 0x3d, 0x77, 0x76, 0x8d, 0xc9, 0x0c);
-WEBP_DEFINE_GUID(GUID_WICPixelFormat24bppRGB_,
-                 0x6fddc324, 0x4e03, 0x4bfe,
-                 0xb1, 0x85, 0x3d, 0x77, 0x76, 0x8d, 0xc9, 0x0d);
-WEBP_DEFINE_GUID(GUID_WICPixelFormat32bppBGRA_,
-                 0x6fddc324, 0x4e03, 0x4bfe,
+WEBP_DEFINE_GUID(GUID_WICPixelFormat24bppBGR_, 0x6fddc324, 0x4e03, 0x4bfe, 0xb1,
+                 0x85, 0x3d, 0x77, 0x76, 0x8d, 0xc9, 0x0c);
+WEBP_DEFINE_GUID(GUID_WICPixelFormat24bppRGB_, 0x6fddc324, 0x4e03, 0x4bfe, 0xb1,
+                 0x85, 0x3d, 0x77, 0x76, 0x8d, 0xc9, 0x0d);
+WEBP_DEFINE_GUID(GUID_WICPixelFormat32bppBGRA_, 0x6fddc324, 0x4e03, 0x4bfe,
                  0xb1, 0x85, 0x3d, 0x77, 0x76, 0x8d, 0xc9, 0x0f);
-WEBP_DEFINE_GUID(GUID_WICPixelFormat32bppRGBA_,
-                 0xf5c7ad2d, 0x6a8d, 0x43dd,
+WEBP_DEFINE_GUID(GUID_WICPixelFormat32bppRGBA_, 0xf5c7ad2d, 0x6a8d, 0x43dd,
                  0xa7, 0xa8, 0xa2, 0x99, 0x35, 0x26, 0x1a, 0xe9);
-WEBP_DEFINE_GUID(GUID_WICPixelFormat64bppBGRA_,
-                 0x1562ff7c, 0xd352, 0x46f9,
+WEBP_DEFINE_GUID(GUID_WICPixelFormat64bppBGRA_, 0x1562ff7c, 0xd352, 0x46f9,
                  0x97, 0x9e, 0x42, 0x97, 0x6b, 0x79, 0x22, 0x46);
-WEBP_DEFINE_GUID(GUID_WICPixelFormat64bppRGBA_,
-                 0x6fddc324, 0x4e03, 0x4bfe,
+WEBP_DEFINE_GUID(GUID_WICPixelFormat64bppRGBA_, 0x6fddc324, 0x4e03, 0x4bfe,
                  0xb1, 0x85, 0x3d, 0x77, 0x76, 0x8d, 0xc9, 0x16);
 
 static HRESULT OpenInputStream(const char* filename, IStream** stream) {
@@ -147,8 +141,7 @@ static HRESULT ExtractICCP(IWICImagingFactory* const factory,
 
   if (SUCCEEDED(hr)) {
     UINT num_color_contexts;
-    IFS(IWICBitmapFrameDecode_GetColorContexts(frame,
-                                               count, color_contexts,
+    IFS(IWICBitmapFrameDecode_GetColorContexts(frame, count, color_contexts,
                                                &num_color_contexts));
     assert(FAILED(hr) || num_color_contexts <= count);
     for (i = 0; SUCCEEDED(hr) && i < num_color_contexts; ++i) {
@@ -156,8 +149,8 @@ static HRESULT ExtractICCP(IWICImagingFactory* const factory,
       IFS(IWICColorContext_GetType(color_contexts[i], &type));
       if (SUCCEEDED(hr) && type == WICColorContextProfile) {
         UINT size;
-        IFS(IWICColorContext_GetProfileBytes(color_contexts[i],
-                                             0, NULL, &size));
+        IFS(IWICColorContext_GetProfileBytes(color_contexts[i], 0, NULL,
+                                             &size));
         if (SUCCEEDED(hr) && size > 0) {
           iccp->bytes = (uint8_t*)malloc(size);
           if (iccp->bytes == NULL) {
@@ -165,9 +158,8 @@ static HRESULT ExtractICCP(IWICImagingFactory* const factory,
             break;
           }
           iccp->size = size;
-          IFS(IWICColorContext_GetProfileBytes(color_contexts[i],
-                                               (UINT)iccp->size, iccp->bytes,
-                                               &size));
+          IFS(IWICColorContext_GetProfileBytes(
+              color_contexts[i], (UINT)iccp->size, iccp->bytes, &size));
           if (SUCCEEDED(hr) && size != iccp->size) {
             fprintf(stderr, "Warning! ICC profile size (%u) != expected (%u)\n",
                     size, (uint32_t)iccp->size);
@@ -209,8 +201,7 @@ static int HasPalette(GUID pixel_format) {
 
 static int HasAlpha(IWICImagingFactory* const factory,
                     IWICBitmapDecoder* const decoder,
-                    IWICBitmapFrameDecode* const frame,
-                    GUID pixel_format) {
+                    IWICBitmapFrameDecode* const frame, GUID pixel_format) {
   int has_alpha;
   if (HasPalette(pixel_format)) {
     IWICPalette* frame_palette = NULL;
@@ -245,21 +236,20 @@ static int HasAlpha(IWICImagingFactory* const factory,
   return has_alpha;
 }
 
-int ReadPictureWithWIC(const char* const filename,
-                       WebPPicture* const pic, int keep_alpha,
-                       Metadata* const metadata) {
+int ReadPictureWithWIC(const char* const filename, WebPPicture* const pic,
+                       int keep_alpha, Metadata* const metadata) {
   // From Microsoft SDK 6.0a -- ks.h
   // Define a local copy to avoid link errors under mingw.
   WEBP_DEFINE_GUID(GUID_NULL_, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
   static const WICFormatImporter kAlphaFormatImporters[] = {
-    { &GUID_WICPixelFormat32bppBGRA_, 4, WebPPictureImportBGRA },
-    { &GUID_WICPixelFormat32bppRGBA_, 4, WebPPictureImportRGBA },
-    { NULL, 0, NULL },
+      {&GUID_WICPixelFormat32bppBGRA_, 4, WebPPictureImportBGRA},
+      {&GUID_WICPixelFormat32bppRGBA_, 4, WebPPictureImportRGBA},
+      {NULL, 0, NULL},
   };
   static const WICFormatImporter kNonAlphaFormatImporters[] = {
-    { &GUID_WICPixelFormat24bppBGR_, 3, WebPPictureImportBGR },
-    { &GUID_WICPixelFormat24bppRGB_, 3, WebPPictureImportRGB },
-    { NULL, 0, NULL },
+      {&GUID_WICPixelFormat24bppBGR_, 3, WebPPictureImportBGR},
+      {&GUID_WICPixelFormat24bppRGB_, 3, WebPPictureImportRGB},
+      {NULL, 0, NULL},
   };
   HRESULT hr = S_OK;
   IWICBitmapFrameDecode* frame = NULL;
@@ -274,26 +264,20 @@ int ReadPictureWithWIC(const char* const filename,
   const WICFormatImporter* importer = NULL;
   GUID src_container_format = GUID_NULL_;
   // From Windows Kits\10\Include\10.0.19041.0\um\wincodec.h
-  WEBP_DEFINE_GUID(GUID_ContainerFormatWebp_,
-                   0xe094b0e2, 0x67f2, 0x45b3,
-                   0xb0, 0xea, 0x11, 0x53, 0x37, 0xca, 0x7c, 0xf3);
+  WEBP_DEFINE_GUID(GUID_ContainerFormatWebp_, 0xe094b0e2, 0x67f2, 0x45b3, 0xb0,
+                   0xea, 0x11, 0x53, 0x37, 0xca, 0x7c, 0xf3);
   static const GUID* kAlphaContainers[] = {
-    &GUID_ContainerFormatBmp,
-    &GUID_ContainerFormatPng,
-    &GUID_ContainerFormatTiff,
-    &GUID_ContainerFormatWebp_,
-    NULL
-  };
+      &GUID_ContainerFormatBmp, &GUID_ContainerFormatPng,
+      &GUID_ContainerFormatTiff, &GUID_ContainerFormatWebp_, NULL};
   int has_alpha = 0;
   int64_t stride;
 
   if (filename == NULL || pic == NULL) return 0;
 
   IFS(CoInitialize(NULL));
-  IFS(CoCreateInstance(MAKE_REFGUID(CLSID_WICImagingFactory), NULL,
-                       CLSCTX_INPROC_SERVER,
-                       MAKE_REFGUID(IID_IWICImagingFactory),
-                       (LPVOID*)&factory));
+  IFS(CoCreateInstance(
+      MAKE_REFGUID(CLSID_WICImagingFactory), NULL, CLSCTX_INPROC_SERVER,
+      MAKE_REFGUID(IID_IWICImagingFactory), (LPVOID*)&factory));
   if (hr == REGDB_E_CLASSNOTREG) {
     fprintf(stderr,
             "Couldn't access Windows Imaging Component (are you running "
@@ -303,8 +287,7 @@ int ReadPictureWithWIC(const char* const filename,
   // Prepare for image decoding.
   IFS(OpenInputStream(filename, &stream));
   IFS(IWICImagingFactory_CreateDecoderFromStream(
-          factory, stream, NULL,
-          WICDecodeMetadataCacheOnDemand, &decoder));
+      factory, stream, NULL, WICDecodeMetadataCacheOnDemand, &decoder));
   IFS(IWICBitmapDecoder_GetFrameCount(decoder, &frame_count));
   if (SUCCEEDED(hr)) {
     if (frame_count == 0) {
@@ -338,18 +321,15 @@ int ReadPictureWithWIC(const char* const filename,
        hr == S_OK && importer->import != NULL; ++importer) {
     BOOL can_convert;
     const HRESULT cchr = IWICFormatConverter_CanConvert(
-        converter,
-        MAKE_REFGUID(src_pixel_format),
-        MAKE_REFGUID(*importer->pixel_format),
-        &can_convert);
+        converter, MAKE_REFGUID(src_pixel_format),
+        MAKE_REFGUID(*importer->pixel_format), &can_convert);
     if (SUCCEEDED(cchr) && can_convert) break;
   }
   if (importer->import == NULL) hr = E_FAIL;
 
-  IFS(IWICFormatConverter_Initialize(converter, (IWICBitmapSource*)frame,
-                                     importer->pixel_format,
-                                     WICBitmapDitherTypeNone,
-                                     NULL, 0.0, WICBitmapPaletteTypeCustom));
+  IFS(IWICFormatConverter_Initialize(
+      converter, (IWICBitmapSource*)frame, importer->pixel_format,
+      WICBitmapDitherTypeNone, NULL, 0.0, WICBitmapPaletteTypeCustom));
 
   // Decode.
   IFS(IWICFormatConverter_GetSize(converter, &width, &height));
@@ -361,18 +341,17 @@ int ReadPictureWithWIC(const char* const filename,
 
   if (SUCCEEDED(hr)) {
     rgb = (BYTE*)malloc((size_t)stride * height);
-    if (rgb == NULL)
-      hr = E_OUTOFMEMORY;
+    if (rgb == NULL) hr = E_OUTOFMEMORY;
   }
-  IFS(IWICFormatConverter_CopyPixels(converter, NULL,
-                                     (UINT)stride, (UINT)stride * height, rgb));
+  IFS(IWICFormatConverter_CopyPixels(converter, NULL, (UINT)stride,
+                                     (UINT)stride * height, rgb));
 
   // WebP conversion.
   if (SUCCEEDED(hr)) {
     int ok;
     pic->width = width;
     pic->height = height;
-    pic->use_argb = 1;    // For WIC, we always force to argb
+    pic->use_argb = 1;  // For WIC, we always force to argb
     ok = importer->import(pic, rgb, (int)stride);
     if (!ok) hr = E_FAIL;
   }
@@ -394,7 +373,7 @@ int ReadPictureWithWIC(const char* const filename,
   free(rgb);
   return SUCCEEDED(hr);
 }
-#else  // !HAVE_WINCODEC_H
+#else   // !HAVE_WINCODEC_H
 int ReadPictureWithWIC(const char* const filename,
                        struct WebPPicture* const pic, int keep_alpha,
                        struct Metadata* const metadata) {
@@ -402,10 +381,11 @@ int ReadPictureWithWIC(const char* const filename,
   (void)pic;
   (void)keep_alpha;
   (void)metadata;
-  fprintf(stderr, "Windows Imaging Component (WIC) support not compiled. "
-                  "Visual Studio and mingw-w64 builds support WIC. Make sure "
-                  "wincodec.h detection is working correctly if using autoconf "
-                  "and HAVE_WINCODEC_H is defined before building.\n");
+  fprintf(stderr,
+          "Windows Imaging Component (WIC) support not compiled. "
+          "Visual Studio and mingw-w64 builds support WIC. Make sure "
+          "wincodec.h detection is working correctly if using autoconf "
+          "and HAVE_WINCODEC_H is defined before building.\n");
   return 0;
 }
 #endif  // HAVE_WINCODEC_H
