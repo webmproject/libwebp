@@ -735,14 +735,14 @@ static int ParseCommandLine(Config* config, const W_CHAR** const unicode_argv) {
       } else if (!strcmp(argv[i], "-h") || !strcmp(argv[i], "-help")) {
         PrintHelp();
         DeleteConfig(config);
-        LOCAL_FREE((W_CHAR** const)unicode_argv);
+        LOCAL_FREE((W_CHAR**)unicode_argv);
         exit(0);
       } else if (!strcmp(argv[i], "-version")) {
         const int version = WebPGetMuxVersion();
         printf("%d.%d.%d\n",
                (version >> 16) & 0xff, (version >> 8) & 0xff, version & 0xff);
         DeleteConfig(config);
-        LOCAL_FREE((W_CHAR** const)unicode_argv);
+        LOCAL_FREE((W_CHAR**)unicode_argv);
         exit(0);
       } else if (!strcmp(argv[i], "--")) {
         if (i < argc - 1) {
