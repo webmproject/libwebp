@@ -137,12 +137,12 @@ static int CompareAnimatedImagePair(const AnimatedImage* const img1,
   const int is_multi_frame_image = (img1->num_frames > 1);
   uint32_t i;
 
-  ok = CompareValues(img1->canvas_width, img2->canvas_width,
-                     "Canvas width mismatch") && ok;
-  ok = CompareValues(img1->canvas_height, img2->canvas_height,
-                     "Canvas height mismatch") && ok;
-  ok = CompareValues(img1->num_frames, img2->num_frames,
-                     "Frame count mismatch") && ok;
+  ok &= CompareValues(img1->canvas_width, img2->canvas_width,
+                      "Canvas width mismatch");
+  ok &= CompareValues(img1->canvas_height, img2->canvas_height,
+                      "Canvas height mismatch");
+  ok &= CompareValues(img1->num_frames, img2->num_frames,
+                      "Frame count mismatch");
   if (!ok) return 0;  // These are fatal failures, can't proceed.
 
   if (is_multi_frame_image) {  // Checks relevant for multi-frame images only.
@@ -155,11 +155,10 @@ static int CompareAnimatedImagePair(const AnimatedImage* const img1,
          img2->format == ANIM_GIF && img2->loop_count == 65536)) {
       max_loop_count_workaround = 1;
     }
-    ok = (max_loop_count_workaround ||
-          CompareValues(img1->loop_count, img2->loop_count,
-                        "Loop count mismatch")) && ok;
-    ok = CompareBackgroundColor(img1->bgcolor, img2->bgcolor,
-                                premultiply) && ok;
+    ok &= (max_loop_count_workaround ||
+           CompareValues(img1->loop_count, img2->loop_count,
+                         "Loop count mismatch"));
+    ok &= CompareBackgroundColor(img1->bgcolor, img2->bgcolor, premultiply);
   }
 
   for (i = 0; i < img1->num_frames; ++i) {

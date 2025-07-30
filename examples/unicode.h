@@ -48,7 +48,7 @@
 #define GET_WARGV_OR_NULL() wargv
 
 // Release resources. LocalFree() is needed after CommandLineToArgvW().
-#define FREE_WARGV() LOCAL_FREE((W_CHAR** const)wargv)
+#define FREE_WARGV() LOCAL_FREE((W_CHAR**)wargv)
 #define LOCAL_FREE(WARGV)                  \
   do {                                     \
     if ((WARGV) != NULL) LocalFree(WARGV); \
