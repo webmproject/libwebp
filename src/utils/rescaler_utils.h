@@ -18,7 +18,10 @@
 extern "C" {
 #endif
 
+#include "src/utils/bounds_safety.h"
 #include "src/webp/types.h"
+
+WEBP_ASSUME_UNSAFE_INDEXABLE_ABI
 
 #define WEBP_RESCALER_RFIX 32  // fixed-point precision for multiplies
 #define WEBP_RESCALER_ONE (1ull << WEBP_RESCALER_RFIX)

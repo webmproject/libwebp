@@ -14,7 +14,10 @@
 #ifndef WEBP_UTILS_HUFFMAN_ENCODE_UTILS_H_
 #define WEBP_UTILS_HUFFMAN_ENCODE_UTILS_H_
 
+#include "src/utils/bounds_safety.h"
 #include "src/webp/types.h"
+
+WEBP_ASSUME_UNSAFE_INDEXABLE_ABI
 
 #ifdef __cplusplus
 extern "C" {

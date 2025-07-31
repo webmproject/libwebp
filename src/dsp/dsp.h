@@ -19,7 +19,10 @@
 #endif
 
 #include "src/dsp/cpu.h"
+#include "src/utils/bounds_safety.h"
 #include "src/webp/types.h"
+
+WEBP_ASSUME_UNSAFE_INDEXABLE_ABI
 
 #ifdef __cplusplus
 extern "C" {

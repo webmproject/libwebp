@@ -26,9 +26,12 @@
 #include "src/dsp/cpu.h"
 #include "src/dsp/dsp.h"
 #include "src/utils/bit_reader_utils.h"
+#include "src/utils/bounds_safety.h"
 #include "src/utils/endian_inl_utils.h"
 #include "src/utils/utils.h"
 #include "src/webp/types.h"
+
+WEBP_ASSUME_UNSAFE_INDEXABLE_ABI
 
 #ifdef __cplusplus
 extern "C" {
@@ -79,7 +82,7 @@ static WEBP_UBSAN_IGNORE_UNDEF WEBP_INLINE void VP8LoadNewBytes(
         : "memory", "at");
 #else
     lbit_t in_bits;
-    memcpy(&in_bits, br->buf, sizeof(in_bits));
+    WEBP_UNSAFE_MEMCPY(&in_bits, br->buf, sizeof(in_bits));
 #endif
     br->buf += BITS >> 3;
 #if !defined(WORDS_BIGENDIAN)

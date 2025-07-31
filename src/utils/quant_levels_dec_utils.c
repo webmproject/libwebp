@@ -18,8 +18,11 @@
 
 #include <string.h>  // for memset
 
+#include "src/utils/bounds_safety.h"
 #include "src/utils/utils.h"
 #include "src/webp/types.h"
+
+WEBP_ASSUME_UNSAFE_INDEXABLE_ABI
 
 // #define USE_DITHERING   // uncomment to enable ordered dithering (not vital)
 
@@ -230,7 +233,7 @@ static int InitParams(uint8_t* const data, int width, int height, int stride,
   p->cur = p->start;
   p->end = p->start + R * width;
   p->top = p->end - width;
-  memset(p->top, 0, width * sizeof(*p->top));
+  WEBP_UNSAFE_MEMSET(p->top, 0, width * sizeof(*p->top));
   mem += size_scratch_m;
 
   p->average = (uint16_t*)mem;
@@ -270,7 +273,7 @@ int WebPDequantizeLevels(uint8_t* const data, int width, int height, int stride,
 
   if (radius > 0) {
     SmoothParams p;
-    memset(&p, 0, sizeof(p));
+    WEBP_UNSAFE_MEMSET(&p, 0, sizeof(p));
     if (!InitParams(data, width, height, stride, radius, &p)) return 0;
     if (p.num_levels > 2) {
       for (; p.row < p.height; ++p.row) {

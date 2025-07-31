@@ -17,7 +17,10 @@
 #endif
 
 #include "src/dsp/dsp.h"
+#include "src/utils/bounds_safety.h"
 #include "src/webp/types.h"
+
+WEBP_ASSUME_UNSAFE_INDEXABLE_ABI
 
 #if defined(WORDS_BIGENDIAN)
 #define HToLE32 BSwap32
