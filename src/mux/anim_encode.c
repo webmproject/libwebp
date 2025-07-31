@@ -848,13 +848,76 @@ enum {
 #define MIN_COLORS_LOSSY     31  // Don't try lossy below this threshold.
 #define MAX_COLORS_LOSSLESS 194  // Don't try lossless above this threshold.
 
+static void GetEncodedData(const WebPMemoryWriter* const memory,
+                           WebPData* const encoded_data) {
+  encoded_data->bytes = memory->mem;
+  encoded_data->size  = memory->size;
+}
+
+// Sets dispose method of the previous frame to be 'dispose_method'.
+static void SetPreviousDisposeMethod(WebPAnimEncoder* const enc,
+                                     WebPMuxAnimDispose dispose_method) {
+  const size_t position = enc->count - 2;
+  EncodedFrame* const prev_enc_frame = GetFrame(enc, position);
+  assert(enc->count >= 2);  // As current and previous frames are in enc.
+
+  if (enc->prev_candidate_undecided) {
+    assert(dispose_method == WEBP_MUX_DISPOSE_NONE);
+    prev_enc_frame->sub_frame.dispose_method = dispose_method;
+    prev_enc_frame->key_frame.dispose_method = dispose_method;
+  } else {
+    WebPMuxFrameInfo* const prev_info = prev_enc_frame->is_key_frame
+                                        ? &prev_enc_frame->key_frame
+                                        : &prev_enc_frame->sub_frame;
+    prev_info->dispose_method = dispose_method;
+  }
+}
+
+// Pick the candidate encoded frame with smallest size and release other
+// candidates.
+// TODO(later): Perhaps a rough SSIM/PSNR produced by the encoder should
+// also be a criteria, in addition to sizes.
+static void PickBestCandidate(WebPAnimEncoder* const enc,
+                              Candidate* const candidate,
+                              WebPMuxAnimDispose dispose_method,
+                              int is_key_frame,
+                              Candidate** const best_candidate,
+                              EncodedFrame* const encoded_frame) {
+  if (*best_candidate == NULL ||
+      candidate->mem.size < (*best_candidate)->mem.size) {
+    WebPMuxFrameInfo* const dst =
+        is_key_frame ? &encoded_frame->key_frame : &encoded_frame->sub_frame;
+    *dst = candidate->info;
+    GetEncodedData(&candidate->mem, &dst->bitstream);
+    if (!is_key_frame) {
+      // Note: Previous dispose method only matters for non-keyframes.
+      // Also, we don't want to modify previous dispose method that was
+      // selected when a non key-frame was assumed.
+      SetPreviousDisposeMethod(enc, dispose_method);
+    }
+    enc->prev_rect = candidate->rect;  // save for next frame.
+
+    // Release the memory of the previous best candidate if any.
+    if (*best_candidate != NULL) {
+      WebPMemoryWriterClear(&(*best_candidate)->mem);
+      (*best_candidate)->evaluate = 0;
+    }
+    *best_candidate = candidate;
+  } else {
+    // Release the memory of the current candidate which is not the best one.
+    WebPMemoryWriterClear(&candidate->mem);
+    candidate->evaluate = 0;
+  }
+}
+
 // Generates candidates for a given dispose method given pre-filled sub-frame
 // 'params'.
 static WebPEncodingError GenerateCandidates(
     WebPAnimEncoder* const enc, Candidate candidates[CANDIDATE_COUNT],
     WebPMuxAnimDispose dispose_method, int is_lossless, int is_key_frame,
     SubFrameParams* const params,
-    const WebPConfig* const config_ll, const WebPConfig* const config_lossy) {
+    const WebPConfig* const config_ll, const WebPConfig* const config_lossy,
+    Candidate** const best_candidate, EncodedFrame* const encoded_frame) {
   WebPEncodingError error_code = VP8_ENC_OK;
   const int is_dispose_none = (dispose_method == WEBP_MUX_DISPOSE_NONE);
   Candidate* const candidate_ll =
@@ -900,50 +963,28 @@ static WebPEncodingError GenerateCandidates(
     error_code = EncodeCandidate(&params->sub_frame_ll, &params->rect_ll,
                                  config_ll, use_blending_ll, candidate_ll);
     if (error_code != VP8_ENC_OK) return error_code;
+    PickBestCandidate(enc, candidate_ll, dispose_method, is_key_frame,
+                      best_candidate, encoded_frame);
   }
   if (evaluate_lossy) {
     CopyCurrentCanvas(enc);
     if (use_blending_lossy) {
-      enc->curr_canvas_copy_modified =
-          FlattenSimilarBlocks(prev_canvas, &params->rect_lossy, curr_canvas,
-                               config_lossy->quality);
+      enc->curr_canvas_copy_modified = FlattenSimilarBlocks(
+          prev_canvas, &params->rect_lossy, curr_canvas, config_lossy->quality);
     }
     error_code =
         EncodeCandidate(&params->sub_frame_lossy, &params->rect_lossy,
                         config_lossy, use_blending_lossy, candidate_lossy);
     if (error_code != VP8_ENC_OK) return error_code;
     enc->curr_canvas_copy_modified = 1;
+    PickBestCandidate(enc, candidate_lossy, dispose_method, is_key_frame,
+                      best_candidate, encoded_frame);
   }
   return error_code;
 }
 
 #undef MIN_COLORS_LOSSY
 #undef MAX_COLORS_LOSSLESS
-
-static void GetEncodedData(const WebPMemoryWriter* const memory,
-                           WebPData* const encoded_data) {
-  encoded_data->bytes = memory->mem;
-  encoded_data->size  = memory->size;
-}
-
-// Sets dispose method of the previous frame to be 'dispose_method'.
-static void SetPreviousDisposeMethod(WebPAnimEncoder* const enc,
-                                     WebPMuxAnimDispose dispose_method) {
-  const size_t position = enc->count - 2;
-  EncodedFrame* const prev_enc_frame = GetFrame(enc, position);
-  assert(enc->count >= 2);  // As current and previous frames are in enc.
-
-  if (enc->prev_candidate_undecided) {
-    assert(dispose_method == WEBP_MUX_DISPOSE_NONE);
-    prev_enc_frame->sub_frame.dispose_method = dispose_method;
-    prev_enc_frame->key_frame.dispose_method = dispose_method;
-  } else {
-    WebPMuxFrameInfo* const prev_info = prev_enc_frame->is_key_frame
-                                        ? &prev_enc_frame->key_frame
-                                        : &prev_enc_frame->sub_frame;
-    prev_info->dispose_method = dispose_method;
-  }
-}
 
 static int IncreasePreviousDuration(WebPAnimEncoder* const enc, int duration) {
   const size_t position = enc->count - 1;
@@ -1007,53 +1048,6 @@ static int IncreasePreviousDuration(WebPAnimEncoder* const enc, int duration) {
   return 1;
 }
 
-// Pick the candidate encoded frame with smallest size and release other
-// candidates.
-// TODO(later): Perhaps a rough SSIM/PSNR produced by the encoder should
-// also be a criteria, in addition to sizes.
-static void PickBestCandidate(WebPAnimEncoder* const enc,
-                              Candidate* const candidates, int is_key_frame,
-                              EncodedFrame* const encoded_frame) {
-  int i;
-  int best_idx = -1;
-  size_t best_size = ~0;
-  for (i = 0; i < CANDIDATE_COUNT; ++i) {
-    if (candidates[i].evaluate) {
-      const size_t candidate_size = candidates[i].mem.size;
-      if (candidate_size < best_size) {
-        best_idx = i;
-        best_size = candidate_size;
-      }
-    }
-  }
-  assert(best_idx != -1);
-  for (i = 0; i < CANDIDATE_COUNT; ++i) {
-    if (candidates[i].evaluate) {
-      if (i == best_idx) {
-        WebPMuxFrameInfo* const dst = is_key_frame
-                                      ? &encoded_frame->key_frame
-                                      : &encoded_frame->sub_frame;
-        *dst = candidates[i].info;
-        GetEncodedData(&candidates[i].mem, &dst->bitstream);
-        if (!is_key_frame) {
-          // Note: Previous dispose method only matters for non-keyframes.
-          // Also, we don't want to modify previous dispose method that was
-          // selected when a non key-frame was assumed.
-          const WebPMuxAnimDispose prev_dispose_method =
-              (best_idx == LL_DISP_NONE || best_idx == LOSSY_DISP_NONE)
-                  ? WEBP_MUX_DISPOSE_NONE
-                  : WEBP_MUX_DISPOSE_BACKGROUND;
-          SetPreviousDisposeMethod(enc, prev_dispose_method);
-        }
-        enc->prev_rect = candidates[i].rect;  // save for next frame.
-      } else {
-        WebPMemoryWriterClear(&candidates[i].mem);
-        candidates[i].evaluate = 0;
-      }
-    }
-  }
-}
-
 // Depending on the configuration, tries different compressions
 // (lossy/lossless), dispose methods, blending methods etc to encode the current
 // frame and outputs the best one in 'encoded_frame'.
@@ -1068,6 +1062,7 @@ static WebPEncodingError SetFrame(WebPAnimEncoder* const enc,
   const WebPPicture* const curr_canvas = &enc->curr_canvas_copy;
   const WebPPicture* const prev_canvas = &enc->prev_canvas;
   Candidate candidates[CANDIDATE_COUNT];
+  Candidate* best_candidate = NULL;
   const int is_lossless = config->lossless;
   const int consider_lossless = is_lossless || enc->options.allow_mixed;
   const int consider_lossy = !is_lossless || enc->options.allow_mixed;
@@ -1157,9 +1152,10 @@ static WebPEncodingError SetFrame(WebPAnimEncoder* const enc,
   }
 
   if (dispose_none_params.should_try) {
-    error_code = GenerateCandidates(
-        enc, candidates, WEBP_MUX_DISPOSE_NONE, is_lossless, is_key_frame,
-        &dispose_none_params, &config_ll, &config_lossy);
+    error_code =
+        GenerateCandidates(enc, candidates, WEBP_MUX_DISPOSE_NONE, is_lossless,
+                           is_key_frame, &dispose_none_params, &config_ll,
+                           &config_lossy, &best_candidate, encoded_frame);
     if (error_code != VP8_ENC_OK) goto Err;
   }
 
@@ -1168,12 +1164,12 @@ static WebPEncodingError SetFrame(WebPAnimEncoder* const enc,
     assert(dispose_bg_possible);
     error_code = GenerateCandidates(
         enc, candidates, WEBP_MUX_DISPOSE_BACKGROUND, is_lossless, is_key_frame,
-        &dispose_bg_params, &config_ll, &config_lossy);
+        &dispose_bg_params, &config_ll, &config_lossy, &best_candidate,
+        encoded_frame);
     if (error_code != VP8_ENC_OK) goto Err;
   }
 
-  PickBestCandidate(enc, candidates, is_key_frame, encoded_frame);
-
+  assert(best_candidate != NULL);
   goto End;
 
  Err:
