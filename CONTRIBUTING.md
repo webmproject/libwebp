@@ -64,8 +64,7 @@ for additional details.
 
 The C code style is based on the
 [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html) and
-`clang-format --style=Google`, though this project doesn't use the tool to
-enforce the formatting.
+the formatting is enforced using `clang-format --style=Google`.
 
 CMake files are formatted with
 [cmake-format](https://cmake-format.readthedocs.io/en/latest/). `cmake-format
