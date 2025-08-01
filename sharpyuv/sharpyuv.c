@@ -289,8 +289,6 @@ static void* SafeMalloc(uint64_t nmemb, size_t size) {
   return malloc((size_t)total_size);
 }
 
-#define SAFE_ALLOC(W, H, T) ((T*)SafeMalloc((uint64_t)(W) * (H), sizeof(T)))
-
 static int DoSharpArgbToYuv(const uint8_t* r_ptr, const uint8_t* g_ptr,
                             const uint8_t* b_ptr, int rgb_step, int rgb_stride,
                             int rgb_bit_depth, uint8_t* y_ptr, int y_stride,
@@ -308,30 +306,42 @@ static int DoSharpArgbToYuv(const uint8_t* r_ptr, const uint8_t* g_ptr,
   uint64_t prev_diff_y_sum = ~0;
   int j, iter;
 
-  // TODO(skal): allocate one big memory chunk. But for now, it's easier
-  // for valgrind debugging to have several chunks.
-  fixed_y_t* const tmp_buffer = SAFE_ALLOC(w * 3, 2, fixed_y_t);  // scratch
-  fixed_y_t* const best_y_base = SAFE_ALLOC(w, h, fixed_y_t);
-  fixed_y_t* const target_y_base = SAFE_ALLOC(w, h, fixed_y_t);
-  fixed_y_t* const best_rgb_y = SAFE_ALLOC(w, 2, fixed_y_t);
-  fixed_t* const best_uv_base = SAFE_ALLOC(uv_w * 3, uv_h, fixed_t);
-  fixed_t* const target_uv_base = SAFE_ALLOC(uv_w * 3, uv_h, fixed_t);
-  fixed_t* const best_rgb_uv = SAFE_ALLOC(uv_w * 3, 1, fixed_t);
-  fixed_y_t* best_y = best_y_base;
-  fixed_y_t* target_y = target_y_base;
-  fixed_t* best_uv = best_uv_base;
-  fixed_t* target_uv = target_uv_base;
+  const uint64_t tmp_buffer_size = (uint64_t)w * 3 * 2;
+  const uint64_t best_y_base_size = (uint64_t)w * h;
+  const uint64_t target_y_base_size = (uint64_t)w * h;
+  const uint64_t best_rgb_y_size = (uint64_t)w * 2;
+  const uint64_t best_uv_base_size = (uint64_t)uv_w * 3 * uv_h;
+  const uint64_t target_uv_base_size = (uint64_t)uv_w * 3 * uv_h;
+  const uint64_t best_rgb_uv_size = (uint64_t)uv_w * 3;
+  fixed_y_t* const tmp_buffer = (fixed_y_t*)SafeMalloc(
+      (tmp_buffer_size + best_y_base_size + target_y_base_size +
+       best_rgb_y_size) +
+          (best_uv_base_size + target_uv_base_size + best_rgb_uv_size),
+      sizeof(*tmp_buffer));
+  fixed_y_t *best_y_base, *target_y_base, *best_rgb_y;
+  fixed_t *best_uv_base, *target_uv_base, *best_rgb_uv;
+  fixed_y_t *best_y, *target_y;
+  fixed_t *best_uv, *target_uv;
   const uint64_t diff_y_threshold = (uint64_t)(3.0 * w * h);
   int ok;
   assert(w > 0);
   assert(h > 0);
+  assert(sizeof(fixed_y_t) == sizeof(fixed_t));
 
-  if (best_y_base == NULL || best_uv_base == NULL || target_y_base == NULL ||
-      target_uv_base == NULL || best_rgb_y == NULL || best_rgb_uv == NULL ||
-      tmp_buffer == NULL) {
+  if (tmp_buffer == NULL) {
     ok = 0;
     goto End;
   }
+  best_y_base = tmp_buffer + tmp_buffer_size;
+  target_y_base = best_y_base + best_y_base_size;
+  best_rgb_y = target_y_base + target_y_base_size;
+  best_uv_base = (fixed_t*)(best_rgb_y + best_rgb_y_size);
+  target_uv_base = best_uv_base + best_uv_base_size;
+  best_rgb_uv = target_uv_base + target_uv_base_size;
+  best_y = best_y_base;
+  target_y = target_y_base;
+  best_uv = best_uv_base;
+  target_uv = target_uv_base;
 
   // Import RGB samples to W/RGB representation.
   for (j = 0; j < height; j += 2) {
@@ -414,17 +424,9 @@ static int DoSharpArgbToYuv(const uint8_t* r_ptr, const uint8_t* g_ptr,
                         width, height, yuv_matrix);
 
 End:
-  free(best_y_base);
-  free(best_uv_base);
-  free(target_y_base);
-  free(target_uv_base);
-  free(best_rgb_y);
-  free(best_rgb_uv);
   free(tmp_buffer);
   return ok;
 }
-
-#undef SAFE_ALLOC
 
 #if defined(WEBP_USE_THREAD) && !defined(_WIN32)
 #include <pthread.h>  // NOLINT
