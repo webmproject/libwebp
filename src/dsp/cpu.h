@@ -193,7 +193,9 @@
 #if defined(_WIN32)
 #include <windows.h>
 
-#if _WIN32_WINNT >= 0x0600
+#if _WIN32_WINNT < 0x0600
+#error _WIN32_WINNT must target Windows Vista / Server 2008 or newer.
+#endif
 // clang-format off
 #define WEBP_DSP_INIT_VARS(func)               \
   static VP8CPUInfo func##_last_cpuinfo_used = \
@@ -207,20 +209,7 @@
     ReleaseSRWLockExclusive(&func##_lock);                 \
   } while (0)
 // clang-format on
-#else   // _WIN32_WINNT < 0x0600
-// clang-format off
-#define WEBP_DSP_INIT_VARS(func)                        \
-  static volatile VP8CPUInfo func##_last_cpuinfo_used = \
-      (VP8CPUInfo)&func##_last_cpuinfo_used
-#define WEBP_DSP_INIT(func)                               \
-  do {                                                    \
-    if (func##_last_cpuinfo_used == VP8GetCPUInfo) break; \
-    func();                                               \
-    func##_last_cpuinfo_used = VP8GetCPUInfo;             \
-  } while (0)
-// clang-format on
-#endif  // _WIN32_WINNT >= 0x0600
-#else   // !defined(_WIN32)
+#else  // !defined(_WIN32)
 // NOLINTNEXTLINE
 #include <pthread.h>
 
