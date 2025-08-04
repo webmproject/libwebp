@@ -25,9 +25,11 @@
 
 #include <fcntl.h>
 #include <io.h>
-#include <shellapi.h>
 #include <wchar.h>
 #include <windows.h>
+
+// shellapi.h must be included after windows.h.
+#include <shellapi.h>
 
 // Create a wchar_t array containing Unicode parameters.
 #define INIT_WARGV(ARGC, ARGV)                                       \
