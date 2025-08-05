@@ -21,7 +21,10 @@
 
 #include <assert.h>
 
+#include "src/utils/bounds_safety.h"
 #include "src/webp/types.h"
+
+WEBP_ASSUME_UNSAFE_INDEXABLE_ABI
 
 #ifdef __cplusplus
 extern "C" {
@@ -69,7 +72,7 @@ WEBP_EXTERN void WebPSafeFree(void* const ptr);
 // memcpy() is the safe way of moving potentially unaligned 32b memory.
 static WEBP_INLINE uint32_t WebPMemToUint32(const uint8_t* const ptr) {
   uint32_t A;
-  memcpy(&A, ptr, sizeof(A));
+  WEBP_UNSAFE_MEMCPY(&A, ptr, sizeof(A));
   return A;
 }
 
@@ -78,7 +81,7 @@ static WEBP_INLINE int32_t WebPMemToInt32(const uint8_t* const ptr) {
 }
 
 static WEBP_INLINE void WebPUint32ToMem(uint8_t* const ptr, uint32_t val) {
-  memcpy(ptr, &val, sizeof(val));
+  WEBP_UNSAFE_MEMCPY(ptr, &val, sizeof(val));
 }
 
 static WEBP_INLINE void WebPInt32ToMem(uint8_t* const ptr, int val) {

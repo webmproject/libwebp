@@ -15,7 +15,10 @@
 #define WEBP_UTILS_FILTERS_UTILS_H_
 
 #include "src/dsp/dsp.h"
+#include "src/utils/bounds_safety.h"
 #include "src/webp/types.h"
+
+WEBP_ASSUME_UNSAFE_INDEXABLE_ABI
 
 #ifdef __cplusplus
 extern "C" {

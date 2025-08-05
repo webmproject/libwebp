@@ -17,7 +17,10 @@
 #include <string.h>
 
 #include "src/dsp/dsp.h"
+#include "src/utils/bounds_safety.h"
 #include "src/webp/types.h"
+
+WEBP_ASSUME_UNSAFE_INDEXABLE_ABI
 
 // -----------------------------------------------------------------------------
 // Quick estimate of a potentially interesting filter mode to try.
@@ -34,7 +37,7 @@ WEBP_FILTER_TYPE WebPEstimateBestFilter(const uint8_t* data, int width,
                                         int height, int stride) {
   int i, j;
   int bins[WEBP_FILTER_LAST][SMAX];
-  memset(bins, 0, sizeof(bins));
+  WEBP_UNSAFE_MEMSET(bins, 0, sizeof(bins));
 
   // We only sample every other pixels. That's enough.
   for (j = 2; j < height - 1; j += 2) {

@@ -17,9 +17,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "src/utils/bounds_safety.h"
 #include "src/utils/utils.h"
 #include "src/webp/format_constants.h"
 #include "src/webp/types.h"
+
+WEBP_ASSUME_UNSAFE_INDEXABLE_ABI
 
 // Huffman data read via DecodeImageStream is represented in two (red and green)
 // bytes.

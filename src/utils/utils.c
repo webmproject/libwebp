@@ -17,9 +17,12 @@
 #include <stdlib.h>
 #include <string.h>  // for memcpy()
 
+#include "src/utils/bounds_safety.h"
 #include "src/utils/palette.h"
 #include "src/webp/encode.h"
 #include "src/webp/types.h"
+
+WEBP_ASSUME_UNSAFE_INDEXABLE_ABI
 
 // If PRINT_MEM_INFO is defined, extra info (like total memory used, number of
 // alloc/free etc) is printed. For debugging/tuning purpose only (it's slow,
@@ -228,9 +231,21 @@ void WebPSafeFree(void* const ptr) {
 
 // Public API functions.
 
-void* WebPMalloc(size_t size) { return WebPSafeMalloc(1, size); }
+void* WEBP_SINGLE WebPMalloc(size_t size) {
+  // Currently WebPMalloc/WebPFree are declared in src/webp/types.h, which does
+  // not include bounds_safety.h. As such, the "default" annotation for the
+  // pointers they accept/return is __single.
+  //
+  // All callers will need to immediately cast the returned pointer to
+  // WEBP_BIDI_INDEXABLE or WEBP_INDEXABLE via
+  // WEBP_UNSAFE_FORGE_BIDI_INDEXABLE.
+  //
+  // TODO: https://issues.webmproject.org/432511225 - Remove this once we can
+  // annotate WebPMalloc/WebPFree.
+  return WEBP_UNSAFE_FORGE_SINGLE(void*, WebPSafeMalloc(1, size));
+}
 
-void WebPFree(void* ptr) { WebPSafeFree(ptr); }
+void WebPFree(void* WEBP_SINGLE ptr) { WebPSafeFree(ptr); }
 
 //------------------------------------------------------------------------------
 
@@ -239,7 +254,7 @@ void WebPCopyPlane(const uint8_t* src, int src_stride, uint8_t* dst,
   assert(src != NULL && dst != NULL);
   assert(abs(src_stride) >= width && abs(dst_stride) >= width);
   while (height-- > 0) {
-    memcpy(dst, src, width);
+    WEBP_UNSAFE_MEMCPY(dst, src, width);
     src += src_stride;
     dst += dst_stride;
   }

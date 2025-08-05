@@ -17,9 +17,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "src/utils/bounds_safety.h"
 #include "src/utils/utils.h"
 #include "src/webp/format_constants.h"
 #include "src/webp/types.h"
+
+WEBP_ASSUME_UNSAFE_INDEXABLE_ABI
 
 // -----------------------------------------------------------------------------
 // Util function to optimize the symbol map for RLE coding
@@ -228,7 +231,8 @@ static void GenerateOptimalTree(const uint32_t* const histogram,
               break;
             }
           }
-          memmove(tree + (k + 1), tree + k, (tree_size - k) * sizeof(*tree));
+          WEBP_UNSAFE_MEMMOVE(tree + (k + 1), tree + k,
+                              (tree_size - k) * sizeof(*tree));
           tree[k].total_count = count;
           tree[k].value = -1;
 
@@ -408,7 +412,7 @@ void VP8LCreateHuffmanTree(uint32_t* const histogram, int tree_depth_limit,
                            uint8_t* const buf_rle, HuffmanTree* const huff_tree,
                            HuffmanTreeCode* const huff_code) {
   const int num_symbols = huff_code->num_symbols;
-  memset(buf_rle, 0, num_symbols * sizeof(*buf_rle));
+  WEBP_UNSAFE_MEMSET(buf_rle, 0, num_symbols * sizeof(*buf_rle));
   OptimizeHuffmanForRle(num_symbols, buf_rle, histogram);
   GenerateOptimalTree(histogram, num_symbols, huff_tree, tree_depth_limit,
                       huff_code->code_lengths);

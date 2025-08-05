@@ -17,12 +17,15 @@
 #include <assert.h>
 #include <stddef.h>
 
+#include "src/utils/bounds_safety.h"
 #include "src/webp/types.h"
 
 #define NUM_SYMBOLS 256
 
 #define MAX_ITER 6            // Maximum number of convergence steps.
 #define ERROR_THRESHOLD 1e-4  // MSE stopping criterion.
+
+WEBP_ASSUME_UNSAFE_INDEXABLE_ABI
 
 // -----------------------------------------------------------------------------
 // Quantize levels.

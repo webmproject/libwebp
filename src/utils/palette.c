@@ -18,11 +18,14 @@
 #include <string.h>
 
 #include "src/dsp/lossless_common.h"
+#include "src/utils/bounds_safety.h"
 #include "src/utils/color_cache_utils.h"
 #include "src/utils/utils.h"
 #include "src/webp/encode.h"
 #include "src/webp/format_constants.h"
 #include "src/webp/types.h"
+
+WEBP_ASSUME_UNSAFE_INDEXABLE_ABI
 
 // -----------------------------------------------------------------------------
 
@@ -82,7 +85,7 @@ int SearchColorNoIdx(const uint32_t sorted[], uint32_t color, int num_colors) {
 void PrepareMapToPalette(const uint32_t palette[], uint32_t num_colors,
                          uint32_t sorted[], uint32_t idx_map[]) {
   uint32_t i;
-  memcpy(sorted, palette, num_colors * sizeof(*sorted));
+  WEBP_UNSAFE_MEMCPY(sorted, palette, num_colors * sizeof(*sorted));
   qsort(sorted, num_colors, sizeof(*sorted), PaletteCompareColorsForQsort);
   for (i = 0; i < num_colors; ++i) {
     idx_map[SearchColorNoIdx(sorted, palette[i], num_colors)] = i;
@@ -188,7 +191,7 @@ static void PaletteSortMinimizeDeltas(const uint32_t* const palette_sorted,
                                       int num_colors, uint32_t* const palette) {
   uint32_t predict = 0x00000000;
   int i, k;
-  memcpy(palette, palette_sorted, num_colors * sizeof(*palette));
+  WEBP_UNSAFE_MEMCPY(palette, palette_sorted, num_colors * sizeof(*palette));
   if (!PaletteHasNonMonotonousDeltas(palette_sorted, num_colors)) return;
   // Find greedily always the closest color of the predicted color to minimize
   // deltas in the palette. This reduces storage needs since the
@@ -393,11 +396,12 @@ int PaletteSort(PaletteSorting method, const struct WebPPicture* const pic,
   switch (method) {
     case kSortedDefault:
       if (palette_sorted[0] == 0 && num_colors > 17) {
-        memcpy(palette, palette_sorted + 1,
-               (num_colors - 1) * sizeof(*palette_sorted));
+        WEBP_UNSAFE_MEMCPY(palette, palette_sorted + 1,
+                           (num_colors - 1) * sizeof(*palette_sorted));
         palette[num_colors - 1] = 0;
       } else {
-        memcpy(palette, palette_sorted, num_colors * sizeof(*palette));
+        WEBP_UNSAFE_MEMCPY(palette, palette_sorted,
+                           num_colors * sizeof(*palette));
       }
       return 1;
     case kMinimizeDelta:

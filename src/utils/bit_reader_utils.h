@@ -22,7 +22,10 @@
 #include <stdlib.h>  // _byteswap_ulong
 #endif
 #include "src/dsp/cpu.h"
+#include "src/utils/bounds_safety.h"
 #include "src/webp/types.h"
+
+WEBP_ASSUME_UNSAFE_INDEXABLE_ABI
 
 // Warning! This macro triggers quite some MACRO wizardry around func signature!
 #if !defined(BITTRACE)

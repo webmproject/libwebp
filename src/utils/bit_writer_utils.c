@@ -18,9 +18,12 @@
 #include <stdlib.h>
 #include <string.h>  // for memcpy()
 
+#include "src/utils/bounds_safety.h"
 #include "src/utils/endian_inl_utils.h"
 #include "src/utils/utils.h"
 #include "src/webp/types.h"
+
+WEBP_ASSUME_UNSAFE_INDEXABLE_ABI
 
 //------------------------------------------------------------------------------
 // VP8BitWriter
@@ -46,7 +49,7 @@ static int BitWriterResize(VP8BitWriter* const bw, size_t extra_size) {
   }
   if (bw->pos > 0) {
     assert(bw->buf != NULL);
-    memcpy(new_buf, bw->buf, bw->pos);
+    WEBP_UNSAFE_MEMCPY(new_buf, bw->buf, bw->pos);
   }
   WebPSafeFree(bw->buf);
   bw->buf = new_buf;
@@ -180,7 +183,7 @@ int VP8BitWriterAppend(VP8BitWriter* const bw, const uint8_t* data,
   assert(data != NULL);
   if (bw->nb_bits != -8) return 0;  // Flush() must have been called
   if (!BitWriterResize(bw, size)) return 0;
-  memcpy(bw->buf + bw->pos, data, size);
+  WEBP_UNSAFE_MEMCPY(bw->buf + bw->pos, data, size);
   bw->pos += size;
   return 1;
 }
@@ -188,7 +191,7 @@ int VP8BitWriterAppend(VP8BitWriter* const bw, const uint8_t* data,
 void VP8BitWriterWipeOut(VP8BitWriter* const bw) {
   if (bw != NULL) {
     WebPSafeFree(bw->buf);
-    memset(bw, 0, sizeof(*bw));
+    WEBP_UNSAFE_MEMSET(bw, 0, sizeof(*bw));
   }
 }
 
@@ -222,7 +225,7 @@ static int VP8LBitWriterResize(VP8LBitWriter* const bw, size_t extra_size) {
     return 0;
   }
   if (current_size > 0) {
-    memcpy(allocated_buf, bw->buf, current_size);
+    WEBP_UNSAFE_MEMCPY(allocated_buf, bw->buf, current_size);
   }
   WebPSafeFree(bw->buf);
   bw->buf = allocated_buf;
@@ -232,7 +235,7 @@ static int VP8LBitWriterResize(VP8LBitWriter* const bw, size_t extra_size) {
 }
 
 int VP8LBitWriterInit(VP8LBitWriter* const bw, size_t expected_size) {
-  memset(bw, 0, sizeof(*bw));
+  WEBP_UNSAFE_MEMSET(bw, 0, sizeof(*bw));
   return VP8LBitWriterResize(bw, expected_size);
 }
 
@@ -241,7 +244,7 @@ int VP8LBitWriterClone(const VP8LBitWriter* const src,
   const size_t current_size = src->cur - src->buf;
   assert(src->cur >= src->buf && src->cur <= src->end);
   if (!VP8LBitWriterResize(dst, current_size)) return 0;
-  memcpy(dst->buf, src->buf, current_size);
+  WEBP_UNSAFE_MEMCPY(dst->buf, src->buf, current_size);
   dst->bits = src->bits;
   dst->used = src->used;
   dst->error = src->error;
@@ -252,7 +255,7 @@ int VP8LBitWriterClone(const VP8LBitWriter* const src,
 void VP8LBitWriterWipeOut(VP8LBitWriter* const bw) {
   if (bw != NULL) {
     WebPSafeFree(bw->buf);
-    memset(bw, 0, sizeof(*bw));
+    WEBP_UNSAFE_MEMSET(bw, 0, sizeof(*bw));
   }
 }
 
