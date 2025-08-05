@@ -54,8 +54,10 @@ if(MSVC AND CMAKE_C_COMPILER_ID STREQUAL "MSVC")
   endif()
   set(SIMD_DISABLE_FLAGS)
 else()
-  set(SIMD_ENABLE_FLAGS "-mavx2;-msse4.1;-msse2;-mips32;-mdspr2;-mfpu=neon;-mmsa")
-  set(SIMD_DISABLE_FLAGS "-mno-avx2;-mno-sse4.1;-mno-sse2;;-mno-dspr2;;-mno-msa")
+  set(SIMD_ENABLE_FLAGS
+      "-mavx2;-msse4.1;-msse2;-mips32;-mdspr2;-mfpu=neon;-mmsa")
+  set(SIMD_DISABLE_FLAGS
+      "-mno-avx2;-mno-sse4.1;-mno-sse2;;-mno-dspr2;;-mno-msa")
 endif()
 
 set(WEBP_SIMD_FILES_TO_INCLUDE)
