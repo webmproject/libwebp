@@ -27,11 +27,11 @@ WEBP_ASSUME_UNSAFE_INDEXABLE_ABI
 
 #include <windows.h>
 typedef HANDLE pthread_t;
-typedef CRITICAL_SECTION pthread_mutex_t;
 
 #if _WIN32_WINNT < 0x0600
 #error _WIN32_WINNT must target Windows Vista / Server 2008 or newer.
 #endif
+typedef SRWLOCK pthread_mutex_t;
 typedef CONDITION_VARIABLE pthread_cond_t;
 
 #ifndef WINAPI_FAMILY_PARTITION
@@ -93,22 +93,22 @@ static int pthread_join(pthread_t thread, void** value_ptr) {
 // Mutex
 static int pthread_mutex_init(pthread_mutex_t* const mutex, void* mutexattr) {
   (void)mutexattr;
-  InitializeCriticalSectionEx(mutex, /*dwSpinCount=*/0, /*Flags=*/0);
+  InitializeSRWLock(mutex);
   return 0;
 }
 
 static int pthread_mutex_lock(pthread_mutex_t* const mutex) {
-  EnterCriticalSection(mutex);
+  AcquireSRWLockExclusive(mutex);
   return 0;
 }
 
 static int pthread_mutex_unlock(pthread_mutex_t* const mutex) {
-  LeaveCriticalSection(mutex);
+  ReleaseSRWLockExclusive(mutex);
   return 0;
 }
 
 static int pthread_mutex_destroy(pthread_mutex_t* const mutex) {
-  DeleteCriticalSection(mutex);
+  (void)mutex;
   return 0;
 }
 
@@ -131,7 +131,7 @@ static int pthread_cond_signal(pthread_cond_t* const condition) {
 
 static int pthread_cond_wait(pthread_cond_t* const condition,
                              pthread_mutex_t* const mutex) {
-  const int ok = SleepConditionVariableCS(condition, mutex, INFINITE);
+  const int ok = SleepConditionVariableSRW(condition, mutex, INFINITE, 0);
   return !ok;
 }
 
