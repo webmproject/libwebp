@@ -18,11 +18,36 @@ function(webp_check_compiler_flag WEBP_SIMD_FLAG ENABLE_SIMD)
   unset(WEBP_HAVE_FLAG_${WEBP_SIMD_FLAG} CACHE)
   cmake_push_check_state()
   set(CMAKE_REQUIRED_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR})
+
+  # If building a universal binary on macOS, we need to check if one of the
+  # architectures supports the SIMD flag.
+  set(OSX_CHECK "")
+  if(APPLE AND CMAKE_OSX_ARCHITECTURES)
+    list(LENGTH CMAKE_OSX_ARCHITECTURES ARCH_COUNT)
+    if(ARCH_COUNT EQUAL 2)
+      set(OSX_CHECK "defined(WEBP_CAN_HAVE_${WEBP_SIMD_FLAG}) &&")
+    endif()
+  endif()
+
   check_c_source_compiles(
     "
       #include \"${CMAKE_CURRENT_LIST_DIR}/../src/dsp/dsp.h\"
+      #if defined(__APPLE__)
+      #if defined(__x86_64__)
+      #define WEBP_CAN_HAVE_SSE2
+      #define WEBP_CAN_HAVE_SSE41
+      #define WEBP_CAN_HAVE_AVX2
+      #elif defined(__aarch64__)
+      #define WEBP_CAN_HAVE_NEON
+      #endif
+      // MIPS intrinsics are not supported on macOS, but we have to define them
+      // so that the check happens.
+      #define WEBP_CAN_HAVE_MIPS32
+      #define WEBP_CAN_HAVE_MIPS_DSP_R2
+      #define WEBP_CAN_HAVE_MSA
+      #endif
       int main(void) {
-        #if !defined(WEBP_USE_${WEBP_SIMD_FLAG})
+        #if ${OSX_CHECK} !defined(WEBP_USE_${WEBP_SIMD_FLAG})
         this is not valid code
         #endif
         return 0;
