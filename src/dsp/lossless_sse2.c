@@ -695,35 +695,34 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitSSE2(void) {
   VP8LPredictors[12] = Predictor12_SSE2;
   VP8LPredictors[13] = Predictor13_SSE2;
 
-  VP8LPredictorsAdd[0] = PredictorAdd0_SSE2;
-  VP8LPredictorsAdd[1] = PredictorAdd1_SSE2;
-  VP8LPredictorsAdd[2] = PredictorAdd2_SSE2;
-  VP8LPredictorsAdd[3] = PredictorAdd3_SSE2;
-  VP8LPredictorsAdd[4] = PredictorAdd4_SSE2;
-  VP8LPredictorsAdd[5] = PredictorAdd5_SSE2;
-  VP8LPredictorsAdd[6] = PredictorAdd6_SSE2;
-  VP8LPredictorsAdd[7] = PredictorAdd7_SSE2;
-  VP8LPredictorsAdd[8] = PredictorAdd8_SSE2;
-  VP8LPredictorsAdd[9] = PredictorAdd9_SSE2;
-  VP8LPredictorsAdd[10] = PredictorAdd10_SSE2;
-  VP8LPredictorsAdd[11] = PredictorAdd11_SSE2;
-  VP8LPredictorsAdd[12] = PredictorAdd12_SSE2;
-  VP8LPredictorsAdd[13] = PredictorAdd13_SSE2;
+  // SSE exports for AVX and above.
+  VP8LPredictorsAdd_SSE[0] = PredictorAdd0_SSE2;
+  VP8LPredictorsAdd_SSE[1] = PredictorAdd1_SSE2;
+  VP8LPredictorsAdd_SSE[2] = PredictorAdd2_SSE2;
+  VP8LPredictorsAdd_SSE[3] = PredictorAdd3_SSE2;
+  VP8LPredictorsAdd_SSE[4] = PredictorAdd4_SSE2;
+  VP8LPredictorsAdd_SSE[5] = PredictorAdd5_SSE2;
+  VP8LPredictorsAdd_SSE[6] = PredictorAdd6_SSE2;
+  VP8LPredictorsAdd_SSE[7] = PredictorAdd7_SSE2;
+  VP8LPredictorsAdd_SSE[8] = PredictorAdd8_SSE2;
+  VP8LPredictorsAdd_SSE[9] = PredictorAdd9_SSE2;
+  VP8LPredictorsAdd_SSE[10] = PredictorAdd10_SSE2;
+  VP8LPredictorsAdd_SSE[11] = PredictorAdd11_SSE2;
+  VP8LPredictorsAdd_SSE[12] = PredictorAdd12_SSE2;
+  VP8LPredictorsAdd_SSE[13] = PredictorAdd13_SSE2;
+  memcpy(VP8LPredictorsAdd, VP8LPredictorsAdd_SSE, sizeof(VP8LPredictorsAdd));
 
-  VP8LAddGreenToBlueAndRed = AddGreenToBlueAndRed_SSE2;
-  VP8LTransformColorInverse = TransformColorInverse_SSE2;
+  // SSE exports for AVX and above.
+  VP8LAddGreenToBlueAndRed_SSE = AddGreenToBlueAndRed_SSE2;
+  VP8LTransformColorInverse_SSE = TransformColorInverse_SSE2;
+  VP8LAddGreenToBlueAndRed = VP8LAddGreenToBlueAndRed_SSE;
+  VP8LTransformColorInverse = VP8LTransformColorInverse_SSE;
 
   VP8LConvertBGRAToRGB = ConvertBGRAToRGB_SSE2;
   VP8LConvertBGRAToRGBA = ConvertBGRAToRGBA_SSE2;
   VP8LConvertBGRAToRGBA4444 = ConvertBGRAToRGBA4444_SSE2;
   VP8LConvertBGRAToRGB565 = ConvertBGRAToRGB565_SSE2;
   VP8LConvertBGRAToBGR = ConvertBGRAToBGR_SSE2;
-
-  // SSE exports for AVX and above.
-  memcpy(VP8LPredictorsAdd_SSE, VP8LPredictorsAdd, sizeof(VP8LPredictorsAdd));
-
-  VP8LAddGreenToBlueAndRed_SSE = AddGreenToBlueAndRed_SSE2;
-  VP8LTransformColorInverse_SSE = TransformColorInverse_SSE2;
 
   VP8LConvertBGRAToRGB_SSE = ConvertBGRAToRGB_SSE2;
   VP8LConvertBGRAToRGBA_SSE = ConvertBGRAToRGBA_SSE2;
