@@ -146,20 +146,22 @@ int32_t VP8GetSignedValue(VP8BitReader* const br, int num_bits,
 typedef uint64_t vp8l_val_t;  // right now, this bit-reader can only use 64bit.
 
 typedef struct {
-  vp8l_val_t val;      // pre-fetched bits
-  const uint8_t* buf;  // input byte buffer
-  size_t len;          // buffer length
-  size_t pos;          // byte position in buf
-  int bit_pos;         // current bit-reading position in val
-  int eos;             // true if a bit was read past the end of buffer
+  vp8l_val_t val;                           // pre-fetched bits
+  const uint8_t* WEBP_COUNTED_BY(len) buf;  // input byte buffer
+  size_t len;                               // buffer length
+  size_t pos;                               // byte position in buf
+  int bit_pos;  // current bit-reading position in val
+  int eos;      // true if a bit was read past the end of buffer
 } VP8LBitReader;
 
-void VP8LInitBitReader(VP8LBitReader* const br, const uint8_t* const start,
+void VP8LInitBitReader(VP8LBitReader* const br,
+                       const uint8_t* const WEBP_COUNTED_BY(length) start,
                        size_t length);
 
 //  Sets a new data buffer.
 void VP8LBitReaderSetBuffer(VP8LBitReader* const br,
-                            const uint8_t* const buffer, size_t length);
+                            const uint8_t* const WEBP_COUNTED_BY(length) buffer,
+                            size_t length);
 
 // Reads the specified number of bits from read buffer.
 // Flags an error in case end_of_stream or n_bits is more than the allowed limit
