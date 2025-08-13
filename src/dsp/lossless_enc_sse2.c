@@ -697,6 +697,35 @@ static void PredictorSub13_SSE2(const uint32_t* in, const uint32_t* upper,
 extern void VP8LEncDspInitSSE2(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8LEncDspInitSSE2(void) {
+  VP8LSubtractGreenFromBlueAndRed = SubtractGreenFromBlueAndRed_SSE2;
+  VP8LTransformColor = TransformColor_SSE2;
+  VP8LCollectColorBlueTransforms = CollectColorBlueTransforms_SSE2;
+  VP8LCollectColorRedTransforms = CollectColorRedTransforms_SSE2;
+  VP8LAddVector = AddVector_SSE2;
+  VP8LAddVectorEq = AddVectorEq_SSE2;
+#if !defined(DONT_USE_COMBINED_SHANNON_ENTROPY_SSE2_FUNC)
+  VP8LCombinedShannonEntropy = CombinedShannonEntropy_SSE2;
+#endif
+  VP8LVectorMismatch = VectorMismatch_SSE2;
+  VP8LBundleColorMap = BundleColorMap_SSE2;
+
+  VP8LPredictorsSub[0] = PredictorSub0_SSE2;
+  VP8LPredictorsSub[1] = PredictorSub1_SSE2;
+  VP8LPredictorsSub[2] = PredictorSub2_SSE2;
+  VP8LPredictorsSub[3] = PredictorSub3_SSE2;
+  VP8LPredictorsSub[4] = PredictorSub4_SSE2;
+  VP8LPredictorsSub[5] = PredictorSub5_SSE2;
+  VP8LPredictorsSub[6] = PredictorSub6_SSE2;
+  VP8LPredictorsSub[7] = PredictorSub7_SSE2;
+  VP8LPredictorsSub[8] = PredictorSub8_SSE2;
+  VP8LPredictorsSub[9] = PredictorSub9_SSE2;
+  VP8LPredictorsSub[10] = PredictorSub10_SSE2;
+  VP8LPredictorsSub[11] = PredictorSub11_SSE2;
+  VP8LPredictorsSub[12] = PredictorSub12_SSE2;
+  VP8LPredictorsSub[13] = PredictorSub13_SSE2;
+  VP8LPredictorsSub[14] = PredictorSub0_SSE2;  // <- padding security sentinels
+  VP8LPredictorsSub[15] = PredictorSub0_SSE2;
+
   // SSE exports for AVX and above.
   VP8LSubtractGreenFromBlueAndRed_SSE = SubtractGreenFromBlueAndRed_SSE2;
   VP8LTransformColor_SSE = TransformColor_SSE2;
@@ -704,37 +733,7 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LEncDspInitSSE2(void) {
   VP8LCollectColorRedTransforms_SSE = CollectColorRedTransforms_SSE2;
   VP8LBundleColorMap_SSE = BundleColorMap_SSE2;
 
-  VP8LSubtractGreenFromBlueAndRed = VP8LSubtractGreenFromBlueAndRed_SSE;
-  VP8LTransformColor = VP8LTransformColor_SSE;
-  VP8LCollectColorBlueTransforms = VP8LCollectColorBlueTransforms_SSE;
-  VP8LCollectColorRedTransforms = VP8LCollectColorRedTransforms_SSE;
-  VP8LAddVector = AddVector_SSE2;
-  VP8LAddVectorEq = AddVectorEq_SSE2;
-#if !defined(DONT_USE_COMBINED_SHANNON_ENTROPY_SSE2_FUNC)
-  VP8LCombinedShannonEntropy = CombinedShannonEntropy_SSE2;
-#endif
-  VP8LVectorMismatch = VectorMismatch_SSE2;
-  VP8LBundleColorMap = VP8LBundleColorMap_SSE;
-
-  // SSE exports for AVX and above.
-  VP8LPredictorsSub_SSE[0] = PredictorSub0_SSE2;
-  VP8LPredictorsSub_SSE[1] = PredictorSub1_SSE2;
-  VP8LPredictorsSub_SSE[2] = PredictorSub2_SSE2;
-  VP8LPredictorsSub_SSE[3] = PredictorSub3_SSE2;
-  VP8LPredictorsSub_SSE[4] = PredictorSub4_SSE2;
-  VP8LPredictorsSub_SSE[5] = PredictorSub5_SSE2;
-  VP8LPredictorsSub_SSE[6] = PredictorSub6_SSE2;
-  VP8LPredictorsSub_SSE[7] = PredictorSub7_SSE2;
-  VP8LPredictorsSub_SSE[8] = PredictorSub8_SSE2;
-  VP8LPredictorsSub_SSE[9] = PredictorSub9_SSE2;
-  VP8LPredictorsSub_SSE[10] = PredictorSub10_SSE2;
-  VP8LPredictorsSub_SSE[11] = PredictorSub11_SSE2;
-  VP8LPredictorsSub_SSE[12] = PredictorSub12_SSE2;
-  VP8LPredictorsSub_SSE[13] = PredictorSub13_SSE2;
-  // padding security sentinels
-  VP8LPredictorsSub_SSE[14] = PredictorSub0_SSE2;
-  VP8LPredictorsSub_SSE[15] = PredictorSub0_SSE2;
-  memcpy(VP8LPredictorsSub, VP8LPredictorsSub_SSE, sizeof(VP8LPredictorsSub));
+  memcpy(VP8LPredictorsSub_SSE, VP8LPredictorsSub, sizeof(VP8LPredictorsSub));
 }
 
 #else  // !WEBP_USE_SSE2
