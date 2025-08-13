@@ -139,7 +139,7 @@ static int CompareHuffmanTrees(const void* ptr1, const void* ptr2) {
 
 static void SetBitDepths(const HuffmanTree* const tree,
                          const HuffmanTree* const pool,
-                         uint8_t* const bit_depths, int level) {
+                         uint8_t* WEBP_INDEXABLE const bit_depths, int level) {
   if (tree->pool_index_left >= 0) {
     SetBitDepths(&pool[tree->pool_index_left], pool, bit_depths, level + 1);
     SetBitDepths(&pool[tree->pool_index_right], pool, bit_depths, level + 1);
@@ -170,7 +170,8 @@ static void SetBitDepths(const HuffmanTree* const tree,
 static void GenerateOptimalTree(const uint32_t* const histogram,
                                 int histogram_size, HuffmanTree* tree,
                                 int tree_depth_limit,
-                                uint8_t* const bit_depths) {
+                                uint8_t* WEBP_COUNTED_BY(histogram_size)
+                                    const bit_depths) {
   uint32_t count_min;
   HuffmanTree* tree_pool;
   int tree_size_orig = 0;

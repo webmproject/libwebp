@@ -31,9 +31,11 @@ typedef struct {
 
 // Struct to represent the tree codes (depth and bits array).
 typedef struct {
-  int num_symbols;        // Number of symbols.
-  uint8_t* code_lengths;  // Code lengths of the symbols.
-  uint16_t* codes;        // Symbol Codes.
+  int num_symbols;  // Number of symbols.
+  // Code lengths of the symbols.
+  uint8_t* WEBP_COUNTED_BY(num_symbols) code_lengths;
+  // Symbol Codes.
+  uint16_t* WEBP_COUNTED_BY(num_symbols) codes;
 } HuffmanTreeCode;
 
 // Struct to represent the Huffman tree.
