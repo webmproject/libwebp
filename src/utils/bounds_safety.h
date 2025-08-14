@@ -110,4 +110,9 @@
 #define WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(typ, ptr, size) ((typ)(ptr))
 
 #endif  // WEBP_SUPPORT_FBOUNDS_SAFETY
+
+// This macro exists to indicate intentionality with self-assignments and
+// silence -Wself-assign compiler warnings.
+#define WEBP_SELF_ASSIGN(x) x = x
+
 #endif  // WEBP_UTILS_BOUNDS_SAFETY_H_
