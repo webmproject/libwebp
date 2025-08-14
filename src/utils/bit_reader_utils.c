@@ -130,7 +130,8 @@ static const uint32_t kBitMask[VP8L_MAX_NUM_BIT_READ + 1] = {
     0x003fff, 0x007fff, 0x00ffff, 0x01ffff, 0x03ffff, 0x07ffff, 0x0fffff,
     0x1fffff, 0x3fffff, 0x7fffff, 0xffffff};
 
-void VP8LInitBitReader(VP8LBitReader* const br, const uint8_t* const start,
+void VP8LInitBitReader(VP8LBitReader* const br,
+                       const uint8_t* const WEBP_COUNTED_BY(length) start,
                        size_t length) {
   size_t i;
   vp8l_val_t value = 0;
