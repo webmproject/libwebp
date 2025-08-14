@@ -141,7 +141,6 @@ void VP8LInitBitReader(VP8LBitReader* const br,
 
   br->buf = start;
   br->len = length;
-  br->val = 0;
   br->bit_pos = 0;
   br->eos = 0;
 
