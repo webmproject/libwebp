@@ -139,6 +139,7 @@ void VP8LInitBitReader(VP8LBitReader* const br,
   assert(start != NULL);
   assert(length < 0xfffffff8u);  // can't happen with a RIFF chunk.
 
+  br->buf = start;
   br->len = length;
   br->val = 0;
   br->bit_pos = 0;
@@ -152,10 +153,10 @@ void VP8LInitBitReader(VP8LBitReader* const br,
   }
   br->val = value;
   br->pos = length;
-  br->buf = start;
 }
 
-void VP8LBitReaderSetBuffer(VP8LBitReader* const br, const uint8_t* const buf,
+void VP8LBitReaderSetBuffer(VP8LBitReader* const br,
+                            const uint8_t* const WEBP_COUNTED_BY(len) buf,
                             size_t len) {
   assert(br != NULL);
   assert(buf != NULL);
