@@ -154,7 +154,8 @@ typedef struct {
   int eos;             // true if a bit was read past the end of buffer
 } VP8LBitReader;
 
-void VP8LInitBitReader(VP8LBitReader* const br, const uint8_t* const start,
+void VP8LInitBitReader(VP8LBitReader* const br,
+                       const uint8_t* const WEBP_COUNTED_BY(length) start,
                        size_t length);
 
 //  Sets a new data buffer.
