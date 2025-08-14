@@ -52,7 +52,7 @@ static int BitWriterResize(VP8BitWriter* const bw, size_t extra_size) {
     WEBP_UNSAFE_MEMCPY(new_buf, bw->buf, bw->pos);
   }
   WebPSafeFree(bw->buf);
-  bw->buf = new_buf;
+  bw->buf = WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(uint8_t*, new_buf, new_size);
   bw->max_pos = new_size;
   return 1;
 }
