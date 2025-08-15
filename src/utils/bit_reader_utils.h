@@ -103,17 +103,20 @@ struct VP8BitReader {
   range_t range;  // current range minus 1. In [127, 254] interval.
   int bits;       // number of valid bits left
   // read buffer
-  const uint8_t* buf;      // next byte to be read
-  const uint8_t* buf_end;  // end of read buffer
-  const uint8_t* buf_max;  // max packed-read position on buffer
-  int eof;                 // true if input is exhausted
+  const uint8_t* WEBP_ENDED_BY(buf_end) buf;  // next byte to be read
+  const uint8_t* buf_end;                     // end of read buffer
+  // max packed-read position on buffer
+  const uint8_t* WEBP_UNSAFE_INDEXABLE buf_max;
+  int eof;  // true if input is exhausted
 };
 
 // Initialize the bit reader and the boolean decoder.
-void VP8InitBitReader(VP8BitReader* const br, const uint8_t* const start,
+void VP8InitBitReader(VP8BitReader* const br,
+                      const uint8_t* const WEBP_COUNTED_BY(size) start,
                       size_t size);
 // Sets the working read buffer.
-void VP8BitReaderSetBuffer(VP8BitReader* const br, const uint8_t* const start,
+void VP8BitReaderSetBuffer(VP8BitReader* const br,
+                           const uint8_t* const WEBP_COUNTED_BY(size) start,
                            size_t size);
 
 // Update internal pointers to displace the byte buffer by the

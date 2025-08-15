@@ -31,7 +31,8 @@ WEBP_ASSUME_UNSAFE_INDEXABLE_ABI
 //------------------------------------------------------------------------------
 // VP8BitReader
 
-void VP8BitReaderSetBuffer(VP8BitReader* const br, const uint8_t* const start,
+void VP8BitReaderSetBuffer(VP8BitReader* const br,
+                           const uint8_t* const WEBP_COUNTED_BY(size) start,
                            size_t size) {
   assert(start != NULL);
   br->buf = start;
@@ -40,7 +41,8 @@ void VP8BitReaderSetBuffer(VP8BitReader* const br, const uint8_t* const start,
       (size >= sizeof(lbit_t)) ? start + size - sizeof(lbit_t) + 1 : start;
 }
 
-void VP8InitBitReader(VP8BitReader* const br, const uint8_t* const start,
+void VP8InitBitReader(VP8BitReader* const br,
+                      const uint8_t* const WEBP_COUNTED_BY(size) start,
                       size_t size) {
   assert(br != NULL);
   assert(start != NULL);
@@ -87,6 +89,7 @@ void VP8LoadFinalBytes(VP8BitReader* const br) {
   if (br->buf < br->buf_end) {
     br->bits += 8;
     br->value = (bit_t)(*br->buf++) | (br->value << 8);
+    WEBP_SELF_ASSIGN(br->buf_end);
   } else if (!br->eof) {
     br->value <<= 8;
     br->bits += 8;
