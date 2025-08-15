@@ -175,14 +175,15 @@ extern void VP8LEncDspInitSSE41(void);
 
 WEBP_TSAN_IGNORE_FUNCTION void VP8LEncDspInitSSE41(void) {
   VP8LExtraCost = ExtraCost_SSE41;
-  VP8LSubtractGreenFromBlueAndRed = SubtractGreenFromBlueAndRed_SSE41;
-  VP8LCollectColorBlueTransforms = CollectColorBlueTransforms_SSE41;
-  VP8LCollectColorRedTransforms = CollectColorRedTransforms_SSE41;
 
   // SSE exports for AVX and above.
   VP8LSubtractGreenFromBlueAndRed_SSE = SubtractGreenFromBlueAndRed_SSE41;
   VP8LCollectColorBlueTransforms_SSE = CollectColorBlueTransforms_SSE41;
   VP8LCollectColorRedTransforms_SSE = CollectColorRedTransforms_SSE41;
+
+  VP8LSubtractGreenFromBlueAndRed = VP8LSubtractGreenFromBlueAndRed_SSE;
+  VP8LCollectColorBlueTransforms = VP8LCollectColorBlueTransforms_SSE;
+  VP8LCollectColorRedTransforms = VP8LCollectColorRedTransforms_SSE;
 }
 
 #else  // !WEBP_USE_SSE41
