@@ -56,7 +56,8 @@ static WEBP_INLINE int CheckSizeOverflow(uint64_t size) {
 WEBP_EXTERN void* WebPSafeMalloc(uint64_t nmemb, size_t size);
 // Note that WebPSafeCalloc() expects the second argument type to be 'size_t'
 // in order to favor the "calloc(num_foo, sizeof(foo))" pattern.
-WEBP_EXTERN void* WebPSafeCalloc(uint64_t nmemb, size_t size);
+WEBP_EXTERN void* WEBP_SIZED_BY_OR_NULL(nmemb* size)
+    WebPSafeCalloc(uint64_t nmemb, size_t size);
 
 // Companion deallocation function to the above allocations.
 WEBP_EXTERN void WebPSafeFree(void* const ptr);
