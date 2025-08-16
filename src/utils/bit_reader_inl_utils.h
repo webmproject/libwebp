@@ -85,6 +85,7 @@ static WEBP_UBSAN_IGNORE_UNDEF WEBP_INLINE void VP8LoadNewBytes(
     WEBP_UNSAFE_MEMCPY(&in_bits, br->buf, sizeof(in_bits));
 #endif
     br->buf += BITS >> 3;
+    WEBP_SELF_ASSIGN(br->buf_end);
 #if !defined(WORDS_BIGENDIAN)
 #if (BITS > 32)
     bits = BSwap64(in_bits);
