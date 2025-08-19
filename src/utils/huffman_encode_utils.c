@@ -265,9 +265,9 @@ static void GenerateOptimalTree(const uint32_t* const histogram,
 // -----------------------------------------------------------------------------
 // Coding of the Huffman tree values
 
-static HuffmanTreeToken* CodeRepeatedValues(int repetitions,
-                                            HuffmanTreeToken* tokens, int value,
-                                            int prev_value) {
+static HuffmanTreeToken* WEBP_INDEXABLE
+CodeRepeatedValues(int repetitions, HuffmanTreeToken* WEBP_INDEXABLE tokens,
+                   int value, int prev_value) {
   assert(value <= MAX_ALLOWED_CODE_LENGTH);
   if (value != prev_value) {
     tokens->code = value;
@@ -299,8 +299,8 @@ static HuffmanTreeToken* CodeRepeatedValues(int repetitions,
   return tokens;
 }
 
-static HuffmanTreeToken* CodeRepeatedZeros(int repetitions,
-                                           HuffmanTreeToken* tokens) {
+static HuffmanTreeToken* WEBP_INDEXABLE
+CodeRepeatedZeros(int repetitions, HuffmanTreeToken* WEBP_INDEXABLE tokens) {
   while (repetitions >= 1) {
     if (repetitions < 3) {
       int i;
@@ -330,8 +330,10 @@ static HuffmanTreeToken* CodeRepeatedZeros(int repetitions,
   return tokens;
 }
 
-int VP8LCreateCompressedHuffmanTree(const HuffmanTreeCode* const tree,
-                                    HuffmanTreeToken* tokens, int max_tokens) {
+int VP8LCreateCompressedHuffmanTree(
+    const HuffmanTreeCode* const tree,
+    HuffmanTreeToken* WEBP_COUNTED_BY(max_tokens) tokens, int max_tokens) {
+  HuffmanTreeToken* WEBP_INDEXABLE current_token = tokens;
   HuffmanTreeToken* const starting_token = tokens;
   HuffmanTreeToken* const ending_token = tokens + max_tokens;
   const int depth_size = tree->num_symbols;
@@ -345,16 +347,17 @@ int VP8LCreateCompressedHuffmanTree(const HuffmanTreeCode* const tree,
     while (k < depth_size && tree->code_lengths[k] == value) ++k;
     runs = k - i;
     if (value == 0) {
-      tokens = CodeRepeatedZeros(runs, tokens);
+      current_token = CodeRepeatedZeros(runs, current_token);
     } else {
-      tokens = CodeRepeatedValues(runs, tokens, value, prev_value);
+      current_token =
+          CodeRepeatedValues(runs, current_token, value, prev_value);
       prev_value = value;
     }
     i += runs;
-    assert(tokens <= ending_token);
+    assert(current_token <= ending_token);
   }
   (void)ending_token;  // suppress 'unused variable' warning
-  return (int)(tokens - starting_token);
+  return (int)(current_token - starting_token);
 }
 
 // -----------------------------------------------------------------------------
