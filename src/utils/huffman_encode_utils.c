@@ -138,7 +138,7 @@ static int CompareHuffmanTrees(const void* ptr1, const void* ptr2) {
 }
 
 static void SetBitDepths(const HuffmanTree* const tree,
-                         const HuffmanTree* const pool,
+                         const HuffmanTree* WEBP_BIDI_INDEXABLE const pool,
                          uint8_t* WEBP_INDEXABLE const bit_depths, int level) {
   if (tree->pool_index_left >= 0) {
     SetBitDepths(&pool[tree->pool_index_left], pool, bit_depths, level + 1);
@@ -168,12 +168,13 @@ static void SetBitDepths(const HuffmanTree* const tree,
 //
 // See https://en.wikipedia.org/wiki/Huffman_coding
 static void GenerateOptimalTree(const uint32_t* const histogram,
-                                int histogram_size, HuffmanTree* tree,
+                                int histogram_size,
+                                HuffmanTree* WEBP_BIDI_INDEXABLE tree,
                                 int tree_depth_limit,
                                 uint8_t* WEBP_COUNTED_BY(histogram_size)
                                     const bit_depths) {
   uint32_t count_min;
-  HuffmanTree* tree_pool;
+  HuffmanTree* WEBP_BIDI_INDEXABLE tree_pool;
   int tree_size_orig = 0;
   int i;
 
@@ -232,8 +233,7 @@ static void GenerateOptimalTree(const uint32_t* const histogram,
               break;
             }
           }
-          WEBP_UNSAFE_MEMMOVE(tree + (k + 1), tree + k,
-                              (tree_size - k) * sizeof(*tree));
+          memmove(tree + (k + 1), tree + k, (tree_size - k) * sizeof(*tree));
           tree[k].total_count = count;
           tree[k].value = -1;
 
@@ -418,8 +418,11 @@ void VP8LCreateHuffmanTree(uint32_t* const histogram, int tree_depth_limit,
   const int num_symbols = huff_code->num_symbols;
   WEBP_UNSAFE_MEMSET(buf_rle, 0, num_symbols * sizeof(*buf_rle));
   OptimizeHuffmanForRle(num_symbols, buf_rle, histogram);
-  GenerateOptimalTree(histogram, num_symbols, huff_tree, tree_depth_limit,
-                      huff_code->code_lengths);
+  GenerateOptimalTree(
+      histogram, num_symbols,
+      WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(HuffmanTree*, huff_tree,
+                                       3 * num_symbols * sizeof(*huff_tree)),
+      tree_depth_limit, huff_code->code_lengths);
   // Create the actual bit codes for the bit lengths.
   ConvertBitDepthsToSymbols(huff_code);
 }
