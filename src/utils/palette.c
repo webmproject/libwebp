@@ -97,7 +97,9 @@ void PrepareMapToPalette(const uint32_t palette[], uint32_t num_colors,
 #define COLOR_HASH_SIZE (MAX_PALETTE_SIZE * 4)
 #define COLOR_HASH_RIGHT_SHIFT 22  // 32 - log2(COLOR_HASH_SIZE).
 
-int GetColorPalette(const WebPPicture* const pic, uint32_t* const palette) {
+int GetColorPalette(const WebPPicture* const pic,
+                    uint32_t* const WEBP_COUNTED_BY_OR_NULL(MAX_PALETTE_SIZE)
+                        palette) {
   int i;
   int x, y;
   int num_colors = 0;
