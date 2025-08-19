@@ -93,32 +93,36 @@ static WEBP_INLINE void WebPInt32ToMem(uint8_t* const ptr, int val) {
 // Reading/writing data.
 
 // Read 16, 24 or 32 bits stored in little-endian order.
-static WEBP_INLINE int GetLE16(const uint8_t* const data) {
+static WEBP_INLINE int GetLE16(const uint8_t* const WEBP_COUNTED_BY(2) data) {
   return (int)(data[0] << 0) | (data[1] << 8);
 }
 
-static WEBP_INLINE int GetLE24(const uint8_t* const data) {
+static WEBP_INLINE int GetLE24(const uint8_t* const WEBP_COUNTED_BY(3) data) {
   return GetLE16(data) | (data[2] << 16);
 }
 
-static WEBP_INLINE uint32_t GetLE32(const uint8_t* const data) {
+static WEBP_INLINE uint32_t GetLE32(const uint8_t* const WEBP_COUNTED_BY(4)
+                                        data) {
   return GetLE16(data) | ((uint32_t)GetLE16(data + 2) << 16);
 }
 
 // Store 16, 24 or 32 bits in little-endian order.
-static WEBP_INLINE void PutLE16(uint8_t* const data, int val) {
+static WEBP_INLINE void PutLE16(uint8_t* const WEBP_COUNTED_BY(2) data,
+                                int val) {
   assert(val < (1 << 16));
   data[0] = (val >> 0) & 0xff;
   data[1] = (val >> 8) & 0xff;
 }
 
-static WEBP_INLINE void PutLE24(uint8_t* const data, int val) {
+static WEBP_INLINE void PutLE24(uint8_t* const WEBP_COUNTED_BY(3) data,
+                                int val) {
   assert(val < (1 << 24));
   PutLE16(data, val & 0xffff);
   data[2] = (val >> 16) & 0xff;
 }
 
-static WEBP_INLINE void PutLE32(uint8_t* const data, uint32_t val) {
+static WEBP_INLINE void PutLE32(uint8_t* const WEBP_COUNTED_BY(4) data,
+                                uint32_t val) {
   PutLE16(data, (int)(val & 0xffff));
   PutLE16(data + 2, (int)(val >> 16));
 }
