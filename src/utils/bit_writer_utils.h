@@ -93,11 +93,11 @@ typedef uint16_t vp8l_wtype_t;
 #endif
 
 typedef struct {
-  vp8l_atype_t bits;  // bit accumulator
-  int used;           // number of bits used in accumulator
-  uint8_t* buf;       // start of buffer
-  uint8_t* cur;       // current write position
-  uint8_t* end;       // end of buffer
+  vp8l_atype_t bits;                   // bit accumulator
+  int used;                            // number of bits used in accumulator
+  uint8_t* WEBP_ENDED_BY(end) buf;     // start of buffer
+  uint8_t* WEBP_UNSAFE_INDEXABLE cur;  // current write position
+  uint8_t* end;                        // end of buffer
 
   // After all bits are written (VP8LBitWriterFinish()), the caller must observe
   // the state of 'error'. A value of 1 indicates that a memory allocation

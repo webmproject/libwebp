@@ -204,7 +204,7 @@ void VP8BitWriterWipeOut(VP8BitWriter* const bw) {
 
 // Returns 1 on success.
 static int VP8LBitWriterResize(VP8LBitWriter* const bw, size_t extra_size) {
-  uint8_t* allocated_buf;
+  uint8_t* WEBP_BIDI_INDEXABLE allocated_buf;
   size_t allocated_size;
   const size_t max_bytes = bw->end - bw->buf;
   const size_t current_size = bw->cur - bw->buf;
@@ -219,7 +219,8 @@ static int VP8LBitWriterResize(VP8LBitWriter* const bw, size_t extra_size) {
   if (allocated_size < size_required) allocated_size = size_required;
   // make allocated size multiple of 1k
   allocated_size = (((allocated_size >> 10) + 1) << 10);
-  allocated_buf = (uint8_t*)WebPSafeMalloc(1ULL, allocated_size);
+  allocated_buf = (uint8_t*)WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(
+      void*, WebPSafeMalloc(1ULL, allocated_size), allocated_size);
   if (allocated_buf == NULL) {
     bw->error = 1;
     return 0;
@@ -229,8 +230,8 @@ static int VP8LBitWriterResize(VP8LBitWriter* const bw, size_t extra_size) {
   }
   WebPSafeFree(bw->buf);
   bw->buf = allocated_buf;
-  bw->cur = bw->buf + current_size;
-  bw->end = bw->buf + allocated_size;
+  bw->end = allocated_buf + allocated_size;
+  bw->cur = allocated_buf + current_size;
   return 1;
 }
 
