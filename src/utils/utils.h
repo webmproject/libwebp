@@ -22,6 +22,7 @@
 #include <assert.h>
 
 #include "src/utils/bounds_safety.h"
+#include "src/webp/format_constants.h"
 #include "src/webp/types.h"
 
 WEBP_ASSUME_UNSAFE_INDEXABLE_ABI
@@ -204,8 +205,9 @@ WEBP_EXTERN void WebPCopyPixels(const struct WebPPicture* const src,
 // Note: 'palette' is assumed to be an array already allocated with at least
 // MAX_PALETTE_SIZE elements.
 // TODO(vrabaud) remove whenever we can break the ABI.
-WEBP_EXTERN int WebPGetColorPalette(const struct WebPPicture* const pic,
-                                    uint32_t* const palette);
+WEBP_EXTERN int WebPGetColorPalette(
+    const struct WebPPicture* const pic,
+    uint32_t* const WEBP_COUNTED_BY_OR_NULL(MAX_PALETTE_SIZE) palette);
 
 //------------------------------------------------------------------------------
 

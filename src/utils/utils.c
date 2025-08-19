@@ -271,7 +271,9 @@ void WebPCopyPixels(const WebPPicture* const src, WebPPicture* const dst) {
 
 //------------------------------------------------------------------------------
 
-int WebPGetColorPalette(const WebPPicture* const pic, uint32_t* const palette) {
+int WebPGetColorPalette(
+    const WebPPicture* const pic,
+    uint32_t* const WEBP_COUNTED_BY_OR_NULL(MAX_PALETTE_SIZE) palette) {
   return GetColorPalette(pic, palette);
 }
 

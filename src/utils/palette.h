@@ -15,6 +15,7 @@
 #define WEBP_UTILS_PALETTE_H_
 
 #include "src/utils/bounds_safety.h"
+#include "src/webp/format_constants.h"
 #include "src/webp/types.h"
 
 WEBP_ASSUME_UNSAFE_INDEXABLE_ABI
@@ -51,7 +52,8 @@ void PrepareMapToPalette(const uint32_t palette[], uint32_t num_colors,
 // 'palette' in a sorted order. Note: 'palette' is assumed to be an array
 // already allocated with at least MAX_PALETTE_SIZE elements.
 int GetColorPalette(const struct WebPPicture* const pic,
-                    uint32_t* const palette);
+                    uint32_t* const WEBP_COUNTED_BY_OR_NULL(MAX_PALETTE_SIZE)
+                        palette);
 
 // Sorts the palette according to the criterion defined by 'method'.
 // 'palette_sorted' is the input palette sorted lexicographically, as done in
