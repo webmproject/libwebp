@@ -416,6 +416,7 @@ if(WEBP_ENABLE_FBOUNDS_SAFETY)
   # Enable -fbounds-safety only for webputils for now.
   add_definitions(-DWEBP_SUPPORT_FBOUNDS_SAFETY=1)
   target_compile_options(webputils PRIVATE -fbounds-safety)
+  target_compile_options(webputilsdecode PRIVATE -fbounds-safety)
 endif()
 
 target_link_libraries(webp sharpyuv)
