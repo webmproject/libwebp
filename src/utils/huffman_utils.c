@@ -68,8 +68,9 @@ static WEBP_INLINE void ReplicateValue(HuffmanCode* table, int step, int end,
 // Returns the table width of the next 2nd level table. count is the histogram
 // of bit lengths for the remaining symbols, len is the code length of the next
 // processed symbol
-static WEBP_INLINE int NextTableBitSize(const int* const count, int len,
-                                        int root_bits) {
+static WEBP_INLINE int NextTableBitSize(
+    const int* const WEBP_COUNTED_BY(MAX_ALLOWED_CODE_LENGTH + 1) count,
+    int len, int root_bits) {
   int left = 1 << (len - root_bits);
   while (len < MAX_ALLOWED_CODE_LENGTH) {
     left -= count[len];
