@@ -53,7 +53,6 @@ struct WebPAnimEncoder {
   const int canvas_height;               // Canvas height.
   const WebPAnimEncoderOptions options;  // Global encoding options.
 
-  FrameRectangle prev_rect;         // Previous WebP frame rectangle.
   WebPConfig last_config;           // Cached in case a re-encode is needed.
   WebPConfig last_config_reversed;  // If 'last_config' uses lossless, then
                                     // this config uses lossy and vice versa;
@@ -89,6 +88,9 @@ struct WebPAnimEncoder {
   int prev_timestamp;            // Timestamp of the last added frame.
   int prev_candidate_undecided;  // True if it's not yet decided if previous
                                  // frame would be a sub-frame or a key-frame.
+
+  FrameRectangle prev_rect;  // Previous WebP frame rectangle. Only valid if
+                             // prev_candidate_undecided is true.
 
   // Misc.
   int is_first_frame;  // True if first frame is yet to be added/being added.
@@ -894,7 +896,6 @@ static void PickBestCandidate(WebPAnimEncoder* const enc,
       // selected when a non key-frame was assumed.
       SetPreviousDisposeMethod(enc, dispose_method);
     }
-    enc->prev_rect = candidate->rect;  // save for next frame.
 
     // Release the memory of the previous best candidate if any.
     if (*best_candidate != NULL) {
@@ -1051,6 +1052,7 @@ static int IncreasePreviousDuration(WebPAnimEncoder* const enc, int duration) {
 static WebPEncodingError SetFrame(WebPAnimEncoder* const enc,
                                   const WebPConfig* const config,
                                   int is_key_frame,
+                                  FrameRectangle* const best_candidate_rect,
                                   EncodedFrame* const encoded_frame,
                                   int* const frame_skipped) {
   int i;
@@ -1165,6 +1167,7 @@ static WebPEncodingError SetFrame(WebPAnimEncoder* const enc,
   }
 
   assert(best_candidate != NULL);
+  *best_candidate_rect = best_candidate->rect;
   goto End;
 
 Err:
@@ -1194,11 +1197,13 @@ static int CacheFrame(WebPAnimEncoder* const enc,
   WebPEncodingError error_code = VP8_ENC_OK;
   const size_t position = enc->count;
   EncodedFrame* const encoded_frame = GetFrame(enc, position);
+  FrameRectangle best_key_candidate_rect, best_sub_candidate_rect;
 
   ++enc->count;
 
   if (enc->is_first_frame) {  // Add this as a key-frame.
-    error_code = SetFrame(enc, config, 1, encoded_frame, &frame_skipped);
+    error_code = SetFrame(enc, config, 1, &best_key_candidate_rect,
+                          encoded_frame, &frame_skipped);
     if (error_code != VP8_ENC_OK) goto End;
     assert(frame_skipped == 0);  // First frame can't be skipped, even if empty.
     assert(position == 0 && enc->count == 1);
@@ -1210,7 +1215,8 @@ static int CacheFrame(WebPAnimEncoder* const enc,
     ++enc->count_since_key_frame;
     if (enc->count_since_key_frame <= enc->options.kmin) {
       // Add this as a frame rectangle.
-      error_code = SetFrame(enc, config, 0, encoded_frame, &frame_skipped);
+      error_code = SetFrame(enc, config, 0, &best_sub_candidate_rect,
+                            encoded_frame, &frame_skipped);
       if (error_code != VP8_ENC_OK) goto End;
       if (frame_skipped) goto Skip;
       encoded_frame->is_key_frame = 0;
@@ -1218,19 +1224,18 @@ static int CacheFrame(WebPAnimEncoder* const enc,
       enc->prev_candidate_undecided = 0;
     } else {
       int64_t curr_delta;
-      FrameRectangle prev_rect_key, prev_rect_sub;
 
       // Add this as a frame rectangle to enc.
-      error_code = SetFrame(enc, config, 0, encoded_frame, &frame_skipped);
+      error_code = SetFrame(enc, config, 0, &best_sub_candidate_rect,
+                            encoded_frame, &frame_skipped);
       if (error_code != VP8_ENC_OK) goto End;
       if (frame_skipped) goto Skip;
-      prev_rect_sub = enc->prev_rect;
 
       // Add this as a key-frame to enc, too.
-      error_code = SetFrame(enc, config, 1, encoded_frame, &frame_skipped);
+      error_code = SetFrame(enc, config, 1, &best_key_candidate_rect,
+                            encoded_frame, &frame_skipped);
       if (error_code != VP8_ENC_OK) goto End;
       assert(frame_skipped == 0);  // Key-frame cannot be an empty rectangle.
-      prev_rect_key = enc->prev_rect;
 
       // Analyze size difference of the two variants.
       curr_delta = KeyFramePenalty(encoded_frame);
@@ -1263,15 +1268,19 @@ static int CacheFrame(WebPAnimEncoder* const enc,
         // Flush all previous frames.
         enc->flush_count = enc->count - 1;
       }
-      if (!enc->prev_candidate_undecided) {
-        enc->prev_rect =
-            encoded_frame->is_key_frame ? prev_rect_key : prev_rect_sub;
-      }
     }
   }
 
-  // Update previous to previous and previous canvases for next call.
+  // Save the current frame environment as the previous frame environment for
+  // the next call to this function.
   WebPCopyPixels(enc->curr_canvas, &enc->prev_canvas);
+  if (enc->prev_candidate_undecided) {
+    // The previous frame rectangle is not known for sure. Do not save it.
+  } else {
+    enc->prev_rect = encoded_frame->is_key_frame ? best_key_candidate_rect
+                                                 : best_sub_candidate_rect;
+  }
+
   enc->is_first_frame = 0;
 
 Skip:
