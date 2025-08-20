@@ -85,7 +85,8 @@ static WEBP_INLINE int NextTableBitSize(
 // by code length.
 static int BuildHuffmanTable(HuffmanCode* const root_table, int root_bits,
                              const int code_lengths[], int code_lengths_size,
-                             uint16_t sorted[]) {
+                             uint16_t WEBP_COUNTED_BY_OR_NULL(code_lengths_size)
+                                 sorted[]) {
   HuffmanCode* table = root_table;  // next available space in table
   int total_size = 1 << root_bits;  // total size root table + 2nd level table
   int len;                          // current code length
@@ -271,8 +272,11 @@ int VP8LBuildHuffmanTable(HuffmanTables* const root_table, int root_bits,
     uint16_t* const sorted =
         (uint16_t*)WebPSafeMalloc(code_lengths_size, sizeof(*sorted));
     if (sorted == NULL) return 0;
-    BuildHuffmanTable(root_table->curr_segment->curr_table, root_bits,
-                      code_lengths, code_lengths_size, sorted);
+    BuildHuffmanTable(
+        root_table->curr_segment->curr_table, root_bits, code_lengths,
+        code_lengths_size,
+        WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(
+            uint16_t*, sorted, (size_t)code_lengths_size * sizeof(*sorted)));
     WebPSafeFree(sorted);
   }
   return total_size;
