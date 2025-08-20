@@ -65,7 +65,8 @@ static WEBP_INLINE void SwapColor(uint32_t* const col1, uint32_t* const col2) {
   *col2 = tmp;
 }
 
-int SearchColorNoIdx(const uint32_t sorted[], uint32_t color, int num_colors) {
+int SearchColorNoIdx(const uint32_t WEBP_COUNTED_BY(num_colors) sorted[],
+                     uint32_t color, int num_colors) {
   int low = 0, hi = num_colors;
   if (sorted[low] == color) return low;  // loop invariant: sorted[low] != color
   while (1) {
@@ -82,10 +83,12 @@ int SearchColorNoIdx(const uint32_t sorted[], uint32_t color, int num_colors) {
   return 0;
 }
 
-void PrepareMapToPalette(const uint32_t palette[], uint32_t num_colors,
-                         uint32_t sorted[], uint32_t idx_map[]) {
+void PrepareMapToPalette(const uint32_t WEBP_COUNTED_BY(num_colors) palette[],
+                         uint32_t num_colors,
+                         uint32_t WEBP_COUNTED_BY(num_colors) sorted[],
+                         uint32_t WEBP_COUNTED_BY(num_colors) idx_map[]) {
   uint32_t i;
-  WEBP_UNSAFE_MEMCPY(sorted, palette, num_colors * sizeof(*sorted));
+  memcpy(sorted, palette, num_colors * sizeof(*sorted));
   qsort(sorted, num_colors, sizeof(*sorted), PaletteCompareColorsForQsort);
   for (i = 0; i < num_colors; ++i) {
     idx_map[SearchColorNoIdx(sorted, palette[i], num_colors)] = i;
@@ -163,8 +166,8 @@ int GetColorPalette(const WebPPicture* const pic, uint32_t* const palette) {
 // no benefit to re-organize them greedily. A monotonic development
 // would be spotted in green-only situations (like lossy alpha) or gray-scale
 // images.
-static int PaletteHasNonMonotonousDeltas(const uint32_t* const palette,
-                                         int num_colors) {
+static int PaletteHasNonMonotonousDeltas(
+    const uint32_t* const WEBP_COUNTED_BY(num_colors) palette, int num_colors) {
   uint32_t predict = 0x000000;
   int i;
   uint8_t sign_found = 0x00;
@@ -187,11 +190,12 @@ static int PaletteHasNonMonotonousDeltas(const uint32_t* const palette,
   return (sign_found & (sign_found << 1)) != 0;  // two consequent signs.
 }
 
-static void PaletteSortMinimizeDeltas(const uint32_t* const palette_sorted,
-                                      int num_colors, uint32_t* const palette) {
+static void PaletteSortMinimizeDeltas(
+    const uint32_t* const WEBP_COUNTED_BY(num_colors) palette_sorted,
+    int num_colors, uint32_t* const WEBP_COUNTED_BY(num_colors) palette) {
   uint32_t predict = 0x00000000;
   int i, k;
-  WEBP_UNSAFE_MEMCPY(palette, palette_sorted, num_colors * sizeof(*palette));
+  memcpy(palette, palette_sorted, num_colors * sizeof(*palette));
   if (!PaletteHasNonMonotonousDeltas(palette_sorted, num_colors)) return;
   // Find greedily always the closest color of the predicted color to minimize
   // deltas in the palette. This reduces storage needs since the
@@ -223,9 +227,9 @@ static void PaletteSortMinimizeDeltas(const uint32_t* const palette_sorted,
 // Pinho and Antonio J. R. Neves.
 
 // Finds the biggest cooccurrence in the matrix.
-static void CoOccurrenceFindMax(const uint32_t* const cooccurrence,
-                                uint32_t num_colors, uint8_t* const c1,
-                                uint8_t* const c2) {
+static void CoOccurrenceFindMax(
+    const uint32_t* const WEBP_COUNTED_BY(num_colors* num_colors) cooccurrence,
+    uint32_t num_colors, uint8_t* const c1, uint8_t* const c2) {
   // Find the index that is most frequently located adjacent to other
   // (different) indexes.
   uint32_t best_sum = 0u;
@@ -253,8 +257,11 @@ static void CoOccurrenceFindMax(const uint32_t* const cooccurrence,
 
 // Builds the cooccurrence matrix
 static int CoOccurrenceBuild(const WebPPicture* const pic,
-                             const uint32_t* const palette, uint32_t num_colors,
-                             uint32_t* cooccurrence) {
+                             const uint32_t* const WEBP_COUNTED_BY(num_colors)
+                                 palette,
+                             uint32_t num_colors,
+                             uint32_t* WEBP_COUNTED_BY(num_colors* num_colors)
+                                 cooccurrence) {
   uint32_t *lines, *line_top, *line_current, *line_tmp;
   int x, y;
   const uint32_t* src = pic->argb;
@@ -304,10 +311,10 @@ struct Sum {
   uint32_t sum;
 };
 
-static int PaletteSortModifiedZeng(const WebPPicture* const pic,
-                                   const uint32_t* const palette_in,
-                                   uint32_t num_colors,
-                                   uint32_t* const palette) {
+static int PaletteSortModifiedZeng(
+    const WebPPicture* const pic,
+    const uint32_t* const WEBP_COUNTED_BY(num_colors) palette_in,
+    uint32_t num_colors, uint32_t* const WEBP_COUNTED_BY(num_colors) palette) {
   uint32_t i, j, ind;
   uint8_t remapping[MAX_PALETTE_SIZE];
   uint32_t* cooccurrence;
@@ -322,13 +329,19 @@ static int PaletteSortModifiedZeng(const WebPPicture* const pic,
   if (cooccurrence == NULL) {
     return 0;
   }
-  if (!CoOccurrenceBuild(pic, palette_in, num_colors, cooccurrence)) {
+  if (!CoOccurrenceBuild(pic, palette_in, num_colors,
+                         WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(
+                             uint32_t*, cooccurrence,
+                             num_colors* num_colors * sizeof(*cooccurrence)))) {
     WebPSafeFree(cooccurrence);
     return 0;
   }
 
   // Initialize the mapping list with the two best indices.
-  CoOccurrenceFindMax(cooccurrence, num_colors, &remapping[0], &remapping[1]);
+  CoOccurrenceFindMax(WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(
+                          const uint32_t*, cooccurrence,
+                          num_colors* num_colors * sizeof(*cooccurrence)),
+                      num_colors, &remapping[0], &remapping[1]);
 
   // We need to append and prepend to the list of remapping. To this end, we
   // actually define the next start/end of the list as indices in a vector (with
@@ -391,17 +404,18 @@ static int PaletteSortModifiedZeng(const WebPPicture* const pic,
 // -----------------------------------------------------------------------------
 
 int PaletteSort(PaletteSorting method, const struct WebPPicture* const pic,
-                const uint32_t* const palette_sorted, uint32_t num_colors,
-                uint32_t* const palette) {
+                const uint32_t* const WEBP_COUNTED_BY(num_colors)
+                    palette_sorted,
+                uint32_t num_colors,
+                uint32_t* const WEBP_COUNTED_BY(num_colors) palette) {
   switch (method) {
     case kSortedDefault:
       if (palette_sorted[0] == 0 && num_colors > 17) {
-        WEBP_UNSAFE_MEMCPY(palette, palette_sorted + 1,
-                           (num_colors - 1) * sizeof(*palette_sorted));
+        memcpy(palette, palette_sorted + 1,
+               (num_colors - 1) * sizeof(*palette_sorted));
         palette[num_colors - 1] = 0;
       } else {
-        WEBP_UNSAFE_MEMCPY(palette, palette_sorted,
-                           num_colors * sizeof(*palette));
+        memcpy(palette, palette_sorted, num_colors * sizeof(*palette));
       }
       return 1;
     case kMinimizeDelta:
