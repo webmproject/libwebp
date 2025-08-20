@@ -30,8 +30,8 @@ WEBP_ASSUME_UNSAFE_INDEXABLE_ABI
 // -----------------------------------------------------------------------------
 // Quantize levels.
 
-int QuantizeLevels(uint8_t* const data, int width, int height, int num_levels,
-                   uint64_t* const sse) {
+int QuantizeLevels(uint8_t* const WEBP_COUNTED_BY((size_t)width* height) data,
+                   int width, int height, int num_levels, uint64_t* const sse) {
   int freq[NUM_SYMBOLS] = {0};
   int q_level[NUM_SYMBOLS] = {0};
   double inv_q_level[NUM_SYMBOLS] = {0};
