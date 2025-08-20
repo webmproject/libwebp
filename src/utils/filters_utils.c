@@ -35,14 +35,14 @@ static WEBP_INLINE int GradientPredictor(uint8_t a, uint8_t b, uint8_t c) {
 
 WEBP_FILTER_TYPE WebPEstimateBestFilter(
     const uint8_t* WEBP_COUNTED_BY((size_t)width* height) data, int width,
-    int height, int stride) {
+    int height) {
   int i, j;
   int bins[WEBP_FILTER_LAST][SMAX];
   WEBP_UNSAFE_MEMSET(bins, 0, sizeof(bins));
 
   // We only sample every other pixels. That's enough.
   for (j = 2; j < height - 1; j += 2) {
-    const uint8_t* const p = data + j * stride;
+    const uint8_t* const p = data + j * width;
     int mean = p[0];
     for (i = 2; i < width - 1; i += 2) {
       const int diff0 = SDIFF(p[i], mean);
