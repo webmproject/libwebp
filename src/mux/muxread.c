@@ -278,9 +278,10 @@ WebPMux* WebPMuxCreateInternal(const WebPData* bitstream, int copy_data,
         ChunkRelease(&chunk);
         goto PushImage;
       default:  // A non-image chunk.
-        if (wpi->is_partial)
+        if (wpi->is_partial) {
           goto Err;  // Encountered a non-image chunk before
                      // getting all chunks of an image.
+        }
         if (chunk_list_ends[id] == NULL) {
           chunk_list_ends[id] =
               MuxGetChunkListFromId(mux, id);  // List to add this chunk.

@@ -235,33 +235,33 @@ int main(int argc, const char* argv[]) {
       format = RAW_YUV;
     } else if (!strcmp(argv[c], "-pixel_format") && c < argc - 1) {
       const char* const fmt = argv[++c];
-      if (!strcmp(fmt, "RGB"))
+      if (!strcmp(fmt, "RGB")) {
         format = RGB;
-      else if (!strcmp(fmt, "RGBA"))
+      } else if (!strcmp(fmt, "RGBA")) {
         format = RGBA;
-      else if (!strcmp(fmt, "BGR"))
+      } else if (!strcmp(fmt, "BGR")) {
         format = BGR;
-      else if (!strcmp(fmt, "BGRA"))
+      } else if (!strcmp(fmt, "BGRA")) {
         format = BGRA;
-      else if (!strcmp(fmt, "ARGB"))
+      } else if (!strcmp(fmt, "ARGB")) {
         format = ARGB;
-      else if (!strcmp(fmt, "RGBA_4444"))
+      } else if (!strcmp(fmt, "RGBA_4444")) {
         format = RGBA_4444;
-      else if (!strcmp(fmt, "RGB_565"))
+      } else if (!strcmp(fmt, "RGB_565")) {
         format = RGB_565;
-      else if (!strcmp(fmt, "rgbA"))
+      } else if (!strcmp(fmt, "rgbA")) {
         format = rgbA;
-      else if (!strcmp(fmt, "bgrA"))
+      } else if (!strcmp(fmt, "bgrA")) {
         format = bgrA;
-      else if (!strcmp(fmt, "Argb"))
+      } else if (!strcmp(fmt, "Argb")) {
         format = Argb;
-      else if (!strcmp(fmt, "rgbA_4444"))
+      } else if (!strcmp(fmt, "rgbA_4444")) {
         format = rgbA_4444;
-      else if (!strcmp(fmt, "YUV"))
+      } else if (!strcmp(fmt, "YUV")) {
         format = YUV;
-      else if (!strcmp(fmt, "YUVA"))
+      } else if (!strcmp(fmt, "YUVA")) {
         format = YUVA;
-      else {
+      } else {
         fprintf(stderr, "Can't parse pixel_format %s\n", fmt);
         parse_error = 1;
       }

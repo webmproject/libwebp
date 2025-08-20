@@ -121,10 +121,11 @@ static uint16_t FromLinearSrgb(uint32_t value, int bit_depth) {
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 
 static WEBP_INLINE float Roundf(float x) {
-  if (x < 0)
+  if (x < 0) {
     return (float)ceil((double)(x - 0.5f));
-  else
+  } else {
     return (float)floor((double)(x + 0.5f));
+  }
 }
 
 static WEBP_INLINE float Powf(float base, float exp) {
