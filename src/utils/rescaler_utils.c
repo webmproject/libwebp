@@ -30,7 +30,8 @@ WEBP_ASSUME_UNSAFE_INDEXABLE_ABI
 int WebPRescalerInit(WebPRescaler* const rescaler, int src_width,
                      int src_height, uint8_t* const dst, int dst_width,
                      int dst_height, int dst_stride, int num_channels,
-                     rescaler_t* const work) {
+                     rescaler_t* const WEBP_COUNTED_BY(2ULL * dst_width *
+                                                       num_channels) work) {
   const int x_add = src_width, x_sub = dst_width;
   const int y_add = src_height, y_sub = dst_height;
   const uint64_t total_size = 2ull * dst_width * num_channels * sizeof(*work);
@@ -47,6 +48,9 @@ int WebPRescalerInit(WebPRescaler* const rescaler, int src_width,
   rescaler->dst = dst;
   rescaler->dst_stride = dst_stride;
   rescaler->num_channels = num_channels;
+  rescaler->irow = work;
+  rescaler->frow = work + num_channels * dst_width;
+  memset(work, 0, (size_t)total_size);
 
   // for 'x_expand', we use bilinear interpolation
   rescaler->x_add = rescaler->x_expand ? (x_sub - 1) : x_add;
@@ -79,9 +83,6 @@ int WebPRescalerInit(WebPRescaler* const rescaler, int src_width,
     rescaler->fy_scale = WEBP_RESCALER_FRAC(1, rescaler->x_add);
     // rescaler->fxy_scale is unused here.
   }
-  rescaler->irow = work;
-  rescaler->frow = work + num_channels * dst_width;
-  WEBP_UNSAFE_MEMSET(work, 0, (size_t)total_size);
 
   WebPRescalerDspInit();
   return 1;
@@ -136,7 +137,11 @@ int WebPRescalerImport(WebPRescaler* const rescaler, int num_lines,
     if (rescaler->y_expand) {
       rescaler_t* const tmp = rescaler->irow;
       rescaler->irow = rescaler->frow;
-      rescaler->frow = tmp;
+      rescaler->frow = WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(
+          rescaler_t*, tmp,
+          rescaler->num_channels * rescaler->dst_width * sizeof(*tmp));
+      WEBP_SELF_ASSIGN(rescaler->dst_width);
+      WEBP_SELF_ASSIGN(rescaler->num_channels);
     }
     WebPRescalerImportRow(rescaler, src);
     if (!rescaler->y_expand) {  // Accumulate the contribution of the new row.
