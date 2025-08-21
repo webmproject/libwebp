@@ -274,8 +274,9 @@ static int HasAlpha8b_SSE2(const uint8_t* src, int length) {
     const int mask = _mm_movemask_epi8(bits);
     if (mask != 0xffff) return 1;
   }
-  for (; i < length; ++i)
+  for (; i < length; ++i) {
     if (src[i] != 0xff) return 1;
+  }
   return 0;
 }
 
@@ -314,8 +315,9 @@ static int HasAlpha32b_SSE2(const uint8_t* src, int length) {
     const int mask = _mm_movemask_epi8(bits);
     if (mask != 0xffff) return 1;
   }
-  for (; i <= length; i += 4)
+  for (; i <= length; i += 4) {
     if (src[i] != 0xff) return 1;
+  }
   return 0;
 }
 
@@ -337,8 +339,9 @@ static void AlphaReplace_SSE2(uint32_t* src, int length, uint32_t color) {
     _mm_storeu_si128((__m128i*)(src + i + 0), _mm_or_si128(d0, e0));
     _mm_storeu_si128((__m128i*)(src + i + 4), _mm_or_si128(d1, e1));
   }
-  for (; i < length; ++i)
+  for (; i < length; ++i) {
     if ((src[i] >> 24) == 0) src[i] = color;
+  }
 }
 
 // -----------------------------------------------------------------------------

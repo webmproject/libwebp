@@ -355,22 +355,25 @@ static void ExtractGreen_C(const uint32_t* WEBP_RESTRICT argb,
 //------------------------------------------------------------------------------
 
 static int HasAlpha8b_C(const uint8_t* src, int length) {
-  while (length-- > 0)
+  while (length-- > 0) {
     if (*src++ != 0xff) return 1;
+  }
   return 0;
 }
 
 static int HasAlpha32b_C(const uint8_t* src, int length) {
   int x;
-  for (x = 0; length-- > 0; x += 4)
+  for (x = 0; length-- > 0; x += 4) {
     if (src[x] != 0xff) return 1;
+  }
   return 0;
 }
 
 static void AlphaReplace_C(uint32_t* src, int length, uint32_t color) {
   int x;
-  for (x = 0; x < length; ++x)
+  for (x = 0; x < length; ++x) {
     if ((src[x] >> 24) == 0) src[x] = color;
+  }
 }
 
 //------------------------------------------------------------------------------
