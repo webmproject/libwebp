@@ -44,7 +44,7 @@ typedef struct {
 // the two will be chosen later.
 typedef struct {
   WebPMuxFrameInfo sub_frame;  // Encoded frame rectangle.
-  WebPMuxFrameInfo key_frame;  // Encoded frame if it is a key-frame.
+  WebPMuxFrameInfo key_frame;  // Encoded frame if it is a keyframe.
   int is_key_frame;            // True if 'key_frame' has been chosen.
 } EncodedFrame;
 
@@ -66,8 +66,25 @@ struct WebPAnimEncoder {
   int curr_canvas_copy_modified;  // True if pixels in 'curr_canvas_copy'
                                   // differ from those in 'curr_canvas'.
 
-  WebPPicture prev_canvas;           // Previous canvas.
-  WebPPicture prev_canvas_disposed;  // Previous canvas disposed to background.
+  // Previous canvas (original animation).
+  // Also used temporarily to store canvas_carryover_disposed pixel values.
+  WebPPicture prev_canvas;
+  // canvas_carryover contains the previous original input frame's pixels
+  // (prev_canvas) with some parts carried over from even earlier original input
+  // frames, to approximate the current state of the canvas at decoding.
+  // canvas_carryover is  compared to curr_canvas at encoding to see what parts
+  // of the current frame are similar enough to not be explicitly encoded.
+  WebPPicture canvas_carryover;
+
+  // Buffer of the size of a subframe, with one boolean value per pixel.
+  // Used when encoding a subframe to remember the pixels that may change when
+  // decoding that frame (0 means the pixel is explicitly encoded, 1 means
+  // carrying over the pixel value of the previous frame).
+  uint8_t* candidate_carryover_mask;
+  // True if at least one pixel is carried over by the best candidate subframe.
+  int best_candidate_carries_over;
+  // Same as candidate_carryover_mask but for the best candidate subframe.
+  uint8_t* best_candidate_carryover_mask;
 
   // Encoded data.
   EncodedFrame* encoded_frames;  // Array of encoded frames.
@@ -77,17 +94,17 @@ struct WebPAnimEncoder {
   size_t flush_count;            // If >0, 'flush_count' frames starting from
                                  // 'start' are ready to be added to mux.
 
-  // key-frame related.
-  int64_t best_delta;  // min(canvas size - frame size) over the frames.
-                       // Can be negative in certain cases due to
-                       // transparent pixels in a frame.
-  int keyframe;        // Index of selected key-frame relative to 'start'.
-  int count_since_key_frame;  // Frames seen since the last key-frame.
+  // keyframe related.
+  int64_t best_delta;         // min(canvas size - frame size) over the frames.
+                              // Can be negative in certain cases due to
+                              // transparent pixels in a frame.
+  int keyframe;               // Index of selected keyframe relative to 'start'.
+  int count_since_key_frame;  // Frames seen since the last keyframe.
 
   int first_timestamp;           // Timestamp of the first frame.
   int prev_timestamp;            // Timestamp of the last added frame.
   int prev_candidate_undecided;  // True if it's not yet decided if previous
-                                 // frame would be a sub-frame or a key-frame.
+                                 // frame would be a subframe or a keyframe.
 
   FrameRectangle prev_rect;  // Previous WebP frame rectangle. Only valid if
                              // prev_candidate_undecided is true.
@@ -134,7 +151,7 @@ static void SanitizeEncoderOptions(WebPAnimEncoderOptions* const enc_options) {
     DisableKeyframes(enc_options);
   }
 
-  if (enc_options->kmax == 1) {  // All frames will be key-frames.
+  if (enc_options->kmax == 1) {  // All frames will be keyframes.
     enc_options->kmin = 0;
     enc_options->kmax = 0;
     return;
@@ -269,7 +286,7 @@ WebPAnimEncoder* WebPAnimEncoderNewInternal(
   // Canvas buffers.
   if (!WebPPictureInit(&enc->curr_canvas_copy) ||
       !WebPPictureInit(&enc->prev_canvas) ||
-      !WebPPictureInit(&enc->prev_canvas_disposed)) {
+      !WebPPictureInit(&enc->canvas_carryover)) {
     goto Err;
   }
   enc->curr_canvas_copy.width = width;
@@ -277,11 +294,19 @@ WebPAnimEncoder* WebPAnimEncoderNewInternal(
   enc->curr_canvas_copy.use_argb = 1;
   if (!WebPPictureAlloc(&enc->curr_canvas_copy) ||
       !WebPPictureCopy(&enc->curr_canvas_copy, &enc->prev_canvas) ||
-      !WebPPictureCopy(&enc->curr_canvas_copy, &enc->prev_canvas_disposed)) {
+      !WebPPictureCopy(&enc->curr_canvas_copy, &enc->canvas_carryover)) {
     goto Err;
   }
-  WebPUtilClearPic(&enc->prev_canvas, NULL);
+  WebPUtilClearPic(&enc->canvas_carryover, NULL);
   enc->curr_canvas_copy_modified = 1;
+
+  // Allocate for the whole canvas so that it can be reused for any subframe.
+  enc->candidate_carryover_mask = (uint8_t*)WebPSafeMalloc(
+      width * (uint64_t)height, sizeof(*enc->candidate_carryover_mask));
+  if (enc->candidate_carryover_mask == NULL) goto Err;
+  enc->best_candidate_carryover_mask = (uint8_t*)WebPSafeMalloc(
+      width * (uint64_t)height, sizeof(*enc->best_candidate_carryover_mask));
+  if (enc->best_candidate_carryover_mask == NULL) goto Err;
 
   // Encoded frames.
   ResetCounters(enc);
@@ -324,7 +349,9 @@ void WebPAnimEncoderDelete(WebPAnimEncoder* enc) {
   if (enc != NULL) {
     WebPPictureFree(&enc->curr_canvas_copy);
     WebPPictureFree(&enc->prev_canvas);
-    WebPPictureFree(&enc->prev_canvas_disposed);
+    WebPPictureFree(&enc->canvas_carryover);
+    WebPSafeFree(enc->candidate_carryover_mask);
+    WebPSafeFree(enc->best_candidate_carryover_mask);
     if (enc->encoded_frames != NULL) {
       size_t i;
       for (i = 0; i < enc->size; ++i) {
@@ -512,11 +539,11 @@ typedef struct {
   int should_try;               // Should try this set of parameters.
   int empty_rect_allowed;       // Frame with empty rectangle can be skipped.
   FrameRectangle rect_ll;       // Frame rectangle for lossless compression.
-  WebPPicture sub_frame_ll;     // Sub-frame pic for lossless compression.
+  WebPPicture sub_frame_ll;     // subframe pic for lossless compression.
   FrameRectangle rect_lossy;    // Frame rectangle for lossy compression.
                                 // Could be smaller than 'rect_ll' as pixels
                                 // with small diffs can be ignored.
-  WebPPicture sub_frame_lossy;  // Sub-frame pic for lossy compression.
+  WebPPicture sub_frame_lossy;  // subframe pic for lossy compression.
 } SubFrameParams;
 
 static int SubFrameParamsInit(SubFrameParams* const params, int should_try,
@@ -688,11 +715,15 @@ static int IsLossyBlendingPossible(const WebPPicture* const src,
 // For pixels in 'rect', replace those pixels in 'dst' that are same as 'src' by
 // transparent pixels.
 // Returns true if at least one pixel gets modified.
+// Remember the modified pixel locations as 1s in carryover_mask.
 static int IncreaseTransparency(const WebPPicture* const src,
                                 const FrameRectangle* const rect,
-                                WebPPicture* const dst) {
+                                WebPPicture* const dst,
+                                uint8_t* const carryover_mask) {
   int i, j;
   int modified = 0;
+  // carryover_mask spans over the rect part of the canvas.
+  uint8_t* carryover_row = carryover_mask;
   assert(src != NULL && dst != NULL && rect != NULL);
   assert(src->width == dst->width && src->height == dst->height);
   for (j = rect->y_offset; j < rect->y_offset + rect->height; ++j) {
@@ -701,9 +732,11 @@ static int IncreaseTransparency(const WebPPicture* const src,
     for (i = rect->x_offset; i < rect->x_offset + rect->width; ++i) {
       if (psrc[i] == pdst[i] && pdst[i] != TRANSPARENT_COLOR) {
         pdst[i] = TRANSPARENT_COLOR;
+        carryover_row[i - rect->x_offset] = 1;
         modified = 1;
       }
     }
+    carryover_row += rect->width;
   }
   return modified;
 }
@@ -714,9 +747,11 @@ static int IncreaseTransparency(const WebPPicture* const src,
 // with uniform average color.
 // Assumes lossy compression is being used.
 // Returns true if at least one pixel gets modified.
+// Remember the modified pixel locations as 1s in carryover_mask.
 static int FlattenSimilarBlocks(const WebPPicture* const src,
                                 const FrameRectangle* const rect,
-                                WebPPicture* const dst, float quality) {
+                                WebPPicture* const dst, float quality,
+                                uint8_t* const carryover_mask) {
   const int max_allowed_diff_lossy = QualityToMaxDiff(quality);
   int i, j;
   int modified = 0;
@@ -725,11 +760,16 @@ static int FlattenSimilarBlocks(const WebPPicture* const src,
   const int y_end = (rect->y_offset + rect->height) & ~(block_size - 1);
   const int x_start = (rect->x_offset + block_size) & ~(block_size - 1);
   const int x_end = (rect->x_offset + rect->width) & ~(block_size - 1);
+  // carryover_mask spans over the rect part of the canvas.
+  uint8_t* carryover_mask_row = carryover_mask +
+                                (y_start - rect->y_offset) * rect->width +
+                                (x_start - rect->x_offset);
   assert(src != NULL && dst != NULL && rect != NULL);
   assert(src->width == dst->width && src->height == dst->height);
   assert((block_size & (block_size - 1)) == 0);  // must be a power of 2
   // Iterate over each block and count similar pixels.
   for (j = y_start; j < y_end; j += block_size) {
+    uint8_t* carryover_mask_block = carryover_mask_row;
     for (i = x_start; i < x_end; i += block_size) {
       int cnt = 0;
       int avg_r = 0, avg_g = 0, avg_b = 0;
@@ -758,11 +798,14 @@ static int FlattenSimilarBlocks(const WebPPicture* const src,
         for (y = 0; y < block_size; ++y) {
           for (x = 0; x < block_size; ++x) {
             pdst[x + y * dst->argb_stride] = color;
+            carryover_mask_block[y * rect->width + x] = 1;
           }
         }
         modified = 1;
       }
+      carryover_mask_block += block_size;
     }
+    carryover_mask_row += block_size * rect->width;
   }
   return modified;
 }
@@ -780,10 +823,15 @@ static int EncodeFrame(const WebPConfig* const config, WebPPicture* const pic,
 
 // Struct representing a candidate encoded frame including its metadata.
 typedef struct {
-  WebPMemoryWriter mem;
+  WebPMemoryWriter mem;  // Encoded bytes.
   WebPMuxFrameInfo info;
-  FrameRectangle rect;
-  int evaluate;  // True if this candidate should be evaluated.
+  FrameRectangle rect;  // Coordinates and dimensions of this candidate.
+  int carries_over;  // True if at least one pixel in rect is carried over from
+                     // the previous frame, meaning at least one pixel was set
+                     // to fully transparent and this frame is blended.
+                     // If this is true, such pixels are marked as 1s in
+                     // WebPAnimEncoder::candidate_carryover_mask.
+  int evaluate;      // True if this candidate should be evaluated.
 } Candidate;
 
 // Generates a candidate encoded frame given a picture and metadata.
@@ -855,6 +903,16 @@ static void GetEncodedData(const WebPMemoryWriter* const memory,
   encoded_data->size = memory->size;
 }
 
+// Opposite of SetPreviousDisposeMethod().
+static WebPMuxAnimDispose GetPreviousDisposeMethod(WebPAnimEncoder* const enc) {
+  const size_t position = enc->count - 2;
+  EncodedFrame* const prev_enc_frame = GetFrame(enc, position);
+  assert(enc->count >= 2);  // As current and previous frames are in enc.
+  return prev_enc_frame->is_key_frame
+             ? prev_enc_frame->key_frame.dispose_method
+             : prev_enc_frame->sub_frame.dispose_method;
+}
+
 // Sets dispose method of the previous frame to be 'dispose_method'.
 static void SetPreviousDisposeMethod(WebPAnimEncoder* const enc,
                                      WebPMuxAnimDispose dispose_method) {
@@ -893,8 +951,35 @@ static void PickBestCandidate(WebPAnimEncoder* const enc,
     if (!is_key_frame) {
       // Note: Previous dispose method only matters for non-keyframes.
       // Also, we don't want to modify previous dispose method that was
-      // selected when a non key-frame was assumed.
+      // selected when a non keyframe was assumed.
       SetPreviousDisposeMethod(enc, dispose_method);
+
+      enc->best_candidate_carries_over = candidate->carries_over;
+      if (candidate->carries_over) {
+        // Save the best_candidate_carryover_mask to be able to generate the
+        // canvas_carryover of the next frame later in case this candidate stays
+        // the best one.
+        // Note: The canvas_carryover could contain the pixel values with loss
+        //       due to quantization as if they were decoded, to even better
+        //       estimate which areas of the canvas should be explicitly encoded
+        //       at each frame. Setting WebPConfig::show_compressed=1 is a way
+        //       to approximate this. That works poorly: in lossy mode most
+        //       areas of the decoded canvas change because of quantization loss
+        //       in a frame, resulting in the encoder trying to explicitly
+        //       encode most of the following frame because most of the areas
+        //       differ significantly between the previous decoded canvas and
+        //       the current original canvas. This repeats for all frames,
+        //       resulting in a very large encoded file for no visible benefit.
+        //       The canvas carryover approach seems to fix
+        //       https://issues.webmproject.org/42340478 while still staying
+        //       close enough to the old behavior (only looking at the previous
+        //       and current original input frames) to not break everything.
+        // Save candidate_carryover_mask as best_candidate_carryover_mask by
+        // swapping the two buffers.
+        uint8_t* const tmp_carryover_mask = enc->best_candidate_carryover_mask;
+        enc->best_candidate_carryover_mask = enc->candidate_carryover_mask;
+        enc->candidate_carryover_mask = tmp_carryover_mask;
+      }
     }
 
     // Release the memory of the previous best candidate if any.
@@ -910,14 +995,15 @@ static void PickBestCandidate(WebPAnimEncoder* const enc,
   }
 }
 
-// Generates candidates for a given dispose method given pre-filled sub-frame
+// Generates candidates for a given dispose method given pre-filled subframe
 // 'params'.
 static WebPEncodingError GenerateCandidates(
     WebPAnimEncoder* const enc, Candidate candidates[CANDIDATE_COUNT],
-    WebPMuxAnimDispose dispose_method, int is_lossless, int is_key_frame,
-    SubFrameParams* const params, const WebPConfig* const config_ll,
-    const WebPConfig* const config_lossy, Candidate** const best_candidate,
-    EncodedFrame* const encoded_frame) {
+    WebPMuxAnimDispose dispose_method,
+    const WebPPicture* const canvas_carryover_disposed, int is_lossless,
+    int is_key_frame, SubFrameParams* const params,
+    const WebPConfig* const config_ll, const WebPConfig* const config_lossy,
+    Candidate** const best_candidate, EncodedFrame* const encoded_frame) {
   WebPEncodingError error_code = VP8_ENC_OK;
   const int is_dispose_none = (dispose_method == WEBP_MUX_DISPOSE_NONE);
   Candidate* const candidate_ll =
@@ -926,19 +1012,19 @@ static WebPEncodingError GenerateCandidates(
                                          ? &candidates[LOSSY_DISP_NONE]
                                          : &candidates[LOSSY_DISP_BG];
   WebPPicture* const curr_canvas = &enc->curr_canvas_copy;
-  const WebPPicture* const prev_canvas =
-      is_dispose_none ? &enc->prev_canvas : &enc->prev_canvas_disposed;
+  const WebPPicture* const canvas_carryover =
+      is_dispose_none ? &enc->canvas_carryover : canvas_carryover_disposed;
   int use_blending_ll, use_blending_lossy;
   int evaluate_ll, evaluate_lossy;
 
   CopyCurrentCanvas(enc);
   use_blending_ll =
-      !is_key_frame &&
-      IsLosslessBlendingPossible(prev_canvas, curr_canvas, &params->rect_ll);
+      !is_key_frame && IsLosslessBlendingPossible(canvas_carryover, curr_canvas,
+                                                  &params->rect_ll);
   use_blending_lossy =
       !is_key_frame &&
-      IsLossyBlendingPossible(prev_canvas, curr_canvas, &params->rect_lossy,
-                              config_lossy->quality);
+      IsLossyBlendingPossible(canvas_carryover, curr_canvas,
+                              &params->rect_lossy, config_lossy->quality);
 
   // Pick candidates to be tried.
   if (!enc->options.allow_mixed) {
@@ -957,25 +1043,37 @@ static WebPEncodingError GenerateCandidates(
   if (evaluate_ll) {
     CopyCurrentCanvas(enc);
     if (use_blending_ll) {
+      // Reset the whole carryover mask to "all pixels are explicitly encoded in
+      // this current frame".
+      memset(enc->candidate_carryover_mask, 0,
+             params->rect_ll.width * params->rect_ll.height);
       enc->curr_canvas_copy_modified =
-          IncreaseTransparency(prev_canvas, &params->rect_ll, curr_canvas);
+          IncreaseTransparency(canvas_carryover, &params->rect_ll, curr_canvas,
+                               enc->candidate_carryover_mask);
     }
     error_code = EncodeCandidate(&params->sub_frame_ll, &params->rect_ll,
                                  config_ll, use_blending_ll, candidate_ll);
     if (error_code != VP8_ENC_OK) return error_code;
+    candidate_ll->carries_over = enc->curr_canvas_copy_modified;
     PickBestCandidate(enc, candidate_ll, dispose_method, is_key_frame,
                       best_candidate, encoded_frame);
   }
   if (evaluate_lossy) {
     CopyCurrentCanvas(enc);
     if (use_blending_lossy) {
+      // Reset the whole carryover mask to "all pixels are explicitly encoded in
+      // this current frame".
+      memset(enc->candidate_carryover_mask, 0,
+             params->rect_lossy.width * params->rect_lossy.height);
       enc->curr_canvas_copy_modified = FlattenSimilarBlocks(
-          prev_canvas, &params->rect_lossy, curr_canvas, config_lossy->quality);
+          canvas_carryover, &params->rect_lossy, curr_canvas,
+          config_lossy->quality, enc->candidate_carryover_mask);
     }
     error_code =
         EncodeCandidate(&params->sub_frame_lossy, &params->rect_lossy,
                         config_lossy, use_blending_lossy, candidate_lossy);
     if (error_code != VP8_ENC_OK) return error_code;
+    candidate_lossy->carries_over = enc->curr_canvas_copy_modified;
     enc->curr_canvas_copy_modified = 1;
     PickBestCandidate(enc, candidate_lossy, dispose_method, is_key_frame,
                       best_candidate, encoded_frame);
@@ -1045,6 +1143,53 @@ static int IncreasePreviousDuration(WebPAnimEncoder* const enc, int duration) {
   return 1;
 }
 
+// Copies the pixels that are identical in 'a' and 'b' to 'dst'.
+static void CopyIdenticalPixels(const WebPPicture* const a,
+                                const WebPPicture* const b,
+                                WebPPicture* const dst) {
+  int y, x;
+  const uint32_t* row_a = a->argb;
+  const uint32_t* row_b = b->argb;
+  uint32_t* row_dst = dst->argb;
+  assert(a->width == b->width && a->height == b->height);
+  assert(a->width == dst->width && a->height == dst->height);
+  assert(a->use_argb && b->use_argb && dst->use_argb);
+
+  for (y = 0; y < a->height; ++y) {
+    for (x = 0; x < a->width; ++x) {
+      if (row_a[x] == row_b[x]) {
+        row_dst[x] = row_a[x];
+      }
+    }
+    row_a += a->argb_stride;
+    row_b += b->argb_stride;
+    row_dst += dst->argb_stride;
+  }
+}
+
+// Copies the pixels where 'mask' is 0 from 'src' to 'dst'.
+static void CopyMaskedPixels(const WebPPicture* const src,
+                             const uint8_t* const mask,
+                             WebPPicture* const dst) {
+  int y, x;
+  const uint32_t* row_src = src->argb;
+  const uint8_t* row_mask = mask;
+  uint32_t* row_dst = dst->argb;
+  assert(src->width == dst->width && src->height == dst->height);
+  assert(src->use_argb && dst->use_argb);
+
+  for (y = 0; y < src->height; ++y) {
+    for (x = 0; x < src->width; ++x) {
+      if (row_mask[x] == 0) {
+        row_dst[x] = row_src[x];
+      }
+    }
+    row_src += src->argb_stride;
+    row_mask += src->width;
+    row_dst += dst->argb_stride;
+  }
+}
+
 // Depending on the configuration, tries different compressions
 // (lossy/lossless), dispose methods, blending methods etc to encode the current
 // frame and outputs the best one in 'encoded_frame'.
@@ -1058,7 +1203,10 @@ static WebPEncodingError SetFrame(WebPAnimEncoder* const enc,
   int i;
   WebPEncodingError error_code = VP8_ENC_OK;
   const WebPPicture* const curr_canvas = &enc->curr_canvas_copy;
-  const WebPPicture* const prev_canvas = &enc->prev_canvas;
+  const WebPPicture* const canvas_carryover = &enc->canvas_carryover;
+  // canvas_carryover with the area corresponding to the previous frame disposed
+  // to background color.
+  WebPPicture* canvas_carryover_disposed = NULL;
   Candidate candidates[CANDIDATE_COUNT];
   Candidate* best_candidate = NULL;
   const int is_lossless = config->lossless;
@@ -1076,10 +1224,10 @@ static WebPEncodingError SetFrame(WebPAnimEncoder* const enc,
   // allow empty rectangle in this case.
   const int empty_rect_allowed_bg = 0;
 
-  // If current frame is a key-frame, dispose method of previous frame doesn't
+  // If current frame is a keyframe, dispose method of previous frame doesn't
   // matter, so we don't try dispose to background.
-  // Also, if key-frame insertion is on, and previous frame could be picked as
-  // either a sub-frame or a key-frame, then we can't be sure about what frame
+  // Also, if keyframe insertion is on, and previous frame could be picked as
+  // either a subframe or a keyframe, then we can't be sure about what frame
   // rectangle would be disposed. In that case too, we don't try dispose to
   // background.
   const int dispose_bg_possible =
@@ -1104,7 +1252,7 @@ static WebPEncodingError SetFrame(WebPAnimEncoder* const enc,
   memset(candidates, 0, sizeof(candidates));
 
   // Change-rectangle assuming previous frame was DISPOSE_NONE.
-  if (!GetSubRects(prev_canvas, curr_canvas, is_key_frame, is_first_frame,
+  if (!GetSubRects(canvas_carryover, curr_canvas, is_key_frame, is_first_frame,
                    config_lossy.quality, &dispose_none_params)) {
     error_code = VP8_ENC_ERROR_INVALID_CONFIGURATION;
     goto Err;
@@ -1120,13 +1268,16 @@ static WebPEncodingError SetFrame(WebPAnimEncoder* const enc,
   }
 
   if (dispose_bg_possible) {
+    // For memory optimization, canvas_carryover_disposed reuses the buffer from
+    // enc->prev_canvas. This is safe because prev_canvas is not read again
+    // before its contents are updated at the end of the CacheFrame() function.
+    canvas_carryover_disposed = &enc->prev_canvas;
     // Change-rectangle assuming previous frame was DISPOSE_BACKGROUND.
-    WebPPicture* const prev_canvas_disposed = &enc->prev_canvas_disposed;
-    WebPCopyPixels(prev_canvas, prev_canvas_disposed);
+    WebPCopyPixels(canvas_carryover, canvas_carryover_disposed);
     DisposeFrameRectangle(WEBP_MUX_DISPOSE_BACKGROUND, &enc->prev_rect,
-                          prev_canvas_disposed);
+                          canvas_carryover_disposed);
 
-    if (!GetSubRects(prev_canvas_disposed, curr_canvas, is_key_frame,
+    if (!GetSubRects(canvas_carryover_disposed, curr_canvas, is_key_frame,
                      is_first_frame, config_lossy.quality,
                      &dispose_bg_params)) {
       error_code = VP8_ENC_ERROR_INVALID_CONFIGURATION;
@@ -1150,7 +1301,8 @@ static WebPEncodingError SetFrame(WebPAnimEncoder* const enc,
 
   if (dispose_none_params.should_try) {
     error_code =
-        GenerateCandidates(enc, candidates, WEBP_MUX_DISPOSE_NONE, is_lossless,
+        GenerateCandidates(enc, candidates, WEBP_MUX_DISPOSE_NONE,
+                           /*canvas_carryover_disposed=*/NULL, is_lossless,
                            is_key_frame, &dispose_none_params, &config_ll,
                            &config_lossy, &best_candidate, encoded_frame);
     if (error_code != VP8_ENC_OK) goto Err;
@@ -1160,9 +1312,9 @@ static WebPEncodingError SetFrame(WebPAnimEncoder* const enc,
     assert(!enc->is_first_frame);
     assert(dispose_bg_possible);
     error_code = GenerateCandidates(
-        enc, candidates, WEBP_MUX_DISPOSE_BACKGROUND, is_lossless, is_key_frame,
-        &dispose_bg_params, &config_ll, &config_lossy, &best_candidate,
-        encoded_frame);
+        enc, candidates, WEBP_MUX_DISPOSE_BACKGROUND, canvas_carryover_disposed,
+        is_lossless, is_key_frame, &dispose_bg_params, &config_ll,
+        &config_lossy, &best_candidate, encoded_frame);
     if (error_code != VP8_ENC_OK) goto Err;
   }
 
@@ -1183,8 +1335,8 @@ End:
   return error_code;
 }
 
-// Calculate the penalty incurred if we encode given frame as a key frame
-// instead of a sub-frame.
+// Calculate the penalty incurred if we encode given frame as a keyframe
+// instead of a subframe.
 static int64_t KeyFramePenalty(const EncodedFrame* const encoded_frame) {
   return ((int64_t)encoded_frame->key_frame.bitstream.size -
           encoded_frame->sub_frame.bitstream.size);
@@ -1198,10 +1350,11 @@ static int CacheFrame(WebPAnimEncoder* const enc,
   const size_t position = enc->count;
   EncodedFrame* const encoded_frame = GetFrame(enc, position);
   FrameRectangle best_key_candidate_rect, best_sub_candidate_rect;
+  int candidate_undecided;
 
   ++enc->count;
 
-  if (enc->is_first_frame) {  // Add this as a key-frame.
+  if (enc->is_first_frame) {  // Add this as a keyframe.
     error_code = SetFrame(enc, config, 1, &best_key_candidate_rect,
                           encoded_frame, &frame_skipped);
     if (error_code != VP8_ENC_OK) goto End;
@@ -1210,9 +1363,21 @@ static int CacheFrame(WebPAnimEncoder* const enc,
     encoded_frame->is_key_frame = 1;
     enc->flush_count = 0;
     enc->count_since_key_frame = 0;
-    enc->prev_candidate_undecided = 0;
+    candidate_undecided = 0;
   } else {
     ++enc->count_since_key_frame;
+
+    // When some parts of the current original input frame (curr_canvas) did not
+    // change since the previous original input frame (prev_canvas), consider
+    // the encoder already did its best job at encoding these parts, and there
+    // is no need to explicitly encode these parts again. To avoid that, copy
+    // these pixels from curr_canvas (or prev_canvas) to canvas_carryover so
+    // that they are detected as unchanged in the SetFrame() implementation
+    // below. If all parts are identical, the whole frame may be skipped.
+    // TODO: Only allocate and use canvas_carryover for lossy and near-lossless.
+    CopyIdenticalPixels(&enc->prev_canvas, enc->curr_canvas,
+                        &enc->canvas_carryover);
+
     if (enc->count_since_key_frame <= enc->options.kmin) {
       // Add this as a frame rectangle.
       error_code = SetFrame(enc, config, 0, &best_sub_candidate_rect,
@@ -1221,49 +1386,53 @@ static int CacheFrame(WebPAnimEncoder* const enc,
       if (frame_skipped) goto Skip;
       encoded_frame->is_key_frame = 0;
       enc->flush_count = enc->count - 1;
-      enc->prev_candidate_undecided = 0;
+      candidate_undecided = 0;
     } else {
       int64_t curr_delta;
 
       // Add this as a frame rectangle to enc.
+      // TODO: Only try to encode a subframe when it can be used (for example
+      //       only when enc->count_since_key_frame < enc->options.kmax ||
+      //       enc->best_delta < DELTA_INFINITY).
+      //       frame_skipped should still be tested to keep exact same behavior.
       error_code = SetFrame(enc, config, 0, &best_sub_candidate_rect,
                             encoded_frame, &frame_skipped);
       if (error_code != VP8_ENC_OK) goto End;
       if (frame_skipped) goto Skip;
 
-      // Add this as a key-frame to enc, too.
+      // Add this as a keyframe to enc, too.
       error_code = SetFrame(enc, config, 1, &best_key_candidate_rect,
                             encoded_frame, &frame_skipped);
       if (error_code != VP8_ENC_OK) goto End;
-      assert(frame_skipped == 0);  // Key-frame cannot be an empty rectangle.
+      assert(frame_skipped == 0);  // keyframe cannot be an empty rectangle.
 
       // Analyze size difference of the two variants.
       curr_delta = KeyFramePenalty(encoded_frame);
-      if (curr_delta <= enc->best_delta) {  // Pick this as the key-frame.
+      if (curr_delta <= enc->best_delta) {  // Pick this as the keyframe.
         if (enc->keyframe != KEYFRAME_NONE) {
           EncodedFrame* const old_keyframe = GetFrame(enc, enc->keyframe);
           assert(old_keyframe->is_key_frame);
           old_keyframe->is_key_frame = 0;
         }
         encoded_frame->is_key_frame = 1;
-        enc->prev_candidate_undecided = 1;
+        candidate_undecided = 1;
         enc->keyframe = (int)position;
         enc->best_delta = curr_delta;
         enc->flush_count = enc->count - 1;  // We can flush previous frames.
       } else {
         encoded_frame->is_key_frame = 0;
-        enc->prev_candidate_undecided = 0;
+        candidate_undecided = 0;
       }
       // Note: We need '>=' below because when kmin and kmax are both zero,
       // count_since_key_frame will always be > kmax.
       if (enc->count_since_key_frame >= enc->options.kmax) {
-        // Start a new sequence of kmin sub-frames, followed by (kmax-kmin)
+        // Start a new sequence of kmin subframes, followed by (kmax-kmin)
         // candidate frames. Exactly one of these candidate frames will end up
-        // as a key-frame in the output encoded animation.
+        // as a keyframe in the output encoded animation.
         enc->count_since_key_frame = 0;
         enc->best_delta = DELTA_INFINITY;
-        // Freeze the previous candidate, whether it is a key-frame or not.
-        enc->prev_candidate_undecided = 0;
+        // Freeze the previous candidate, whether it is a keyframe or not.
+        candidate_undecided = 0;
         enc->keyframe = KEYFRAME_NONE;
         // Flush all previous frames.
         enc->flush_count = enc->count - 1;
@@ -1271,10 +1440,57 @@ static int CacheFrame(WebPAnimEncoder* const enc,
     }
   }
 
+  if (encoded_frame->is_key_frame) {
+    // A keyframe does not carry any pixels over from previous frames.
+    WebPCopyPixels(enc->curr_canvas, &enc->canvas_carryover);
+  } else {
+    const FrameRectangle* const curr_rect = &best_sub_candidate_rect;
+    WebPPicture curr_canvas_in_curr_rect;
+    WebPPicture canvas_carryover_in_curr_rect;
+
+    // There is no carried over pixel in the disposed rectangle, if any.
+    // Note that this could not have been done earlier because the decision to
+    // dispose a frame is taken when encoding a next frame's candidate.
+    const WebPMuxAnimDispose prev_dispose_method =
+        GetPreviousDisposeMethod(enc);
+    assert(prev_dispose_method == WEBP_MUX_DISPOSE_NONE ||
+           !enc->prev_candidate_undecided);
+    DisposeFrameRectangle(prev_dispose_method, &enc->prev_rect,
+                          &enc->canvas_carryover);
+
+    // The pixels outside the current frame rectangle are not carried over.
+    // Focus on the current frame rectangle.
+    if (!WebPPictureView(enc->curr_canvas, curr_rect->x_offset,
+                         curr_rect->y_offset, curr_rect->width,
+                         curr_rect->height, &curr_canvas_in_curr_rect) ||
+        !WebPPictureView(&enc->canvas_carryover, curr_rect->x_offset,
+                         curr_rect->y_offset, curr_rect->width,
+                         curr_rect->height, &canvas_carryover_in_curr_rect)) {
+      error_code = VP8_ENC_ERROR_INVALID_CONFIGURATION;
+      goto End;
+    }
+
+    if (enc->best_candidate_carries_over) {
+      // Carry over the pixels that were set to fully transparent in the current
+      // frame (meaning they are left untouched in canvas_carryover). Copy the
+      // other pixels (the explicitly encoded ones) from the original input
+      // canvas (curr_canvas) to next frame's canvas_carryover.
+      CopyMaskedPixels(&curr_canvas_in_curr_rect,
+                       enc->best_candidate_carryover_mask,
+                       &canvas_carryover_in_curr_rect);
+    } else {
+      // No pixel is carried over from previous frames, either because the
+      // current subframe is not blended, or because no pixel was set to
+      // TRANSPARENT_COLOR.
+      WebPCopyPixels(&curr_canvas_in_curr_rect, &canvas_carryover_in_curr_rect);
+    }
+  }
+
   // Save the current frame environment as the previous frame environment for
   // the next call to this function.
   WebPCopyPixels(enc->curr_canvas, &enc->prev_canvas);
-  if (enc->prev_candidate_undecided) {
+  enc->prev_candidate_undecided = candidate_undecided;
+  if (candidate_undecided) {
     // The previous frame rectangle is not known for sure. Do not save it.
   } else {
     enc->prev_rect = encoded_frame->is_key_frame ? best_key_candidate_rect
