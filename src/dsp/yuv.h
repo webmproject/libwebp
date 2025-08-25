@@ -40,6 +40,15 @@
 #include "src/dsp/dsp.h"
 #include "src/webp/types.h"
 
+// Macros to give the offset of each channel in a uint32_t containing ARGB.
+#ifdef WORDS_BIGENDIAN
+// uint32_t 0xff000000 is 0xff,00,00,00 in memory
+#define CHANNEL_OFFSET(i) (i)
+#else
+// uint32_t 0xff000000 is 0x00,00,00,ff in memory
+#define CHANNEL_OFFSET(i) (3 - (i))
+#endif
+
 //------------------------------------------------------------------------------
 // YUV -> RGB conversion
 
@@ -220,6 +229,31 @@ static WEBP_INLINE int VP8RGBToV(int r, int g, int b, int rounding) {
   const int v = +28800 * r - 24116 * g - 4684 * b;
   return VP8ClipUV(v, rounding);
 }
+
+extern void (*WebPImportYUVAFromRGBA)(
+    const uint8_t* r_ptr, const uint8_t* g_ptr, const uint8_t* b_ptr,
+    const uint8_t* a_ptr,
+    int step,        // bytes per pixel
+    int rgb_stride,  // bytes per scanline
+    int has_alpha, int width, int height, uint16_t* tmp_rgb, int y_stride,
+    int uv_stride, int a_stride, uint8_t* dst_y, uint8_t* dst_u, uint8_t* dst_v,
+    uint8_t* dst_a);
+extern void (*WebPImportYUVAFromRGBALastLine)(
+    const uint8_t* r_ptr, const uint8_t* g_ptr, const uint8_t* b_ptr,
+    const uint8_t* a_ptr,
+    int step,  // bytes per pixel
+    int has_alpha, int width, uint16_t* tmp_rgb, uint8_t* dst_y, uint8_t* dst_u,
+    uint8_t* dst_v, uint8_t* dst_a);
+
+// Internal function to WebPImportYUVAFromRGBA* that can be reused.
+void WebPAccumulateRGBA(const uint8_t* const r_ptr, const uint8_t* const g_ptr,
+                        const uint8_t* const b_ptr, const uint8_t* const a_ptr,
+                        int rgb_stride, uint16_t* dst, int width);
+void WebPAccumulateRGB(const uint8_t* const r_ptr, const uint8_t* const g_ptr,
+                       const uint8_t* const b_ptr, int step, int rgb_stride,
+                       uint16_t* dst, int width);
+// Must be called before calling WebPAccumulateRGB*.
+void WebPInitGammaTables(void);
 
 #ifdef __cplusplus
 }  // extern "C"

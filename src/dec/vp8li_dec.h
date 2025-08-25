@@ -67,6 +67,8 @@ struct VP8LDecoder {
   uint32_t* pixels;      // Internal data: either uint8_t* for alpha
                          // or uint32_t* for BGRA.
   uint32_t* argb_cache;  // Scratch buffer for temporary BGRA storage.
+  uint16_t* accumulated_rgb_pixels;  // Scratch buffer for accumulated RGB for
+                                     // YUV conversion.
 
   VP8LBitReader br;
   int incremental;         // if true, incremental decoding is expected
