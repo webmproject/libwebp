@@ -27,7 +27,7 @@ extern "C" {
 // Fast estimate of a potentially good filter.
 WEBP_FILTER_TYPE WebPEstimateBestFilter(
     const uint8_t* WEBP_COUNTED_BY((size_t)width* height) data, int width,
-    int height, int stride);
+    int height);
 
 #ifdef __cplusplus
 }  // extern "C"
