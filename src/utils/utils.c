@@ -201,14 +201,15 @@ static int CheckSizeArgumentsOverflow(uint64_t nmemb, size_t size) {
   return 1;
 }
 
-void* WebPSafeMalloc(uint64_t nmemb, size_t size) {
+void* WEBP_SIZED_BY_OR_NULL(nmemb* size)
+    WebPSafeMalloc(uint64_t nmemb, size_t size) {
   void* ptr;
   Increment(&num_malloc_calls);
   if (!CheckSizeArgumentsOverflow(nmemb, size)) return NULL;
   assert(nmemb * size > 0);
   ptr = malloc((size_t)(nmemb * size));
   AddMem(ptr, (size_t)(nmemb * size));
-  return ptr;
+  return WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(void*, ptr, (size_t)(nmemb * size));
 }
 
 void* WEBP_SIZED_BY_OR_NULL(nmemb* size)
