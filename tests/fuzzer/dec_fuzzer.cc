@@ -19,6 +19,7 @@
 #include <cstdlib>
 #include <string_view>
 
+#include "./nalloc.h"
 #include "src/webp/decode.h"
 #include "tests/fuzzer/fuzz_utils.h"
 
@@ -30,8 +31,11 @@ void DecodeWebP(std::string_view arbitrary_bytes) {
     fprintf(stderr, "WebPInitDecoderConfig failed.\n");
     std::abort();
   }
+  nalloc_init(nullptr);
+  nalloc_start(reinterpret_cast<const uint8_t *>(arbitrary_bytes.data()),
+               arbitrary_bytes.size());
   const VP8StatusCode status =
-      WebPDecode(reinterpret_cast<const uint8_t*>(arbitrary_bytes.data()),
+      WebPDecode(reinterpret_cast<const uint8_t *>(arbitrary_bytes.data()),
                  arbitrary_bytes.size(), &decoder_config);
   WebPFreeDecBuffer(&decoder_config.output);
   // The decoding may fail (because the fuzzed input can be anything) but not
@@ -39,6 +43,7 @@ void DecodeWebP(std::string_view arbitrary_bytes) {
   if (status == VP8_STATUS_SUSPENDED || status == VP8_STATUS_USER_ABORT) {
     std::abort();
   }
+  nalloc_end();
 }
 
 FUZZ_TEST(WebPSuite, DecodeWebP)

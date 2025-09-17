@@ -40,7 +40,7 @@
 set -eu
 
 EXTRA_CMAKE_FLAGS=""
-export CXXFLAGS="${CXXFLAGS} -DFUZZTEST_COMPATIBILITY_MODE"
+export CXXFLAGS="${CXXFLAGS} -DFUZZTEST_COMPATIBILITY_MODE -DWEBP_FUZZER_ENABLE_NALLOC"
 EXTRA_CMAKE_FLAGS="-DFUZZTEST_COMPATIBILITY_MODE=libfuzzer"
 
 # limit allocation size to reduce spurious OOMs
@@ -79,6 +79,11 @@ chmod +x \$this_dir/$fuzz_basename
 chmod -x \$this_dir/$fuzz_basename
 EOF
     chmod +x $OUT/$TARGET_FUZZER
+    if grep -q "nalloc_init" $fuzz_main_file; then
+      cp $OUT/$TARGET_FUZZER $OUT/${TARGET_FUZZER}_nalloc
+      sed -i -e 's/^\$this_dir/NALLOQ_FREQ=32 \$this_dir/' \
+        $OUT/${TARGET_FUZZER}_nalloc
+    fi
   done
   # Copy data.
   cp fuzz_seed_corpus.zip $OUT/${fuzz_basename}_seed_corpus.zip
