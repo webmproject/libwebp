@@ -28,8 +28,9 @@ extern "C" {
 // Strength is in [0..100] and controls the amount of dithering applied.
 // Returns false in case of error (data is NULL, invalid parameters,
 // malloc failure, ...).
-int WebPDequantizeLevels(uint8_t* const data, int width, int height, int stride,
-                         int strength);
+int WebPDequantizeLevels(uint8_t* WEBP_SIZED_BY((size_t)stride* height)
+                             const data,
+                         int width, int height, int stride, int strength);
 
 #ifdef __cplusplus
 }  // extern "C"
