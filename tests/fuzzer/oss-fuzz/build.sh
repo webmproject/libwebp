@@ -81,7 +81,7 @@ EOF
     chmod +x $OUT/$TARGET_FUZZER
     if grep -q "nalloc_init" $fuzz_main_file; then
       cp $OUT/$TARGET_FUZZER $OUT/${TARGET_FUZZER}_nalloc
-      sed -i -e 's/^\$this_dir/NALLOQ_FREQ=32 \$this_dir/' \
+      sed -i -e 's/^\$this_dir/NALLOC_FREQ=32 \$this_dir/' \
         $OUT/${TARGET_FUZZER}_nalloc
     fi
   done
