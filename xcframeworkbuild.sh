@@ -41,8 +41,8 @@ readonly NUM_PLATFORMS=4
 readonly OLDPATH=${PATH}
 
 # Names should be of the form '<platform>-[<variant>-]<architecture>'.
-PLATFORMS[$IOS]="iPhoneOS-armv7 iPhoneOS-armv7s iPhoneOS-arm64"
-PLATFORMS[$IOS_SIMULATOR]="iPhoneSimulator-i386 iPhoneSimulator-x86_64"
+PLATFORMS[$IOS]="iPhoneOS-arm64"
+PLATFORMS[$IOS_SIMULATOR]="iPhoneSimulator-x86_64"
 PLATFORMS[$MACOS]="MacOSX-x86_64"
 PLATFORMS[$MACOS_CATALYST]="MacOSX-Catalyst-x86_64"
 if [[ "${XCODE%%.*}" -ge 12 ]]; then
