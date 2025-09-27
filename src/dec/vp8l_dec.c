@@ -24,6 +24,7 @@
 #include "src/dsp/dsp.h"
 #include "src/dsp/lossless.h"
 #include "src/dsp/lossless_common.h"
+#include "src/dsp/yuv.h"
 #include "src/utils/bit_reader_utils.h"
 #include "src/utils/color_cache_utils.h"
 #include "src/utils/huffman_utils.h"
@@ -703,13 +704,71 @@ static int EmitRescaledRowsYUVA(const VP8LDecoder* const dec, uint8_t* in,
   return y_pos;
 }
 
-static int EmitRowsYUVA(const VP8LDecoder* const dec, const uint8_t* in,
-                        int in_stride, int mb_w, int num_rows) {
+// Returns true if alpha[] has non-0xff values.
+static int CheckNonOpaque(const uint8_t* alpha, int width, int height,
+                          int y_step) {
+  WebPInitAlphaProcessing();
+  for (; height-- > 0; alpha += y_step) {
+    if (WebPHasAlpha8b(alpha, width)) return 1;
+  }
+  return 0;
+}
+
+static int EmitRowsYUVA(const uint8_t* const in, const VP8Io* const io,
+                        int in_stride, uint16_t* tmp_rgb,
+                        VP8LDecoder* const dec) {
   int y_pos = dec->last_out_row;
-  while (num_rows-- > 0) {
-    ConvertToYUVA((const uint32_t*)in, mb_w, y_pos, dec->output);
-    in += in_stride;
-    ++y_pos;
+  const int width = io->mb_w;
+  int num_rows = io->mb_h;
+  const int y_pos_final = y_pos + num_rows;
+  const int y_stride = dec->output->u.YUVA.y_stride;
+  const int uv_stride = dec->output->u.YUVA.u_stride;
+  const int a_stride = dec->output->u.YUVA.a_stride;
+  uint8_t* dst_a = dec->output->u.YUVA.a;
+  uint8_t* dst_y = dec->output->u.YUVA.y + y_pos * y_stride;
+  uint8_t* dst_u = dec->output->u.YUVA.u + (y_pos >> 1) * uv_stride;
+  uint8_t* dst_v = dec->output->u.YUVA.v + (y_pos >> 1) * uv_stride;
+  const uint8_t* r_ptr = in + CHANNEL_OFFSET(1);
+  const uint8_t* g_ptr = in + CHANNEL_OFFSET(2);
+  const uint8_t* b_ptr = in + CHANNEL_OFFSET(3);
+  const uint8_t* a_ptr = NULL;
+  int has_alpha = 0;
+
+  // Make sure the lines are processed two by two from the start.
+  assert(y_pos % 2 == 0);
+
+  // Make sure num_rows is even. y_pos_final will check if it not.
+  num_rows &= ~1;
+
+  if (dst_a) {
+    dst_a += y_pos * a_stride;
+    a_ptr = in + CHANNEL_OFFSET(0);
+    has_alpha = CheckNonOpaque(a_ptr, width, num_rows, in_stride);
+  }
+  // Process pairs of lines.
+  WebPImportYUVAFromRGBA(r_ptr, g_ptr, b_ptr, a_ptr, /*step=*/4, in_stride,
+                         has_alpha, width, num_rows, tmp_rgb, y_stride,
+                         uv_stride, a_stride, dst_y, dst_u, dst_v, dst_a);
+
+  y_pos += num_rows;
+  if (y_pos_final == io->crop_bottom - io->crop_top && y_pos < y_pos_final) {
+    assert(y_pos + 1 == y_pos_final);
+    // If we output the last line of an image with odd height.
+    dst_y += num_rows * y_stride;
+    dst_u += (num_rows >> 1) * uv_stride;
+    dst_v += (num_rows >> 1) * uv_stride;
+    r_ptr += num_rows * in_stride;
+    g_ptr += num_rows * in_stride;
+    b_ptr += num_rows * in_stride;
+    if (dst_a) {
+      dst_a += num_rows * a_stride;
+      a_ptr += num_rows * in_stride;
+      has_alpha = CheckNonOpaque(a_ptr, width, /*height=*/1, in_stride);
+    }
+    WebPImportYUVAFromRGBALastLine(r_ptr, g_ptr, b_ptr, a_ptr, /*step=*/4,
+                                   has_alpha, width, tmp_rgb, dst_y, dst_u,
+                                   dst_v, dst_a);
+    y_pos = y_pos_final;
   }
   return y_pos;
 }
@@ -789,8 +848,17 @@ static void ApplyInverseTransforms(VP8LDecoder* const dec, int start_row,
 // last call.
 static void ProcessRows(VP8LDecoder* const dec, int row) {
   const uint32_t* const rows = dec->pixels + dec->width * dec->last_row;
-  const int num_rows = row - dec->last_row;
+  int num_rows;
 
+  // In case of YUV conversion and if we do not need to get to the last row.
+  if (!WebPIsRGBMode(dec->output->colorspace) && row >= dec->io->crop_top &&
+      row < dec->io->crop_bottom) {
+    // Make sure the number of rows to process is even.
+    if ((row - dec->io->crop_top) % 2 == 1) {
+      --row;
+    }
+  }
+  num_rows = row - dec->last_row;
   assert(row <= dec->io->crop_bottom);
   // We can't process more than NUM_ARGB_CACHE_ROWS at a time (that's the size
   // of argb_cache), but we currently don't need more than that.
@@ -822,7 +890,8 @@ static void ProcessRows(VP8LDecoder* const dec, int row) {
         dec->last_out_row =
             io->use_scaling
                 ? EmitRescaledRowsYUVA(dec, rows_data, in_stride, io->mb_h)
-                : EmitRowsYUVA(dec, rows_data, in_stride, io->mb_w, io->mb_h);
+                : EmitRowsYUVA(rows_data, io, in_stride,
+                               dec->accumulated_rgb_pixels, dec);
       }
       assert(dec->last_out_row <= output->height);
     }
@@ -1526,9 +1595,16 @@ static int AllocateInternalBuffers32b(VP8LDecoder* const dec, int final_width) {
   const uint64_t cache_top_pixels = (uint16_t)final_width;
   // Scratch buffer for temporary BGRA storage. Not needed for paletted alpha.
   const uint64_t cache_pixels = (uint64_t)final_width * NUM_ARGB_CACHE_ROWS;
-  const uint64_t total_num_pixels =
-      num_pixels + cache_top_pixels + cache_pixels;
-
+  // Scratch buffer to accumulate RGBA values (hence 4*)for YUV conversion.
+  uint64_t accumulated_rgb_pixels = 0;
+  uint64_t total_num_pixels;
+  if (dec->output != NULL && !WebPIsRGBMode(dec->output->colorspace)) {
+    const int uv_width = (dec->io->crop_right - dec->io->crop_left + 1) >> 1;
+    accumulated_rgb_pixels =
+        4 * uv_width * sizeof(*dec->accumulated_rgb_pixels) / sizeof(uint32_t);
+  }
+  total_num_pixels =
+      num_pixels + cache_top_pixels + cache_pixels + accumulated_rgb_pixels;
   assert(dec->width <= final_width);
   dec->pixels = (uint32_t*)WebPSafeMalloc(total_num_pixels, sizeof(uint32_t));
   if (dec->pixels == NULL) {
@@ -1536,6 +1612,12 @@ static int AllocateInternalBuffers32b(VP8LDecoder* const dec, int final_width) {
     return VP8LSetError(dec, VP8_STATUS_OUT_OF_MEMORY);
   }
   dec->argb_cache = dec->pixels + num_pixels + cache_top_pixels;
+  dec->accumulated_rgb_pixels =
+      accumulated_rgb_pixels == 0
+          ? NULL
+          : (uint16_t*)(dec->pixels + num_pixels + cache_top_pixels +
+                        cache_pixels);
+
   return 1;
 }
 
