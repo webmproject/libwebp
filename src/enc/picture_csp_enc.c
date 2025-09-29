@@ -246,11 +246,7 @@ static int ImportYUVAFromRGBA(const uint8_t* r_ptr, const uint8_t* g_ptr,
           WebPAccumulateRGBA(r_ptr, g_ptr, b_ptr, a_ptr, /*rgb_stride=*/0,
                              tmp_rgb, width);
         }
-        if (rg == NULL) {
-          WebPConvertRGBA32ToUV(tmp_rgb, dst_u, dst_v, uv_width);
-        } else {
-          ConvertRowsToUV(tmp_rgb, dst_u, dst_v, uv_width, rg);
-        }
+        ConvertRowsToUV(tmp_rgb, dst_u, dst_v, uv_width, rg);
       }
     }
 
