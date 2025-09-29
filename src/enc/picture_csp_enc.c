@@ -185,15 +185,15 @@ static int ImportYUVAFromRGBA(const uint8_t* r_ptr, const uint8_t* g_ptr,
                              picture->y_stride, picture->uv_stride,
                              picture->a_stride, dst_y, dst_u, dst_v, dst_a);
       if (height & 1) {
-        dst_y += (height - 1) * picture->y_stride;
-        dst_u += (height >> 1) * picture->uv_stride;
-        dst_v += (height >> 1) * picture->uv_stride;
-        r_ptr += (height - 1) * rgb_stride;
-        b_ptr += (height - 1) * rgb_stride;
-        g_ptr += (height - 1) * rgb_stride;
+        dst_y += (height - 1) * (uint64_t)picture->y_stride;
+        dst_u += (height >> 1) * (uint64_t)picture->uv_stride;
+        dst_v += (height >> 1) * (uint64_t)picture->uv_stride;
+        r_ptr += (height - 1) * (uint64_t)rgb_stride;
+        b_ptr += (height - 1) * (uint64_t)rgb_stride;
+        g_ptr += (height - 1) * (uint64_t)rgb_stride;
         if (has_alpha) {
-          dst_a += (height - 1) * picture->a_stride;
-          a_ptr += (height - 1) * rgb_stride;
+          dst_a += (height - 1) * (uint64_t)picture->a_stride;
+          a_ptr += (height - 1) * (uint64_t)rgb_stride;
         }
         WebPImportYUVAFromRGBALastLine(r_ptr, g_ptr, b_ptr, a_ptr, step,
                                        has_alpha, width, tmp_rgb, dst_y, dst_u,
