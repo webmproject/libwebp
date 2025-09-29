@@ -149,6 +149,16 @@ if(WIN32 AND BUILD_SHARED_LIBS)
   add_definitions(-DWEBP_DLL)
 endif()
 
+# Compatibility with autoconf configure script's way of setting this
+if(CMAKE_C_BYTE_ORDER STREQUAL "BIG_ENDIAN")
+  set(WORDS_BIGENDIAN TRUE)
+elseif(CMAKE_C_BYTE_ORDER STREQUAL "LITTLE_ENDIAN")
+  set(WORDS_BIGENDIAN FALSE)
+else()
+  set(WORDS_BIGENDIAN FALSE)
+  message(WARNING "Endianness could not be determined.")
+endif()
+
 # pkg-config variables used by *.pc.in.
 set(prefix ${CMAKE_INSTALL_PREFIX})
 set(exec_prefix "\${prefix}")
