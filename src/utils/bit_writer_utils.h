@@ -125,30 +125,33 @@ void VP8LBitWriterReset(const VP8LBitWriter* const bw_init,
 // Swaps the memory held by two BitWriters.
 void VP8LBitWriterSwap(VP8LBitWriter* const src, VP8LBitWriter* const dst);
 
-// Internal function for VP8LPutBits flushing 32 bits from the written state.
-void VP8LPutBitsFlushBits(VP8LBitWriter* const bw);
+// Internal function for VP8LPutBits flushing VP8L_WRITER_BITS bits from the
+// written state.
+void VP8LPutBitsFlushBits(VP8LBitWriter* const bw, int* used,
+                          vp8l_atype_t* bits);
 
+#if VP8L_WRITER_BITS == 16
 // PutBits internal function used in the 16 bit vp8l_wtype_t case.
 void VP8LPutBitsInternal(VP8LBitWriter* const bw, uint32_t bits, int n_bits);
+#endif
 
 // This function writes bits into bytes in increasing addresses (little endian),
 // and within a byte least-significant-bit first.
-// This function can write up to 32 bits in one go, but VP8LBitReader can only
-// read 24 bits max (VP8L_MAX_NUM_BIT_READ).
+// This function can write up to VP8L_WRITER_MAX_BITS bits in one go, but
+// VP8LBitReader can only read 24 bits max (VP8L_MAX_NUM_BIT_READ).
 // VP8LBitWriter's 'error' flag is set in case of memory allocation error.
 static WEBP_INLINE void VP8LPutBits(VP8LBitWriter* const bw, uint32_t bits,
                                     int n_bits) {
-  if (sizeof(vp8l_wtype_t) == 4) {
-    if (n_bits > 0) {
-      if (bw->used >= 32) {
-        VP8LPutBitsFlushBits(bw);
-      }
-      bw->bits |= (vp8l_atype_t)bits << bw->used;
-      bw->used += n_bits;
-    }
-  } else {
-    VP8LPutBitsInternal(bw, bits, n_bits);
+#if VP8L_WRITER_BYTES == 4
+  if (n_bits == 0) return;
+  if (bw->used >= VP8L_WRITER_BITS) {
+    VP8LPutBitsFlushBits(bw, &bw->used, &bw->bits);
   }
+  bw->bits |= (vp8l_atype_t)bits << bw->used;
+  bw->used += n_bits;
+#else
+  VP8LPutBitsInternal(bw, bits, n_bits);
+#endif
 }
 
 //------------------------------------------------------------------------------
