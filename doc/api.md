@@ -36,6 +36,12 @@ size_t WebPEncodeLosslessBGRA(const uint8_t* bgra, int width, int height,
 Of course in this case, no quality factor is needed since the compression occurs
 without loss of the input values, at the expense of larger output sizes.
 
+Note these functions, like the lossy versions, use the library's default
+settings. For lossless this means 'exact' is disabled. RGB values in fully
+transparent areas (that is, areas with alpha values equal to `0`) will be
+modified to improve compression. To avoid this, use `WebPEncode()` and set
+`WebPConfig::exact` to `1`.
+
 ### Advanced encoding API
 
 A more advanced API is based on the WebPConfig and WebPPicture structures.

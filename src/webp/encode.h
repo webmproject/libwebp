@@ -65,9 +65,10 @@ WEBP_EXTERN size_t WebPEncodeBGRA(const uint8_t* bgra, int width, int height,
 // lossless manner. Files are usually larger than lossy format, but will
 // not suffer any compression loss.
 // Note these functions, like the lossy versions, use the library's default
-// settings. For lossless this means 'exact' is disabled. RGB values in
-// transparent areas will be modified to improve compression. To avoid this,
-// use WebPEncode() and set WebPConfig::exact to 1.
+// settings. For lossless this means 'exact' is disabled. RGB values in fully
+// transparent areas (that is, areas with alpha values equal to 0) will be
+// modified to improve compression. To avoid this, use WebPEncode() and set
+// WebPConfig::exact to 1.
 WEBP_EXTERN size_t WebPEncodeLosslessRGB(const uint8_t* rgb, int width,
                                          int height, int stride,
                                          uint8_t** output);
