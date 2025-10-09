@@ -30,7 +30,7 @@
 
 namespace {
 
-void TestReader(const uint8_t *data, size_t size, WebPImageReader reader,
+void TestReader(const uint8_t* data, size_t size, WebPImageReader reader,
                 bool keep_alpha, bool use_argb) {
   WebPPicture pic;
   if (!WebPPictureInit(&pic)) {
@@ -55,8 +55,8 @@ constexpr WebPInputFileFormat kUnknown = WEBP_UNSUPPORTED_FORMAT;
 
 void Decode(std::string_view arbitrary_bytes, WebPInputFileFormat format,
             bool keep_alpha, bool use_argb) {
-  const uint8_t *data =
-      reinterpret_cast<const uint8_t *>(arbitrary_bytes.data());
+  const uint8_t* data =
+      reinterpret_cast<const uint8_t*>(arbitrary_bytes.data());
   const size_t size = arbitrary_bytes.size();
   if (format == kUnknown) {
     (void)WebPGuessImageType(data, size);  // shouldn't fail

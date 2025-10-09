@@ -106,12 +106,12 @@ extern void __sanitizer_print_stack_trace(void);
 #endif
 
 // Generic init, using env variables to get parameters
-void nalloc_init(const char *prog) {
+void nalloc_init(const char* prog) {
   if (nalloc_initialized) {
     return;
   }
   nalloc_initialized = true;
-  char *bitmask = getenv("NALLOC_FREQ");
+  char* bitmask = getenv("NALLOC_FREQ");
   if (bitmask) {
     int shift = atoi(bitmask);
     if (shift > 0 && shift < 31) {
@@ -127,12 +127,12 @@ void nalloc_init(const char *prog) {
     return;
   }
 
-  char *magic = getenv("NALLOC_MAGIC");
+  char* magic = getenv("NALLOC_MAGIC");
   if (magic) {
     nalloc_magic = (uint32_t)strtol(magic, NULL, 0);
   }
 
-  char *verbose = getenv("NALLOC_VERBOSE");
+  char* verbose = getenv("NALLOC_VERBOSE");
   if (verbose) {
     nalloc_verbose = true;
   }
@@ -146,7 +146,7 @@ static inline void nalloc_random_update(uint8_t b) {
 }
 
 // Start the failure injections, using a buffer as seed
-static int nalloc_start(const uint8_t *data, size_t size) {
+static int nalloc_start(const uint8_t* data, size_t size) {
   if (nalloc_random_bitmask) {
     if (nalloc_random_state & 0x10) {
       nalloc_bitmask = 0xFFFFFFFF;
@@ -172,7 +172,7 @@ static int nalloc_start(const uint8_t *data, size_t size) {
 // Stop the failure injections
 static void nalloc_end() { __sync_fetch_and_sub(&nalloc_running, 1); }
 
-static bool nalloc_backtrace_exclude(size_t size, const char *op) {
+static bool nalloc_backtrace_exclude(size_t size, const char* op) {
   if (nalloc_verbose) {
     fprintf(stderr, "failed %s(%zu) \n", op, size);
 #ifdef NALLOC_ASAN
@@ -184,7 +184,7 @@ static bool nalloc_backtrace_exclude(size_t size, const char *op) {
 }
 
 //
-static bool nalloc_fail(size_t size, const char *op) {
+static bool nalloc_fail(size_t size, const char* op) {
   // do not fail before thread init
   if (nalloc_runs == 0) {
     return false;
@@ -217,15 +217,15 @@ static bool nalloc_fail(size_t size, const char *op) {
 
 // ASAN interceptor for libc routines
 #ifdef NALLOC_ASAN
-extern void *__interceptor_malloc(size_t);
-extern void *__interceptor_calloc(size_t, size_t);
-extern void *__interceptor_realloc(void *, size_t);
-extern void *__interceptor_reallocarray(void *, size_t, size_t);
+extern void* __interceptor_malloc(size_t);
+extern void* __interceptor_calloc(size_t, size_t);
+extern void* __interceptor_realloc(void*, size_t);
+extern void* __interceptor_reallocarray(void*, size_t, size_t);
 
-extern ssize_t __interceptor_read(int, void *, size_t);
-extern ssize_t __interceptor_write(int, const void *, size_t);
-extern ssize_t __interceptor_recv(int, void *, size_t, int);
-extern ssize_t __interceptor_send(int, const void *, size_t, int);
+extern ssize_t __interceptor_read(int, void*, size_t);
+extern ssize_t __interceptor_write(int, const void*, size_t);
+extern ssize_t __interceptor_recv(int, void*, size_t, int);
+extern ssize_t __interceptor_send(int, const void*, size_t, int);
 
 #define nalloc_malloc(s) __interceptor_malloc(s)
 #define nalloc_calloc(s, n) __interceptor_calloc(s, n)
@@ -238,15 +238,15 @@ extern ssize_t __interceptor_send(int, const void *, size_t, int);
 #define nalloc_send(f, b, s, x) __interceptor_send(f, b, s, x)
 
 #else
-extern void *__libc_malloc(size_t);
-extern void *__libc_calloc(size_t, size_t);
-extern void *__libc_realloc(void *, size_t);
-extern void *__libc_reallocarray(void *, size_t, size_t);
+extern void* __libc_malloc(size_t);
+extern void* __libc_calloc(size_t, size_t);
+extern void* __libc_realloc(void*, size_t);
+extern void* __libc_reallocarray(void*, size_t, size_t);
 
-extern ssize_t __read(int, void *, size_t);
-extern ssize_t __write(int, const void *, size_t);
-extern ssize_t __recv(int, void *, size_t, int);
-extern ssize_t __send(int, const void *, size_t, int);
+extern ssize_t __read(int, void*, size_t);
+extern ssize_t __write(int, const void*, size_t);
+extern ssize_t __recv(int, void*, size_t, int);
+extern ssize_t __send(int, const void*, size_t, int);
 
 #define nalloc_malloc(s) __libc_malloc(s)
 #define nalloc_calloc(s, n) __libc_calloc(s, n)
@@ -260,7 +260,7 @@ extern ssize_t __send(int, const void *, size_t, int);
 #endif
 
 // nalloc standard function overwrites with pseudo-random failures
-ssize_t read(int fd, void *buf, size_t count) {
+ssize_t read(int fd, void* buf, size_t count) {
   if (nalloc_fail(count, "read")) {
     errno = EIO;
     return -1;
@@ -268,7 +268,7 @@ ssize_t read(int fd, void *buf, size_t count) {
   return nalloc_read(fd, buf, count);
 }
 
-ssize_t write(int fd, const void *buf, size_t count) {
+ssize_t write(int fd, const void* buf, size_t count) {
   if (nalloc_fail(count, "write")) {
     errno = EIO;
     return -1;
@@ -276,7 +276,7 @@ ssize_t write(int fd, const void *buf, size_t count) {
   return nalloc_write(fd, buf, count);
 }
 
-ssize_t recv(int fd, void *buf, size_t count, int flags) {
+ssize_t recv(int fd, void* buf, size_t count, int flags) {
   if (nalloc_fail(count, "recv")) {
     errno = EIO;
     return -1;
@@ -284,7 +284,7 @@ ssize_t recv(int fd, void *buf, size_t count, int flags) {
   return nalloc_recv(fd, buf, count, flags);
 }
 
-ssize_t send(int fd, const void *buf, size_t count, int flags) {
+ssize_t send(int fd, const void* buf, size_t count, int flags) {
   if (nalloc_fail(count, "send")) {
     errno = EIO;
     return -1;
@@ -292,7 +292,7 @@ ssize_t send(int fd, const void *buf, size_t count, int flags) {
   return nalloc_send(fd, buf, count, flags);
 }
 
-void *calloc(size_t nmemb, size_t size) {
+void* calloc(size_t nmemb, size_t size) {
   if (nalloc_fail(size, "calloc")) {
     errno = ENOMEM;
     return NULL;
@@ -300,7 +300,7 @@ void *calloc(size_t nmemb, size_t size) {
   return nalloc_calloc(nmemb, size);
 }
 
-void *malloc(size_t size) {
+void* malloc(size_t size) {
   if (nalloc_fail(size, "malloc")) {
     errno = ENOMEM;
     return NULL;
@@ -308,7 +308,7 @@ void *malloc(size_t size) {
   return nalloc_malloc(size);
 }
 
-void *realloc(void *ptr, size_t size) {
+void* realloc(void* ptr, size_t size) {
   if (nalloc_fail(size, "realloc")) {
     errno = ENOMEM;
     return NULL;
@@ -316,7 +316,7 @@ void *realloc(void *ptr, size_t size) {
   return nalloc_realloc(ptr, size);
 }
 
-void *reallocarray(void *ptr, size_t nmemb, size_t size) {
+void* reallocarray(void* ptr, size_t nmemb, size_t size) {
   if (nalloc_fail(size, "reallocarray")) {
     errno = ENOMEM;
     return NULL;
