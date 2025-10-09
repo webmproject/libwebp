@@ -184,7 +184,8 @@
 #endif
 
 #if defined(__has_feature)
-#if __has_feature(memory_sanitizer)
+// Clang 21 should have all the MSAN fixes needed for WebP.
+#if __has_feature(memory_sanitizer) && !LOCAL_CLANG_PREREQ(21, 0)
 #define WEBP_MSAN
 #endif
 #endif
