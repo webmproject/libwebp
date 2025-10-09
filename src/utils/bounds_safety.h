@@ -87,6 +87,10 @@
             WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(uint8_t*, src, size), size); \
   } while (0)
 
+#define WEBP_UNSAFE_MEMCMP(s1, s2, size)                       \
+  memcmp(WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(uint8_t*, s1, size), \
+         WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(uint8_t*, s2, size), size)
+
 #else  // WEBP_SUPPORT_FBOUNDS_SAFETY
 
 #define WEBP_ASSUME_UNSAFE_INDEXABLE_ABI
@@ -105,6 +109,7 @@
 #define WEBP_UNSAFE_MEMCPY(dst, src, size) memcpy(dst, src, size)
 #define WEBP_UNSAFE_MEMSET(dst, c, size) memset(dst, c, size)
 #define WEBP_UNSAFE_MEMMOVE(dst, src, size) memmove(dst, src, size)
+#define WEBP_UNSAFE_MEMCMP(s1, s2, size) memcmp(s1, s2, size)
 
 #define WEBP_UNSAFE_FORGE_SINGLE(typ, ptr) ((typ)(ptr))
 #define WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(typ, ptr, size) ((typ)(ptr))
