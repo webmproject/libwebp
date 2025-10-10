@@ -16,6 +16,7 @@
 
 #include <stddef.h>
 
+#include "src/dsp/cpu.h"
 #include "src/utils/bounds_safety.h"
 #include "src/webp/types.h"
 
@@ -76,9 +77,10 @@ static WEBP_INLINE size_t VP8BitWriterSize(const VP8BitWriter* const bw) {
 //------------------------------------------------------------------------------
 // VP8LBitWriter
 
-#if defined(__x86_64__) || defined(_M_X64)  // 64bit
-typedef uint64_t vp8l_atype_t;              // accumulator type
-typedef uint32_t vp8l_wtype_t;              // writing type
+// 64bit
+#if defined(__x86_64__) || defined(_M_X64) || WEBP_AARCH64 || defined(__wasm__)
+typedef uint64_t vp8l_atype_t;  // accumulator type
+typedef uint32_t vp8l_wtype_t;  // writing type
 #define WSWAP HToLE32
 #define VP8L_WRITER_BYTES 4      // sizeof(vp8l_wtype_t)
 #define VP8L_WRITER_BITS 32      // 8 * sizeof(vp8l_wtype_t)
