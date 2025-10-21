@@ -32,10 +32,10 @@ void DecodeWebP(std::string_view arbitrary_bytes) {
     std::abort();
   }
   nalloc_init(nullptr);
-  nalloc_start(reinterpret_cast<const uint8_t *>(arbitrary_bytes.data()),
+  nalloc_start(reinterpret_cast<const uint8_t*>(arbitrary_bytes.data()),
                arbitrary_bytes.size());
   const VP8StatusCode status =
-      WebPDecode(reinterpret_cast<const uint8_t *>(arbitrary_bytes.data()),
+      WebPDecode(reinterpret_cast<const uint8_t*>(arbitrary_bytes.data()),
                  arbitrary_bytes.size(), &decoder_config);
   WebPFreeDecBuffer(&decoder_config.output);
   // The decoding may fail (because the fuzzed input can be anything) but not
