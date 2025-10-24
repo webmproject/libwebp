@@ -21,6 +21,8 @@
 #include "src/utils/bit_reader_utils.h"
 #include "src/webp/types.h"
 
+WEBP_ASSUME_UNSAFE_INDEXABLE_ABI
+
 #if !defined(USE_GENERIC_TREE)
 #if !defined(__arm__) && !defined(_M_ARM) && !WEBP_AARCH64 && !defined(__wasm__)
 // using a table is ~1-2% slower on ARM. Prefer the coded-tree approach then.
@@ -316,7 +318,7 @@ static void ParseIntraMode(VP8BitReader* const br, VP8Decoder* const dec,
 #endif  // USE_GENERIC_TREE
         top[x] = ymode;
       }
-      memcpy(modes, top, 4 * sizeof(*top));
+      WEBP_UNSAFE_MEMCPY(modes, top, 4 * sizeof(*top));
       modes += 4;
       left[y] = ymode;
     }

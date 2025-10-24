@@ -24,6 +24,8 @@
 #include "src/webp/mux_types.h"
 #include "src/webp/types.h"
 
+WEBP_ASSUME_UNSAFE_INDEXABLE_ABI
+
 #define NUM_CHANNELS 4
 
 // Channel extraction from a uint32_t representation of a uint8_t RGBA/BGRA
@@ -168,7 +170,7 @@ WEBP_NODISCARD static int ZeroFillCanvas(uint8_t* buf, uint32_t canvas_width,
   const uint64_t size =
       (uint64_t)canvas_width * canvas_height * NUM_CHANNELS * sizeof(*buf);
   if (!CheckSizeOverflow(size)) return 0;
-  memset(buf, 0, (size_t)size);
+  WEBP_UNSAFE_MEMSET(buf, 0, (size_t)size);
   return 1;
 }
 
@@ -179,7 +181,7 @@ static void ZeroFillFrameRect(uint8_t* buf, int buf_stride, int x_offset,
   assert(width * NUM_CHANNELS <= buf_stride);
   buf += y_offset * buf_stride + x_offset * NUM_CHANNELS;
   for (j = 0; j < height; ++j) {
-    memset(buf, 0, width * NUM_CHANNELS);
+    WEBP_UNSAFE_MEMSET(buf, 0, width * NUM_CHANNELS);
     buf += buf_stride;
   }
 }
@@ -190,7 +192,7 @@ WEBP_NODISCARD static int CopyCanvas(const uint8_t* src, uint8_t* dst,
   const uint64_t size = (uint64_t)width * height * NUM_CHANNELS;
   if (!CheckSizeOverflow(size)) return 0;
   assert(src != NULL && dst != NULL);
-  memcpy(dst, src, (size_t)size);
+  WEBP_UNSAFE_MEMCPY(dst, src, (size_t)size);
   return 1;
 }
 
@@ -456,7 +458,7 @@ void WebPAnimDecoderReset(WebPAnimDecoder* dec) {
   if (dec != NULL) {
     dec->prev_frame_timestamp = 0;
     WebPDemuxReleaseIterator(&dec->prev_iter);
-    memset(&dec->prev_iter, 0, sizeof(dec->prev_iter));
+    WEBP_UNSAFE_MEMSET(&dec->prev_iter, 0, sizeof(dec->prev_iter));
     dec->prev_frame_was_keyframe = 0;
     dec->next_frame = 1;
   }

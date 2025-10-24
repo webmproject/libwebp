@@ -26,6 +26,8 @@
 #include "src/webp/mux_types.h"
 #include "src/webp/types.h"
 
+WEBP_ASSUME_UNSAFE_INDEXABLE_ABI
+
 #define DMUX_MAJ_VERSION 1
 #define DMUX_MIN_VERSION 6
 #define DMUX_REV_VERSION 0
@@ -116,7 +118,7 @@ static int RemapMemBuffer(MemBuffer* const mem, const uint8_t* data,
 
 static int InitMemBuffer(MemBuffer* const mem, const uint8_t* data,
                          size_t size) {
-  memset(mem, 0, sizeof(*mem));
+  WEBP_UNSAFE_MEMSET(mem, 0, sizeof(*mem));
   return RemapMemBuffer(mem, data, size);
 }
 
@@ -874,7 +876,7 @@ static int SetFrame(int frame_num, WebPIterator* const iter) {
 int WebPDemuxGetFrame(const WebPDemuxer* dmux, int frame, WebPIterator* iter) {
   if (iter == NULL) return 0;
 
-  memset(iter, 0, sizeof(*iter));
+  WEBP_UNSAFE_MEMSET(iter, 0, sizeof(*iter));
   iter->private_ = (void*)dmux;
   return SetFrame(frame, iter);
 }
@@ -945,7 +947,7 @@ int WebPDemuxGetChunk(const WebPDemuxer* dmux, const char fourcc[4],
                       int chunk_num, WebPChunkIterator* iter) {
   if (iter == NULL) return 0;
 
-  memset(iter, 0, sizeof(*iter));
+  WEBP_UNSAFE_MEMSET(iter, 0, sizeof(*iter));
   iter->private_ = (void*)dmux;
   return SetChunk(fourcc, chunk_num, iter);
 }

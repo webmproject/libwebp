@@ -22,6 +22,8 @@
 #include "src/webp/decode.h"
 #include "src/webp/types.h"
 
+WEBP_ASSUME_UNSAFE_INDEXABLE_ABI
+
 //------------------------------------------------------------------------------
 // WebPDecBuffer
 

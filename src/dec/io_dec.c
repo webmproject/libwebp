@@ -27,6 +27,8 @@
 #include "src/webp/decode.h"
 #include "src/webp/types.h"
 
+WEBP_ASSUME_UNSAFE_INDEXABLE_ABI
+
 //------------------------------------------------------------------------------
 // Main YUV<->RGB conversion functions
 
@@ -100,9 +102,9 @@ static int EmitFancyRGB(const VP8Io* const io, WebPDecParams* const p) {
   cur_y += io->y_stride;
   if (io->crop_top + y_end < io->crop_bottom) {
     // Save the unfinished samples for next call (as we're not done yet).
-    memcpy(p->tmp_y, cur_y, mb_w * sizeof(*p->tmp_y));
-    memcpy(p->tmp_u, cur_u, uv_w * sizeof(*p->tmp_u));
-    memcpy(p->tmp_v, cur_v, uv_w * sizeof(*p->tmp_v));
+    WEBP_UNSAFE_MEMCPY(p->tmp_y, cur_y, mb_w * sizeof(*p->tmp_y));
+    WEBP_UNSAFE_MEMCPY(p->tmp_u, cur_u, uv_w * sizeof(*p->tmp_u));
+    WEBP_UNSAFE_MEMCPY(p->tmp_v, cur_v, uv_w * sizeof(*p->tmp_v));
     // The fancy upsampler leaves a row unfinished behind
     // (except for the very last row)
     num_lines_out--;
@@ -140,7 +142,7 @@ static int EmitAlphaYUV(const VP8Io* const io, WebPDecParams* const p,
   assert(expected_num_lines_out == mb_h);
   if (alpha != NULL) {
     for (j = 0; j < mb_h; ++j) {
-      memcpy(dst, alpha, mb_w * sizeof(*dst));
+      WEBP_UNSAFE_MEMCPY(dst, alpha, mb_w * sizeof(*dst));
       alpha += io->width;
       dst += buf->a_stride;
     }

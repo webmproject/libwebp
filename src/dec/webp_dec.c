@@ -27,6 +27,8 @@
 #include "src/webp/mux_types.h"  // ALPHA_FLAG
 #include "src/webp/types.h"
 
+WEBP_ASSUME_UNSAFE_INDEXABLE_ABI
+
 //------------------------------------------------------------------------------
 // RIFF layout is:
 //   Offset  tag
