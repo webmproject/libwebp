@@ -65,7 +65,7 @@ struct WebPData {
 // Initializes the contents of the 'webp_data' object with default values.
 static WEBP_INLINE void WebPDataInit(WebPData* webp_data) {
   if (webp_data != NULL) {
-    memset(webp_data, 0, sizeof(*webp_data));
+    WEBP_UNSAFE_MEMSET(webp_data, 0, sizeof(*webp_data));
   }
 }
 
@@ -87,7 +87,7 @@ WEBP_NODISCARD static WEBP_INLINE int WebPDataCopy(const WebPData* src,
   if (src->bytes != NULL && src->size != 0) {
     dst->bytes = (uint8_t*)WebPMalloc(src->size);
     if (dst->bytes == NULL) return 0;
-    memcpy((void*)dst->bytes, src->bytes, src->size);
+    WEBP_UNSAFE_MEMCPY((void*)dst->bytes, src->bytes, src->size);
     dst->size = src->size;
   }
   return 1;

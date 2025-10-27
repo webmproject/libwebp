@@ -236,7 +236,7 @@ int WebPInitDecBufferInternal(WebPDecBuffer* buffer, int version) {
     return 0;  // version mismatch
   }
   if (buffer == NULL) return 0;
-  memset(buffer, 0, sizeof(*buffer));
+  WEBP_UNSAFE_MEMSET(buffer, 0, sizeof(*buffer));
   return 1;
 }
 

@@ -303,7 +303,7 @@ static VP8StatusCode ParseHeadersInternal(const uint8_t* data, size_t data_size,
   if (data == NULL || data_size < RIFF_HEADER_SIZE) {
     return VP8_STATUS_NOT_ENOUGH_DATA;
   }
-  memset(&hdrs, 0, sizeof(hdrs));
+  WEBP_UNSAFE_MEMSET(&hdrs, 0, sizeof(hdrs));
   hdrs.data = data;
   hdrs.data_size = data_size;
 
@@ -441,7 +441,7 @@ VP8StatusCode WebPParseHeaders(WebPHeaderStructure* const headers) {
 
 void WebPResetDecParams(WebPDecParams* const params) {
   if (params != NULL) {
-    memset(params, 0, sizeof(*params));
+    WEBP_UNSAFE_MEMSET(params, 0, sizeof(*params));
   }
 }
 
@@ -692,7 +692,7 @@ uint8_t* WebPDecodeYUV(const uint8_t* data, size_t data_size, int* width,
 
 static void DefaultFeatures(WebPBitstreamFeatures* const features) {
   assert(features != NULL);
-  memset(features, 0, sizeof(*features));
+  WEBP_UNSAFE_MEMSET(features, 0, sizeof(*features));
 }
 
 static VP8StatusCode GetFeatures(const uint8_t* const data, size_t data_size,
@@ -739,7 +739,7 @@ int WebPInitDecoderConfigInternal(WebPDecoderConfig* config, int version) {
   if (config == NULL) {
     return 0;
   }
-  memset(config, 0, sizeof(*config));
+  WEBP_UNSAFE_MEMSET(config, 0, sizeof(*config));
   DefaultFeatures(&config->input);
   if (!WebPInitDecBuffer(&config->output)) {
     return 0;

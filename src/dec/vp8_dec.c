@@ -63,7 +63,7 @@ int VP8InitIoInternal(VP8Io* const io, int version) {
     return 0;  // mismatch error
   }
   if (io != NULL) {
-    memset(io, 0, sizeof(*io));
+    WEBP_UNSAFE_MEMSET(io, 0, sizeof(*io));
   }
   return 1;
 }
@@ -168,8 +168,8 @@ static void ResetSegmentHeader(VP8SegmentHeader* const hdr) {
   hdr->use_segment = 0;
   hdr->update_map = 0;
   hdr->absolute_delta = 1;
-  memset(hdr->quantizer, 0, sizeof(hdr->quantizer));
-  memset(hdr->filter_strength, 0, sizeof(hdr->filter_strength));
+  WEBP_UNSAFE_MEMSET(hdr->quantizer, 0, sizeof(hdr->quantizer));
+  WEBP_UNSAFE_MEMSET(hdr->filter_strength, 0, sizeof(hdr->filter_strength));
 }
 
 // Paragraph 9.3
@@ -542,7 +542,7 @@ static int ParseResiduals(VP8Decoder* const dec, VP8MB* const mb,
   uint32_t out_t_nz, out_l_nz;
   int first;
 
-  memset(dst, 0, 384 * sizeof(*dst));
+  WEBP_UNSAFE_MEMSET(dst, 0, 384 * sizeof(*dst));
   if (!block->is_i4x4) {  // parse DC
     int16_t dc[16] = {0};
     const int ctx = mb->nz_dc + left_mb->nz_dc;
@@ -652,7 +652,7 @@ void VP8InitScanline(VP8Decoder* const dec) {
   VP8MB* const left = dec->mb_info - 1;
   left->nz = 0;
   left->nz_dc = 0;
-  memset(dec->intra_l, B_DC_PRED, sizeof(dec->intra_l));
+  WEBP_UNSAFE_MEMSET(dec->intra_l, B_DC_PRED, sizeof(dec->intra_l));
   dec->mb_x = 0;
 }
 
@@ -734,7 +734,7 @@ void VP8Clear(VP8Decoder* const dec) {
   WebPSafeFree(dec->mem);
   dec->mem = NULL;
   dec->mem_size = 0;
-  memset(&dec->br, 0, sizeof(dec->br));
+  WEBP_UNSAFE_MEMSET(&dec->br, 0, sizeof(dec->br));
   dec->ready = 0;
 }
 
