@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <string_view>
 
 #include "./fuzz_utils.h"
@@ -26,10 +27,9 @@
 
 namespace {
 
-void AdvancedApiTest(std::string_view blob, uint8_t factor_u8, bool flip,
-                     bool bypass_filtering, bool no_fancy_upsampling,
-                     bool use_threads, bool use_cropping, bool use_scaling,
-                     bool use_dithering, int colorspace, bool incremental) {
+void AdvancedApiTest(std::string_view blob, uint8_t factor_u8, int colorspace,
+                     bool incremental,
+                     const fuzz_utils::WebPDecoderOptionsCpp& decoder_options) {
   WebPDecoderConfig config;
   if (!WebPInitDecoderConfig(&config)) return;
   const uint8_t* const data = reinterpret_cast<const uint8_t*>(blob.data());
@@ -46,24 +46,14 @@ void AdvancedApiTest(std::string_view blob, uint8_t factor_u8, bool flip,
   const uint8_t value = fuzz_utils::FuzzHash(data, size);
   const float factor = factor_u8 / 255.f;  // 0-1
 
-  config.options.flip = flip;
-  config.options.bypass_filtering = bypass_filtering;
-  config.options.no_fancy_upsampling = no_fancy_upsampling;
-  config.options.use_threads = use_threads;
-  if (use_cropping) {
-    config.options.use_cropping = 1;
+  std::memcpy(&config.options, &decoder_options, sizeof(decoder_options));
+  if (config.options.use_cropping) {
     config.options.crop_width = (int)(config.input.width * (1 - factor));
     config.options.crop_height = (int)(config.input.height * (1 - factor));
     config.options.crop_left = config.input.width - config.options.crop_width;
     config.options.crop_top = config.input.height - config.options.crop_height;
   }
-  if (use_dithering) {
-    int strength = (int)(factor * 100);
-    config.options.dithering_strength = strength;
-    config.options.alpha_dithering_strength = 100 - strength;
-  }
-  if (use_scaling) {
-    config.options.use_scaling = 1;
+  if (config.options.use_scaling) {
     config.options.scaled_width = (int)(config.input.width * factor * 2);
     config.options.scaled_height = (int)(config.input.height * factor * 2);
   }
@@ -162,13 +152,6 @@ FUZZ_TEST(AdvancedApi, AdvancedApiTest)
     .WithDomains(fuzztest::String().WithMaxSize(fuzz_utils::kMaxWebPFileSize +
                                                 1),
                  /*factor_u8=*/fuzztest::Arbitrary<uint8_t>(),
-                 /*flip=*/fuzztest::Arbitrary<bool>(),
-                 /*bypass_filtering=*/fuzztest::Arbitrary<bool>(),
-                 /*no_fancy_upsampling=*/fuzztest::Arbitrary<bool>(),
-                 /*use_threads=*/fuzztest::Arbitrary<bool>(),
-                 /*use_cropping=*/fuzztest::Arbitrary<bool>(),
-                 /*use_scaling=*/fuzztest::Arbitrary<bool>(),
-                 /*use_dithering=*/fuzztest::Arbitrary<bool>(),
 #if defined(WEBP_REDUCE_CSP)
                  fuzztest::ElementOf<int>({static_cast<int>(MODE_RGBA),
                                            static_cast<int>(MODE_BGRA),
@@ -177,4 +160,5 @@ FUZZ_TEST(AdvancedApi, AdvancedApiTest)
 #else
                  fuzztest::InRange<int>(0, static_cast<int>(MODE_LAST) - 1),
 #endif
-                 /*incremental=*/fuzztest::Arbitrary<bool>());
+                 /*incremental=*/fuzztest::Arbitrary<bool>(),
+                 fuzz_utils::ArbitraryValidWebPDecoderOptions());

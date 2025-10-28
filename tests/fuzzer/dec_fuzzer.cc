@@ -17,6 +17,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <string_view>
 
 #include "./nalloc.h"
@@ -25,7 +26,8 @@
 
 namespace {
 
-void DecodeWebP(std::string_view arbitrary_bytes) {
+void DecodeWebP(std::string_view arbitrary_bytes,
+                const fuzz_utils::WebPDecoderOptionsCpp& decoder_options) {
   WebPDecoderConfig decoder_config;
   if (!WebPInitDecoderConfig(&decoder_config)) {
     fprintf(stderr, "WebPInitDecoderConfig failed.\n");
@@ -34,6 +36,8 @@ void DecodeWebP(std::string_view arbitrary_bytes) {
   nalloc_init(nullptr);
   nalloc_start(reinterpret_cast<const uint8_t*>(arbitrary_bytes.data()),
                arbitrary_bytes.size());
+  std::memcpy(&decoder_config.options, &decoder_options,
+              sizeof(decoder_options));
   const VP8StatusCode status =
       WebPDecode(reinterpret_cast<const uint8_t*>(arbitrary_bytes.data()),
                  arbitrary_bytes.size(), &decoder_config);
@@ -48,6 +52,7 @@ void DecodeWebP(std::string_view arbitrary_bytes) {
 
 FUZZ_TEST(WebPSuite, DecodeWebP)
     .WithDomains(fuzztest::String().WithMaxSize(fuzz_utils::kMaxWebPFileSize +
-                                                1));
+                                                1),
+                 fuzz_utils::ArbitraryValidWebPDecoderOptions());
 
 }  // namespace

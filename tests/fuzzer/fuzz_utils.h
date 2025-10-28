@@ -17,9 +17,12 @@
 #ifndef WEBP_TESTS_FUZZER_FUZZ_UTILS_H_
 #define WEBP_TESTS_FUZZER_FUZZ_UTILS_H_
 
+#include <array>
+#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
+#include <cstring>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -31,6 +34,7 @@
 #include "./img_peak.h"
 #include "fuzztest/fuzztest.h"
 #include "src/dsp/cpu.h"
+#include "src/webp/decode.h"
 #include "src/webp/encode.h"
 #include "src/webp/types.h"
 
@@ -79,6 +83,17 @@ constexpr size_t kNumSourceImages =
 
 WebPPicture GetSourcePicture(int image_index, bool use_argb);
 
+// Struct to use in a unique_ptr to free the memory.
+struct UniquePtrDeleter {
+  void operator()(WebPMemoryWriter* writer) const {
+    WebPMemoryWriterClear(writer);
+  }
+  void operator()(WebPPicture* pic) const { WebPPictureFree(pic); }
+  void operator()(WebPDecoderConfig* config) const {
+    WebPFreeDecBuffer(&config->output);
+  }
+};
+
 static inline auto ArbitraryWebPConfig() {
   return fuzztest::Map(
       [](int lossless, int quality, int method, int image_hint, int segments,
@@ -89,7 +104,7 @@ static inline auto ArbitraryWebPConfig() {
          int thread_level, int low_memory, int near_lossless, int exact,
          int use_delta_palette, int use_sharp_yuv) -> WebPConfig {
         WebPConfig config;
-        if (!WebPConfigInit(&config)) abort();
+        if (!WebPConfigInit(&config)) assert(false);
         config.lossless = lossless;
         config.quality = quality;
         config.method = method;
@@ -115,7 +130,7 @@ static inline auto ArbitraryWebPConfig() {
         config.exact = exact;
         config.use_delta_palette = use_delta_palette;
         config.use_sharp_yuv = use_sharp_yuv;
-        if (!WebPValidateConfig(&config)) abort();
+        if (!WebPValidateConfig(&config)) assert(false);
         return config;
       },
       /*lossless=*/fuzztest::InRange<int>(0, 1),
@@ -142,6 +157,114 @@ static inline auto ArbitraryWebPConfig() {
       /*exact=*/fuzztest::InRange<int>(0, 1),
       /*use_delta_palette=*/fuzztest::InRange<int>(0, 1),
       /*use_sharp_yuv=*/fuzztest::InRange<int>(0, 1));
+}
+
+// Like WebPDecoderOptions but with no C array.
+// This can be removed once b/294098900 is fixed.
+struct WebPDecoderOptionsCpp {
+  int bypass_filtering;
+  int no_fancy_upsampling;
+  int use_cropping;
+  int crop_left, crop_top;
+
+  int crop_width, crop_height;
+  int use_scaling;
+  int scaled_width, scaled_height;
+
+  int use_threads;
+  int dithering_strength;
+  int flip;
+  int alpha_dithering_strength;
+
+  std::array<uint32_t, 5> pad;
+};
+
+static inline auto ArbitraryValidWebPDecoderOptions() {
+  return fuzztest::Map(
+      [](int bypass_filtering, int no_fancy_upsampling, int use_cropping,
+         int crop_left, int crop_top, int crop_width, int crop_height,
+         int use_scaling, int scaled_width, int scaled_height, int use_threads,
+         int dithering_strength, int flip,
+         int alpha_dithering_strength) -> WebPDecoderOptionsCpp {
+        WebPDecoderOptions options;
+        options.bypass_filtering = bypass_filtering;
+        options.no_fancy_upsampling = no_fancy_upsampling;
+        options.use_cropping = use_cropping;
+        options.crop_left = crop_left;
+        options.crop_top = crop_top;
+        options.crop_width = crop_width;
+        options.crop_height = crop_height;
+        options.use_scaling = use_scaling;
+        options.scaled_width = scaled_width;
+        options.scaled_height = scaled_height;
+        options.use_threads = use_threads;
+        options.dithering_strength = dithering_strength;
+        options.flip = flip;
+        options.alpha_dithering_strength = alpha_dithering_strength;
+        WebPDecoderConfig config;
+        if (!WebPInitDecoderConfig(&config)) assert(false);
+        config.options = options;
+        if (!WebPValidateDecoderConfig(&config)) assert(false);
+        WebPDecoderOptionsCpp options_cpp;
+        std::memcpy(&options_cpp, &options, sizeof(options));
+        return options_cpp;
+      },
+      /*bypass_filtering=*/fuzztest::InRange<int>(0, 1),
+      /*no_fancy_upsampling=*/fuzztest::InRange<int>(0, 1),
+      /*use_cropping=*/fuzztest::InRange<int>(0, 1),
+      /*crop_left=*/fuzztest::InRange<int>(0, 10),
+      /*crop_top=*/fuzztest::InRange<int>(0, 10),
+      /*crop_width=*/fuzztest::InRange<int>(1, 10),
+      /*crop_height=*/fuzztest::InRange<int>(1, 10),
+      /*use_scaling=*/fuzztest::InRange<int>(0, 1),
+      /*scaled_width=*/fuzztest::InRange<int>(1, 10),
+      /*scaled_height=*/fuzztest::InRange<int>(1, 10),
+      /*use_threads=*/fuzztest::InRange<int>(0, 1),
+      /*dithering_strength=*/fuzztest::InRange<int>(0, 100),
+      /*flip=*/fuzztest::InRange<int>(0, 1),
+      /*alpha_dithering_strength=*/fuzztest::InRange<int>(0, 100));
+}
+
+static inline auto ArbitraryWebPDecoderOptions() {
+  return fuzztest::Map(
+      [](int bypass_filtering, int no_fancy_upsampling, int use_cropping,
+         int crop_left, int crop_top, int crop_width, int crop_height,
+         int use_scaling, int scaled_width, int scaled_height, int use_threads,
+         int dithering_strength, int flip,
+         int alpha_dithering_strength) -> WebPDecoderOptionsCpp {
+        WebPDecoderOptions options;
+        options.bypass_filtering = bypass_filtering;
+        options.no_fancy_upsampling = no_fancy_upsampling;
+        options.use_cropping = use_cropping;
+        options.crop_left = crop_left;
+        options.crop_top = crop_top;
+        options.crop_width = crop_width;
+        options.crop_height = crop_height;
+        options.use_scaling = use_scaling;
+        options.scaled_width = scaled_width;
+        options.scaled_height = scaled_height;
+        options.use_threads = use_threads;
+        options.dithering_strength = dithering_strength;
+        options.flip = flip;
+        options.alpha_dithering_strength = alpha_dithering_strength;
+        WebPDecoderOptionsCpp options_cpp;
+        std::memcpy(&options_cpp, &options, sizeof(options));
+        return options_cpp;
+      },
+      /*bypass_filtering=*/fuzztest::Arbitrary<int>(),
+      /*no_fancy_upsampling=*/fuzztest::Arbitrary<int>(),
+      /*use_cropping=*/fuzztest::Arbitrary<int>(),
+      /*crop_left=*/fuzztest::Arbitrary<int>(),
+      /*crop_top=*/fuzztest::Arbitrary<int>(),
+      /*crop_width=*/fuzztest::Arbitrary<int>(),
+      /*crop_height=*/fuzztest::Arbitrary<int>(),
+      /*use_scaling=*/fuzztest::Arbitrary<int>(),
+      /*scaled_width=*/fuzztest::Arbitrary<int>(),
+      /*scaled_height=*/fuzztest::Arbitrary<int>(),
+      /*use_threads=*/fuzztest::Arbitrary<int>(),
+      /*dithering_strength=*/fuzztest::Arbitrary<int>(),
+      /*flip=*/fuzztest::Arbitrary<int>(),
+      /*alpha_dithering_strength=*/fuzztest::Arbitrary<int>());
 }
 
 struct CropOrScaleParams {
