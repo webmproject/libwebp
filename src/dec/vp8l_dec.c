@@ -309,7 +309,7 @@ static int ReadHuffmanCode(int alphabet_size, VP8LDecoder* const dec,
   VP8LBitReader* const br = &dec->br;
   const int simple_code = VP8LReadBits(br, 1);
 
-  memset(code_lengths, 0, alphabet_size * sizeof(*code_lengths));
+  WEBP_UNSAFE_MEMSET(code_lengths, 0, alphabet_size * sizeof(*code_lengths));
 
   if (simple_code) {  // Read symbols, codes & code lengths directly.
     const int num_symbols = VP8LReadBits(br, 1) + 1;
@@ -400,7 +400,8 @@ static int ReadHuffmanCodes(VP8LDecoder* const dec, int xsize, int ysize,
       }
       // -1 means a value is unmapped, and therefore unused in the Huffman
       // image.
-      memset(mapping, 0xff, num_htree_groups_max * sizeof(*mapping));
+      WEBP_UNSAFE_MEMSET(mapping, 0xff,
+                         num_htree_groups_max * sizeof(*mapping));
       for (num_htree_groups = 0, i = 0; i < huffman_pixs; ++i) {
         // Get the current mapping for the group and remap the Huffman image.
         int* const mapped_group = &mapping[huffman_image[i]];
@@ -1450,7 +1451,7 @@ static int ReadTransform(int* const xsize, int const* ysize,
 
 static void InitMetadata(VP8LMetadata* const hdr) {
   assert(hdr != NULL);
-  memset(hdr, 0, sizeof(*hdr));
+  WEBP_UNSAFE_MEMSET(hdr, 0, sizeof(*hdr));
 }
 
 static void ClearMetadata(VP8LMetadata* const hdr) {

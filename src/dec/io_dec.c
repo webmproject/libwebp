@@ -125,7 +125,7 @@ static int EmitFancyRGB(const VP8Io* const io, WebPDecParams* const p) {
 static void FillAlphaPlane(uint8_t* dst, int w, int h, int stride) {
   int j;
   for (j = 0; j < h; ++j) {
-    memset(dst, 0xff, w * sizeof(*dst));
+    WEBP_UNSAFE_MEMSET(dst, 0xff, w * sizeof(*dst));
     dst += stride;
   }
 }

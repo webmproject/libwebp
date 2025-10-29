@@ -105,9 +105,9 @@ static void ReconstructRow(const VP8Decoder* const dec,
   } else {
     // we only need to do this init once at block (0,0).
     // Afterward, it remains valid for the whole topmost row.
-    memset(y_dst - BPS - 1, 127, 16 + 4 + 1);
-    memset(u_dst - BPS - 1, 127, 8 + 1);
-    memset(v_dst - BPS - 1, 127, 8 + 1);
+    WEBP_UNSAFE_MEMSET(y_dst - BPS - 1, 127, 16 + 4 + 1);
+    WEBP_UNSAFE_MEMSET(u_dst - BPS - 1, 127, 8 + 1);
+    WEBP_UNSAFE_MEMSET(v_dst - BPS - 1, 127, 8 + 1);
   }
 
   // Reconstruct one row.
@@ -144,7 +144,7 @@ static void ReconstructRow(const VP8Decoder* const dec,
 
         if (mb_y > 0) {
           if (mb_x >= dec->mb_w - 1) {  // on rightmost border
-            memset(top_right, top_yuv[0].y[15], sizeof(*top_right));
+            WEBP_UNSAFE_MEMSET(top_right, top_yuv[0].y[15], sizeof(*top_right));
           } else {
             WEBP_UNSAFE_MEMCPY(top_right, top_yuv[1].y, sizeof(*top_right));
           }
@@ -790,11 +790,11 @@ static int AllocateMemory(VP8Decoder* const dec) {
   assert(mem <= (uint8_t*)dec->mem + dec->mem_size);
 
   // note: left/top-info is initialized once for all.
-  memset(dec->mb_info - 1, 0, mb_info_size);
+  WEBP_UNSAFE_MEMSET(dec->mb_info - 1, 0, mb_info_size);
   VP8InitScanline(dec);  // initialize left too.
 
   // initialize top
-  memset(dec->intra_t, B_DC_PRED, intra_pred_mode_size);
+  WEBP_UNSAFE_MEMSET(dec->intra_t, B_DC_PRED, intra_pred_mode_size);
 
   return 1;
 }
