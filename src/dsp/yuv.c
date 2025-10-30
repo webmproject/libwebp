@@ -15,6 +15,7 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "src/dsp/cpu.h"
 #include "src/dsp/dsp.h"
@@ -547,7 +548,13 @@ static void ImportYUVAFromRGBA_C(const uint8_t* r_ptr, const uint8_t* g_ptr,
       rows_have_alpha &=
           !WebPExtractAlpha(a_ptr, rgb_stride, width, 2, dst_a, a_stride);
       dst_a += 2 * a_stride;
+    } else if (dst_a != NULL) {
+      int i;
+      for (i = 0; i < 2; ++i, dst_a += a_stride) {
+        memset(dst_a, 0xff, width);
+      }
     }
+
     // Collect averaged R/G/B(/A)
     if (!rows_have_alpha) {
       WebPAccumulateRGB(r_ptr, g_ptr, b_ptr, step, rgb_stride, tmp_rgb, width);
@@ -583,7 +590,10 @@ static void ImportYUVAFromRGBALastLine_C(
   }
   if (row_has_alpha) {
     row_has_alpha &= !WebPExtractAlpha(a_ptr, 0, width, 1, dst_a, 0);
+  } else if (dst_a != NULL) {
+    memset(dst_a, 0xff, width);
   }
+
   // Collect averaged R/G/B(/A)
   if (!row_has_alpha) {
     // Collect averaged R/G/B
