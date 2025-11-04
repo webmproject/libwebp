@@ -652,19 +652,19 @@ static void ConvertToYUVA(const uint32_t* const src, int width, int y_pos,
   const WebPYUVABuffer* const buf = &output->u.YUVA;
 
   // first, the luma plane
-  WebPConvertARGBToY(src, buf->y + y_pos * buf->y_stride, width);
+  WebPConvertARGBToY(src, buf->y + (ptrdiff_t)y_pos * buf->y_stride, width);
 
   // then U/V planes
   {
-    uint8_t* const u = buf->u + (y_pos >> 1) * buf->u_stride;
-    uint8_t* const v = buf->v + (y_pos >> 1) * buf->v_stride;
+    uint8_t* const u = buf->u + (ptrdiff_t)(y_pos >> 1) * buf->u_stride;
+    uint8_t* const v = buf->v + (ptrdiff_t)(y_pos >> 1) * buf->v_stride;
     // even lines: store values
     // odd lines: average with previous values
     WebPConvertARGBToUV(src, u, v, width, !(y_pos & 1));
   }
   // Lastly, store alpha if needed.
   if (buf->a != NULL) {
-    uint8_t* const a = buf->a + y_pos * buf->a_stride;
+    uint8_t* const a = buf->a + (ptrdiff_t)y_pos * buf->a_stride;
 #if defined(WORDS_BIGENDIAN)
     WebPExtractAlpha((uint8_t*)src + 0, 0, width, 1, a, 0);
 #else
@@ -701,7 +701,7 @@ static int EmitRescaledRowsYUVA(const VP8LDecoder* const dec, uint8_t* in,
         WebPRescalerImport(dec->rescaler, lines_left, in, in_stride);
     assert(lines_imported == needed_lines);
     num_lines_in += lines_imported;
-    in += needed_lines * in_stride;
+    in += (ptrdiff_t)needed_lines * in_stride;
     y_pos += ExportYUVA(dec, y_pos);
   }
   return y_pos;
@@ -728,9 +728,9 @@ static int EmitRowsYUVA(const uint8_t* const in, const VP8Io* const io,
   const int uv_stride = dec->output->u.YUVA.u_stride;
   const int a_stride = dec->output->u.YUVA.a_stride;
   uint8_t* dst_a = dec->output->u.YUVA.a;
-  uint8_t* dst_y = dec->output->u.YUVA.y + y_pos * y_stride;
-  uint8_t* dst_u = dec->output->u.YUVA.u + (y_pos >> 1) * uv_stride;
-  uint8_t* dst_v = dec->output->u.YUVA.v + (y_pos >> 1) * uv_stride;
+  uint8_t* dst_y = dec->output->u.YUVA.y + (ptrdiff_t)y_pos * y_stride;
+  uint8_t* dst_u = dec->output->u.YUVA.u + (ptrdiff_t)(y_pos >> 1) * uv_stride;
+  uint8_t* dst_v = dec->output->u.YUVA.v + (ptrdiff_t)(y_pos >> 1) * uv_stride;
   const uint8_t* r_ptr = in + CHANNEL_OFFSET(1);
   const uint8_t* g_ptr = in + CHANNEL_OFFSET(2);
   const uint8_t* b_ptr = in + CHANNEL_OFFSET(3);
@@ -744,7 +744,7 @@ static int EmitRowsYUVA(const uint8_t* const in, const VP8Io* const io,
   num_rows &= ~1;
 
   if (dst_a) {
-    dst_a += y_pos * a_stride;
+    dst_a += (ptrdiff_t)y_pos * a_stride;
     a_ptr = in + CHANNEL_OFFSET(0);
     has_alpha = CheckNonOpaque(a_ptr, width, num_rows, in_stride);
   }
@@ -757,15 +757,15 @@ static int EmitRowsYUVA(const uint8_t* const in, const VP8Io* const io,
   if (y_pos_final == io->crop_bottom - io->crop_top && y_pos < y_pos_final) {
     assert(y_pos + 1 == y_pos_final);
     // If we output the last line of an image with odd height.
-    dst_y += num_rows * y_stride;
-    dst_u += (num_rows >> 1) * uv_stride;
-    dst_v += (num_rows >> 1) * uv_stride;
-    r_ptr += num_rows * in_stride;
-    g_ptr += num_rows * in_stride;
-    b_ptr += num_rows * in_stride;
+    dst_y += (ptrdiff_t)num_rows * y_stride;
+    dst_u += (ptrdiff_t)(num_rows >> 1) * uv_stride;
+    dst_v += (ptrdiff_t)(num_rows >> 1) * uv_stride;
+    r_ptr += (ptrdiff_t)num_rows * in_stride;
+    g_ptr += (ptrdiff_t)num_rows * in_stride;
+    b_ptr += (ptrdiff_t)num_rows * in_stride;
     if (dst_a) {
-      dst_a += num_rows * a_stride;
-      a_ptr += num_rows * in_stride;
+      dst_a += (ptrdiff_t)num_rows * a_stride;
+      a_ptr += (ptrdiff_t)num_rows * in_stride;
       has_alpha = CheckNonOpaque(a_ptr, width, /*height=*/1, in_stride);
     }
     WebPImportYUVAFromRGBALastLine(r_ptr, g_ptr, b_ptr, a_ptr, /*step=*/4,
@@ -794,7 +794,7 @@ static int SetCropWindow(VP8Io* const io, int y_start, int y_end,
   if (y_start < io->crop_top) {
     const int delta = io->crop_top - y_start;
     y_start = io->crop_top;
-    *in_data += delta * pixel_stride;
+    *in_data += (ptrdiff_t)delta * pixel_stride;
   }
   if (y_start >= y_end) return 0;  // Crop window is empty.
 
