@@ -646,7 +646,13 @@ static int TrellisQuantizeBlock(const VP8Encoder* WEBP_RESTRICT const enc,
       int best_prev;
       score_t cost, score;
 
-      ss_cur[m].costs = costs[n + 1][ctx];
+      // costs is [16][NUM_CTX == 3] but ss_cur[m].costs is only read after
+      // being swapped with ss_prev: the last value can be NULL.
+      if (n + 1 < 16) {
+        ss_cur[m].costs = costs[n + 1][ctx];
+      } else {
+        ss_cur[m].costs = NULL;
+      }
       if (level < 0 || level > thresh_level) {
         ss_cur[m].score = MAX_COST;
         // Node is dead.
