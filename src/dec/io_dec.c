@@ -574,7 +574,9 @@ static int CustomSetup(VP8Io* io) {
   p->emit = NULL;
   p->emit_alpha = NULL;
   p->emit_alpha_row = NULL;
-  if (!WebPIoInitFromOptions(p->options, io, is_alpha ? MODE_YUV : MODE_YUVA)) {
+  // Note: WebPIoInitFromOptions() does not distinguish between MODE_YUV and
+  // MODE_YUVA, only RGB vs YUV.
+  if (!WebPIoInitFromOptions(p->options, io, /*src_colorspace=*/MODE_YUV)) {
     return 0;
   }
   if (is_alpha && WebPIsPremultipliedMode(colorspace)) {
