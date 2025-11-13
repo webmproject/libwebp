@@ -19,7 +19,7 @@ Emscripten and CMake.
 -   configure the project 'WEBP_JS' with CMake using:
 
     ```shell
-    cd webp_js && \
+    cd webp_js && embuilder build sdl2 && \
     emcmake cmake -DWEBP_BUILD_WEBP_JS=ON ../
     ```
 
