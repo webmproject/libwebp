@@ -111,18 +111,15 @@ static void NearLossless(int xsize, int ysize, const uint32_t* argb_src,
 int VP8ApplyNearLossless(const WebPPicture* const picture, int quality,
                          uint32_t* const argb_dst) {
   int i;
+  uint32_t* copy_buffer;
   const int xsize = picture->width;
   const int ysize = picture->height;
   const int stride = picture->argb_stride;
-  uint32_t* const copy_buffer =
-      (uint32_t*)WebPSafeMalloc(xsize * 3, sizeof(*copy_buffer));
   const int limit_bits = VP8LNearLosslessBits(quality);
   assert(argb_dst != NULL);
   assert(limit_bits > 0);
   assert(limit_bits <= MAX_LIMIT_BITS);
-  if (copy_buffer == NULL) {
-    return 0;
-  }
+
   // For small icon images, don't attempt to apply near-lossless compression.
   if ((xsize < MIN_DIM_FOR_NEAR_LOSSLESS &&
        ysize < MIN_DIM_FOR_NEAR_LOSSLESS) ||
@@ -131,8 +128,12 @@ int VP8ApplyNearLossless(const WebPPicture* const picture, int quality,
       memcpy(argb_dst + i * xsize, picture->argb + i * picture->argb_stride,
              xsize * sizeof(*argb_dst));
     }
-    WebPSafeFree(copy_buffer);
     return 1;
+  }
+
+  copy_buffer = (uint32_t*)WebPSafeMalloc(xsize * 3, sizeof(*copy_buffer));
+  if (copy_buffer == NULL) {
+    return 0;
   }
 
   NearLossless(xsize, ysize, picture->argb, stride, limit_bits, copy_buffer,
