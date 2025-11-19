@@ -50,11 +50,8 @@ int WebPPictureInitInternal(WebPPicture* picture, int version) {
 
 int WebPValidatePicture(const WebPPicture* const picture) {
   if (picture == NULL) return 0;
-  if (picture->width <= 0 || picture->height <= 0) {
-    return WebPEncodingSetError(picture, VP8_ENC_ERROR_BAD_DIMENSION);
-  }
-  if (picture->width <= 0 || picture->width / 4 > INT_MAX / 4 ||
-      picture->height <= 0 || picture->height / 4 > INT_MAX / 4) {
+  if (picture->width <= 0 || picture->width > INT_MAX / 4 ||
+      picture->height <= 0 || picture->height > INT_MAX / 4) {
     return WebPEncodingSetError(picture, VP8_ENC_ERROR_BAD_DIMENSION);
   }
   if (picture->colorspace != WEBP_YUV420 &&
