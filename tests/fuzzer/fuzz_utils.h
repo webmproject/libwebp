@@ -17,6 +17,7 @@
 #ifndef WEBP_TESTS_FUZZER_FUZZ_UTILS_H_
 #define WEBP_TESTS_FUZZER_FUZZ_UTILS_H_
 
+#include <algorithm>
 #include <array>
 #include <cassert>
 #include <cstddef>
@@ -93,6 +94,114 @@ struct UniquePtrDeleter {
     WebPFreeDecBuffer(&config->output);
   }
 };
+
+// Like WebPPicture but with no C array.
+// This can be removed once b/294098900 is fixed.
+struct WebPPictureCpp {
+  inline WebPPictureCpp(int use_argb, WebPEncCSP colorspace, int width,
+                        int height, uint8_t* y, uint8_t* u, uint8_t* v,
+                        int y_stride, int uv_stride, uint8_t* a, int a_stride,
+                        uint32_t* argb, int argb_stride, void* memory,
+                        void* memory_argb) {
+    pic.reset(new WebPPicture(), [](WebPPicture* pic) {
+      WebPPictureFree(pic);
+      delete pic;
+    });
+    if (!WebPPictureInit(pic.get())) assert(false);
+    pic->use_argb = use_argb;
+    pic->colorspace = colorspace;
+    pic->width = width;
+    pic->height = height;
+    pic->y = y;
+    pic->u = u;
+    pic->v = v;
+    pic->a = a;
+    pic->y_stride = y_stride;
+    pic->uv_stride = uv_stride;
+    pic->a_stride = a_stride;
+    pic->argb = argb;
+    pic->argb_stride = argb_stride;
+    pic->memory_ = memory;
+    pic->memory_argb_ = memory_argb;
+  }
+  WebPPicture& ref() const { return const_cast<WebPPicture&>(*pic); }
+  std::shared_ptr<WebPPicture> pic;
+};
+
+static inline auto ArbitraryWebPPicture() {
+  return fuzztest::FlatMap(
+      // colorspace of 0 is use_argb, 1 is YUV420, 2 is YUV420A.
+      [](int colorspace, int width, int height) {
+        const int uv_width = (int)(((int64_t)width + 1) >> 1);
+        const int uv_height = (int)(((int64_t)height + 1) >> 1);
+        // Create a domain for the vector that strictly obeys w * h * 4.
+        size_t size = width * height;
+        if (colorspace == 0) size *= 4;
+        if (colorspace == 1) size += 2 * uv_width * uv_height;
+        if (colorspace == 2) size += 2 * uv_width * uv_height + size;
+        auto DataDomain =
+            fuzztest::VectorOf(fuzztest::Arbitrary<uint8_t>()).WithSize(size);
+
+        // Map the vector domain back into our Image struct, injecting w and h
+        return fuzztest::Map(
+            [colorspace, width,
+             height](const std::vector<uint8_t>& data) -> WebPPictureCpp {
+              WebPPicture pic;
+              if (!WebPPictureInit(&pic)) assert(false);
+              pic.use_argb = colorspace == 0 ? 1 : 0;
+              pic.colorspace = static_cast<WebPEncCSP>(
+                  colorspace <= 1 ? WEBP_YUV420 : WEBP_YUV420A);
+              pic.width = width;
+              pic.height = height;
+              if (!WebPPictureAlloc(&pic)) assert(false);
+              size_t size = width * height;
+              if (pic.use_argb) {
+                std::copy(data.begin(), data.begin() + size,
+                          (uint32_t*)pic.argb);
+              } else {
+                // Y.
+                auto iter = data.begin();
+                std::copy(iter, iter + size, (uint8_t*)pic.y);
+                iter += size;
+                // A.
+                if ((int)pic.colorspace & WEBP_CSP_ALPHA_BIT) {
+                  std::copy(iter, iter + size, (uint8_t*)pic.a);
+                  iter += size;
+                }
+                // U and V.
+                const int uv_width = (int)(((int64_t)width + 1) >> 1);
+                const int uv_height = (int)(((int64_t)height + 1) >> 1);
+                size = uv_width * uv_height;
+                std::copy(iter, iter + size, (uint8_t*)pic.u);
+                iter += size;
+                std::copy(iter, iter + size, (uint8_t*)pic.v);
+              }
+              return WebPPictureCpp(pic.use_argb, pic.colorspace, pic.width,
+                                    pic.height, pic.y, pic.u, pic.v,
+                                    pic.y_stride, pic.uv_stride, pic.a,
+                                    pic.a_stride, pic.argb, pic.argb_stride,
+                                    pic.memory_, pic.memory_argb_);
+            },
+            DataDomain);
+      },
+      /*colorspace=*/fuzztest::InRange<int>(0, 2),
+      /*width=*/fuzztest::InRange<int>(1, 128),
+      /*height=*/fuzztest::InRange<int>(1, 128));
+}
+
+static inline auto ArbitraryWebPPictureFromIndex() {
+  return fuzztest::Map(
+      [](int index, bool use_argb) -> WebPPictureCpp {
+        // Map the vector domain back into our Image struct, injecting w and h
+        WebPPicture pic = fuzz_utils::GetSourcePicture(index, use_argb);
+        return WebPPictureCpp(use_argb, pic.colorspace, pic.width, pic.height,
+                              pic.y, pic.u, pic.v, pic.y_stride, pic.uv_stride,
+                              pic.a, pic.a_stride, pic.argb, pic.argb_stride,
+                              pic.memory_, pic.memory_argb_);
+      },
+      /*index=*/fuzztest::InRange<int>(0, fuzz_utils::kNumSourceImages - 1),
+      /*use_argb=*/fuzztest::Arbitrary<bool>());
+}
 
 static inline auto ArbitraryWebPConfig() {
   return fuzztest::Map(

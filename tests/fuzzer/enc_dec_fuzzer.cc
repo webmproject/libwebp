@@ -73,16 +73,15 @@ void Enc(const fuzz_utils::CropOrScaleParams& crop_or_scale_params,
   }
 }
 
-void EncDecValidTest(bool use_argb, int source_image_index, WebPConfig config,
-                     int optimization_index,
+void EncDecValidTest(bool use_argb, fuzz_utils::WebPPictureCpp pic_cpp,
+                     WebPConfig config, int optimization_index,
                      const fuzz_utils::CropOrScaleParams& crop_or_scale_params,
                      int colorspace,
                      const fuzz_utils::WebPDecoderOptionsCpp& decoder_options) {
   fuzz_utils::SetOptimization(default_VP8GetCPUInfo, optimization_index);
 
   // Init the source picture.
-  WebPPicture pic = fuzz_utils::GetSourcePicture(source_image_index, use_argb);
-  std::unique_ptr<WebPPicture, fuzz_utils::UniquePtrDeleter> pic_owner(&pic);
+  WebPPicture& pic = pic_cpp.ref();
 
   WebPMemoryWriter memory_writer;
   WebPMemoryWriterInit(&memory_writer);
@@ -164,16 +163,17 @@ void EncDecValidTest(bool use_argb, int source_image_index, WebPConfig config,
   }
 }
 
-void EncDecTest(bool use_argb, int source_image_index, WebPConfig config,
-                int optimization_index,
+////////////////////////////////////////////////////////////////////////////////
+
+void EncDecTest(bool use_argb, fuzz_utils::WebPPictureCpp pic_cpp,
+                WebPConfig config, int optimization_index,
                 const fuzz_utils::CropOrScaleParams& crop_or_scale_params,
                 int colorspace,
                 const fuzz_utils::WebPDecoderOptionsCpp& decoder_options) {
   fuzz_utils::SetOptimization(default_VP8GetCPUInfo, optimization_index);
 
   // Init the source picture.
-  WebPPicture pic = fuzz_utils::GetSourcePicture(source_image_index, use_argb);
-  std::unique_ptr<WebPPicture, fuzz_utils::UniquePtrDeleter> pic_owner(&pic);
+  WebPPicture& pic = pic_cpp.ref();
   WebPMemoryWriter memory_writer;
   WebPMemoryWriterInit(&memory_writer);
   std::unique_ptr<WebPMemoryWriter, fuzz_utils::UniquePtrDeleter>
@@ -204,10 +204,9 @@ void EncDecTest(bool use_argb, int source_image_index, WebPConfig config,
 
 }  // namespace
 
-FUZZ_TEST(EncDec, EncDecValidTest)
+FUZZ_TEST(EncIndexDec, EncDecValidTest)
     .WithDomains(/*use_argb=*/fuzztest::Arbitrary<bool>(),
-                 /*source_image_index=*/
-                 fuzztest::InRange<int>(0, fuzz_utils::kNumSourceImages - 1),
+                 fuzz_utils::ArbitraryWebPPictureFromIndex(),
                  fuzz_utils::ArbitraryWebPConfig(),
                  /*optimization_index=*/
                  fuzztest::InRange<uint32_t>(0,
@@ -216,10 +215,31 @@ FUZZ_TEST(EncDec, EncDecValidTest)
                  /*colorspace=*/fuzztest::InRange<int>(0, MODE_LAST - 1),
                  fuzz_utils::ArbitraryValidWebPDecoderOptions());
 
-FUZZ_TEST(EncDec, EncDecTest)
+FUZZ_TEST(EncArbitraryDec, EncDecValidTest)
     .WithDomains(/*use_argb=*/fuzztest::Arbitrary<bool>(),
-                 /*source_image_index=*/
-                 fuzztest::InRange<int>(0, fuzz_utils::kNumSourceImages - 1),
+                 fuzz_utils::ArbitraryWebPPicture(),
+                 fuzz_utils::ArbitraryWebPConfig(),
+                 /*optimization_index=*/
+                 fuzztest::InRange<uint32_t>(0,
+                                             fuzz_utils::kMaxOptimizationIndex),
+                 fuzz_utils::ArbitraryCropOrScaleParams(),
+                 /*colorspace=*/fuzztest::InRange<int>(0, MODE_LAST - 1),
+                 fuzz_utils::ArbitraryValidWebPDecoderOptions());
+
+FUZZ_TEST(EncIndexDec, EncDecTest)
+    .WithDomains(/*use_argb=*/fuzztest::Arbitrary<bool>(),
+                 fuzz_utils::ArbitraryWebPPictureFromIndex(),
+                 fuzz_utils::ArbitraryWebPConfig(),
+                 /*optimization_index=*/
+                 fuzztest::InRange<uint32_t>(0,
+                                             fuzz_utils::kMaxOptimizationIndex),
+                 fuzz_utils::ArbitraryCropOrScaleParams(),
+                 /*colorspace=*/fuzztest::Arbitrary<int>(),
+                 fuzz_utils::ArbitraryWebPDecoderOptions());
+
+FUZZ_TEST(EncArbitraryDec, EncDecTest)
+    .WithDomains(/*use_argb=*/fuzztest::Arbitrary<bool>(),
+                 fuzz_utils::ArbitraryWebPPicture(),
                  fuzz_utils::ArbitraryWebPConfig(),
                  /*optimization_index=*/
                  fuzztest::InRange<uint32_t>(0,

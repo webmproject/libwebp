@@ -18,6 +18,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>
+#include <memory>
 #include <string>
 #include <string_view>
 
@@ -32,29 +33,14 @@ namespace {
 
 const VP8CPUInfo default_VP8GetCPUInfo = fuzz_utils::VP8GetCPUInfo;
 
-void EncTest(std::string_view file, uint32_t optimization_index, bool use_argb,
-             WebPConfig config,
-             const fuzz_utils::CropOrScaleParams& crop_or_scale_params) {
+void EncTestImpl(WebPPicture& pic, uint32_t optimization_index, bool use_argb,
+                 WebPConfig config,
+                 const fuzz_utils::CropOrScaleParams& crop_or_scale_params) {
   fuzz_utils::SetOptimization(default_VP8GetCPUInfo, optimization_index);
-
-  // Init the source picture.
-  WebPPicture pic;
-  if (!WebPPictureInit(&pic)) {
-    std::cerr << "WebPPictureInit failed.\n";
-    std::abort();
-  }
-  pic.use_argb = use_argb;
-
-  const uint8_t* const file_data =
-      reinterpret_cast<const uint8_t*>(file.data());
-  if (fuzz_utils::IsImageTooBig(file_data, file.size())) return;
-  WebPImageReader reader = WebPGuessImageReader(file_data, file.size());
-  if (!reader(file_data, file.size(), &pic, 1, NULL)) return;
 
   // Crop and scale.
   if (!CropOrScale(&pic, crop_or_scale_params)) {
     const WebPEncodingError error_code = pic.error_code;
-    WebPPictureFree(&pic);
     if (error_code == VP8_ENC_ERROR_OUT_OF_MEMORY) return;
     std::cerr << "CropOrScale failed. Error code: " << error_code << "\n";
     std::abort();
@@ -74,10 +60,8 @@ void EncTest(std::string_view file, uint32_t optimization_index, bool use_argb,
   if (!WebPEncode(&config, &pic)) {
     const WebPEncodingError error_code = pic.error_code;
     WebPMemoryWriterClear(&memory_writer);
-    WebPPictureFree(&pic);
     if (error_code == VP8_ENC_ERROR_OUT_OF_MEMORY) return;
-    std::cerr << "WebPEncode failed. Error code: " << error_code
-              << " \nFile starts with: " << file.substr(0, 20) << "\n";
+    std::cerr << "WebPEncode failed. Error code: " << error_code << "\n";
     std::abort();
   }
 
@@ -87,11 +71,9 @@ void EncTest(std::string_view file, uint32_t optimization_index, bool use_argb,
   const size_t out_size = memory_writer.size;
   uint8_t* const rgba = WebPDecodeBGRA(out_data, out_size, &w, &h);
   if (rgba == nullptr || w != pic.width || h != pic.height) {
-    std::cerr << "WebPDecodeBGRA failed.\nFile starts with: "
-              << file.substr(0, 20) << "\n";
+    std::cerr << "WebPDecodeBGRA failed.\n";
     WebPFree(rgba);
     WebPMemoryWriterClear(&memory_writer);
-    WebPPictureFree(&pic);
     std::abort();
   }
 
@@ -110,13 +92,9 @@ void EncTest(std::string_view file, uint32_t optimization_index, bool use_argb,
           }
         }
         if (v1 != v2) {
-          std::cerr
-              << "Lossless compression failed pixel-exactness.\nFile starts "
-                 "with: "
-              << file.substr(0, 20) << "\n";
+          std::cerr << "Lossless compression failed pixel-exactness.\n";
           WebPFree(rgba);
           WebPMemoryWriterClear(&memory_writer);
-          WebPPictureFree(&pic);
           std::abort();
         }
       }
@@ -128,10 +106,41 @@ void EncTest(std::string_view file, uint32_t optimization_index, bool use_argb,
   WebPPictureFree(&pic);
 }
 
+// For open source compatibility, maybe_unused is necessary.
+[[maybe_unused]] void EncFileTest(
+    std::string_view file, uint32_t optimization_index, bool use_argb,
+    WebPConfig config,
+    const fuzz_utils::CropOrScaleParams& crop_or_scale_params) {
+  // Init the source picture.
+  WebPPicture pic;
+  if (!WebPPictureInit(&pic)) {
+    std::cerr << "WebPPictureInit failed.\n";
+    std::abort();
+  }
+  pic.use_argb = use_argb;
+
+  const uint8_t* const file_data =
+      reinterpret_cast<const uint8_t*>(file.data());
+  if (fuzz_utils::IsImageTooBig(file_data, file.size())) return;
+  WebPImageReader reader = WebPGuessImageReader(file_data, file.size());
+  if (!reader(file_data, file.size(), &pic, 1, NULL)) return;
+
+  EncTestImpl(pic, optimization_index, use_argb, config, crop_or_scale_params);
+}
+
+void EncArbitraryTest(
+    fuzz_utils::WebPPictureCpp pic_cpp, uint32_t optimization_index,
+    bool use_argb, WebPConfig config,
+    const fuzz_utils::CropOrScaleParams& crop_or_scale_params) {
+  WebPPicture& pic = pic_cpp.ref();
+
+  EncTestImpl(pic, optimization_index, use_argb, config, crop_or_scale_params);
+}
+
 }  // namespace
 
-FUZZ_TEST(Enc, EncTest)
-    .WithDomains(fuzztest::Arbitrary<std::string>(),
+FUZZ_TEST(Enc, EncArbitraryTest)
+    .WithDomains(fuzz_utils::ArbitraryWebPPicture(),
                  /*optimization_index=*/
                  fuzztest::InRange<uint32_t>(0,
                                              fuzz_utils::kMaxOptimizationIndex),
