@@ -261,9 +261,10 @@ static int FastMBAnalyze(VP8EncIterator* const it) {
   // Empirical cut-off value, should be around 16 (~=block size). We use the
   // [8-17] range and favor intra4 at high quality, intra16 for low quality.
   const int q = (int)it->enc->config->quality;
-  const uint32_t kThreshold = 8 + (17 - 8) * q / 100;
+  const uint64_t kThreshold = 8 + (17 - 8) * q / 100;
   int k;
-  uint32_t dc[16], m, m2;
+  uint32_t dc[16];
+  uint64_t m, m2;
   for (k = 0; k < 16; k += 4) {
     VP8Mean16x4(it->yuv_in + Y_OFF_ENC + k * BPS, &dc[k]);
   }
