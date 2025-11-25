@@ -196,7 +196,8 @@ int ReadWebP(const uint8_t* const data, size_t data_size,
 #endif
       output_buffer->u.RGBA.rgba = (uint8_t*)pic->argb;
       output_buffer->u.RGBA.stride = pic->argb_stride * sizeof(uint32_t);
-      output_buffer->u.RGBA.size = output_buffer->u.RGBA.stride * pic->height;
+      output_buffer->u.RGBA.size =
+          (size_t)output_buffer->u.RGBA.stride * pic->height;
     } else {
       output_buffer->colorspace = has_alpha ? MODE_YUVA : MODE_YUV;
       output_buffer->u.YUVA.y = pic->y;
@@ -207,10 +208,12 @@ int ReadWebP(const uint8_t* const data, size_t data_size,
       output_buffer->u.YUVA.u_stride = pic->uv_stride;
       output_buffer->u.YUVA.v_stride = pic->uv_stride;
       output_buffer->u.YUVA.a_stride = has_alpha ? pic->a_stride : 0;
-      output_buffer->u.YUVA.y_size = pic->height * pic->y_stride;
-      output_buffer->u.YUVA.u_size = (pic->height + 1) / 2 * pic->uv_stride;
-      output_buffer->u.YUVA.v_size = (pic->height + 1) / 2 * pic->uv_stride;
-      output_buffer->u.YUVA.a_size = pic->height * pic->a_stride;
+      output_buffer->u.YUVA.y_size = (size_t)pic->height * pic->y_stride;
+      output_buffer->u.YUVA.u_size =
+          (size_t)(pic->height + 1) / 2 * pic->uv_stride;
+      output_buffer->u.YUVA.v_size =
+          (size_t)(pic->height + 1) / 2 * pic->uv_stride;
+      output_buffer->u.YUVA.a_size = (size_t)pic->height * pic->a_stride;
     }
     output_buffer->is_external_memory = 1;
 
