@@ -75,7 +75,7 @@ for fuzz_main_file in $FUZZ_TEST_BINARIES_OUT_PATHS; do
 this_dir=\$(dirname "\$0")
 export TEST_DATA_DIRS=\$this_dir/corpus
 chmod +x \$this_dir/$fuzz_basename
-\$this_dir/$fuzz_basename --fuzz=$fuzz_entrypoint -- \$@
+\$this_dir/$fuzz_basename --fuzz=$fuzz_entrypoint -- \$@ -rss_limit_mb=0
 chmod -x \$this_dir/$fuzz_basename
 EOF
     chmod +x $OUT/$TARGET_FUZZER
