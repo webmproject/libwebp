@@ -70,7 +70,7 @@ for fuzz_main_file in $FUZZ_TEST_BINARIES_OUT_PATHS; do
     TARGET_FUZZER="${fuzz_basename}@$fuzz_entrypoint"
     # Write executer script
     cat << EOF > $OUT/$TARGET_FUZZER
-#!/bin/sh
+#!/bin/bash
 # LLVMFuzzerTestOneInput for fuzzer detection.
 this_dir=\$(dirname "\$0")
 export TEST_DATA_DIRS=\$this_dir/corpus
