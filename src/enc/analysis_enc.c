@@ -270,7 +270,7 @@ static int FastMBAnalyze(VP8EncIterator* const it) {
   }
   for (m = 0, m2 = 0, k = 0; k < 16; ++k) {
     m += dc[k];
-    m2 += dc[k] * dc[k];
+    m2 += (uint64_t)dc[k] * dc[k];
   }
   if (kThreshold * m2 < m * m) {
     VP8SetIntra16Mode(it, 0);  // DC16
