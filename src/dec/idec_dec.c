@@ -144,20 +144,30 @@ static void DoRemap(WebPIDecoder* const idec, ptrdiff_t offset) {
         // parse the partitions). The bitreader is only used meaningfully when
         // there is enough data to begin parsing partition 0.
         if (last_start != NULL) {
-          VP8BitReaderSetBuffer(&dec->parts[last_part], last_start,
-                                mem->buf + mem->end - last_start);
+          const size_t part_size = mem->buf + mem->end - last_start;
+          const uint8_t* WEBP_BIDI_INDEXABLE const bounded_last_start =
+              WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(const uint8_t*, last_start,
+                                               part_size);
+          VP8BitReaderSetBuffer(&dec->parts[last_part], bounded_last_start,
+                                part_size);
         }
       }
       if (NeedCompressedAlpha(idec)) {
         ALPHDecoder* const alph_dec = dec->alph_dec;
         dec->alpha_data += offset;
+        dec->alpha_data_size = dec->alpha_data_size;
         if (alph_dec != NULL && alph_dec->vp8l_dec != NULL) {
           if (alph_dec->method == ALPHA_LOSSLESS_COMPRESSION) {
             VP8LDecoder* const alph_vp8l_dec = alph_dec->vp8l_dec;
+            size_t data_size;
+            const uint8_t* WEBP_BIDI_INDEXABLE bounded_alpha_data;
+
             assert(dec->alpha_data_size >= ALPHA_HEADER_LEN);
-            VP8LBitReaderSetBuffer(&alph_vp8l_dec->br,
-                                   dec->alpha_data + ALPHA_HEADER_LEN,
-                                   dec->alpha_data_size - ALPHA_HEADER_LEN);
+            data_size = dec->alpha_data_size - ALPHA_HEADER_LEN;
+            bounded_alpha_data = WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(
+                const uint8_t*, dec->alpha_data + ALPHA_HEADER_LEN, data_size);
+            VP8LBitReaderSetBuffer(&alph_vp8l_dec->br, bounded_alpha_data,
+                                   data_size);
           } else {  // alph_dec->method == ALPHA_NO_COMPRESSION
             // Nothing special to do in this case.
           }
@@ -165,7 +175,10 @@ static void DoRemap(WebPIDecoder* const idec, ptrdiff_t offset) {
       }
     } else {  // Resize lossless bitreader
       VP8LDecoder* const dec = (VP8LDecoder*)idec->dec;
-      VP8LBitReaderSetBuffer(&dec->br, new_base, MemDataSize(mem));
+      const size_t data_size = MemDataSize(mem);
+      const uint8_t* WEBP_BIDI_INDEXABLE const bounded_new_base =
+          WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(const uint8_t*, new_base, data_size);
+      VP8LBitReaderSetBuffer(&dec->br, bounded_new_base, data_size);
     }
   }
 }
@@ -328,7 +341,8 @@ static VP8StatusCode DecodeWebPHeaders(WebPIDecoder* const idec) {
   VP8StatusCode status;
   WebPHeaderStructure headers;
 
-  headers.data = data;
+  headers.data =
+      WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(const uint8_t*, data, curr_size);
   headers.data_size = curr_size;
   headers.have_all_data = 0;
   status = WebPParseHeaders(&headers);
@@ -371,8 +385,13 @@ static VP8StatusCode DecodeVP8FrameHeader(WebPIDecoder* const idec) {
     // Not enough data bytes to extract VP8 Frame Header.
     return VP8_STATUS_SUSPENDED;
   }
-  if (!VP8GetInfo(data, curr_size, idec->chunk_size, &width, &height)) {
-    return IDecError(idec, VP8_STATUS_BITSTREAM_ERROR);
+  {
+    const uint8_t* WEBP_BIDI_INDEXABLE const bounded_data =
+        WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(const uint8_t*, data, curr_size);
+    if (!VP8GetInfo(bounded_data, curr_size, idec->chunk_size, &width,
+                    &height)) {
+      return IDecError(idec, VP8_STATUS_BITSTREAM_ERROR);
+    }
   }
 
   bits = data[0] | (data[1] << 8) | (data[2] << 16);
@@ -399,7 +418,8 @@ static VP8StatusCode CopyParts0Data(WebPIDecoder* const idec) {
   }
   if (mem->mode == MEM_MODE_APPEND) {
     // We copy and grab ownership of the partition #0 data.
-    uint8_t* const part0_buf = (uint8_t*)WebPSafeMalloc(1ULL, part_size);
+    uint8_t* WEBP_BIDI_INDEXABLE const part0_buf =
+        (uint8_t*)WebPSafeMalloc(1ULL, part_size);
     if (part0_buf == NULL) {
       return VP8_STATUS_OUT_OF_MEMORY;
     }
@@ -660,8 +680,8 @@ WebPIDecoder* WebPINewDecoder(WebPDecBuffer* output_buffer) {
   return NewDecoder(output_buffer, NULL);
 }
 
-WebPIDecoder* WebPIDecode(const uint8_t* data, size_t data_size,
-                          WebPDecoderConfig* config) {
+WebPIDecoder* WebPIDecode(const uint8_t* WEBP_COUNTED_BY(data_size) data,
+                          size_t data_size, WebPDecoderConfig* config) {
   WebPIDecoder* idec;
   WebPBitstreamFeatures tmp_features;
   WebPBitstreamFeatures* const features =
@@ -710,13 +730,16 @@ void WebPIDelete(WebPIDecoder* idec) {
 //------------------------------------------------------------------------------
 // Wrapper toward WebPINewDecoder
 
-WebPIDecoder* WebPINewRGB(WEBP_CSP_MODE csp, uint8_t* output_buffer,
+WebPIDecoder* WebPINewRGB(WEBP_CSP_MODE csp,
+                          uint8_t* WEBP_COUNTED_BY(output_buffer_size)
+                              output_buffer,
                           size_t output_buffer_size, int output_stride) {
   const int is_external_memory = (output_buffer != NULL) ? 1 : 0;
   WebPIDecoder* idec;
 
   if (csp >= MODE_YUV) return NULL;
   if (is_external_memory == 0) {  // Overwrite parameters to sane values.
+    output_buffer = NULL;
     output_buffer_size = 0;
     output_stride = 0;
   } else {  // A buffer was passed. Validate the other params.
@@ -734,18 +757,27 @@ WebPIDecoder* WebPINewRGB(WEBP_CSP_MODE csp, uint8_t* output_buffer,
   return idec;
 }
 
-WebPIDecoder* WebPINewYUVA(uint8_t* luma, size_t luma_size, int luma_stride,
-                           uint8_t* u, size_t u_size, int u_stride, uint8_t* v,
-                           size_t v_size, int v_stride, uint8_t* a,
-                           size_t a_size, int a_stride) {
+WebPIDecoder* WebPINewYUVA(uint8_t* WEBP_COUNTED_BY(luma_size) luma,
+                           size_t luma_size, int luma_stride,
+                           uint8_t* WEBP_COUNTED_BY(u_size) u, size_t u_size,
+                           int u_stride, uint8_t* WEBP_COUNTED_BY(v_size) v,
+                           size_t v_size, int v_stride,
+                           uint8_t* WEBP_COUNTED_BY(a_size) a, size_t a_size,
+                           int a_stride) {
   const int is_external_memory = (luma != NULL) ? 1 : 0;
   WebPIDecoder* idec;
   WEBP_CSP_MODE colorspace;
 
   if (is_external_memory == 0) {  // Overwrite parameters to sane values.
-    luma_size = u_size = v_size = a_size = 0;
+    luma = NULL;
+    luma_size = 0;
+    u = NULL;
+    u_size = 0;
+    v = NULL;
+    v_size = 0;
+    a = NULL;
+    a_size = 0;
     luma_stride = u_stride = v_stride = a_stride = 0;
-    u = v = a = NULL;
     colorspace = MODE_YUVA;
   } else {  // A luma buffer was passed. Validate the other parameters.
     if (u == NULL || v == NULL) return NULL;
@@ -777,8 +809,10 @@ WebPIDecoder* WebPINewYUVA(uint8_t* luma, size_t luma_size, int luma_stride,
   return idec;
 }
 
-WebPIDecoder* WebPINewYUV(uint8_t* luma, size_t luma_size, int luma_stride,
-                          uint8_t* u, size_t u_size, int u_stride, uint8_t* v,
+WebPIDecoder* WebPINewYUV(uint8_t* WEBP_COUNTED_BY(luma_size) luma,
+                          size_t luma_size, int luma_stride,
+                          uint8_t* WEBP_COUNTED_BY(u_size) u, size_t u_size,
+                          int u_stride, uint8_t* WEBP_COUNTED_BY(v_size) v,
                           size_t v_size, int v_stride) {
   return WebPINewYUVA(luma, luma_size, luma_stride, u, u_size, u_stride, v,
                       v_size, v_stride, NULL, 0, 0);
@@ -797,7 +831,8 @@ static VP8StatusCode IDecCheckStatus(const WebPIDecoder* const idec) {
   return VP8_STATUS_SUSPENDED;
 }
 
-VP8StatusCode WebPIAppend(WebPIDecoder* idec, const uint8_t* data,
+VP8StatusCode WebPIAppend(WebPIDecoder* idec,
+                          const uint8_t* WEBP_COUNTED_BY(data_size) data,
                           size_t data_size) {
   VP8StatusCode status;
   if (idec == NULL || data == NULL) {
@@ -818,7 +853,8 @@ VP8StatusCode WebPIAppend(WebPIDecoder* idec, const uint8_t* data,
   return IDecode(idec);
 }
 
-VP8StatusCode WebPIUpdate(WebPIDecoder* idec, const uint8_t* data,
+VP8StatusCode WebPIUpdate(WebPIDecoder* idec,
+                          const uint8_t* WEBP_COUNTED_BY(data_size) data,
                           size_t data_size) {
   VP8StatusCode status;
   if (idec == NULL || data == NULL) {

@@ -52,39 +52,39 @@ WEBP_EXTERN int WebPGetDecoderVersion(void);
 // RIFF + VP8X + (optional chunks) + VP8(L)
 // ALPH + VP8 <-- Not a valid WebP format: only allowed for internal purpose.
 // VP8(L)     <-- Not a valid WebP format: only allowed for internal purpose.
-WEBP_NODISCARD WEBP_EXTERN int WebPGetInfo(const uint8_t* data,
-                                           size_t data_size, int* width,
-                                           int* height);
+WEBP_NODISCARD WEBP_EXTERN int WebPGetInfo(
+    const uint8_t* WEBP_COUNTED_BY(data_size) data, size_t data_size,
+    int* width, int* height);
 
 // Decodes WebP images pointed to by 'data' and returns RGBA samples, along
 // with the dimensions in *width and *height. The ordering of samples in
 // memory is R, G, B, A, R, G, B, A... in scan order (endian-independent).
 // The returned pointer should be deleted calling WebPFree().
 // Returns NULL in case of error.
-WEBP_NODISCARD WEBP_EXTERN uint8_t* WebPDecodeRGBA(const uint8_t* data,
-                                                   size_t data_size, int* width,
-                                                   int* height);
+WEBP_NODISCARD WEBP_EXTERN uint8_t* WebPDecodeRGBA(
+    const uint8_t* WEBP_COUNTED_BY(data_size) data, size_t data_size,
+    int* width, int* height);
 
 // Same as WebPDecodeRGBA, but returning A, R, G, B, A, R, G, B... ordered data.
-WEBP_NODISCARD WEBP_EXTERN uint8_t* WebPDecodeARGB(const uint8_t* data,
-                                                   size_t data_size, int* width,
-                                                   int* height);
+WEBP_NODISCARD WEBP_EXTERN uint8_t* WebPDecodeARGB(
+    const uint8_t* WEBP_COUNTED_BY(data_size) data, size_t data_size,
+    int* width, int* height);
 
 // Same as WebPDecodeRGBA, but returning B, G, R, A, B, G, R, A... ordered data.
-WEBP_NODISCARD WEBP_EXTERN uint8_t* WebPDecodeBGRA(const uint8_t* data,
-                                                   size_t data_size, int* width,
-                                                   int* height);
+WEBP_NODISCARD WEBP_EXTERN uint8_t* WebPDecodeBGRA(
+    const uint8_t* WEBP_COUNTED_BY(data_size) data, size_t data_size,
+    int* width, int* height);
 
 // Same as WebPDecodeRGBA, but returning R, G, B, R, G, B... ordered data.
 // If the bitstream contains transparency, it is ignored.
-WEBP_NODISCARD WEBP_EXTERN uint8_t* WebPDecodeRGB(const uint8_t* data,
-                                                  size_t data_size, int* width,
-                                                  int* height);
+WEBP_NODISCARD WEBP_EXTERN uint8_t* WebPDecodeRGB(
+    const uint8_t* WEBP_COUNTED_BY(data_size) data, size_t data_size,
+    int* width, int* height);
 
 // Same as WebPDecodeRGB, but returning B, G, R, B, G, R... ordered data.
-WEBP_NODISCARD WEBP_EXTERN uint8_t* WebPDecodeBGR(const uint8_t* data,
-                                                  size_t data_size, int* width,
-                                                  int* height);
+WEBP_NODISCARD WEBP_EXTERN uint8_t* WebPDecodeBGR(
+    const uint8_t* WEBP_COUNTED_BY(data_size) data, size_t data_size,
+    int* width, int* height);
 
 // Decode WebP images pointed to by 'data' to Y'UV format(*). The pointer
 // returned is the Y samples buffer. Upon return, *u and *v will point to
@@ -96,11 +96,10 @@ WEBP_NODISCARD WEBP_EXTERN uint8_t* WebPDecodeBGR(const uint8_t* data,
 // 'width' and 'height' may be NULL, the other pointers must not be.
 // Returns NULL in case of error.
 // (*) Also named Y'CbCr. See: https://en.wikipedia.org/wiki/YCbCr
-WEBP_NODISCARD WEBP_EXTERN uint8_t* WebPDecodeYUV(const uint8_t* data,
-                                                  size_t data_size, int* width,
-                                                  int* height, uint8_t** u,
-                                                  uint8_t** v, int* stride,
-                                                  int* uv_stride);
+WEBP_NODISCARD WEBP_EXTERN uint8_t* WebPDecodeYUV(
+    const uint8_t* WEBP_COUNTED_BY(data_size) data, size_t data_size,
+    int* width, int* height, uint8_t** u, uint8_t** v, int* stride,
+    int* uv_stride);
 
 // These five functions are variants of the above ones, that decode the image
 // directly into a pre-allocated buffer 'output_buffer'. The maximum storage
@@ -111,27 +110,28 @@ WEBP_NODISCARD WEBP_EXTERN uint8_t* WebPDecodeYUV(const uint8_t* data,
 // between scanlines. Hence, output_buffer_size is expected to be at least
 // output_stride x picture-height.
 WEBP_NODISCARD WEBP_EXTERN uint8_t* WebPDecodeRGBAInto(
-    const uint8_t* data, size_t data_size, uint8_t* output_buffer,
+    const uint8_t* WEBP_COUNTED_BY(data_size) data, size_t data_size,
+    uint8_t* WEBP_COUNTED_BY(output_buffer_size) output_buffer,
     size_t output_buffer_size, int output_stride);
 WEBP_NODISCARD WEBP_EXTERN uint8_t* WebPDecodeARGBInto(
-    const uint8_t* data, size_t data_size, uint8_t* output_buffer,
+    const uint8_t* WEBP_COUNTED_BY(data_size) data, size_t data_size,
+    uint8_t* WEBP_COUNTED_BY(output_buffer_size) output_buffer,
     size_t output_buffer_size, int output_stride);
 WEBP_NODISCARD WEBP_EXTERN uint8_t* WebPDecodeBGRAInto(
-    const uint8_t* data, size_t data_size, uint8_t* output_buffer,
+    const uint8_t* WEBP_COUNTED_BY(data_size) data, size_t data_size,
+    uint8_t* WEBP_COUNTED_BY(output_buffer_size) output_buffer,
     size_t output_buffer_size, int output_stride);
 
 // RGB and BGR variants. Here too the transparency information, if present,
 // will be dropped and ignored.
-WEBP_NODISCARD WEBP_EXTERN uint8_t* WebPDecodeRGBInto(const uint8_t* data,
-                                                      size_t data_size,
-                                                      uint8_t* output_buffer,
-                                                      size_t output_buffer_size,
-                                                      int output_stride);
-WEBP_NODISCARD WEBP_EXTERN uint8_t* WebPDecodeBGRInto(const uint8_t* data,
-                                                      size_t data_size,
-                                                      uint8_t* output_buffer,
-                                                      size_t output_buffer_size,
-                                                      int output_stride);
+WEBP_NODISCARD WEBP_EXTERN uint8_t* WebPDecodeRGBInto(
+    const uint8_t* WEBP_COUNTED_BY(data_size) data, size_t data_size,
+    uint8_t* WEBP_COUNTED_BY(output_buffer_size) output_buffer,
+    size_t output_buffer_size, int output_stride);
+WEBP_NODISCARD WEBP_EXTERN uint8_t* WebPDecodeBGRInto(
+    const uint8_t* WEBP_COUNTED_BY(data_size) data, size_t data_size,
+    uint8_t* WEBP_COUNTED_BY(output_buffer_size) output_buffer,
+    size_t output_buffer_size, int output_stride);
 
 // WebPDecodeYUVInto() is a variant of WebPDecodeYUV() that operates directly
 // into pre-allocated luma/chroma plane buffers. This function requires the
@@ -141,9 +141,10 @@ WEBP_NODISCARD WEBP_EXTERN uint8_t* WebPDecodeBGRInto(const uint8_t* data,
 // Pointer to the luma plane ('*luma') is returned or NULL if an error occurred
 // during decoding (or because some buffers were found to be too small).
 WEBP_NODISCARD WEBP_EXTERN uint8_t* WebPDecodeYUVInto(
-    const uint8_t* data, size_t data_size, uint8_t* luma, size_t luma_size,
-    int luma_stride, uint8_t* u, size_t u_size, int u_stride, uint8_t* v,
-    size_t v_size, int v_stride);
+    const uint8_t* WEBP_COUNTED_BY(data_size) data, size_t data_size,
+    uint8_t* WEBP_COUNTED_BY(luma_size) luma, size_t luma_size, int luma_stride,
+    uint8_t* WEBP_COUNTED_BY(u_size) u, size_t u_size, int u_stride,
+    uint8_t* WEBP_COUNTED_BY(v_size) v, size_t v_size, int v_stride);
 
 //------------------------------------------------------------------------------
 // Output colorspaces and buffer
@@ -312,10 +313,10 @@ WEBP_NODISCARD WEBP_EXTERN WebPIDecoder* WebPINewDecoder(
 // colorspace 'csp' is taken into account for allocating this buffer. All other
 // parameters are ignored.
 // Returns NULL if the allocation failed, or if some parameters are invalid.
-WEBP_NODISCARD WEBP_EXTERN WebPIDecoder* WebPINewRGB(WEBP_CSP_MODE csp,
-                                                     uint8_t* output_buffer,
-                                                     size_t output_buffer_size,
-                                                     int output_stride);
+WEBP_NODISCARD WEBP_EXTERN WebPIDecoder* WebPINewRGB(
+    WEBP_CSP_MODE csp,
+    uint8_t* WEBP_COUNTED_BY(output_buffer_size) output_buffer,
+    size_t output_buffer_size, int output_stride);
 
 // This function allocates and initializes an incremental-decoder object, which
 // will output the raw luma/chroma samples into a preallocated planes if
@@ -329,15 +330,17 @@ WEBP_NODISCARD WEBP_EXTERN WebPIDecoder* WebPINewRGB(WEBP_CSP_MODE csp,
 // MODE_YUVA) when decoding starts. All parameters are then ignored.
 // Returns NULL if the allocation failed or if a parameter is invalid.
 WEBP_NODISCARD WEBP_EXTERN WebPIDecoder* WebPINewYUVA(
-    uint8_t* luma, size_t luma_size, int luma_stride, uint8_t* u, size_t u_size,
-    int u_stride, uint8_t* v, size_t v_size, int v_stride, uint8_t* a,
-    size_t a_size, int a_stride);
+    uint8_t* WEBP_COUNTED_BY(luma_size) luma, size_t luma_size, int luma_stride,
+    uint8_t* WEBP_COUNTED_BY(u_size) u, size_t u_size, int u_stride,
+    uint8_t* WEBP_COUNTED_BY(v_size) v, size_t v_size, int v_stride,
+    uint8_t* WEBP_COUNTED_BY(a_size) a, size_t a_size, int a_stride);
 
 // Deprecated version of the above, without the alpha plane.
 // Kept for backward compatibility.
 WEBP_NODISCARD WEBP_EXTERN WebPIDecoder* WebPINewYUV(
-    uint8_t* luma, size_t luma_size, int luma_stride, uint8_t* u, size_t u_size,
-    int u_stride, uint8_t* v, size_t v_size, int v_stride);
+    uint8_t* WEBP_COUNTED_BY(luma_size) luma, size_t luma_size, int luma_stride,
+    uint8_t* WEBP_COUNTED_BY(u_size) u, size_t u_size, int u_stride,
+    uint8_t* WEBP_COUNTED_BY(v_size) v, size_t v_size, int v_stride);
 
 // Deletes the WebPIDecoder object and associated memory. Must always be called
 // if WebPINewDecoder, WebPINewRGB or WebPINewYUV succeeded.
@@ -346,7 +349,9 @@ WEBP_EXTERN void WebPIDelete(WebPIDecoder* idec);
 // Copies and decodes the next available data. Returns VP8_STATUS_OK when
 // the image is successfully decoded. Returns VP8_STATUS_SUSPENDED when more
 // data is expected. Returns error in other cases.
-WEBP_EXTERN VP8StatusCode WebPIAppend(WebPIDecoder* idec, const uint8_t* data,
+WEBP_EXTERN VP8StatusCode WebPIAppend(WebPIDecoder* idec,
+                                      const uint8_t* WEBP_COUNTED_BY(data_size)
+                                          data,
                                       size_t data_size);
 
 // A variant of the above function to be used when data buffer contains
@@ -354,7 +359,9 @@ WEBP_EXTERN VP8StatusCode WebPIAppend(WebPIDecoder* idec, const uint8_t* data,
 // to the internal memory.
 // Note that the value of the 'data' pointer can change between calls to
 // WebPIUpdate, for instance when the data buffer is resized to fit larger data.
-WEBP_EXTERN VP8StatusCode WebPIUpdate(WebPIDecoder* idec, const uint8_t* data,
+WEBP_EXTERN VP8StatusCode WebPIUpdate(WebPIDecoder* idec,
+                                      const uint8_t* WEBP_COUNTED_BY(data_size)
+                                          data,
                                       size_t data_size);
 
 // Returns the RGB/A image decoded so far. Returns NULL if output params
@@ -441,8 +448,9 @@ struct WebPBitstreamFeatures {
 };
 
 // Internal, version-checked, entry point
-WEBP_EXTERN VP8StatusCode WebPGetFeaturesInternal(const uint8_t*, size_t,
-                                                  WebPBitstreamFeatures*, int);
+WEBP_EXTERN VP8StatusCode
+WebPGetFeaturesInternal(const uint8_t* WEBP_COUNTED_BY(data_size),
+                        size_t data_size, WebPBitstreamFeatures*, int);
 
 // Retrieve features from the bitstream. The *features structure is filled
 // with information gathered from the bitstream.
@@ -455,8 +463,9 @@ WEBP_EXTERN VP8StatusCode WebPGetFeaturesInternal(const uint8_t*, size_t,
 // RIFF + VP8X + (optional chunks) + VP8(L)
 // ALPH + VP8 <-- Not a valid WebP format: only allowed for internal purpose.
 // VP8(L)     <-- Not a valid WebP format: only allowed for internal purpose.
-static WEBP_INLINE VP8StatusCode WebPGetFeatures(
-    const uint8_t* data, size_t data_size, WebPBitstreamFeatures* features) {
+static WEBP_INLINE VP8StatusCode
+WebPGetFeatures(const uint8_t* WEBP_COUNTED_BY(data_size) data,
+                size_t data_size, WebPBitstreamFeatures* features) {
   return WebPGetFeaturesInternal(data, data_size, features,
                                  WEBP_DECODER_ABI_VERSION);
 }
@@ -516,14 +525,16 @@ WEBP_NODISCARD WEBP_EXTERN int WebPValidateDecoderConfig(
 // The return WebPIDecoder object must always be deleted calling WebPIDelete().
 // Returns NULL in case of error (and config->status will then reflect
 // the error condition, if available).
-WEBP_NODISCARD WEBP_EXTERN WebPIDecoder* WebPIDecode(const uint8_t* data,
-                                                     size_t data_size,
-                                                     WebPDecoderConfig* config);
+WEBP_NODISCARD WEBP_EXTERN WebPIDecoder* WebPIDecode(
+    const uint8_t* WEBP_COUNTED_BY(data_size) data, size_t data_size,
+    WebPDecoderConfig* config);
 
 // Non-incremental version. This version decodes the full data at once, taking
 // 'config' into account. Returns decoding status (which should be VP8_STATUS_OK
 // if the decoding was successful). Note that 'config' cannot be NULL.
-WEBP_EXTERN VP8StatusCode WebPDecode(const uint8_t* data, size_t data_size,
+WEBP_EXTERN VP8StatusCode WebPDecode(const uint8_t* WEBP_COUNTED_BY(data_size)
+                                         data,
+                                     size_t data_size,
                                      WebPDecoderConfig* config);
 
 #ifdef __cplusplus

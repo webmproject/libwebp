@@ -311,7 +311,7 @@ static int InitYUVRescaler(const VP8Io* const io, WebPDecParams* const p) {
   const size_t uv_work_size = 2 * uv_out_width;  // and for each u/v ones
   uint64_t total_size;
   size_t rescaler_size;
-  rescaler_t* work;
+  rescaler_t* WEBP_BIDI_INDEXABLE work;
   WebPRescaler* scalers;
   const int num_rescalers = has_alpha ? 4 : 3;
 
@@ -325,11 +325,11 @@ static int InitYUVRescaler(const VP8Io* const io, WebPDecParams* const p) {
     return 0;
   }
 
-  p->memory = WebPSafeMalloc(1ULL, (size_t)total_size);
-  if (p->memory == NULL) {
+  work = (rescaler_t*)WebPSafeMalloc(1ULL, (size_t)total_size);
+  if (work == NULL) {
     return 0;  // memory error
   }
-  work = (rescaler_t*)p->memory;
+  p->memory = work;
 
   scalers = (WebPRescaler*)WEBP_ALIGN((const uint8_t*)work + total_size -
                                       rescaler_size);
@@ -499,8 +499,9 @@ static int InitRGBRescaler(const VP8Io* const io, WebPDecParams* const p) {
   const int uv_in_height = (io->mb_h + 1) >> 1;
   // scratch memory for one rescaler
   const size_t work_size = 2 * (size_t)out_width;
-  rescaler_t* work;  // rescalers work area
-  uint8_t* tmp;  // tmp storage for scaled YUV444 samples before RGB conversion
+  rescaler_t* WEBP_BIDI_INDEXABLE work;  // rescalers work area
+  uint8_t* WEBP_BIDI_INDEXABLE
+      tmp;  // tmp storage for scaled YUV444 samples before RGB conversion
   uint64_t tmp_size1, tmp_size2, total_size;
   size_t rescaler_size;
   WebPRescaler* scalers;
@@ -515,11 +516,11 @@ static int InitRGBRescaler(const VP8Io* const io, WebPDecParams* const p) {
     return 0;
   }
 
-  p->memory = WebPSafeMalloc(1ULL, (size_t)total_size);
-  if (p->memory == NULL) {
+  work = (rescaler_t*)WebPSafeMalloc(1ULL, (size_t)total_size);
+  if (work == NULL) {
     return 0;  // memory error
   }
-  work = (rescaler_t*)p->memory;
+  p->memory = work;
   tmp = (uint8_t*)(work + tmp_size1);
 
   scalers = (WebPRescaler*)WEBP_ALIGN((const uint8_t*)work + total_size -

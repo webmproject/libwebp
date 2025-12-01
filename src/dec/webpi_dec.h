@@ -61,15 +61,16 @@ void WebPResetDecParams(WebPDecParams* const params);
 
 // Structure storing a description of the RIFF headers.
 typedef struct {
-  const uint8_t* data;        // input buffer
-  size_t data_size;           // input buffer size
-  int have_all_data;          // true if all data is known to be available
-  size_t offset;              // offset to main data chunk (VP8 or VP8L)
-  const uint8_t* alpha_data;  // points to alpha chunk (if present)
-  size_t alpha_data_size;     // alpha chunk size
-  size_t compressed_size;     // VP8/VP8L compressed data size
-  size_t riff_size;           // size of the riff payload (or 0 if absent)
-  int is_lossless;            // true if a VP8L chunk is present
+  const uint8_t* WEBP_COUNTED_BY(data_size) data;  // input buffer
+  size_t data_size;                                // input buffer size
+  int have_all_data;  // true if all data is known to be available
+  size_t offset;      // offset to main data chunk (VP8 or VP8L)
+  const uint8_t* WEBP_COUNTED_BY(alpha_data_size)
+      alpha_data;          // points to alpha chunk (if present)
+  size_t alpha_data_size;  // alpha chunk size
+  size_t compressed_size;  // VP8/VP8L compressed data size
+  size_t riff_size;        // size of the riff payload (or 0 if absent)
+  int is_lossless;         // true if a VP8L chunk is present
 } WebPHeaderStructure;
 
 // Skips over all valid chunks prior to the first VP8/VP8L frame header.
