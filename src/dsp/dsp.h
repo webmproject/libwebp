@@ -18,8 +18,10 @@
 #include "src/webp/config.h"
 #endif
 
+#include "src/dec/common_dec.h"
 #include "src/dsp/cpu.h"
 #include "src/utils/bounds_safety.h"
+#include "src/webp/decode.h"
 #include "src/webp/types.h"
 
 WEBP_ASSUME_UNSAFE_INDEXABLE_ABI
@@ -229,9 +231,9 @@ extern VP8WHT VP8TransformWHT;
 // *dst is the destination block, with stride BPS. Boundary samples are
 // assumed accessible when needed.
 typedef void (*VP8PredFunc)(uint8_t* dst);
-extern VP8PredFunc VP8PredLuma16[/* NUM_B_DC_MODES */];
-extern VP8PredFunc VP8PredChroma8[/* NUM_B_DC_MODES */];
-extern VP8PredFunc VP8PredLuma4[/* NUM_BMODES */];
+extern VP8PredFunc VP8PredLuma16[NUM_B_DC_MODES];
+extern VP8PredFunc VP8PredChroma8[NUM_B_DC_MODES];
+extern VP8PredFunc VP8PredLuma4[NUM_BMODES];
 
 // clipping tables (for filtering)
 extern const int8_t* const VP8ksclip1;  // clips [-1020, 1020] to [-128, 127]
@@ -294,7 +296,7 @@ typedef void (*WebPUpsampleLinePairFunc)(
 #ifdef FANCY_UPSAMPLING
 
 // Fancy upsampling functions to convert YUV to RGB(A) modes
-extern WebPUpsampleLinePairFunc WebPUpsamplers[/* MODE_LAST */];
+extern WebPUpsampleLinePairFunc WebPUpsamplers[MODE_LAST];
 
 #endif  // FANCY_UPSAMPLING
 
@@ -311,7 +313,7 @@ void WebPSamplerProcessPlane(const uint8_t* WEBP_RESTRICT y, int y_stride,
                              int width, int height, WebPSamplerRowFunc func);
 
 // Sampling functions to convert rows of YUV to RGB(A)
-extern WebPSamplerRowFunc WebPSamplers[/* MODE_LAST */];
+extern WebPSamplerRowFunc WebPSamplers[MODE_LAST];
 
 // General function for converting two lines of ARGB or RGBA.
 // 'alpha_is_last' should be true if 0xff000000 is stored in memory as
@@ -324,7 +326,7 @@ typedef void (*WebPYUV444Converter)(const uint8_t* WEBP_RESTRICT y,
                                     const uint8_t* WEBP_RESTRICT v,
                                     uint8_t* WEBP_RESTRICT dst, int len);
 
-extern WebPYUV444Converter WebPYUV444Converters[/* MODE_LAST */];
+extern WebPYUV444Converter WebPYUV444Converters[MODE_LAST];
 
 // Must be called before using the WebPUpsamplers[] (and for premultiplied
 // colorspaces like rgbA, rgbA4444, etc)

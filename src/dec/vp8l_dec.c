@@ -104,7 +104,8 @@ static int DecodeImageStream(int xsize, int ysize, int is_level0,
 
 //------------------------------------------------------------------------------
 
-int VP8LCheckSignature(const uint8_t* const data, size_t size) {
+int VP8LCheckSignature(const uint8_t* const WEBP_COUNTED_BY(size) data,
+                       size_t size) {
   return (size >= VP8L_FRAME_HEADER_SIZE && data[0] == VP8L_MAGIC_BYTE &&
           (data[4] >> 5) == 0);  // version
 }
@@ -119,8 +120,9 @@ static int ReadImageInfo(VP8LBitReader* const br, int* const width,
   return !br->eos;
 }
 
-int VP8LGetInfo(const uint8_t* data, size_t data_size, int* const width,
-                int* const height, int* const has_alpha) {
+int VP8LGetInfo(const uint8_t* WEBP_COUNTED_BY(data_size) data,
+                size_t data_size, int* const width, int* const height,
+                int* const has_alpha) {
   if (data == NULL || data_size < VP8L_FRAME_HEADER_SIZE) {
     return 0;  // not enough data
   } else if (!VP8LCheckSignature(data, data_size)) {
@@ -248,10 +250,14 @@ static int ReadHuffmanCodeLengths(VP8LDecoder* const dec,
   int max_symbol;
   int prev_code_len = DEFAULT_CODE_LENGTH;
   HuffmanTables tables;
+  const int* WEBP_BIDI_INDEXABLE const bounded_code_lengths =
+      WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(
+          const int*, code_length_code_lengths,
+          NUM_CODE_LENGTH_CODES * sizeof(*code_length_code_lengths));
 
   if (!VP8LHuffmanTablesAllocate(1 << LENGTHS_TABLE_BITS, &tables) ||
-      !VP8LBuildHuffmanTable(&tables, LENGTHS_TABLE_BITS,
-                             code_length_code_lengths, NUM_CODE_LENGTH_CODES)) {
+      !VP8LBuildHuffmanTable(&tables, LENGTHS_TABLE_BITS, bounded_code_lengths,
+                             NUM_CODE_LENGTH_CODES)) {
     goto End;
   }
 
@@ -338,8 +344,11 @@ static int ReadHuffmanCode(int alphabet_size, VP8LDecoder* const dec,
 
   ok = ok && !br->eos;
   if (ok) {
-    size = VP8LBuildHuffmanTable(table, HUFFMAN_TABLE_BITS, code_lengths,
-                                 alphabet_size);
+    const int* WEBP_BIDI_INDEXABLE const bounded_code_lengths =
+        WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(const int*, code_lengths,
+                                         alphabet_size * sizeof(int));
+    size = VP8LBuildHuffmanTable(table, HUFFMAN_TABLE_BITS,
+                                 bounded_code_lengths, alphabet_size);
   }
   if (!ok || size == 0) {
     return VP8LSetError(dec, VP8_STATUS_BITSTREAM_ERROR);
@@ -553,13 +562,15 @@ static int AllocateAndInitRescaler(VP8LDecoder* const dec, VP8Io* const io) {
   const int in_height = io->mb_h;
   const int out_height = io->scaled_height;
   const uint64_t work_size = 2 * num_channels * (uint64_t)out_width;
-  rescaler_t* work;  // Rescaler work area.
+  rescaler_t* WEBP_BIDI_INDEXABLE work;  // Rescaler work area.
   const uint64_t scaled_data_size = (uint64_t)out_width;
-  uint32_t* scaled_data;  // Temporary storage for scaled BGRA data.
+  uint32_t* WEBP_BIDI_INDEXABLE
+      scaled_data;  // Temporary storage for scaled BGRA data.
   const uint64_t memory_size = sizeof(*dec->rescaler) +
                                work_size * sizeof(*work) +
                                scaled_data_size * sizeof(*scaled_data);
-  uint8_t* memory = (uint8_t*)WebPSafeMalloc(memory_size, sizeof(*memory));
+  uint8_t* WEBP_BIDI_INDEXABLE memory =
+      (uint8_t*)WebPSafeMalloc(memory_size, sizeof(*memory));
   if (memory == NULL) {
     return VP8LSetError(dec, VP8_STATUS_OUT_OF_MEMORY);
   }
@@ -1684,7 +1695,8 @@ static void ExtractAlphaRows(VP8LDecoder* const dec, int last_row,
 }
 
 int VP8LDecodeAlphaHeader(ALPHDecoder* const alph_dec,
-                          const uint8_t* const data, size_t data_size) {
+                          const uint8_t* const WEBP_COUNTED_BY(data_size) data,
+                          size_t data_size) {
   int ok = 0;
   VP8LDecoder* dec = VP8LNew();
 
@@ -1763,7 +1775,12 @@ int VP8LDecodeHeader(VP8LDecoder* const dec, VP8Io* const io) {
 
   dec->io = io;
   dec->status = VP8_STATUS_OK;
-  VP8LInitBitReader(&dec->br, io->data, io->data_size);
+  {
+    const uint8_t* WEBP_BIDI_INDEXABLE const bounded_data =
+        WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(const uint8_t*, io->data,
+                                         io->data_size);
+    VP8LInitBitReader(&dec->br, bounded_data, io->data_size);
+  }
   if (!ReadImageInfo(&dec->br, &width, &height, &has_alpha)) {
     VP8LSetError(dec, VP8_STATUS_BITSTREAM_ERROR);
     goto Error;

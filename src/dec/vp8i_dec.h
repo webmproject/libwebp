@@ -263,7 +263,8 @@ struct VP8Decoder {
 
   // Alpha
   struct ALPHDecoder* alph_dec;  // alpha-plane decoder object
-  const uint8_t* alpha_data;     // compressed alpha data (if present)
+  const uint8_t* WEBP_COUNTED_BY(alpha_data_size)
+      alpha_data;  // compressed alpha data (if present)
   size_t alpha_data_size;
   int is_alpha_decoded;      // true if alpha_data is decoded in alpha_plane
   uint8_t* alpha_plane_mem;  // memory allocated for alpha_plane

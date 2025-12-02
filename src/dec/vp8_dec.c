@@ -113,13 +113,14 @@ int VP8SetError(VP8Decoder* const dec, VP8StatusCode error,
 
 //------------------------------------------------------------------------------
 
-int VP8CheckSignature(const uint8_t* const data, size_t data_size) {
+int VP8CheckSignature(const uint8_t* const WEBP_COUNTED_BY(data_size) data,
+                      size_t data_size) {
   return (data_size >= 3 && data[0] == 0x9d && data[1] == 0x01 &&
           data[2] == 0x2a);
 }
 
-int VP8GetInfo(const uint8_t* data, size_t data_size, size_t chunk_size,
-               int* const width, int* const height) {
+int VP8GetInfo(const uint8_t* WEBP_COUNTED_BY(data_size) data, size_t data_size,
+               size_t chunk_size, int* const width, int* const height) {
   if (data == NULL || data_size < VP8_FRAME_HEADER_SIZE) {
     return 0;  // not enough data
   }
@@ -218,12 +219,13 @@ static int ParseSegmentHeader(VP8BitReader* br, VP8SegmentHeader* hdr,
 // If we don't even have the partitions' sizes, then VP8_STATUS_NOT_ENOUGH_DATA
 // is returned, and this is an unrecoverable error.
 // If the partitions were positioned ok, VP8_STATUS_OK is returned.
-static VP8StatusCode ParsePartitions(VP8Decoder* const dec, const uint8_t* buf,
+static VP8StatusCode ParsePartitions(VP8Decoder* const dec,
+                                     const uint8_t* WEBP_COUNTED_BY(size) buf,
                                      size_t size) {
   VP8BitReader* const br = &dec->br;
-  const uint8_t* sz = buf;
+  const uint8_t* WEBP_BIDI_INDEXABLE sz = buf;
   const uint8_t* buf_end = buf + size;
-  const uint8_t* part_start;
+  const uint8_t* WEBP_BIDI_INDEXABLE part_start;
   size_t size_left = size;
   size_t last_part;
   size_t p;
@@ -279,8 +281,8 @@ static int ParseFilterHeader(VP8BitReader* br, VP8Decoder* const dec) {
 
 // Topmost call
 int VP8GetHeaders(VP8Decoder* const dec, VP8Io* const io) {
-  const uint8_t* buf;
   size_t buf_size;
+  const uint8_t* WEBP_COUNTED_BY(buf_size) buf;
   VP8FrameHeader* frm_hdr;
   VP8PictureHeader* pic_hdr;
   VP8BitReader* br;
@@ -294,8 +296,9 @@ int VP8GetHeaders(VP8Decoder* const dec, VP8Io* const io) {
     return VP8SetError(dec, VP8_STATUS_INVALID_PARAM,
                        "null VP8Io passed to VP8GetHeaders()");
   }
-  buf = io->data;
   buf_size = io->data_size;
+  buf =
+      WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(const uint8_t*, io->data, io->data_size);
   if (buf_size < 4) {
     return VP8SetError(dec, VP8_STATUS_NOT_ENOUGH_DATA, "Truncated header.");
   }

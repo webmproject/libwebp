@@ -423,10 +423,12 @@ target_include_directories(webputils PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
 add_library(webp $<TARGET_OBJECTS:webpdecode> $<TARGET_OBJECTS:webpdsp>
                  $<TARGET_OBJECTS:webpencode> $<TARGET_OBJECTS:webputils>)
 if(WEBP_ENABLE_FBOUNDS_SAFETY)
-  # Enable -fbounds-safety only for webputils for now.
+  # Enable -fbounds-safety only for webputils and webpdecode(r) for now.
   add_definitions(-DWEBP_SUPPORT_FBOUNDS_SAFETY=1)
   target_compile_options(webputils PRIVATE -fbounds-safety)
   target_compile_options(webputilsdecode PRIVATE -fbounds-safety)
+  target_compile_options(webpdecode PRIVATE -fbounds-safety)
+  target_compile_options(webpdecoder PRIVATE -fbounds-safety)
 endif()
 
 target_link_libraries(webp sharpyuv)
