@@ -74,16 +74,9 @@ for fuzz_main_file in $FUZZ_TEST_BINARIES_OUT_PATHS; do
 # LLVMFuzzerTestOneInput for fuzzer detection.
 this_dir=\$(dirname "\$0")
 export TEST_DATA_DIRS=\$this_dir/corpus
-filtered_args=()
-for arg in "\$@"; do
-    if [[ "\$arg" == -rss_limit_mb=* ]]; then
-        continue
-    else
-        filtered_args+=("\$arg")
-    fi
-done
+export ASAN_OPTIONS="\${ASAN_OPTIONS}:allocator_may_return_null=1"
 chmod +x \$this_dir/$fuzz_basename
-\$this_dir/$fuzz_basename --fuzz=$fuzz_entrypoint -- "\${filtered_args[@]}" -rss_limit_mb=0
+\$this_dir/$fuzz_basename --fuzz=$fuzz_entrypoint -- \$@
 chmod -x \$this_dir/$fuzz_basename
 EOF
     chmod +x $OUT/$TARGET_FUZZER

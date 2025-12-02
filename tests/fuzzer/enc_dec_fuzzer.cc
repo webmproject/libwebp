@@ -191,6 +191,13 @@ void EncDecTest(bool use_argb, fuzz_utils::WebPPictureCpp pic_cpp,
     fprintf(stderr, "WebPInitDecoderConfig failed.\n");
     abort();
   }
+  if (decoder_options.use_scaling &&
+      static_cast<size_t>(decoder_options.scaled_width) *
+              decoder_options.scaled_height >
+          1000u * 1000u) {
+    // Skip huge scaling.
+    return;
+  }
 
   dec_config.output.colorspace = static_cast<WEBP_CSP_MODE>(colorspace);
   std::memcpy(&dec_config.options, &decoder_options, sizeof(decoder_options));
