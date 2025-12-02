@@ -269,8 +269,12 @@ static int FastMBAnalyze(VP8EncIterator* const it) {
     VP8Mean16x4(it->yuv_in + Y_OFF_ENC + k * BPS, &dc[k]);
   }
   for (m = 0, m2 = 0, k = 0; k < 16; ++k) {
+    // dc[k] is at most 16 (for loop of 16)*(16*255) (max value in dc after
+    // Mean16x4, which uses two nested loops of 4). Squared as (16*16*255)^2, it
+    // fits in a uint32_t.
+    const uint32_t dc2 = dc[k] * dc[k];
     m += dc[k];
-    m2 += (uint64_t)dc[k] * dc[k];
+    m2 += dc2;
   }
   if (kThreshold * m2 < m * m) {
     VP8SetIntra16Mode(it, 0);  // DC16
