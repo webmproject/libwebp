@@ -155,7 +155,7 @@ static void DoRemap(WebPIDecoder* const idec, ptrdiff_t offset) {
       if (NeedCompressedAlpha(idec)) {
         ALPHDecoder* const alph_dec = dec->alph_dec;
         dec->alpha_data += offset;
-        dec->alpha_data_size = dec->alpha_data_size;
+        WEBP_SELF_ASSIGN(dec->alpha_data_size);
         if (alph_dec != NULL && alph_dec->vp8l_dec != NULL) {
           if (alph_dec->method == ALPHA_LOSSLESS_COMPRESSION) {
             VP8LDecoder* const alph_vp8l_dec = alph_dec->vp8l_dec;
