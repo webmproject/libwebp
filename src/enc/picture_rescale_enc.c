@@ -205,6 +205,7 @@ int WebPPictureRescale(WebPPicture* picture, int width, int height) {
   WebPPicture tmp;
   int prev_width, prev_height;
   rescaler_t* work;
+  int status = VP8_ENC_OK;
 
   if (picture == NULL) return 0;
   prev_width = picture->width;
@@ -224,15 +225,16 @@ int WebPPictureRescale(WebPPicture* picture, int width, int height) {
   if (!picture->use_argb) {
     work = (rescaler_t*)WebPSafeMalloc(2ULL * width, sizeof(*work));
     if (work == NULL) {
-      WebPPictureFree(&tmp);
-      return WebPEncodingSetError(picture, VP8_ENC_ERROR_OUT_OF_MEMORY);
+      status = VP8_ENC_ERROR_OUT_OF_MEMORY;
+      goto Cleanup;
     }
     // If present, we need to rescale alpha first (for AlphaMultiplyY).
     if (picture->a != NULL) {
       WebPInitAlphaProcessing();
       if (!RescalePlane(picture->a, prev_width, prev_height, picture->a_stride,
                         tmp.a, width, height, tmp.a_stride, work, 1)) {
-        return WebPEncodingSetError(picture, VP8_ENC_ERROR_BAD_DIMENSION);
+        status = VP8_ENC_ERROR_BAD_DIMENSION;
+        goto Cleanup;
       }
     }
 
@@ -247,14 +249,15 @@ int WebPPictureRescale(WebPPicture* picture, int width, int height) {
         !RescalePlane(picture->v, HALVE(prev_width), HALVE(prev_height),
                       picture->uv_stride, tmp.v, HALVE(width), HALVE(height),
                       tmp.uv_stride, work, 1)) {
-      return WebPEncodingSetError(picture, VP8_ENC_ERROR_BAD_DIMENSION);
+      status = VP8_ENC_ERROR_BAD_DIMENSION;
+      goto Cleanup;
     }
     AlphaMultiplyY(&tmp, 1);
   } else {
     work = (rescaler_t*)WebPSafeMalloc(2ULL * width * 4, sizeof(*work));
     if (work == NULL) {
-      WebPPictureFree(&tmp);
-      return WebPEncodingSetError(picture, VP8_ENC_ERROR_OUT_OF_MEMORY);
+      status = VP8_ENC_ERROR_BAD_DIMENSION;
+      goto Cleanup;
     }
     // In order to correctly interpolate colors, we need to apply the alpha
     // weighting first (black-matting), scale the RGB values, and remove
@@ -264,12 +267,20 @@ int WebPPictureRescale(WebPPicture* picture, int width, int height) {
     if (!RescalePlane((const uint8_t*)picture->argb, prev_width, prev_height,
                       picture->argb_stride * 4, (uint8_t*)tmp.argb, width,
                       height, tmp.argb_stride * 4, work, 4)) {
-      return WebPEncodingSetError(picture, VP8_ENC_ERROR_BAD_DIMENSION);
+      status = VP8_ENC_ERROR_BAD_DIMENSION;
+      goto Cleanup;
     }
     AlphaMultiplyARGB(&tmp, 1);
   }
-  WebPPictureFree(picture);
+
+Cleanup:
   WebPSafeFree(work);
+  if (status != VP8_ENC_OK) {
+    WebPPictureFree(&tmp);
+    return WebPEncodingSetError(picture, status);
+  }
+
+  WebPPictureFree(picture);
   *picture = tmp;
   return 1;
 }
