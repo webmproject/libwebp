@@ -23,6 +23,7 @@
 
 #include "./fuzz_utils.h"
 #include "src/dsp/cpu.h"
+#include "src/utils/rescaler_utils.h"
 #include "src/webp/decode.h"
 #include "src/webp/encode.h"
 
@@ -191,12 +192,18 @@ void EncDecTest(bool use_argb, fuzz_utils::WebPPictureCpp pic_cpp,
     fprintf(stderr, "WebPInitDecoderConfig failed.\n");
     abort();
   }
-  if (decoder_options.use_scaling &&
-      static_cast<size_t>(decoder_options.scaled_width) *
-              decoder_options.scaled_height >
-          1000u * 1000u) {
-    // Skip huge scaling.
-    return;
+  if (decoder_options.use_scaling) {
+    int scaled_width = decoder_options.scaled_width;
+    int scaled_height = decoder_options.scaled_height;
+    if (!WebPRescalerGetScaledDimensions(pic.width, pic.height, &scaled_width,
+                                         &scaled_height)) {
+      // Rescaled dimensions do not make sense.
+      return;
+    }
+    if (static_cast<uint64_t>(scaled_width) * scaled_height > 1000u * 1000u) {
+      // Skip huge scaling.
+      return;
+    }
   }
 
   dec_config.output.colorspace = static_cast<WEBP_CSP_MODE>(colorspace);
