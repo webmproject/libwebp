@@ -23,7 +23,7 @@
 #include "./fuzz_utils.h"
 #include "src/dec/webpi_dec.h"
 #include "src/utils/rescaler_utils.h"
-#include "src/webp/decode.h"
+#include "webp/decode.h"
 
 namespace {
 

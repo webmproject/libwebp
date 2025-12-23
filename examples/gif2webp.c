@@ -29,8 +29,8 @@
 
 #include <gif_lib.h>
 
-#include "../examples/example_util.h"
 #include "../imageio/imageio_util.h"
+#include "./example_util.h"
 #include "./gifdec.h"
 #include "./unicode.h"
 #include "./unicode_gif.h"

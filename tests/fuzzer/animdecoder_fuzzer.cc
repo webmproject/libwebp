@@ -21,9 +21,9 @@
 #include "./fuzz_utils.h"
 #include "./nalloc.h"
 #include "imageio/imageio_util.h"
-#include "src/webp/decode.h"
-#include "src/webp/demux.h"
-#include "src/webp/mux_types.h"
+#include "webp/decode.h"
+#include "webp/demux.h"
+#include "webp/mux_types.h"
 
 namespace {
 

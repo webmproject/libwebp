@@ -24,7 +24,7 @@
 #include "src/utils/bit_reader_utils.h"
 #include "src/utils/huffman_utils.h"
 #include "src/utils/utils.h"
-#include "src/webp/format_constants.h"
+#include "webp/format_constants.h"
 
 namespace {
 

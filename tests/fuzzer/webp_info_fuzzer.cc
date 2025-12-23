@@ -18,8 +18,8 @@
 #include <string_view>
 
 #include "./nalloc.h"
-#include "src/webp/mux_types.h"
 #include "tests/fuzzer/fuzz_utils.h"
+#include "webp/mux_types.h"
 
 // Don't do that at home!
 #define main exec_main

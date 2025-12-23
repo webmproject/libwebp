@@ -30,9 +30,9 @@
 #include "./img_grid.h"
 #include "./img_peak.h"
 #include "src/dsp/cpu.h"
-#include "src/webp/decode.h"
-#include "src/webp/encode.h"
-#include "src/webp/types.h"
+#include "webp/decode.h"
+#include "webp/encode.h"
+#include "webp/types.h"
 
 namespace fuzz_utils {
 

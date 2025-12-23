@@ -20,8 +20,8 @@
 #include <string_view>
 
 #include "./fuzz_utils.h"
-#include "src/webp/decode.h"
-#include "src/webp/types.h"
+#include "webp/decode.h"
+#include "webp/types.h"
 
 namespace {
 

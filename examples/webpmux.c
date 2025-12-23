@@ -60,8 +60,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../examples/example_util.h"
 #include "../imageio/imageio_util.h"
+#include "./example_util.h"
 #include "./unicode.h"
 #include "webp/decode.h"
 #include "webp/mux.h"

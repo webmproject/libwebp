@@ -24,10 +24,10 @@
 
 #include "imageio/image_dec.h"
 #include "src/dsp/cpu.h"
-#include "src/webp/decode.h"
-#include "src/webp/encode.h"
-#include "src/webp/types.h"
 #include "tests/fuzzer/fuzz_utils.h"
+#include "webp/decode.h"
+#include "webp/encode.h"
+#include "webp/types.h"
 
 namespace {
 

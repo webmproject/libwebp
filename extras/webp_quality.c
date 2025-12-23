@@ -12,9 +12,9 @@
 #include <string.h>
 
 #include "../examples/unicode.h"
-#include "extras/extras.h"
+#include "./extras.h"
 #include "imageio/imageio_util.h"
-#include "src/webp/types.h"
+#include "webp/types.h"
 
 // Returns EXIT_SUCCESS on success, EXIT_FAILURE on failure.
 int main(int argc, const char* argv[]) {

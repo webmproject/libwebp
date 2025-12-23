@@ -21,8 +21,8 @@
 #include <string_view>
 
 #include "./nalloc.h"
-#include "src/webp/decode.h"
 #include "tests/fuzzer/fuzz_utils.h"
+#include "webp/decode.h"
 
 namespace {
 

@@ -11,14 +11,14 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
-#include "sharpyuv/sharpyuv_dsp.h"
+#include "./sharpyuv_dsp.h"
 
 #include <assert.h>
 #include <stdlib.h>
 
-#include "sharpyuv/sharpyuv_cpu.h"
+#include "./sharpyuv_cpu.h"
 #include "src/dsp/cpu.h"
-#include "src/webp/types.h"
+#include "webp/types.h"
 
 //-----------------------------------------------------------------------------
 

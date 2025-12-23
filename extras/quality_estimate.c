@@ -14,9 +14,9 @@
 #include <math.h>
 #include <stddef.h>
 
-#include "extras/extras.h"
-#include "src/webp/types.h"
+#include "./extras.h"
 #include "webp/decode.h"
+#include "webp/types.h"
 
 //------------------------------------------------------------------------------
 

@@ -24,8 +24,8 @@
 #include "./fuzz_utils.h"
 #include "src/dsp/cpu.h"
 #include "src/utils/rescaler_utils.h"
-#include "src/webp/decode.h"
-#include "src/webp/encode.h"
+#include "webp/decode.h"
+#include "webp/encode.h"
 
 namespace {
 
