@@ -127,7 +127,7 @@ static size_t ReadPAMFields(PNMInfo* const info, size_t off) {
       return 0;
     }
   }
-  if (!(info->seen_flags & ALL_NEEDED_FLAGS)) {
+  if ((info->seen_flags & ALL_NEEDED_FLAGS) != ALL_NEEDED_FLAGS) {
     fprintf(stderr, "PAM header error: missing tags%s%s%s%s\n",
             (info->seen_flags & WIDTH_FLAG) ? "" : " WIDTH",
             (info->seen_flags & HEIGHT_FLAG) ? "" : " HEIGHT",
