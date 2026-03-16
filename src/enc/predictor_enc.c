@@ -960,6 +960,7 @@ static void GetBestGreenRedToBlue(const uint32_t* argb, int stride,
   const int8_t offset[kGreenRedToBlueNumAxis][2] = {
       {0, -1}, {0, 1}, {-1, 0}, {1, 0}, {-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
   const int8_t delta_lut[kGreenRedToBlueMaxIters] = {16, 16, 8, 4, 2, 2, 2};
+  // Only axis aligned diffs for lower quality.
   const int iters = (quality < 25)   ? 1
                     : (quality > 50) ? kGreenRedToBlueMaxIters
                                      : 4;
@@ -984,10 +985,6 @@ static void GetBestGreenRedToBlue(const uint32_t* argb, int stride,
         best_diff = cur_diff;
         green_to_blue_best = green_to_blue_cur;
         red_to_blue_best = red_to_blue_cur;
-      }
-      if (quality < 25 && iter == 4) {
-        // Only axis aligned diffs for lower quality.
-        break;  // next iter.
       }
     }
     if (delta == 2 && green_to_blue_best == 0 && red_to_blue_best == 0) {
