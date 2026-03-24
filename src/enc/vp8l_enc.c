@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "src/dec/common_dec.h"
 #include "src/dsp/lossless.h"
 #include "src/dsp/lossless_common.h"
 #include "src/enc/backward_references_enc.h"
@@ -31,8 +32,6 @@
 #include "src/webp/format_constants.h"
 #include "src/webp/types.h"
 
-// Maximum number of histogram images (sub-blocks).
-#define MAX_HUFF_IMAGE_SIZE 2600
 #define MAX_HUFFMAN_BITS (MIN_HUFFMAN_BITS + (1 << NUM_HUFFMAN_BITS) - 1)
 // Empirical value for which it becomes too computationally expensive to
 // compute the best predictor image.

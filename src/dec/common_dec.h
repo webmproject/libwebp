@@ -59,4 +59,8 @@ enum {
 // Check that webp_csp_mode is within the bounds of WEBP_CSP_MODE.
 int IsValidColorspace(int webp_csp_mode);
 
+// Lossless: maximum number of histogram images (sub-blocks). This is defined
+// for encoding efficiency, the standard allows for more.
+#define MAX_HUFF_IMAGE_SIZE 2600
+
 #endif  // WEBP_DEC_COMMON_DEC_H_

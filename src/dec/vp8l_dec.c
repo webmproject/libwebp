@@ -18,6 +18,7 @@
 #include <string.h>
 
 #include "src/dec/alphai_dec.h"
+#include "src/dec/common_dec.h"
 #include "src/dec/vp8_dec.h"
 #include "src/dec/vp8li_dec.h"
 #include "src/dec/webpi_dec.h"
@@ -456,6 +457,7 @@ int ReadHuffmanCodesHelper(int color_cache_bits, int num_htree_groups,
       kAlphabetSize[0] + ((color_cache_bits > 0) ? 1 << color_cache_bits : 0);
   const int table_size = kTableSize[color_cache_bits];
   int* code_lengths = NULL;
+  int total_huffman_table_size;
 
   if ((mapping == NULL && num_htree_groups != num_htree_groups_max) ||
       num_htree_groups > num_htree_groups_max) {
@@ -466,9 +468,14 @@ int ReadHuffmanCodesHelper(int color_cache_bits, int num_htree_groups,
       (int*)WebPSafeCalloc((uint64_t)max_alphabet_size, sizeof(*code_lengths));
   *htree_groups = VP8LHtreeGroupsNew(num_htree_groups);
 
+  // MAX_HUFF_IMAGE_SIZE is above what the libwebp encoder allows so something
+  // fishy might be happening. Do not allocate too much yet.
+  total_huffman_table_size =
+      (num_htree_groups_max > MAX_HUFF_IMAGE_SIZE ? MAX_HUFF_IMAGE_SIZE
+                                                  : num_htree_groups) *
+      table_size;
   if (*htree_groups == NULL || code_lengths == NULL ||
-      !VP8LHuffmanTablesAllocate(num_htree_groups * table_size,
-                                 huffman_tables)) {
+      !VP8LHuffmanTablesAllocate(total_huffman_table_size, huffman_tables)) {
     VP8LSetError(dec, VP8_STATUS_OUT_OF_MEMORY);
     goto Error;
   }
