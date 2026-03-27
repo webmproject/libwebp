@@ -59,6 +59,10 @@ add_webp_fuzztest(huffman_fuzzer webpdecode webpdspdecode webputilsdecode)
 add_webp_fuzztest(imageio_fuzzer imagedec)
 add_webp_fuzztest(simple_api_fuzzer)
 
+if (WEBP_BUILD_ANIM_UTILS)
+  add_webp_fuzztest(anim_util_fuzzer anim_util imageioutil webpdemux)
+endif()
+
 if(WEBP_BUILD_LIBWEBPMUX)
   add_webp_fuzztest(animation_api_fuzzer webpdemux)
   add_webp_fuzztest(animdecoder_fuzzer imageioutil webpdemux)

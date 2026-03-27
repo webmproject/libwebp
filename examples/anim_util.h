@@ -52,6 +52,13 @@ void ClearAnimatedImage(AnimatedImage* const image);
 int ReadAnimatedImage(const char filename[], AnimatedImage* const image,
                       int dump_frames, const char dump_folder[]);
 
+// Same as 'ReadAnimatedImage', but from a memory buffer.
+// filename is only used for log messages.
+int ReadAnimatedImageFromMemory(const char filename[],
+                                const uint8_t* const data, size_t size,
+                                AnimatedImage* const image, int dump_frames,
+                                const char dump_folder[]);
+
 // Given two RGBA buffers, calculate max pixel difference and PSNR.
 // If 'premultiply' is true, R/G/B values will be pre-multiplied by the
 // transparency before comparison.

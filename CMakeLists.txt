@@ -752,12 +752,24 @@ if(WEBP_BUILD_WEBP_JS)
 endif()
 
 if(WEBP_BUILD_ANIM_UTILS)
+  # anim_util
+  parse_makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/examples "ANIM_UTIL_SRCS"
+                    "anim_util_[^ ]*")
+  add_library(anim_util STATIC ${ANIM_UTIL_SRCS})
+  target_include_directories(
+    anim_util
+    PUBLIC
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR};${CMAKE_CURRENT_BINARY_DIR}/src>
+      $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+  target_link_libraries(anim_util PUBLIC webp GIF::GIF)
+
   # anim_diff
   parse_makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/examples "ANIM_DIFF_SRCS"
                     "anim_diff")
   add_executable(anim_diff ${ANIM_DIFF_SRCS})
   target_link_libraries(
     anim_diff
+    anim_util
     exampleutil
     imagedec
     imageenc
@@ -773,6 +785,7 @@ if(WEBP_BUILD_ANIM_UTILS)
   add_executable(anim_dump ${ANIM_DUMP_SRCS})
   target_link_libraries(
     anim_dump
+    anim_util
     exampleutil
     imagedec
     imageenc

@@ -24,23 +24,32 @@ if BUILD_WEBPINFO
 endif
 
 noinst_LTLIBRARIES = libexample_util.la
+noinst_LTLIBRARIES += libanim_util.la
 
 libexample_util_la_SOURCES = example_util.c example_util.h
 libexample_util_la_LIBADD = ../src/libwebp.la
 
-anim_diff_SOURCES = anim_diff.c anim_util.c anim_util.h gifdec.c gifdec.h
+libanim_util_la_SOURCES = anim_util.c anim_util.h gifdec.c gifdec.h
+libanim_util_la_LIBADD =
+libanim_util_la_LIBADD += ../src/libwebp.la
+libanim_util_la_LIBADD += ../src/demux/libwebpdemux.la
+libanim_util_la_LIBADD += $(GIF_LIBS)
+
+anim_diff_SOURCES = anim_diff.c
 anim_diff_CPPFLAGS = $(AM_CPPFLAGS) $(GIF_INCLUDES)
 anim_diff_LDADD  =
 anim_diff_LDADD += ../src/demux/libwebpdemux.la
+anim_diff_LDADD += libanim_util.la
 anim_diff_LDADD += libexample_util.la
 anim_diff_LDADD += ../imageio/libimageio_util.la
 anim_diff_LDADD += $(GIF_LIBS) -lm
 
-anim_dump_SOURCES = anim_dump.c anim_util.c anim_util.h gifdec.c gifdec.h
+anim_dump_SOURCES = anim_dump.c
 anim_dump_CPPFLAGS = $(AM_CPPFLAGS) $(PNG_INCLUDES)
 anim_dump_CPPFLAGS += $(GIF_INCLUDES)
 anim_dump_LDADD  =
 anim_dump_LDADD += ../src/demux/libwebpdemux.la
+anim_dump_LDADD += libanim_util.la
 anim_dump_LDADD += libexample_util.la
 anim_dump_LDADD += ../imageio/libimageio_util.la
 anim_dump_LDADD += ../imageio/libimageenc.la

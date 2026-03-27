@@ -23,7 +23,6 @@
 #include "../imageio/imageio_util.h"
 #include "./gifdec.h"
 #include "./unicode.h"
-#include "./unicode_gif.h"
 #include "webp/decode.h"
 #include "webp/demux.h"
 #include "webp/format_constants.h"
@@ -294,6 +293,24 @@ End:
 
 #if defined(WEBP_HAVE_GIF)
 
+typedef struct {
+  const uint8_t* data;
+  size_t size;
+  size_t offset;
+} GifBufferContext;
+
+static int MemoryReadGIF(GifFileType* gif, GifByteType* dest, int len) {
+  GifBufferContext* const ctx = (GifBufferContext*)gif->UserData;
+  if (ctx->offset + len > ctx->size) {
+    len = (int)(ctx->size - ctx->offset);
+  }
+  if (len > 0) {
+    memcpy(dest, ctx->data + ctx->offset, len);
+    ctx->offset += len;
+  }
+  return len;
+}
+
 // Returns true if this is a valid GIF bitstream.
 static int IsGIF(const WebPData* const data) {
   return data->size > GIF_STAMP_LEN &&
@@ -504,18 +521,25 @@ static int ReadFrameGIF(const SavedImage* const gif_image,
   return 1;
 }
 
-// Read animated GIF bitstream from 'filename' into 'AnimatedImage' struct.
-static int ReadAnimatedGIF(const char filename[], AnimatedImage* const image,
-                           int dump_frames, const char dump_folder[]) {
+// Read animated GIF bitstream from 'gif_data' into 'AnimatedImage' struct.
+static int ReadAnimatedGIF(const char filename[],
+                           const WebPData* const gif_data,
+                           AnimatedImage* const image, int dump_frames,
+                           const char dump_folder[]) {
   uint32_t frame_count;
   uint32_t canvas_width, canvas_height;
   uint32_t i;
   int gif_error;
   GifFileType* gif;
+  GifBufferContext ctx;
 
-  gif = DGifOpenFileUnicode((const W_CHAR*)filename, NULL);
+  ctx.data = gif_data->bytes;
+  ctx.size = gif_data->size;
+  ctx.offset = 0;
+  gif = DGifOpen(&ctx, MemoryReadGIF, &gif_error);
   if (gif == NULL) {
-    WFPRINTF(stderr, "Could not read file: %s.\n", (const W_CHAR*)filename);
+    WFPRINTF(stderr, "Could not read GIF from memory: %s.\n",
+             (const W_CHAR*)filename);
     return 0;
   }
 
@@ -684,9 +708,12 @@ static int IsGIF(const WebPData* const data) {
   return 0;
 }
 
-static int ReadAnimatedGIF(const char filename[], AnimatedImage* const image,
-                           int dump_frames, const char dump_folder[]) {
+static int ReadAnimatedGIF(const char filename[],
+                           const WebPData* const gif_data,
+                           AnimatedImage* const image, int dump_frames,
+                           const char dump_folder[]) {
   (void)filename;
+  (void)gif_data;
   (void)image;
   (void)dump_frames;
   (void)dump_folder;
@@ -706,18 +733,38 @@ int ReadAnimatedImage(const char filename[], AnimatedImage* const image,
   WebPData webp_data;
 
   WebPDataInit(&webp_data);
-  memset(image, 0, sizeof(*image));
 
   if (!ImgIoUtilReadFile(filename, &webp_data.bytes, &webp_data.size)) {
     WFPRINTF(stderr, "Error reading file: %s\n", (const W_CHAR*)filename);
     return 0;
   }
 
+  ok = ReadAnimatedImageFromMemory(filename, webp_data.bytes, webp_data.size,
+                                   image, dump_frames, dump_folder);
+  if (!ok) {
+    WFPRINTF(stderr, "Error parsing image: %s\n", (const W_CHAR*)filename);
+  }
+
+  WebPDataClear(&webp_data);
+  return ok;
+}
+
+int ReadAnimatedImageFromMemory(const char filename[],
+                                const uint8_t* const data, size_t size,
+                                AnimatedImage* const image, int dump_frames,
+                                const char dump_folder[]) {
+  int ok = 0;
+  WebPData webp_data;
+
+  webp_data.bytes = data;
+  webp_data.size = size;
+  memset(image, 0, sizeof(*image));
+
   if (IsWebP(&webp_data)) {
     ok =
         ReadAnimatedWebP(filename, &webp_data, image, dump_frames, dump_folder);
   } else if (IsGIF(&webp_data)) {
-    ok = ReadAnimatedGIF(filename, image, dump_frames, dump_folder);
+    ok = ReadAnimatedGIF(filename, &webp_data, image, dump_frames, dump_folder);
   } else {
     WFPRINTF(stderr,
              "Unknown file type: %s. Supported file types are WebP and GIF\n",
@@ -725,7 +772,6 @@ int ReadAnimatedImage(const char filename[], AnimatedImage* const image,
     ok = 0;
   }
   if (!ok) ClearAnimatedImage(image);
-  WebPDataClear(&webp_data);
   return ok;
 }
 
