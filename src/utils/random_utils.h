@@ -16,6 +16,7 @@
 
 #include <assert.h>
 
+#include "src/dsp/cpu.h"
 #include "src/utils/bounds_safety.h"
 #include "src/webp/types.h"
 
@@ -40,8 +41,8 @@ void VP8InitRandom(VP8Random* const rg, float dithering);
 // Returns a centered pseudo-random number with 'num_bits' amplitude.
 // (uses D.Knuth's Difference-based random generator).
 // 'amp' is in VP8_RANDOM_DITHER_FIX fixed-point precision.
-static WEBP_INLINE int VP8RandomBits2(VP8Random* const rg, int num_bits,
-                                      int amp) {
+static WEBP_UBSAN_IGNORE_UNSIGNED_OVERFLOW WEBP_INLINE int VP8RandomBits2(
+    VP8Random* const rg, int num_bits, int amp) {
   int diff;
   assert(num_bits + VP8_RANDOM_DITHER_FIX <= 31);
   diff = rg->tab[rg->index1] - rg->tab[rg->index2];

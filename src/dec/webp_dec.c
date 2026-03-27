@@ -164,7 +164,7 @@ static VP8StatusCode ParseOptionalChunks(
     size_t* WEBP_SINGLE const alpha_size) {
   size_t buf_size;
   const uint8_t* WEBP_COUNTED_BY(buf_size) buf;
-  uint32_t total_size = TAG_SIZE +           // "WEBP".
+  uint64_t total_size = TAG_SIZE +           // "WEBP".
                         CHUNK_HEADER_SIZE +  // "VP8Xnnnn".
                         VP8X_CHUNK_SIZE;     // data.
   assert(data != NULL);
