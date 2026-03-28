@@ -93,6 +93,10 @@ int WebPRescalerGetScaledDimensions(int src_width, int src_height,
                                     int* const scaled_height) {
   assert(scaled_width != NULL);
   assert(scaled_height != NULL);
+  if (src_width < 0 || src_height < 0 || *scaled_width < 0 ||
+      *scaled_height < 0) {
+    return 0;
+  }
   {
     int width = *scaled_width;
     int height = *scaled_height;

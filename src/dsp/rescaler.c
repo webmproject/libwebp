@@ -28,9 +28,8 @@
 
 //------------------------------------------------------------------------------
 // Row import
-
-void WebPRescalerImportRowExpand_C(WebPRescaler* WEBP_RESTRICT const wrk,
-                                   const uint8_t* WEBP_RESTRICT src) {
+WEBP_UBSAN_IGNORE_UNSIGNED_OVERFLOW void WebPRescalerImportRowExpand_C(
+    WebPRescaler* WEBP_RESTRICT const wrk, const uint8_t* WEBP_RESTRICT src) {
   const int x_stride = wrk->num_channels;
   const int x_out_max = wrk->dst_width * wrk->num_channels;
   int channel;

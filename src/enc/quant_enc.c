@@ -623,7 +623,7 @@ static int TrellisQuantizeBlock(const VP8Encoder* WEBP_RESTRICT const enc,
     // note: it's important to take sign of the _original_ coeff,
     // so we don't have to consider level < 0 afterward.
     const int sign = (in[j] < 0);
-    const uint32_t coeff0 = (sign ? -in[j] : in[j]) + mtx->sharpen[j];
+    const int32_t coeff0 = (sign ? -in[j] : in[j]) + mtx->sharpen[j];
     int level0 = QUANTDIV(coeff0, iQ, B);
     int thresh_level = QUANTDIV(coeff0, iQ, BIAS(0x80));
     if (thresh_level > MAX_LEVEL) thresh_level = MAX_LEVEL;
@@ -663,7 +663,7 @@ static int TrellisQuantizeBlock(const VP8Encoder* WEBP_RESTRICT const enc,
         // Compute delta_error = how much coding this level will
         // subtract to max_error as distortion.
         // Here, distortion = sum of (|coeff_i| - level_i * Q_i)^2
-        const int new_error = coeff0 - level * Q;
+        const int new_error = coeff0 - level * (int32_t)Q;
         const int delta_error =
             kWeightTrellis[j] * (new_error * new_error - coeff0 * coeff0);
         base_score = RDScoreTrellis(lambda, 0, delta_error);
