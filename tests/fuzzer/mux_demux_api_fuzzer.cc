@@ -14,6 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <string_view>
@@ -25,7 +26,8 @@
 
 namespace {
 
-void MuxDemuxApiTest(std::string_view data_in, bool use_mux_api) {
+void MuxDemuxApiTest(std::string_view data_in, bool use_mux_api,
+                     const std::array<int, 10>& chunk_flags) {
   const size_t size = data_in.size();
   WebPData webp_data;
   WebPDataInit(&webp_data);
@@ -48,6 +50,9 @@ void MuxDemuxApiTest(std::string_view data_in, bool use_mux_api) {
     uint32_t flags;
     (void)WebPMuxGetFeatures(mux, &flags);
 
+    int width = 0, height = 0;
+    (void)WebPMuxGetCanvasSize(mux, &width, &height);
+
     WebPMuxAnimParams params;
     (void)WebPMuxGetAnimationParams(mux, &params);
 
@@ -60,6 +65,36 @@ void MuxDemuxApiTest(std::string_view data_in, bool use_mux_api) {
       } else if (status == WEBP_MUX_OK) {
         WebPDataClear(&info.bitstream);
       }
+    }
+
+    // Try setting a custom chunk.
+    if (size > 20) {
+      WebPData custom_chunk;
+      custom_chunk.bytes = reinterpret_cast<const uint8_t*>(data_in.data()) + 4;
+      custom_chunk.size = size - 4;
+      int chunk_idx = 0;
+      for (std::string_view fourcc : {"VP8X", "ICCP", "ANIM", "EXIF", "XMP ",
+                                      "ANMF", "ALPH", "VP8 ", "VP8L", "FUZZ"}) {
+        // The last five image chunks should return WEBP_MUX_INVALID_ARGUMENT.
+        for (int i = 0; i < chunk_flags[chunk_idx]; i++) {
+          (void)WebPMuxSetChunk(mux, fourcc.data(), &custom_chunk, 0);
+        }
+        chunk_idx++;
+      }
+    }
+
+    // Try assembling the mux
+    WebPData assembled;
+    WebPDataInit(&assembled);
+    (void)WebPMuxAssemble(mux, &assembled);
+    WebPDataClear(&assembled);
+
+    // Get number of chunks of various types
+    for (int chunk_type = WEBP_CHUNK_VP8X; chunk_type <= WEBP_CHUNK_NIL;
+         ++chunk_type) {
+      int num_chunks = 0;
+      (void)WebPMuxNumChunks(mux, static_cast<WebPChunkId>(chunk_type),
+                             &num_chunks);
     }
 
     WebPMuxDelete(mux);
@@ -104,6 +139,7 @@ void MuxDemuxApiTest(std::string_view data_in, bool use_mux_api) {
 }  // namespace
 
 FUZZ_TEST(MuxDemuxApi, MuxDemuxApiTest)
-    .WithDomains(fuzztest::String().WithMaxSize(fuzz_utils::kMaxWebPFileSize +
-                                                1),
-                 /*mux=*/fuzztest::Arbitrary<bool>());
+    .WithDomains(
+        fuzztest::String().WithMaxSize(fuzz_utils::kMaxWebPFileSize + 1),
+        /*mux=*/fuzztest::Arbitrary<bool>(),
+        /*chunk_flags=*/fuzztest::ArrayOf<10>(fuzztest::InRange(0, 2)));

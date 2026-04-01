@@ -493,6 +493,7 @@ static ParseStatus ParseVP8XChunks(WebPDemuxer* const dmux) {
       }
       case MKFOURCC('A', 'N', 'M', 'F'): {
         if (anim_chunks == 0) return PARSE_ERROR;  // 'ANIM' precedes frames.
+        if (chunk_size_padded < ANMF_CHUNK_SIZE) return PARSE_ERROR;
         status = ParseAnimationFrame(dmux, chunk_size_padded);
         break;
       }

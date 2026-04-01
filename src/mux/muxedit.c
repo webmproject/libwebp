@@ -91,7 +91,7 @@ static WebPMuxError MuxSet(WebPMux* const mux, uint32_t tag,
   WebPMuxError err = WEBP_MUX_NOT_FOUND;
   const CHUNK_INDEX idx = ChunkGetIndexFromTag(tag);
   assert(mux != NULL);
-  assert(!IsWPI(kChunks[idx].id));
+  if (IsWPI(kChunks[idx].id)) return WEBP_MUX_INVALID_ARGUMENT;
 
   ChunkInit(&chunk);
   SWITCH_ID_LIST(IDX_VP8X, &mux->vp8x);
@@ -402,8 +402,8 @@ static WebPMuxError GetFrameInfo(const WebPChunk* const frame_chunk,
                                  int* const duration) {
   const WebPData* const data = &frame_chunk->data;
   const size_t expected_data_size = ANMF_CHUNK_SIZE;
-  assert(frame_chunk->tag == kChunks[IDX_ANMF].tag);
   assert(frame_chunk != NULL);
+  assert(frame_chunk->tag == kChunks[IDX_ANMF].tag);
   if (data->size != expected_data_size) return WEBP_MUX_INVALID_ARGUMENT;
 
   *x_offset = 2 * GetLE24(data->bytes + 0);
@@ -454,8 +454,9 @@ static WebPMuxError GetAdjustedCanvasSize(const WebPMux* const mux,
       const int max_x_pos = x_offset + w;
       const int max_y_pos = y_offset + h;
       if (err != WEBP_MUX_OK) return err;
-      assert(x_offset < MAX_POSITION_OFFSET);
-      assert(y_offset < MAX_POSITION_OFFSET);
+      if (x_offset >= MAX_POSITION_OFFSET || y_offset >= MAX_POSITION_OFFSET) {
+        return WEBP_MUX_INVALID_ARGUMENT;
+      }
 
       if (max_x_pos > max_x) max_x = max_x_pos;
       if (max_y_pos > max_y) max_y = max_y_pos;

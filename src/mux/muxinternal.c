@@ -196,7 +196,7 @@ void ChunkListDelete(WebPChunk** const chunk_list) {
 static uint8_t* ChunkEmit(const WebPChunk* const chunk, uint8_t* dst) {
   const size_t chunk_size = chunk->data.size;
   assert(chunk);
-  assert(chunk->tag != NIL_TAG);
+  // Do not check chunk->tag != NIL as NIL_TAG could have been read from a file.
   PutLE32(dst + 0, chunk->tag);
   PutLE32(dst + TAG_SIZE, (uint32_t)chunk_size);
   assert(chunk_size == (uint32_t)chunk_size);
