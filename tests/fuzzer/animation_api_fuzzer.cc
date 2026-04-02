@@ -16,9 +16,11 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <string>
 #include <string_view>
 
 #include "./fuzz_utils.h"
+#include "gtest/gtest.h"
 #include "webp/decode.h"
 #include "webp/demux.h"
 #include "webp/mux_types.h"
@@ -88,3 +90,15 @@ FUZZ_TEST(AnimationApi, AnimationApiTest)
                  // Animations only support 4 (out of 12) modes.
                  fuzztest::ElementOf<WEBP_CSP_MODE>({MODE_RGBA, MODE_BGRA,
                                                      MODE_rgbA, MODE_bgrA}));
+
+TEST(AnimationApi, Buganizer498965803) {
+  AnimationApiTest(
+      std::string("ALPH\000\000\000\000\000\000\000\000\021\000\000\000\t\305"
+                  "\006d\301\013\177\000\000webp\034\205\000#@VP8 "
+                  "!\000\000\000v\003\000\235\001*\007\200\"\000\0020("
+                  "\000\377\377\377\003\000\000\000\311\311\311\311\311\311\311"
+                  "\311\311\311\311\311\311\311\311\311\311\311\311\311\311\211"
+                  "\311\311\311\311\311\030\030\030\030\030\030\311\311",
+                  98),
+      false, static_cast<WEBP_CSP_MODE>(1));
+}
