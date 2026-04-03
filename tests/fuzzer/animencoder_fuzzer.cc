@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "./fuzz_utils.h"
+#include "gtest/gtest.h"
 #include "src/dsp/cpu.h"
 #include "webp/encode.h"
 #include "webp/mux.h"
@@ -208,3 +209,38 @@ FUZZ_TEST(AnimArbitraryEncoder, AnimEncoderTest)
             .WithMaxSize(15),
         /*optimization_index=*/
         fuzztest::InRange<uint32_t>(0, fuzz_utils::kMaxOptimizationIndex));
+
+TEST(AnimIndexEncoder, Buganizer498967191) {
+  auto GetWebPPicture = [](int index,
+                           bool use_argb) -> fuzz_utils::WebPPictureCpp {
+    WebPPicture pic = fuzz_utils::GetSourcePicture(index, use_argb);
+    return fuzz_utils::WebPPictureCpp(
+        use_argb, pic.colorspace, pic.width, pic.height, pic.y, pic.u, pic.v,
+        pic.y_stride, pic.uv_stride, pic.a, pic.a_stride, pic.argb,
+        pic.argb_stride, pic.memory_, pic.memory_argb_);
+  };
+  AnimEncoderTest(
+      false, {0, 1}, true,
+      {FrameConfig{1, 0, WebPConfig{0,  0.f, 6, static_cast<WebPImageHint>(3),
+                                    0,  0.f, 4, 0,
+                                    38, 7,   1, 0,
+                                    0,  0,   1, 10,
+                                    1,  1,   1, 10,
+                                    0,  0,   0, 20,
+                                    1,  0,   0, 0,
+                                    100},
+                   fuzz_utils::CropOrScaleParams{true, true, 6, 1, 2, 1},
+                   GetWebPPicture(0, true)},
+       FrameConfig{0, 7248,
+                   WebPConfig{1,   0.f, 1, static_cast<WebPImageHint>(3),
+                              0,   0.f, 1, 0,
+                              100, 0,   1, 0,
+                              1,   0,   0, 10,
+                              1,   1,   0, 10,
+                              0,   1,   0, 0,
+                              1,   0,   0, 0,
+                              100},
+                   fuzz_utils::CropOrScaleParams{true, true, 6, 8, 2, 1},
+                   GetWebPPicture(0, true)}},
+      1);
+}

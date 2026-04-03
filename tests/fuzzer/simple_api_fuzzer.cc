@@ -17,9 +17,11 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
+#include <string>
 #include <string_view>
 
 #include "./fuzz_utils.h"
+#include "gtest/gtest.h"
 #include "webp/decode.h"
 #include "webp/types.h"
 
@@ -101,3 +103,15 @@ void SimpleApiTest(std::string_view data_in) {
 FUZZ_TEST(SimpleApi, SimpleApiTest)
     .WithDomains(fuzztest::String().WithMaxSize(fuzz_utils::kMaxWebPFileSize +
                                                 1));
+
+TEST(SimpleApi, Buganizer498966511) {
+  SimpleApiTest(
+      std::string("ALPH\004\000\000\000A\377\377\377\377LP\010\000\000\000\000"
+                  "\000\000\311H\006\000\000\000\"E\356PW\"ALPH\000\000\000\000"
+                  "ALpH\004\000\000\000\004\010\000\200VP8 "
+                  "T\000\000\000\266\003\000\235\001*"
+                  "\001\000\002\000y\336n\366\001O\363\374\243\000\003LPS\"\002"
+                  "iF\000FjRsa\232vP\"EO\"K\217OM;rOect\275n\"Wsection_JUNQ="
+                  "\"JUNQ\"\250YO,_I\362\021\"ANIM\"",
+                  150));
+}

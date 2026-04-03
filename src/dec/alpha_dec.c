@@ -58,7 +58,6 @@ WEBP_NODISCARD static int ALPHInit(ALPHDecoder* const dec, const uint8_t* data,
                                    uint8_t* output) {
   int ok = 0;
   const uint8_t* const alpha_data = data + ALPHA_HEADER_LEN;
-  const size_t alpha_data_size = data_size - ALPHA_HEADER_LEN;
   int rsrv;
   VP8Io* const io = &dec->io;
 
@@ -101,16 +100,19 @@ WEBP_NODISCARD static int ALPHInit(ALPHDecoder* const dec, const uint8_t* data,
   io->crop_bottom = src_io->crop_bottom;
   // No need to copy the scaling parameters.
 
-  if (dec->method == ALPHA_NO_COMPRESSION) {
-    const size_t alpha_decoded_size = dec->width * dec->height;
-    ok = (alpha_data_size >= alpha_decoded_size);
-  } else {
-    assert(dec->method == ALPHA_LOSSLESS_COMPRESSION);
-    {
-      const uint8_t* WEBP_BIDI_INDEXABLE const bounded_alpha_data =
-          WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(const uint8_t*, alpha_data,
-                                           alpha_data_size);
-      ok = VP8LDecodeAlphaHeader(dec, bounded_alpha_data, alpha_data_size);
+  {
+    const size_t alpha_data_size = data_size - ALPHA_HEADER_LEN;
+    if (dec->method == ALPHA_NO_COMPRESSION) {
+      const size_t alpha_decoded_size = dec->width * dec->height;
+      ok = (alpha_data_size >= alpha_decoded_size);
+    } else {
+      assert(dec->method == ALPHA_LOSSLESS_COMPRESSION);
+      {
+        const uint8_t* WEBP_BIDI_INDEXABLE const bounded_alpha_data =
+            WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(const uint8_t*, alpha_data,
+                                             alpha_data_size);
+        ok = VP8LDecodeAlphaHeader(dec, bounded_alpha_data, alpha_data_size);
+      }
     }
   }
 

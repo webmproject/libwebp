@@ -1339,7 +1339,7 @@ End:
 // instead of a subframe.
 static int64_t KeyFramePenalty(const EncodedFrame* const encoded_frame) {
   return ((int64_t)encoded_frame->key_frame.bitstream.size -
-          encoded_frame->sub_frame.bitstream.size);
+          (int64_t)encoded_frame->sub_frame.bitstream.size);
 }
 
 static int CacheFrame(WebPAnimEncoder* const enc,

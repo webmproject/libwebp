@@ -18,9 +18,11 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <string>
 #include <string_view>
 
 #include "./fuzz_utils.h"
+#include "gtest/gtest.h"
 #include "src/dec/webpi_dec.h"
 #include "src/utils/rescaler_utils.h"
 #include "webp/decode.h"
@@ -162,3 +164,25 @@ FUZZ_TEST(AdvancedApi, AdvancedApiTest)
 #endif
                  /*incremental=*/fuzztest::Arbitrary<bool>(),
                  fuzz_utils::ArbitraryValidWebPDecoderOptions());
+
+TEST(AdvancedApi, Buganizer498966235) {
+  AdvancedApiTest(
+      std::string(
+          "RIFF\014|"
+          "\000\000WEBPVP8X\n\000\000\000\020\000\000D\002\000\000\017\000\000A"
+          "LPH5\000\000\000\004\327\000\000\000\000\000\000c8\345S\000\243\000"
+          "\253c\311\000\027\000\000\000\200\000\000\000\000\240\"AE\001\000"
+          "\000\0008<"
+          "ALP\010\000s\002\000\000\000\000\000\000\000\000\000ALPH\000\000\000"
+          "\000VP8 "
+          "(\000\000\000\224\001\000\235\001*\003\000\020\000\003,\000~"
+          "\342\000\000se\002ionR\265Vq\302M}\"webp\"r\010\003\000\020#"
+          "\366\356\002\323\220\000 "
+          "\212N@\000\026\327A\367\266\201\201\"IFF@\"RIFF\"&\226!"
+          "VP\n8Rg\000\0001\"\335\"I\"XEBP\"\002\002\"\367\\x0\203\203\203\341"
+          "\341l,\203\\sectiqncJUN=\"sectistre\\x9D\\x01\\x2A\"JUKQ\"",
+          257),
+      68, 3, true,
+      fuzz_utils::WebPDecoderOptionsCpp{
+          0, 0, 1, 5, 10, 5, 9, 0, 1, 3, 0, 72, 0, 83, {0, 0, 0, 0, 0}});
+}
