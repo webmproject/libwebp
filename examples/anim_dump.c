@@ -101,6 +101,7 @@ int main(int argc, const char* argv[]) {
       for (i = 0; !error && i < image.num_frames; ++i) {
         W_CHAR out_file[1024];
         WebPDecBuffer buffer;
+        size_t size;
         if (!WebPInitDecBuffer(&buffer)) {
           fprintf(stderr, "Cannot init dec buffer\n");
           error = 1;
@@ -112,7 +113,15 @@ int main(int argc, const char* argv[]) {
         buffer.height = image.canvas_height;
         buffer.u.RGBA.rgba = image.frames[i].rgba;
         buffer.u.RGBA.stride = buffer.width * sizeof(uint32_t);
-        buffer.u.RGBA.size = buffer.u.RGBA.stride * buffer.height;
+        if (!CheckMultiplicationOverflow(buffer.u.RGBA.stride, buffer.height,
+                                         &size)) {
+          fprintf(stderr, "Invalid canvas size: %d x %d\n", buffer.width,
+                  buffer.height);
+          error = 1;
+          WebPFreeDecBuffer(&buffer);
+          continue;
+        }
+        buffer.u.RGBA.size = size;
         WSNPRINTF(out_file, sizeof(out_file), "%s/%s%.4d.%s", dump_folder,
                   prefix, i, suffix);
         if (!WebPSaveImage(&buffer, format, (const char*)out_file)) {

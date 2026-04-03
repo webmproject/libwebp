@@ -70,6 +70,9 @@ void GetDiffAndPSNR(const uint8_t rgba1[], const uint8_t rgba2[],
 void GetAnimatedImageVersions(int* const decoder_version,
                               int* const demux_version);
 
+// Check whether val1 * val2 fits in a size_t. Returns 1 on success.
+int CheckMultiplicationOverflow(uint32_t val1, uint32_t val2, size_t* product);
+
 #ifdef __cplusplus
 }  // extern "C"
 #endif
