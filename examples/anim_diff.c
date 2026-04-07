@@ -70,8 +70,10 @@ static int FramesAreSimilar(const uint8_t* const rgba1,
   for (j = 0; j < height; ++j) {
     for (i = 0; i < width; ++i) {
       const int stride = width * 4;
-      const size_t offset = j * stride + i;
-      if (!PixelsAreSimilar(rgba1[offset], rgba2[offset], max_allowed_diff)) {
+      size_t offset_row, offset;
+      if (!CheckMultiplicationOverflow(j, stride, &offset_row) ||
+          !CheckAdditionOverflow(offset_row, i, &offset) ||
+          !PixelsAreSimilar(rgba1[offset], rgba2[offset], max_allowed_diff)) {
         return 0;
       }
     }

@@ -102,10 +102,8 @@ int CheckMultiplicationOverflow(uint32_t val1, uint32_t val2, size_t* product) {
   return 0;
 }
 
-#if defined(WEBP_HAVE_GIF)
-
 WEBP_NODISCARD
-static int CheckAdditionOverflow(size_t val1, uint32_t val2, size_t* addition) {
+int CheckAdditionOverflow(size_t val1, uint32_t val2, size_t* addition) {
   const uint64_t size = (uint64_t)val1 + val2;
   if (CheckSizeForOverflow(size)) {
     *addition = (size_t)size;
@@ -113,6 +111,8 @@ static int CheckAdditionOverflow(size_t val1, uint32_t val2, size_t* addition) {
   }
   return 0;
 }
+
+#if defined(WEBP_HAVE_GIF)
 
 // For the GIF functions below, the width, height, x_offset, y_offset fit on 16
 // bits (but can fill the 16 bits) as per the GIF specification.

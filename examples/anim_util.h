@@ -73,6 +73,9 @@ void GetAnimatedImageVersions(int* const decoder_version,
 // Check whether val1 * val2 fits in a size_t. Returns 1 on success.
 int CheckMultiplicationOverflow(uint32_t val1, uint32_t val2, size_t* product);
 
+// Check whether val1 + val2 fits in a size_t. Returns 1 on success.
+int CheckAdditionOverflow(size_t val1, uint32_t val2, size_t* addition);
+
 #ifdef __cplusplus
 }  // extern "C"
 #endif
