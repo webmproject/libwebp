@@ -500,6 +500,14 @@ WebPMuxError MuxValidate(const WebPMux* const mux) {
   err = ValidateChunk(mux, IDX_XMP, XMP_FLAG, flags, 1, &num_xmp);
   if (err != WEBP_MUX_OK) return err;
 
+  // Verify either VP8X chunk is present OR there is only one elem in
+  // mux->images.
+  err = ValidateChunk(mux, IDX_VP8X, NO_FLAG, flags, 1, &num_vp8x);
+  if (err != WEBP_MUX_OK) return err;
+  err = ValidateChunk(mux, IDX_VP8, NO_FLAG, flags, -1, &num_images);
+  if (err != WEBP_MUX_OK) return err;
+  if (num_vp8x == 0 && num_images != 1) return WEBP_MUX_INVALID_ARGUMENT;
+
   // Animation: ANIMATION_FLAG, ANIM chunk and ANMF chunk(s) are consistent.
   // At most one ANIM chunk.
   err = ValidateChunk(mux, IDX_ANIM, NO_FLAG, flags, 1, &num_anim);
@@ -509,7 +517,10 @@ WebPMuxError MuxValidate(const WebPMux* const mux) {
 
   {
     const int has_animation = !!(flags & ANIMATION_FLAG);
-    if (has_animation && (num_anim == 0 || num_frames == 0)) {
+    // An ANIM chunk must be present when has_animation is true, and all images
+    // must be contained in ANMF chunks.
+    if (has_animation &&
+        (num_anim == 0 || num_frames == 0 || num_frames != num_images)) {
       return WEBP_MUX_INVALID_ARGUMENT;
     }
     if (!has_animation && (num_anim == 1 || num_frames > 0)) {
@@ -530,14 +541,6 @@ WebPMuxError MuxValidate(const WebPMux* const mux) {
       }
     }
   }
-
-  // Verify either VP8X chunk is present OR there is only one elem in
-  // mux->images.
-  err = ValidateChunk(mux, IDX_VP8X, NO_FLAG, flags, 1, &num_vp8x);
-  if (err != WEBP_MUX_OK) return err;
-  err = ValidateChunk(mux, IDX_VP8, NO_FLAG, flags, -1, &num_images);
-  if (err != WEBP_MUX_OK) return err;
-  if (num_vp8x == 0 && num_images != 1) return WEBP_MUX_INVALID_ARGUMENT;
 
   // ALPHA_FLAG & alpha chunk(s) are consistent.
   // Note: ALPHA_FLAG can be set when there is actually no Alpha data present.
