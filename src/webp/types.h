@@ -71,6 +71,15 @@ typedef long long int int64_t;
 #endif /* defined(_WIN32) && defined(WEBP_DLL) */
 #endif /* WEBP_EXTERN */
 
+#ifndef WEBP_FALLTHROUGH
+#if (defined(__cplusplus) && __cplusplus >= 201703L) || \
+    (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 202311L)
+#define WEBP_FALLTHROUGH [[fallthrough]]
+#else
+#define WEBP_FALLTHROUGH
+#endif
+#endif /* WEBP_FALLTHROUGH */
+
 // Macro to check ABI compatibility (same major revision number)
 #define WEBP_ABI_IS_INCOMPATIBLE(a, b) (((a) >> 8) != ((b) >> 8))
 

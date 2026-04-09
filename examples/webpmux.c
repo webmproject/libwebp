@@ -493,12 +493,18 @@ static int ParseFrameArgs(const char* args, WebPMuxFrameInfo* const info) {
                               &plus_minus, &blend_method, &unused);
   switch (num_args) {
     case 1:
-      info->x_offset = info->y_offset = 0;  // fall through
+      info->x_offset = info->y_offset = 0;
+      WEBP_FALLTHROUGH;
+      // fall through
     case 3:
-      dispose_method = 0;  // fall through
+      dispose_method = 0;
+      WEBP_FALLTHROUGH;
+      // fall through
     case 4:
       plus_minus = '+';
-      blend_method = 'b';  // fall through
+      blend_method = 'b';
+      WEBP_FALLTHROUGH;
+      // fall through
     case 6:
       break;
     case 2:
