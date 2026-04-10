@@ -203,6 +203,8 @@ WEBP_NODISCARD static int AppendToMemBuffer(WebPIDecoder* const idec,
     return 0;
   }
 
+    ptrdiff_t safe_offset = 0;
+
   if (mem->end + data_size > mem->buf_size) {  // Need some free memory
     const size_t new_mem_start = old_start - old_base;
     const size_t current_size = MemDataSize(mem) + new_mem_start;
@@ -211,6 +213,11 @@ WEBP_NODISCARD static int AppendToMemBuffer(WebPIDecoder* const idec,
     uint8_t* const new_buf =
         (uint8_t*)WebPSafeMalloc(extra_size, sizeof(*new_buf));
     if (new_buf == NULL) return 0;
+    
+    if (old_start != NULL) {
+      safe_offset = (ptrdiff_t)((uintptr_t)(new_buf + new_mem_start) - (uintptr_t)old_start);
+    }
+    
     if (old_base != NULL) WEBP_UNSAFE_MEMCPY(new_buf, old_base, current_size);
     WebPSafeFree(mem->buf);
     mem->buf = new_buf;
@@ -224,7 +231,7 @@ WEBP_NODISCARD static int AppendToMemBuffer(WebPIDecoder* const idec,
   mem->end += data_size;
   assert(mem->end <= mem->buf_size);
 
-  DoRemap(idec, mem->buf + mem->start - old_start);
+  DoRemap(idec, safe_offset);
   return 1;
 }
 
