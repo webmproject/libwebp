@@ -1263,9 +1263,9 @@ static int DecodeImageData(VP8LDecoder* const dec, uint32_t* const data,
     } else {
       code = ReadSymbol(htree_group->htrees[GREEN], br);
     }
-    if (VP8LIsEndOfStream(br)) break;
     if (code < NUM_LITERAL_CODES) {  // Literal
       if (htree_group->is_trivial_literal) {
+        if (VP8LIsEndOfStream(br)) break;
         *src = htree_group->literal_arb | (code << 8);
       } else {
         int red, blue, alpha;
@@ -1331,6 +1331,7 @@ static int DecodeImageData(VP8LDecoder* const dec, uint32_t* const data,
     } else if (code < color_cache_limit) {  // Color cache
       const int key = code - len_code_limit;
       assert(color_cache != NULL);
+      if (VP8LIsEndOfStream(br)) break;
       while (last_cached < src) {
         VP8LColorCacheInsert(color_cache, *last_cached++);
       }
