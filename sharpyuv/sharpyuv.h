@@ -131,8 +131,9 @@ typedef enum SharpYuvTransferFunctionType {
 //     point to uint8_t buffers if yuv_bit_depth is 8, or uint16_t buffers
 //     otherwise.
 // y_stride, u_stride, v_stride: distance in bytes between two vertically
-//     adjacent pixels on the y, u and v channels. If yuv_bit_depth > 8, they
-//     should be multiples of 2.
+//     adjacent pixels on the y, u and v channels. Must be at least large enough
+//     to hold one row of pixels. If yuv_bit_depth is > 8, they must be
+//     multiples of 2.
 // width, height: width and height of the image in pixels
 // yuv_matrix: RGB to YUV conversion matrix. The matrix values typically
 //     depend on the input's rgb_bit_depth.

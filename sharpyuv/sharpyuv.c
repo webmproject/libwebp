@@ -527,6 +527,16 @@ int SharpYuvConvertWithOptions(const void* r_ptr, const void* g_ptr,
     // Step/stride should be even for uint16_t buffers.
     return 0;
   }
+  {
+    const uint64_t yuv_bytes = (yuv_bit_depth > 8) ? 2 : 1;
+    const uint64_t uv_width = (width + 1) / 2;
+
+    if (y_stride < 0 || (uint64_t)y_stride < (uint64_t)width * yuv_bytes ||
+        u_stride < 0 || (uint64_t)u_stride < uv_width * yuv_bytes ||
+        v_stride < 0 || (uint64_t)v_stride < uv_width * yuv_bytes) {
+      return 0;
+    }
+  }
   if (yuv_bit_depth > 8 &&
       (y_stride % 2 != 0 || u_stride % 2 != 0 || v_stride % 2 != 0)) {
     // Stride should be even for uint16_t buffers.
