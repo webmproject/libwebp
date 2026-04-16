@@ -60,26 +60,14 @@ static WEBP_INLINE uint32_t ClampedAddSubtractHalf_SSE2(uint32_t c0,
 }
 
 static WEBP_INLINE uint32_t Select_SSE2(uint32_t a, uint32_t b, uint32_t c) {
-  int pa_minus_pb;
-  const __m128i zero = _mm_setzero_si128();
   const __m128i A0 = _mm_cvtsi32_si128((int)a);
   const __m128i B0 = _mm_cvtsi32_si128((int)b);
   const __m128i C0 = _mm_cvtsi32_si128((int)c);
-  const __m128i AC0 = _mm_subs_epu8(A0, C0);
-  const __m128i CA0 = _mm_subs_epu8(C0, A0);
-  const __m128i BC0 = _mm_subs_epu8(B0, C0);
-  const __m128i CB0 = _mm_subs_epu8(C0, B0);
-  const __m128i AC = _mm_or_si128(AC0, CA0);
-  const __m128i BC = _mm_or_si128(BC0, CB0);
-  const __m128i pa = _mm_unpacklo_epi8(AC, zero);  // |a - c|
-  const __m128i pb = _mm_unpacklo_epi8(BC, zero);  // |b - c|
-  const __m128i diff = _mm_sub_epi16(pb, pa);
-  {
-    int16_t out[8];
-    _mm_storeu_si128((__m128i*)out, diff);
-    pa_minus_pb = out[0] + out[1] + out[2] + out[3];
-  }
-  return (pa_minus_pb <= 0) ? a : b;
+  const __m128i sa = _mm_sad_epu8(A0, C0);
+  const __m128i sb = _mm_sad_epu8(B0, C0);
+  const __m128i mask = _mm_cmpgt_epi32(sb, sa);
+  const uint32_t b_gt_a = (uint32_t)_mm_cvtsi128_si32(mask);
+  return b_gt_a ? b : a;
 }
 
 static WEBP_INLINE void Average2_m128i(const __m128i* const a0,
