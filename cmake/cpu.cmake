@@ -101,13 +101,13 @@ list(LENGTH WEBP_SIMD_FLAGS WEBP_SIMD_FLAGS_LENGTH)
 math(EXPR WEBP_SIMD_FLAGS_RANGE "${WEBP_SIMD_FLAGS_LENGTH} - 1")
 
 foreach(I_SIMD RANGE ${WEBP_SIMD_FLAGS_RANGE})
+  list(GET WEBP_SIMD_FLAGS ${I_SIMD} WEBP_SIMD_FLAG)
+
   # With Emscripten 2.0.9 -msimd128 -mfpu=neon will enable NEON, but the source
   # will fail to compile.
-  if(EMSCRIPTEN AND ${I_SIMD} GREATER_EQUAL 2)
-    break()
+  if(EMSCRIPTEN AND ${WEBP_SIMD_FLAG} STREQUAL "NEON")
+    continue()
   endif()
-
-  list(GET WEBP_SIMD_FLAGS ${I_SIMD} WEBP_SIMD_FLAG)
 
   # First try with no extra flag added as the compiler might have default flags
   # (especially on Android).
