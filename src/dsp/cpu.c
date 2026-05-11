@@ -194,6 +194,10 @@ static int wasmCPUInfo(CPUFeature feature) {
     case kSSE4_1:
       return 1;
 #endif
+#ifdef WEBP_HAVE_AVX2
+    case kAVX2:
+      return 1;
+#endif
 #ifdef WEBP_HAVE_NEON
     case kNEON:
       return 1;
