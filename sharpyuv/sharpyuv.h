@@ -125,6 +125,8 @@ typedef enum SharpYuvTransferFunctionType {
 //     r, g, and b channels. If rgb_bit_depth is > 8, it must be a
 //     multiple of 2. abs(rgb_stride) must be at least width * abs(rgb_step).
 // rgb_bit_depth: number of bits for each r/g/b value. One of: 8, 10, 12, 16.
+//     The input rgb buffer values should be in the range
+//     [0, (1 << rgb_bit_depth) - 1] and will be clamped to this range if not.
 //     Note: 16 bit input is truncated to 14 bits before conversion to yuv.
 // yuv_bit_depth: number of bits for each y/u/v value. One of: 8, 10, 12.
 // y_ptr, u_ptr, v_ptr: pointers to the destination y, u and v channels.  Must
