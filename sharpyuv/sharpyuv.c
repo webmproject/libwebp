@@ -226,10 +226,10 @@ static void InterpolateTwoRows(const fixed_y_t* const best_y,
 
 static WEBP_INLINE int RGBToYUVComponent(int r, int g, int b,
                                          const int coeffs[4], int sfix) {
-  const int srounder = 1 << (YUV_FIX + sfix - 1);
-  const int luma =
-      coeffs[0] * r + coeffs[1] * g + coeffs[2] * b + coeffs[3] + srounder;
-  return (luma >> (YUV_FIX + sfix));
+  const int64_t srounder = 1LL << (YUV_FIX + sfix - 1);
+  const int64_t luma = (int64_t)coeffs[0] * r + (int64_t)coeffs[1] * g +
+                       (int64_t)coeffs[2] * b + coeffs[3] + srounder;
+  return (int)(luma >> (YUV_FIX + sfix));
 }
 
 static int ConvertWRGBToYUV(const fixed_y_t* best_y, const fixed_t* best_uv,
