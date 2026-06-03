@@ -143,8 +143,8 @@ static uint8_t* AllocateExternalBuffer(WebPDecoderConfig* config,
     uint8_t* tmp;
     uint32_t stride = w + 3;
     uint32_t uv_stride = (w + 1) / 2 + 13;
-    uint32_t total_size =
-        stride * h * (has_alpha ? 2 : 1) + 2 * uv_stride * (h + 1) / 2;
+    const size_t total_size = (size_t)stride * h * (has_alpha ? 2 : 1) +
+                              (size_t)2 * uv_stride * (h + 1) / 2;
     assert(format >= YUV && format <= YUVA);
     external_buffer = (uint8_t*)WebPMalloc(total_size);
     if (external_buffer == NULL) return NULL;

@@ -227,7 +227,7 @@ struct WebPYUVABuffer {    // view as YUVA
 struct WebPDecBuffer {
   WEBP_CSP_MODE colorspace;  // Colorspace.
   int width, height;         // Dimensions.
-  int is_external_memory;    // If non-zero, 'internal_memory' pointer is not
+  int is_external_memory;    // If non-zero, 'private_memory' pointer is not
                              // used. If value is '2' or more, the external
                              // memory is considered 'slow' and multiple
                              // read/write will be avoided.
