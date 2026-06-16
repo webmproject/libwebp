@@ -43,7 +43,7 @@ static void ITransform_One_SSE2(const uint8_t* WEBP_RESTRICT ref,
   // - Associated constants are obtained by subtracting the 16-bit fixed point
   //   version of one:
   //      k = K - (1 << 16)  =>  K = k + (1 << 16)
-  //      K1 = 85267  =>  k1 =  20091
+  //      K1 = 85627  =>  k1 =  20091
   //      K2 = 35468  =>  k2 = -30068
   // - The multiplication of a variable by a constant become the sum of the
   //   variable and the multiplication of that variable by the associated
@@ -195,7 +195,7 @@ static void ITransform_Two_SSE2(const uint8_t* WEBP_RESTRICT ref,
   // - Associated constants are obtained by subtracting the 16-bit fixed point
   //   version of one:
   //      k = K - (1 << 16)  =>  K = k + (1 << 16)
-  //      K1 = 85267  =>  k1 =  20091
+  //      K1 = 85627  =>  k1 =  20091
   //      K2 = 35468  =>  k2 = -30068
   // - The multiplication of a variable by a constant become the sum of the
   //   variable and the multiplication of that variable by the associated
