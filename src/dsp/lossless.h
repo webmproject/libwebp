@@ -16,6 +16,7 @@
 #define WEBP_DSP_LOSSLESS_H_
 
 #include "src/dsp/dsp.h"
+#include "src/utils/bounds_safety.h"
 #include "src/webp/decode.h"
 #include "src/webp/types.h"
 
@@ -28,45 +29,50 @@ extern "C" {
 //------------------------------------------------------------------------------
 // Decoding
 
-typedef uint32_t (*VP8LPredictorFunc)(const uint32_t* const left,
-                                      const uint32_t* const top);
+// VP8LPredictorFunc: 'left' is always single-dereferenced (*left only);
+// 'top' may be accessed bidirectionally (e.g. top[-1], top[0], top[1]).
+typedef uint32_t (*VP8LPredictorFunc)(const uint32_t* WEBP_SINGLE const left,
+                                      const uint32_t* WEBP_BIDI_INDEXABLE const top);
 extern VP8LPredictorFunc VP8LPredictors[16];
 
-uint32_t VP8LPredictor2_C(const uint32_t* const left,
-                          const uint32_t* const top);
-uint32_t VP8LPredictor3_C(const uint32_t* const left,
-                          const uint32_t* const top);
-uint32_t VP8LPredictor4_C(const uint32_t* const left,
-                          const uint32_t* const top);
-uint32_t VP8LPredictor5_C(const uint32_t* const left,
-                          const uint32_t* const top);
-uint32_t VP8LPredictor6_C(const uint32_t* const left,
-                          const uint32_t* const top);
-uint32_t VP8LPredictor7_C(const uint32_t* const left,
-                          const uint32_t* const top);
-uint32_t VP8LPredictor8_C(const uint32_t* const left,
-                          const uint32_t* const top);
-uint32_t VP8LPredictor9_C(const uint32_t* const left,
-                          const uint32_t* const top);
-uint32_t VP8LPredictor10_C(const uint32_t* const left,
-                           const uint32_t* const top);
-uint32_t VP8LPredictor11_C(const uint32_t* const left,
-                           const uint32_t* const top);
-uint32_t VP8LPredictor12_C(const uint32_t* const left,
-                           const uint32_t* const top);
-uint32_t VP8LPredictor13_C(const uint32_t* const left,
-                           const uint32_t* const top);
+uint32_t VP8LPredictor2_C(const uint32_t* WEBP_SINGLE const left,
+                          const uint32_t* WEBP_BIDI_INDEXABLE const top);
+uint32_t VP8LPredictor3_C(const uint32_t* WEBP_SINGLE const left,
+                          const uint32_t* WEBP_BIDI_INDEXABLE const top);
+uint32_t VP8LPredictor4_C(const uint32_t* WEBP_SINGLE const left,
+                          const uint32_t* WEBP_BIDI_INDEXABLE const top);
+uint32_t VP8LPredictor5_C(const uint32_t* WEBP_SINGLE const left,
+                          const uint32_t* WEBP_BIDI_INDEXABLE const top);
+uint32_t VP8LPredictor6_C(const uint32_t* WEBP_SINGLE const left,
+                          const uint32_t* WEBP_BIDI_INDEXABLE const top);
+uint32_t VP8LPredictor7_C(const uint32_t* WEBP_SINGLE const left,
+                          const uint32_t* WEBP_BIDI_INDEXABLE const top);
+uint32_t VP8LPredictor8_C(const uint32_t* WEBP_SINGLE const left,
+                          const uint32_t* WEBP_BIDI_INDEXABLE const top);
+uint32_t VP8LPredictor9_C(const uint32_t* WEBP_SINGLE const left,
+                          const uint32_t* WEBP_BIDI_INDEXABLE const top);
+uint32_t VP8LPredictor10_C(const uint32_t* WEBP_SINGLE const left,
+                           const uint32_t* WEBP_BIDI_INDEXABLE const top);
+uint32_t VP8LPredictor11_C(const uint32_t* WEBP_SINGLE const left,
+                           const uint32_t* WEBP_BIDI_INDEXABLE const top);
+uint32_t VP8LPredictor12_C(const uint32_t* WEBP_SINGLE const left,
+                           const uint32_t* WEBP_BIDI_INDEXABLE const top);
+uint32_t VP8LPredictor13_C(const uint32_t* WEBP_SINGLE const left,
+                           const uint32_t* WEBP_BIDI_INDEXABLE const top);
 
-// These Add/Sub function expects upper[-1] and out[-1] to be readable.
-typedef void (*VP8LPredictorAddSubFunc)(const uint32_t* in,
-                                        const uint32_t* upper, int num_pixels,
-                                        uint32_t* WEBP_RESTRICT out);
+// These Add/Sub functions expect upper[-1] and out[-1] to be readable.
+// Hence upper and out require WEBP_BIDI_INDEXABLE (bidirectional indexing).
+typedef void (*VP8LPredictorAddSubFunc)(const uint32_t* WEBP_BIDI_INDEXABLE in,
+                                        const uint32_t* WEBP_BIDI_INDEXABLE upper,
+                                        int num_pixels,
+                                        uint32_t* WEBP_RESTRICT WEBP_BIDI_INDEXABLE out);
 extern VP8LPredictorAddSubFunc VP8LPredictorsAdd[16];
 extern VP8LPredictorAddSubFunc VP8LPredictorsAdd_C[16];
 extern VP8LPredictorAddSubFunc VP8LPredictorsAdd_SSE[16];
 
-typedef void (*VP8LProcessDecBlueAndRedFunc)(const uint32_t* src,
-                                             int num_pixels, uint32_t* dst);
+typedef void (*VP8LProcessDecBlueAndRedFunc)(
+    const uint32_t* WEBP_BIDI_INDEXABLE src, int num_pixels,
+    uint32_t* WEBP_BIDI_INDEXABLE dst);
 extern VP8LProcessDecBlueAndRedFunc VP8LAddGreenToBlueAndRed;
 extern VP8LProcessDecBlueAndRedFunc VP8LAddGreenToBlueAndRed_SSE;
 
@@ -127,8 +133,9 @@ void VP8LColorIndexInverseTransformAlpha(
 
 // Expose some C-only fallback functions
 void VP8LTransformColorInverse_C(const VP8LMultipliers* const m,
-                                 const uint32_t* src, int num_pixels,
-                                 uint32_t* dst);
+                                 const uint32_t* WEBP_BIDI_INDEXABLE src,
+                                 int num_pixels,
+                                 uint32_t* WEBP_BIDI_INDEXABLE dst);
 
 void VP8LConvertBGRAToRGB_C(const uint32_t* WEBP_RESTRICT src, int num_pixels,
                             uint8_t* WEBP_RESTRICT dst);
@@ -140,8 +147,9 @@ void VP8LConvertBGRAToRGB565_C(const uint32_t* WEBP_RESTRICT src,
                                int num_pixels, uint8_t* WEBP_RESTRICT dst);
 void VP8LConvertBGRAToBGR_C(const uint32_t* WEBP_RESTRICT src, int num_pixels,
                             uint8_t* WEBP_RESTRICT dst);
-void VP8LAddGreenToBlueAndRed_C(const uint32_t* src, int num_pixels,
-                                uint32_t* dst);
+void VP8LAddGreenToBlueAndRed_C(const uint32_t* WEBP_BIDI_INDEXABLE src,
+                                int num_pixels,
+                                uint32_t* WEBP_BIDI_INDEXABLE dst);
 
 // Must be called before calling any of the above methods.
 void VP8LDspInit(void);

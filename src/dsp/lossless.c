@@ -23,6 +23,7 @@
 #include "src/dsp/cpu.h"
 #include "src/dsp/dsp.h"
 #include "src/dsp/lossless_common.h"
+#include "src/utils/bounds_safety.h"
 #include "src/utils/endian_inl_utils.h"
 #include "src/utils/utils.h"
 #include "src/webp/decode.h"
@@ -111,90 +112,101 @@ static WEBP_INLINE uint32_t Select(uint32_t a, uint32_t b, uint32_t c) {
 //------------------------------------------------------------------------------
 // Predictors
 
-static uint32_t VP8LPredictor0_C(const uint32_t* const left,
-                                 const uint32_t* const top) {
+// Note: 'left' is always accessed as a single element (*left); 'top' is
+// accessed with negative offsets (top[-1]) in several predictors, hence it
+// requires WEBP_BIDI_INDEXABLE. The caller guarantees that top[-1] and top[1]
+// are within bounds (i.e. this is never called on the first pixel of a row).
+static uint32_t VP8LPredictor0_C(const uint32_t* WEBP_SINGLE const left,
+                                 const uint32_t* WEBP_BIDI_INDEXABLE const top) {
   (void)top;
   (void)left;
   return ARGB_BLACK;
 }
-static uint32_t VP8LPredictor1_C(const uint32_t* const left,
-                                 const uint32_t* const top) {
+static uint32_t VP8LPredictor1_C(const uint32_t* WEBP_SINGLE const left,
+                                 const uint32_t* WEBP_BIDI_INDEXABLE const top) {
   (void)top;
   return *left;
 }
-uint32_t VP8LPredictor2_C(const uint32_t* const left,
-                          const uint32_t* const top) {
+uint32_t VP8LPredictor2_C(const uint32_t* WEBP_SINGLE const left,
+                          const uint32_t* WEBP_BIDI_INDEXABLE const top) {
   (void)left;
   return top[0];
 }
-uint32_t VP8LPredictor3_C(const uint32_t* const left,
-                          const uint32_t* const top) {
+uint32_t VP8LPredictor3_C(const uint32_t* WEBP_SINGLE const left,
+                          const uint32_t* WEBP_BIDI_INDEXABLE const top) {
   (void)left;
   return top[1];
 }
-uint32_t VP8LPredictor4_C(const uint32_t* const left,
-                          const uint32_t* const top) {
+uint32_t VP8LPredictor4_C(const uint32_t* WEBP_SINGLE const left,
+                          const uint32_t* WEBP_BIDI_INDEXABLE const top) {
   (void)left;
-  return top[-1];
+  return top[-1];  // Requires WEBP_BIDI_INDEXABLE: backward access at top[-1]
 }
-uint32_t VP8LPredictor5_C(const uint32_t* const left,
-                          const uint32_t* const top) {
+uint32_t VP8LPredictor5_C(const uint32_t* WEBP_SINGLE const left,
+                          const uint32_t* WEBP_BIDI_INDEXABLE const top) {
   const uint32_t pred = Average3(*left, top[0], top[1]);
   return pred;
 }
-uint32_t VP8LPredictor6_C(const uint32_t* const left,
-                          const uint32_t* const top) {
-  const uint32_t pred = Average2(*left, top[-1]);
+uint32_t VP8LPredictor6_C(const uint32_t* WEBP_SINGLE const left,
+                          const uint32_t* WEBP_BIDI_INDEXABLE const top) {
+  const uint32_t pred = Average2(*left, top[-1]);  // backward access
   return pred;
 }
-uint32_t VP8LPredictor7_C(const uint32_t* const left,
-                          const uint32_t* const top) {
+uint32_t VP8LPredictor7_C(const uint32_t* WEBP_SINGLE const left,
+                          const uint32_t* WEBP_BIDI_INDEXABLE const top) {
   const uint32_t pred = Average2(*left, top[0]);
   return pred;
 }
-uint32_t VP8LPredictor8_C(const uint32_t* const left,
-                          const uint32_t* const top) {
-  const uint32_t pred = Average2(top[-1], top[0]);
+uint32_t VP8LPredictor8_C(const uint32_t* WEBP_SINGLE const left,
+                          const uint32_t* WEBP_BIDI_INDEXABLE const top) {
+  const uint32_t pred = Average2(top[-1], top[0]);  // backward access
   (void)left;
   return pred;
 }
-uint32_t VP8LPredictor9_C(const uint32_t* const left,
-                          const uint32_t* const top) {
+uint32_t VP8LPredictor9_C(const uint32_t* WEBP_SINGLE const left,
+                          const uint32_t* WEBP_BIDI_INDEXABLE const top) {
   const uint32_t pred = Average2(top[0], top[1]);
   (void)left;
   return pred;
 }
-uint32_t VP8LPredictor10_C(const uint32_t* const left,
-                           const uint32_t* const top) {
-  const uint32_t pred = Average4(*left, top[-1], top[0], top[1]);
+uint32_t VP8LPredictor10_C(const uint32_t* WEBP_SINGLE const left,
+                           const uint32_t* WEBP_BIDI_INDEXABLE const top) {
+  const uint32_t pred = Average4(*left, top[-1], top[0], top[1]);  // backward
   return pred;
 }
-uint32_t VP8LPredictor11_C(const uint32_t* const left,
-                           const uint32_t* const top) {
-  const uint32_t pred = Select(top[0], *left, top[-1]);
+uint32_t VP8LPredictor11_C(const uint32_t* WEBP_SINGLE const left,
+                           const uint32_t* WEBP_BIDI_INDEXABLE const top) {
+  const uint32_t pred = Select(top[0], *left, top[-1]);  // backward access
   return pred;
 }
-uint32_t VP8LPredictor12_C(const uint32_t* const left,
-                           const uint32_t* const top) {
+uint32_t VP8LPredictor12_C(const uint32_t* WEBP_SINGLE const left,
+                           const uint32_t* WEBP_BIDI_INDEXABLE const top) {
   const uint32_t pred = ClampedAddSubtractFull(*left, top[0], top[-1]);
   return pred;
 }
-uint32_t VP8LPredictor13_C(const uint32_t* const left,
-                           const uint32_t* const top) {
+uint32_t VP8LPredictor13_C(const uint32_t* WEBP_SINGLE const left,
+                           const uint32_t* WEBP_BIDI_INDEXABLE const top) {
   const uint32_t pred = ClampedAddSubtractHalf(*left, top[0], top[-1]);
   return pred;
 }
 
-static void PredictorAdd0_C(const uint32_t* in, const uint32_t* upper,
-                            int num_pixels, uint32_t* WEBP_RESTRICT out) {
+// 'out' requires WEBP_BIDI_INDEXABLE: PredictorAdd1_C reads out[-1] as the
+// left-neighbor pixel. 'upper' requires WEBP_BIDI_INDEXABLE: GENERATE_PREDICTOR_ADD
+// passes 'upper + x' to predictors that may access top[-1].
+static void PredictorAdd0_C(const uint32_t* WEBP_BIDI_INDEXABLE in,
+                            const uint32_t* WEBP_BIDI_INDEXABLE upper,
+                            int num_pixels,
+                            uint32_t* WEBP_RESTRICT WEBP_BIDI_INDEXABLE out) {
   int x;
   (void)upper;
   for (x = 0; x < num_pixels; ++x) out[x] = VP8LAddPixels(in[x], ARGB_BLACK);
 }
-static void PredictorAdd1_C(const uint32_t* in, const uint32_t* upper,
-                            int num_pixels, uint32_t* WEBP_RESTRICT out) {
+static void PredictorAdd1_C(const uint32_t* WEBP_BIDI_INDEXABLE in,
+                            const uint32_t* WEBP_BIDI_INDEXABLE upper,
+                            int num_pixels,
+                            uint32_t* WEBP_RESTRICT WEBP_BIDI_INDEXABLE out) {
   int i;
-  uint32_t left = out[-1];
+  uint32_t left = out[-1];  // Backward access: requires WEBP_BIDI_INDEXABLE
   (void)upper;
   for (i = 0; i < num_pixels; ++i) {
     out[i] = left = VP8LAddPixels(in[i], left);
@@ -262,8 +274,9 @@ static void PredictorInverseTransform_C(const VP8LTransform* const transform,
 
 // Add green to blue and red channels (i.e. perform the inverse transform of
 // 'subtract green').
-void VP8LAddGreenToBlueAndRed_C(const uint32_t* src, int num_pixels,
-                                uint32_t* dst) {
+void VP8LAddGreenToBlueAndRed_C(const uint32_t* WEBP_BIDI_INDEXABLE src,
+                                int num_pixels,
+                                uint32_t* WEBP_BIDI_INDEXABLE dst) {
   int i;
   for (i = 0; i < num_pixels; ++i) {
     const uint32_t argb = src[i];
@@ -287,8 +300,9 @@ static WEBP_INLINE void ColorCodeToMultipliers(uint32_t color_code,
 }
 
 void VP8LTransformColorInverse_C(const VP8LMultipliers* const m,
-                                 const uint32_t* src, int num_pixels,
-                                 uint32_t* dst) {
+                                 const uint32_t* WEBP_BIDI_INDEXABLE src,
+                                 int num_pixels,
+                                 uint32_t* WEBP_BIDI_INDEXABLE dst) {
   int i;
   for (i = 0; i < num_pixels; ++i) {
     const uint32_t argb = src[i];
