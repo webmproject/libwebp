@@ -167,7 +167,7 @@ AC_ARG_ENABLE([avx2],
                              [Disable detection of AVX2 support
                               @<:@default=auto@:>@]))
 
-AS_IF([test "x$enable_avx2" != "xno" -a "x$enable_sse4_1" != "xno"
+AS_IF([test "x$enable_avx2" != "xno" -a "x$enable_sse4_1" != "xno" \
       -a "x$enable_sse2" != "xno"], [
   AVX2_FLAGS="$INTRINSICS_CFLAGS $AVX2_FLAGS"
   TEST_AND_ADD_CFLAGS([AVX2_FLAGS], [-mavx2])
