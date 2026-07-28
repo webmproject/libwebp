@@ -394,33 +394,17 @@ static int ReadHuffmanCodes(VP8LDecoder* const dec, int xsize, int ysize,
         num_htree_groups_max = group + 1;
       }
     }
-    // Check the validity of num_htree_groups_max. If it seems too big, use a
-    // smaller value for later. This will prevent big memory allocations to end
-    // up with a bad bitstream anyway.
-    // The value of 1000 is totally arbitrary. We know that num_htree_groups_max
-    // is smaller than (1 << 16) and should be smaller than the number of pixels
-    // (though the format allows it to be bigger).
-    if (num_htree_groups_max > 1000 || num_htree_groups_max > xsize * ysize) {
-      // Create a mapping from the used indices to the minimal set of used
-      // values [0, num_htree_groups)
-      mapping = (int*)WebPSafeMalloc(num_htree_groups_max, sizeof(*mapping));
-      if (mapping == NULL) {
-        VP8LSetError(dec, VP8_STATUS_OUT_OF_MEMORY);
-        goto Error;
-      }
-      // -1 means a value is unmapped, and therefore unused in the Huffman
-      // image.
-      WEBP_UNSAFE_MEMSET(mapping, 0xff,
-                         num_htree_groups_max * sizeof(*mapping));
-      for (num_htree_groups = 0, i = 0; i < huffman_pixs; ++i) {
-        // Get the current mapping for the group and remap the Huffman image.
-        int* const mapped_group = &mapping[huffman_image[i]];
-        if (*mapped_group == -1) *mapped_group = num_htree_groups++;
-        huffman_image[i] = *mapped_group;
-      }
-    } else {
-      num_htree_groups = num_htree_groups_max;
+    // Check the validity of num_htree_groups_max. Sparse high group IDs would
+    // otherwise force parsing up to 65k Huffman tables (amplification). Fail
+    // closed instead of remapping and still walking the full index range.
+    // The value of 1000 matches the historical soft threshold and stays below
+    // the pixel count when the image is small.
+    if (num_htree_groups_max > 1000 ||
+        num_htree_groups_max > (uint64_t)xsize * ysize) {
+      VP8LSetError(dec, VP8_STATUS_BITSTREAM_ERROR);
+      goto Error;
     }
+    num_htree_groups = num_htree_groups_max;
   }
 
   if (br->eos) goto Error;

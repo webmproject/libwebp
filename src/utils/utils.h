@@ -37,7 +37,9 @@ extern "C" {
 // This is the maximum memory amount that libwebp will ever try to allocate.
 #ifndef WEBP_MAX_ALLOCABLE_MEMORY
 #if SIZE_MAX > (1ULL << 34)
-#define WEBP_MAX_ALLOCABLE_MEMORY (1ULL << 34)
+/* Cap single allocations to 1 GiB by default (was 16 GiB). Override at
+ * compile time if a larger budget is intentionally required. */
+#define WEBP_MAX_ALLOCABLE_MEMORY (1ULL << 30)
 #else
 // For 32-bit targets keep this below INT_MAX to avoid valgrind warnings.
 #define WEBP_MAX_ALLOCABLE_MEMORY ((1ULL << 31) - (1 << 16))
