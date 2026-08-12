@@ -29,11 +29,13 @@ WEBP_ASSUME_UNSAFE_INDEXABLE_ABI
   ((uint32_t)(((uint64_t)(x) << WEBP_RESCALER_RFIX) / (y)))
 
 // Structure used for on-the-fly rescaling
-typedef uint32_t rescaler_t;  // type for side-buffer
+typedef uint32_t rescaler_t;        // type for side-buffer
+typedef uint64_t rescaler_accum_t;  // type for 64-bit accumulator buffer
 typedef struct WebPRescaler WebPRescaler;
 struct WebPRescaler {
   int x_expand;               // true if we're expanding in the x direction
   int y_expand;               // true if we're expanding in the y direction
+  int use_64bit;              // true if 64-bit accumulator is used
   int num_channels;           // bytes to jump between pixels
   uint32_t fx_scale;          // fixed-point scaling factors
   uint32_t fy_scale;          // ''
@@ -47,17 +49,28 @@ struct WebPRescaler {
   uint8_t* dst;
   int dst_stride;
   // work buffer
-  rescaler_t* WEBP_COUNTED_BY(dst_width* num_channels) irow;
+  rescaler_t* WEBP_COUNTED_BY_OR_NULL(dst_width* num_channels) irow;
   rescaler_t* WEBP_COUNTED_BY(dst_width* num_channels) frow;
+  rescaler_accum_t* WEBP_COUNTED_BY_OR_NULL(dst_width* num_channels) irow64;
 };
+
+// Returns 1 if a 64-bit accumulator is needed to avoid integer overflow during
+// scaling, 0 otherwise.
+int WebPRescalerNeeds64Bit(int src_width, int src_height, int dst_width,
+                           int dst_height);
+
+// Returns the required scratch work buffer size in bytes for the given
+// scaling dimensions and channel count.
+uint64_t WebPRescalerWorkSize(int src_width, int src_height, int dst_width,
+                              int dst_height, int num_channels);
 
 // Initialize a rescaler given scratch area 'work' and dimensions of src & dst.
 // Returns false in case of error.
-WEBP_NODISCARD int WebPRescalerInit(
-    WebPRescaler* const rescaler, int src_width, int src_height,
-    uint8_t* const dst, int dst_width, int dst_height, int dst_stride,
-    int num_channels,
-    rescaler_t* const WEBP_COUNTED_BY(2ULL * dst_width * num_channels) work);
+WEBP_NODISCARD int WebPRescalerInit(WebPRescaler* const rescaler, int src_width,
+                                    int src_height, uint8_t* const dst,
+                                    int dst_width, int dst_height,
+                                    int dst_stride, int num_channels,
+                                    rescaler_t* const work);
 
 // If either 'scaled_width' or 'scaled_height' (but not both) is 0 the value
 // will be calculated preserving the aspect ratio, otherwise the values are

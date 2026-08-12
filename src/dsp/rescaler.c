@@ -126,31 +126,42 @@ void WebPRescalerExportRowExpand_C(WebPRescaler* const wrk) {
   }
 }
 
+#define EXPORT_ROW_SHRINK(IROW_TYPE, IROW)                                   \
+  do {                                                                       \
+    int x_out;                                                               \
+    uint8_t* const dst = wrk->dst;                                           \
+    IROW_TYPE* const irow = wrk->IROW;                                       \
+    const int x_out_max = wrk->dst_width * wrk->num_channels;                \
+    const rescaler_t* const frow = wrk->frow;                                \
+    const uint32_t yscale = wrk->fy_scale * (-wrk->y_accum);                 \
+    assert(!WebPRescalerOutputDone(wrk));                                    \
+    assert(wrk->y_accum <= 0);                                               \
+    assert(!wrk->y_expand);                                                  \
+    if (yscale) {                                                            \
+      for (x_out = 0; x_out < x_out_max; ++x_out) {                          \
+        const uint32_t frac = (uint32_t)MULT_FIX_FLOOR(frow[x_out], yscale); \
+        const int v = (int)MULT_FIX(irow[x_out] - frac, wrk->fxy_scale);     \
+        dst[x_out] = (v > 255) ? 255u : (uint8_t)v;                          \
+        irow[x_out] = frac; /* new fractional start */                       \
+      }                                                                      \
+    } else {                                                                 \
+      for (x_out = 0; x_out < x_out_max; ++x_out) {                          \
+        const int v = (int)MULT_FIX(irow[x_out], wrk->fxy_scale);            \
+        dst[x_out] = (v > 255) ? 255u : (uint8_t)v;                          \
+        irow[x_out] = 0;                                                     \
+      }                                                                      \
+    }                                                                        \
+  } while (0)
+
 void WebPRescalerExportRowShrink_C(WebPRescaler* const wrk) {
-  int x_out;
-  uint8_t* const dst = wrk->dst;
-  rescaler_t* const irow = wrk->irow;
-  const int x_out_max = wrk->dst_width * wrk->num_channels;
-  const rescaler_t* const frow = wrk->frow;
-  const uint32_t yscale = wrk->fy_scale * (-wrk->y_accum);
-  assert(!WebPRescalerOutputDone(wrk));
-  assert(wrk->y_accum <= 0);
-  assert(!wrk->y_expand);
-  if (yscale) {
-    for (x_out = 0; x_out < x_out_max; ++x_out) {
-      const uint32_t frac = (uint32_t)MULT_FIX_FLOOR(frow[x_out], yscale);
-      const int v = (int)MULT_FIX(irow[x_out] - frac, wrk->fxy_scale);
-      dst[x_out] = (v > 255) ? 255u : (uint8_t)v;
-      irow[x_out] = frac;  // new fractional start
-    }
-  } else {
-    for (x_out = 0; x_out < x_out_max; ++x_out) {
-      const int v = (int)MULT_FIX(irow[x_out], wrk->fxy_scale);
-      dst[x_out] = (v > 255) ? 255u : (uint8_t)v;
-      irow[x_out] = 0;
-    }
-  }
+  EXPORT_ROW_SHRINK(rescaler_t, irow);
 }
+
+static void RescalerExportRowShrink64_C(WebPRescaler* const wrk) {
+  EXPORT_ROW_SHRINK(rescaler_accum_t, irow64);
+}
+
+#undef EXPORT_ROW_SHRINK
 
 #undef MULT_FIX_FLOOR
 #undef MULT_FIX
@@ -175,14 +186,25 @@ void WebPRescalerExportRow(WebPRescaler* const wrk) {
     if (wrk->y_expand) {
       WebPRescalerExportRowExpand(wrk);
     } else if (wrk->fxy_scale) {
-      WebPRescalerExportRowShrink(wrk);
+      if (wrk->use_64bit) {
+        RescalerExportRowShrink64_C(wrk);
+      } else {
+        WebPRescalerExportRowShrink(wrk);
+      }
     } else {  // special case
       int i;
-      assert(wrk->src_height == wrk->dst_height && wrk->x_add == 1);
-      assert(wrk->src_width == 1 && wrk->dst_width <= 2);
-      for (i = 0; i < wrk->num_channels * wrk->dst_width; ++i) {
-        wrk->dst[i] = wrk->irow[i];
-        wrk->irow[i] = 0;
+      if (wrk->use_64bit) {
+        for (i = 0; i < wrk->num_channels * wrk->dst_width; ++i) {
+          wrk->dst[i] = (uint8_t)wrk->irow64[i];
+          wrk->irow64[i] = 0;
+        }
+      } else {
+        assert(wrk->src_height == wrk->dst_height && wrk->x_add == 1);
+        assert(wrk->src_width == 1 && wrk->dst_width <= 2);
+        for (i = 0; i < wrk->num_channels * wrk->dst_width; ++i) {
+          wrk->dst[i] = (uint8_t)wrk->irow[i];
+          wrk->irow[i] = 0;
+        }
       }
     }
     wrk->y_accum += wrk->y_add;

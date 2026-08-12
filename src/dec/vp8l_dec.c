@@ -613,33 +613,37 @@ WEBP_NODISCARD static int AllocateAndInitRescaler(VP8LDecoder* const dec,
   const int out_width = io->scaled_width;
   const int in_height = io->mb_h;
   const int out_height = io->scaled_height;
-  const uint64_t work_size = 2 * num_channels * (uint64_t)out_width;
+  const uint64_t work_size_bytes = WebPRescalerWorkSize(
+      in_width, in_height, out_width, out_height, num_channels);
   rescaler_t* WEBP_BIDI_INDEXABLE work;  // Rescaler work area.
   const uint64_t scaled_data_size = (uint64_t)out_width;
-  uint32_t* WEBP_BIDI_INDEXABLE
-      scaled_data;  // Temporary storage for scaled BGRA data.
-  const uint64_t memory_size = sizeof(*dec->rescaler) +
-                               work_size * sizeof(*work) +
-                               scaled_data_size * sizeof(*scaled_data);
-  uint8_t* WEBP_BIDI_INDEXABLE memory =
-      (uint8_t*)WebPSafeMalloc(memory_size, sizeof(*memory));
-  if (memory == NULL) {
+  // Temporary storage for scaled BGRA data.
+  uint32_t* WEBP_BIDI_INDEXABLE scaled_data =
+      (uint32_t*)WebPSafeMalloc(scaled_data_size, sizeof(*scaled_data));
+  uint8_t* WEBP_BIDI_INDEXABLE memory = (uint8_t*)WebPSafeMalloc(
+      work_size_bytes + WEBP_ALIGN_CST, sizeof(*memory));
+  WebPRescaler* rescaler =
+      (WebPRescaler*)WebPSafeMalloc(1ULL, sizeof(*rescaler));
+  if (rescaler == NULL || memory == NULL || scaled_data == NULL) {
+    WebPSafeFree(rescaler);
+    WebPSafeFree(memory);
+    WebPSafeFree(scaled_data);
     return VP8LSetError(dec, VP8_STATUS_OUT_OF_MEMORY);
   }
+  assert(dec->rescaler == NULL);
   assert(dec->rescaler_memory == NULL);
-  dec->rescaler_memory = memory;
 
-  dec->rescaler = (WebPRescaler*)memory;
-  memory += sizeof(*dec->rescaler);
-  work = (rescaler_t*)memory;
-  memory += work_size * sizeof(*work);
-  scaled_data = (uint32_t*)memory;
-
-  if (!WebPRescalerInit(dec->rescaler, in_width, in_height,
-                        (uint8_t*)scaled_data, out_width, out_height, 0,
-                        num_channels, work)) {
+  work = WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(rescaler_t*, WEBP_ALIGN(memory),
+                                          work_size_bytes);
+  if (!WebPRescalerInit(rescaler, in_width, in_height, (uint8_t*)scaled_data,
+                        out_width, out_height, 0, num_channels, work)) {
+    WebPSafeFree(rescaler);
+    WebPSafeFree(memory);
+    WebPSafeFree(scaled_data);
     return VP8LSetError(dec, VP8_STATUS_INVALID_PARAM);
   }
+  dec->rescaler = rescaler;
+  dec->rescaler_memory = memory;
   return 1;
 }
 #endif  // WEBP_REDUCE_SIZE
@@ -1728,6 +1732,11 @@ static void VP8LClear(VP8LDecoder* const dec) {
   dec->next_transform = 0;
   dec->transforms_seen = 0;
 
+  if (dec->rescaler != NULL) {
+    WebPSafeFree(dec->rescaler->dst);
+    WebPSafeFree(dec->rescaler);
+    dec->rescaler = NULL;
+  }
   WebPSafeFree(dec->rescaler_memory);
   dec->rescaler_memory = NULL;
 
