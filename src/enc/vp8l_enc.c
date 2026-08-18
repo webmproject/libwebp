@@ -355,6 +355,12 @@ static int EncoderAnalyze(VP8LEncoder* const enc,
                   typed_sorting_method == kSortedDefault) {
                 continue;
               }
+              // kMinLA* only helps when index image uses predictors
+              if ((typed_sorting_method == kMinLAFromZeng ||
+                   typed_sorting_method == kMinLAFromDelta) &&
+                  i != kPaletteAndSpatial) {
+                continue;
+              }
               crunch_configs[(*crunch_configs_size)].entropy_idx = i;
               crunch_configs[(*crunch_configs_size)].palette_sorting_type =
                   typed_sorting_method;
@@ -379,9 +385,13 @@ static int EncoderAnalyze(VP8LEncoder* const enc,
         do_no_cache = 1;
         // If we have a palette, also check in combination with spatial.
         if (min_entropy_ix == kPalette) {
-          *crunch_configs_size = 2;
+          *crunch_configs_size = 4;
           crunch_configs[1].entropy_idx = kPaletteAndSpatial;
           crunch_configs[1].palette_sorting_type = kMinimizeDelta;
+          crunch_configs[2].entropy_idx = kPaletteAndSpatial;
+          crunch_configs[2].palette_sorting_type = kMinLAFromZeng;
+          crunch_configs[3].entropy_idx = kPaletteAndSpatial;
+          crunch_configs[3].palette_sorting_type = kMinLAFromDelta;
         }
       }
     }

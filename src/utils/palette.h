@@ -32,8 +32,13 @@ typedef enum PaletteSorting {
   // Methods for Improving the Compression of Color-Indexed Images" by Armando
   // J. Pinho and Antonio J. R. Neves.
   kModifiedZeng = 2,
-  kUnusedPalette = 3,
-  kPaletteSortingNum = 4
+  // Refines kModifiedZeng, resp. kMinimizeDelta, by local search on the linear
+  // arrangement cost of the co-occurrence graph. Only useful with a spatial
+  // predictor: without one, index entropy does not depend on the order.
+  kMinLAFromZeng = 3,
+  kMinLAFromDelta = 4,
+  kUnusedPalette = 5,
+  kPaletteSortingNum = 6
 } PaletteSorting;
 
 // Returns the index of 'color' in the sorted palette 'sorted' of size
