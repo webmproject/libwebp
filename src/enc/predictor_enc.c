@@ -964,6 +964,8 @@ static void GetBestGreenRedToBlue(const uint32_t* argb, int stride,
                                   VP8LMultipliers* const best_tx) {
   const int8_t offset[kGreenRedToBlueNumAxis][2] = {
       {0, -1}, {0, 1}, {-1, 0}, {1, 0}, {-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
+  // Must stay positive and non-increasing: skip_delta below assumes a value
+  // never recurs once a smaller one has been tried, and uses -1 as "none".
   const int8_t delta_lut[kGreenRedToBlueMaxIters] = {16, 16, 8, 4, 2, 2, 2};
   // Only axis aligned diffs for lower quality.
   const int iters = (quality < 25)   ? 1
@@ -972,6 +974,9 @@ static void GetBestGreenRedToBlue(const uint32_t* argb, int stride,
   int green_to_blue_best = 0;
   int red_to_blue_best = 0;
   int iter;
+  // The delta that just found nothing, if any: repeating it would re-probe
+  // the same eight points around the same centre for the same result.
+  int skip_delta = -1;
   // Initial value at origin:
   int64_t best_diff = GetPredictionCostCrossColorBlue(
       argb, stride, tile_width, tile_height, prev_x, prev_y, green_to_blue_best,
@@ -979,6 +984,8 @@ static void GetBestGreenRedToBlue(const uint32_t* argb, int stride,
   for (iter = 0; iter < iters; ++iter) {
     const int delta = delta_lut[iter];
     int axis;
+    if (delta == skip_delta) continue;
+    skip_delta = delta;
     for (axis = 0; axis < kGreenRedToBlueNumAxis; ++axis) {
       const int green_to_blue_cur =
           offset[axis][0] * delta + green_to_blue_best;
@@ -990,6 +997,7 @@ static void GetBestGreenRedToBlue(const uint32_t* argb, int stride,
         best_diff = cur_diff;
         green_to_blue_best = green_to_blue_cur;
         red_to_blue_best = red_to_blue_cur;
+        skip_delta = -1;
       }
     }
     if (delta == 2 && green_to_blue_best == 0 && red_to_blue_best == 0) {
