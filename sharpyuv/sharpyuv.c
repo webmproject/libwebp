@@ -428,10 +428,8 @@ static int DoSharpArgbToYuv(const uint8_t* r_ptr, const uint8_t* g_ptr,
       j += 2;
     } while (j < h);
     // test exit condition
-    if (iter > 0) {
-      if (diff_y_sum < diff_y_threshold) break;
-      if (diff_y_sum > prev_diff_y_sum) break;
-    }
+    if (diff_y_sum < diff_y_threshold) break;
+    if (iter > 0 && diff_y_sum > prev_diff_y_sum) break;
     prev_diff_y_sum = diff_y_sum;
   }
 
