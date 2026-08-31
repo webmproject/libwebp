@@ -22,10 +22,12 @@
 // Size of pre-computed table for converting from gamma to linear.
 #define GAMMA_TO_LINEAR_TAB_BITS 10
 #define GAMMA_TO_LINEAR_TAB_SIZE (1 << GAMMA_TO_LINEAR_TAB_BITS)
-static uint32_t kGammaToLinearTabS[GAMMA_TO_LINEAR_TAB_SIZE + 2];
+uint32_t kSharpYuvGammaToLinearTabS[GAMMA_TO_LINEAR_TAB_SIZE + 2];
+#define kGammaToLinearTabS kSharpYuvGammaToLinearTabS
 #define LINEAR_TO_GAMMA_TAB_BITS 9
 #define LINEAR_TO_GAMMA_TAB_SIZE (1 << LINEAR_TO_GAMMA_TAB_BITS)
-static uint32_t kLinearToGammaTabS[LINEAR_TO_GAMMA_TAB_SIZE + 2];
+uint32_t kSharpYuvLinearToGammaTabS[LINEAR_TO_GAMMA_TAB_SIZE + 2];
+#define kLinearToGammaTabS kSharpYuvLinearToGammaTabS
 
 static const double kGammaF = 1. / 0.45;
 #define GAMMA_TO_LINEAR_BITS 16
