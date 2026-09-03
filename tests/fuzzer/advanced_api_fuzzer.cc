@@ -20,12 +20,15 @@
 #include <cstring>
 #include <string>
 #include <string_view>
+#include <vector>
 
 #include "./fuzz_utils.h"
 #include "gtest/gtest.h"
 #include "src/dec/webpi_dec.h"
 #include "src/utils/rescaler_utils.h"
 #include "webp/decode.h"
+#include "webp/encode.h"
+#include "webp/types.h"
 
 namespace {
 
@@ -164,6 +167,157 @@ FUZZ_TEST(AdvancedApi, AdvancedApiTest)
 #endif
                  /*incremental=*/fuzztest::Arbitrary<bool>(),
                  fuzz_utils::ArbitraryValidWebPDecoderOptions());
+
+TEST(AdvancedApi, IncrementalExternalYUVABufferReplacementWithScaling) {
+  constexpr int kWidth = 256;
+  constexpr int kHeight = 256;
+  constexpr int kOutWidth = 128;
+  constexpr int kOutHeight = 128;
+  constexpr int kUVWidth = (kOutWidth + 1) / 2;
+  constexpr int kUVHeight = (kOutHeight + 1) / 2;
+
+  // Build a deterministic RGBA image with non-trivial alpha.
+  std::vector<uint8_t> rgba(kWidth * kHeight * 4);
+  for (int y = 0; y < kHeight; ++y) {
+    for (int x = 0; x < kWidth; ++x) {
+      const size_t i = 4u * (y * kWidth + x);
+      rgba[i + 0] = static_cast<uint8_t>(x * 13 + y * 7 + (x ^ y));
+      rgba[i + 1] = static_cast<uint8_t>(x * 3 + y * 17);
+      rgba[i + 2] = static_cast<uint8_t>((x ^ (y * 5)) + x * 11);
+      rgba[i + 3] = static_cast<uint8_t>(x * 5 + y * 9);
+    }
+  }
+
+  uint8_t* encoded = nullptr;
+  const size_t encoded_size =
+      WebPEncodeRGBA(rgba.data(), kWidth, kHeight, kWidth * 4, 75.f, &encoded);
+  ASSERT_NE(encoded, nullptr);
+  ASSERT_GT(encoded_size, 0u);
+
+  WebPDecoderConfig config;
+  ASSERT_TRUE(WebPInitDecoderConfig(&config));
+  ASSERT_EQ(WebPGetFeatures(encoded, encoded_size, &config.input),
+            VP8_STATUS_OK);
+
+  config.options.use_scaling = 1;
+  config.options.scaled_width = kOutWidth;
+  config.options.scaled_height = kOutHeight;
+  config.output.colorspace = MODE_YUVA;
+  config.output.is_external_memory = 1;
+
+  // A uses tight strides.
+  constexpr int kAYStride = kOutWidth;
+  constexpr int kAUVStride = kUVWidth;
+  constexpr int kAAStride = kOutWidth;
+
+  std::vector<uint8_t> ay(kAYStride * kOutHeight, 0x11);
+  std::vector<uint8_t> au(kAUVStride * kUVHeight, 0x22);
+  std::vector<uint8_t> av(kAUVStride * kUVHeight, 0x33);
+  std::vector<uint8_t> aa(kAAStride * kOutHeight, 0x44);
+
+  // B deliberately uses different, padded strides. Pointer and stride changes
+  // are both permitted for external buffers between incremental decode calls.
+  constexpr int kBYStride = kOutWidth + 7;
+  constexpr int kBUStride = kUVWidth + 5;
+  constexpr int kBVStride = kUVWidth + 9;
+  constexpr int kBAStride = kOutWidth + 11;
+
+  std::vector<uint8_t> by(kBYStride * kOutHeight, 0xa1);
+  std::vector<uint8_t> bu(kBUStride * kUVHeight, 0xa2);
+  std::vector<uint8_t> bv(kBVStride * kUVHeight, 0xa3);
+  std::vector<uint8_t> ba(kBAStride * kOutHeight, 0xa4);
+
+  const auto bind = [&config](std::vector<uint8_t>& y, int y_stride,
+                              std::vector<uint8_t>& u, int u_stride,
+                              std::vector<uint8_t>& v, int v_stride,
+                              std::vector<uint8_t>& a, int a_stride) {
+    WebPYUVABuffer* const out = &config.output.u.YUVA;
+
+    out->y = y.data();
+    out->y_stride = y_stride;
+    out->y_size = y.size();
+
+    out->u = u.data();
+    out->u_stride = u_stride;
+    out->u_size = u.size();
+
+    out->v = v.data();
+    out->v_stride = v_stride;
+    out->v_size = v.size();
+
+    out->a = a.data();
+    out->a_stride = a_stride;
+    out->a_size = a.size();
+  };
+
+  bind(ay, kAYStride, au, kAUVStride, av, kAUVStride, aa, kAAStride);
+  ASSERT_TRUE(WebPValidateDecoderConfig(&config));
+
+  WebPIDecoder* const idec = WebPIDecode(nullptr, 0, &config);
+  ASSERT_NE(idec, nullptr);
+
+  bool switched = false;
+  size_t offset = 0;
+  VP8StatusCode status = VP8_STATUS_SUSPENDED;
+
+  std::vector<uint8_t> ay_at_switch;
+  std::vector<uint8_t> au_at_switch;
+  std::vector<uint8_t> av_at_switch;
+  std::vector<uint8_t> aa_at_switch;
+
+  while (offset < encoded_size && status == VP8_STATUS_SUSPENDED) {
+    const size_t chunk = std::min<size_t>(64, encoded_size - offset);
+
+    status = WebPIAppend(idec, encoded + offset, chunk);
+    offset += chunk;
+
+    ASSERT_TRUE(status == VP8_STATUS_OK || status == VP8_STATUS_SUSPENDED);
+
+    if (!switched && status == VP8_STATUS_SUSPENDED) {
+      int last_y = -1;
+      int width = 0, height = 0;
+      int y_stride = 0, uv_stride = 0, a_stride = 0;
+      uint8_t *u = nullptr, *v = nullptr, *a = nullptr;
+
+      uint8_t* const y =
+          WebPIDecGetYUVA(idec, &last_y, &u, &v, &a, &width, &height, &y_stride,
+                          &uv_stride, &a_stride);
+
+      // Wait until rescaled output has actually started, so the rescalers
+      // already contain their initially configured destinations.
+      if (y != nullptr && last_y > 0) {
+        ay_at_switch = ay;
+        au_at_switch = au;
+        av_at_switch = av;
+        aa_at_switch = aa;
+
+        bind(by, kBYStride, bu, kBUStride, bv, kBVStride, ba, kBAStride);
+        switched = true;
+      }
+    }
+  }
+
+  EXPECT_TRUE(switched);
+  EXPECT_EQ(status, VP8_STATUS_OK);
+
+  if (switched) {
+    // Once config.output points at B, no later decoder output may be written
+    // through the stale destinations originally captured from A.
+    EXPECT_EQ(ay, ay_at_switch);
+    EXPECT_EQ(au, au_at_switch);
+    EXPECT_EQ(av, av_at_switch);
+    EXPECT_EQ(aa, aa_at_switch);
+
+    // Confirm that decoding actually continued into the replacement buffer.
+    EXPECT_TRUE(
+        std::any_of(by.begin(), by.end(), [](uint8_t v) { return v != 0xa1; }));
+    EXPECT_TRUE(
+        std::any_of(ba.begin(), ba.end(), [](uint8_t v) { return v != 0xa4; }));
+  }
+
+  WebPIDelete(idec);
+  WebPFree(encoded);
+}
 
 TEST(AdvancedApi, Buganizer498966235) {
   AdvancedApiTest(
