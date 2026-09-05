@@ -22,7 +22,7 @@ extern "C" {
 #include "sharpyuv/sharpyuv.h"
 #include "webp/encode.h"
 
-#define WEBP_EXTRAS_ABI_VERSION 0x0003  // MAJOR(8b) + MINOR(8b)
+#define WEBP_EXTRAS_ABI_VERSION 0x0004  // MAJOR(8b) + MINOR(8b)
 
 //------------------------------------------------------------------------------
 
@@ -97,13 +97,30 @@ WEBP_EXTERN int VP8EstimateQuality(const uint8_t* const data, size_t size);
 // rgb_bit_depth: number of bits for each r/g/b value. Only a value of 8 is
 //     currently supported.
 // width, height: width and height of the image in pixels
-// Returns 0 on failure.
+// Returns 0 on failure, 1 on success.
+//
+// May return early with an approximate score once it's confidently away
+// from the decision thresholds SharpYuvRiskThresholds[].
+//   => use SharpYuvEstimate420RiskFull() for the legacy behavior of always
+//      scanning the full image.
+
 WEBP_EXTERN int SharpYuvEstimate420Risk(const void* r_ptr, const void* g_ptr,
                                         const void* b_ptr, int rgb_step,
                                         int rgb_stride, int rgb_bit_depth,
                                         int width, int height,
                                         const SharpYuvOptions* options,
                                         float* score);
+
+// Same as SharpYuvEstimate420Risk(), but always scans the full image for an
+// exact score, at the cost of speed on large images.
+WEBP_EXTERN int SharpYuvEstimate420RiskFull(
+    const void* r_ptr, const void* g_ptr, const void* b_ptr, int rgb_step,
+    int rgb_stride, int rgb_bit_depth, int width, int height,
+    const SharpYuvOptions* options, float* score);
+
+// Threshold values for deciding between 420 / Sharp-420 and Sharp-420 / 444
+// respectively.
+WEBP_EXTERN const double SharpYuvRiskThresholds[2];
 
 //------------------------------------------------------------------------------
 
