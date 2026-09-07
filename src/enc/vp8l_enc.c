@@ -287,6 +287,44 @@ typedef struct {
 // kPaletteAndSpatial.
 #define CRUNCH_CONFIGS_MAX (kNumEntropyIx + 2 * kPaletteSortingNum)
 
+// Palette size above which the spatial-sort trial pays off for itself,
+// regardless of AnalyzeEntropy()'s guess.
+#define MIN_PALETTE_SIZE_FOR_SPATIAL_SORT 225
+
+// Appends one crunch_config per PaletteSorting method compatible with
+// entropy_idx.
+// * MinLA refinements: kPaletteAndSpatial only (they need a predictor).
+// * kModifiedZeng: optional (win is small, <~3% of images). Reserved for -z 9.
+static void AddPaletteSortingConfigs(
+    EntropyIx entropy_idx, int include_modified_zeng,
+    CrunchConfig crunch_configs[CRUNCH_CONFIGS_MAX],
+    int* const crunch_configs_size) {
+  int sorting_method;
+  for (sorting_method = 0; sorting_method < kPaletteSortingNum;
+       ++sorting_method) {
+    const PaletteSorting typed_sorting_method = (PaletteSorting)sorting_method;
+    // TODO(vrabaud) kSortedDefault should be tested. It is omitted for now
+    // for backward compatibility.
+    if (typed_sorting_method == kUnusedPalette ||
+        typed_sorting_method == kSortedDefault) {
+      continue;
+    }
+    if (typed_sorting_method == kModifiedZeng && !include_modified_zeng) {
+      continue;
+    }
+    if ((typed_sorting_method == kMinLAFromZeng ||
+         typed_sorting_method == kMinLAFromDelta) &&
+        entropy_idx != kPaletteAndSpatial) {
+      continue;
+    }
+    assert(*crunch_configs_size < CRUNCH_CONFIGS_MAX);
+    crunch_configs[*crunch_configs_size].entropy_idx = entropy_idx;
+    crunch_configs[*crunch_configs_size].palette_sorting_type =
+        typed_sorting_method;
+    ++*crunch_configs_size;
+  }
+}
+
 static int EncoderAnalyze(VP8LEncoder* const enc,
                           CrunchConfig crunch_configs[CRUNCH_CONFIGS_MAX],
                           int* const crunch_configs_size,
@@ -344,28 +382,8 @@ static int EncoderAnalyze(VP8LEncoder* const enc,
         if ((i != kPalette && i != kPaletteAndSpatial) || use_palette) {
           assert(*crunch_configs_size < CRUNCH_CONFIGS_MAX);
           if (use_palette && (i == kPalette || i == kPaletteAndSpatial)) {
-            int sorting_method;
-            for (sorting_method = 0; sorting_method < kPaletteSortingNum;
-                 ++sorting_method) {
-              const PaletteSorting typed_sorting_method =
-                  (PaletteSorting)sorting_method;
-              // TODO(vrabaud) kSortedDefault should be tested. It is omitted
-              // for now for backward compatibility.
-              if (typed_sorting_method == kUnusedPalette ||
-                  typed_sorting_method == kSortedDefault) {
-                continue;
-              }
-              // kMinLA* only helps when index image uses predictors
-              if ((typed_sorting_method == kMinLAFromZeng ||
-                   typed_sorting_method == kMinLAFromDelta) &&
-                  i != kPaletteAndSpatial) {
-                continue;
-              }
-              crunch_configs[(*crunch_configs_size)].entropy_idx = i;
-              crunch_configs[(*crunch_configs_size)].palette_sorting_type =
-                  typed_sorting_method;
-              ++*crunch_configs_size;
-            }
+            AddPaletteSortingConfigs((EntropyIx)i, /*include_modified_zeng=*/1,
+                                     crunch_configs, crunch_configs_size);
           } else {
             crunch_configs[(*crunch_configs_size)].entropy_idx = i;
             crunch_configs[(*crunch_configs_size)].palette_sorting_type =
@@ -380,18 +398,17 @@ static int EncoderAnalyze(VP8LEncoder* const enc,
       crunch_configs[0].entropy_idx = min_entropy_ix;
       crunch_configs[0].palette_sorting_type =
           use_palette ? kMinimizeDelta : kUnusedPalette;
-      if (config->quality >= 75 && method == 5) {
-        // Test with and without color cache.
-        do_no_cache = 1;
-        // If we have a palette, also check in combination with spatial.
-        if (min_entropy_ix == kPalette) {
-          *crunch_configs_size = 4;
-          crunch_configs[1].entropy_idx = kPaletteAndSpatial;
-          crunch_configs[1].palette_sorting_type = kMinimizeDelta;
-          crunch_configs[2].entropy_idx = kPaletteAndSpatial;
-          crunch_configs[2].palette_sorting_type = kMinLAFromZeng;
-          crunch_configs[3].entropy_idx = kPaletteAndSpatial;
-          crunch_configs[3].palette_sorting_type = kMinLAFromDelta;
+      if (method >= 4 && config->quality >= 50) {
+        if (method == 5) {
+          // Test with and without color cache.
+          do_no_cache = 1;
+        }
+        if (use_palette &&
+            (min_entropy_ix == kPalette ||
+             enc->palette_size >= MIN_PALETTE_SIZE_FOR_SPATIAL_SORT)) {
+          AddPaletteSortingConfigs(kPaletteAndSpatial,
+                                   /*include_modified_zeng=*/0, crunch_configs,
+                                   crunch_configs_size);
         }
       }
     }
