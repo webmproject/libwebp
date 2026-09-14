@@ -5,6 +5,7 @@ lib_LTLIBRARIES = libsharpyuv.la
 
 noinst_LTLIBRARIES =
 noinst_LTLIBRARIES += libsharpyuv_sse2.la
+noinst_LTLIBRARIES += libsharpyuv_avx2.la
 noinst_LTLIBRARIES += libsharpyuv_neon.la
 
 libsharpyuvinclude_HEADERS =
@@ -19,6 +20,11 @@ libsharpyuv_sse2_la_SOURCES =
 libsharpyuv_sse2_la_SOURCES += sharpyuv_sse2.c
 libsharpyuv_sse2_la_CPPFLAGS = $(libsharpyuv_la_CPPFLAGS)
 libsharpyuv_sse2_la_CFLAGS = $(AM_CFLAGS) $(SSE2_FLAGS)
+
+libsharpyuv_avx2_la_SOURCES =
+libsharpyuv_avx2_la_SOURCES += sharpyuv_avx2.c
+libsharpyuv_avx2_la_CPPFLAGS = $(libsharpyuv_la_CPPFLAGS)
+libsharpyuv_avx2_la_CFLAGS = $(AM_CFLAGS) $(AVX2_FLAGS)
 
 libsharpyuv_neon_la_SOURCES =
 libsharpyuv_neon_la_SOURCES += sharpyuv_neon.c
@@ -36,6 +42,7 @@ libsharpyuv_la_CPPFLAGS = $(AM_CPPFLAGS)
 libsharpyuv_la_LDFLAGS = -no-undefined -version-info 1:2:1 -lm
 libsharpyuv_la_LIBADD =
 libsharpyuv_la_LIBADD += libsharpyuv_sse2.la
+libsharpyuv_la_LIBADD += libsharpyuv_avx2.la
 libsharpyuv_la_LIBADD += libsharpyuv_neon.la
 libsharpyuvincludedir = $(includedir)/webp/sharpyuv
 pkgconfig_DATA = libsharpyuv.pc

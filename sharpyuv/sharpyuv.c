@@ -33,9 +33,6 @@ int SharpYuvGetVersion(void) { return SHARPYUV_VERSION; }
 
 static const int kNumIterations = 4;
 
-#define YUV_FIX 16  // fixed-point precision for RGB->YUV
-static const int kYuvHalf = 1 << (YUV_FIX - 1);
-
 // Max bit depth so that intermediate calculations fit in 16 bits.
 static const int kMaxBitDepth = 14;
 
@@ -52,26 +49,12 @@ typedef uint16_t fixed_y_t;  // unsigned type with extra precision for W
 
 //------------------------------------------------------------------------------
 
-static uint8_t clip_8b(fixed_t v) {
-  return (!(v & ~0xff)) ? (uint8_t)v : (v < 0) ? 0u : 255u;
-}
-
-static uint16_t clip(fixed_t v, int max) {
-  return (v < 0) ? 0 : (v > max) ? max : (uint16_t)v;
-}
-
 static fixed_y_t clip_bit_depth(int y, int bit_depth) {
   const int max = (1 << bit_depth) - 1;
   return (!(y & ~max)) ? (fixed_y_t)y : (y < 0) ? 0 : max;
 }
 
 //------------------------------------------------------------------------------
-
-static int RGBToGray(int64_t r, int64_t g, int64_t b) {
-  // r/g/b can reach ~71501 (Smpte428's EOTF), not just the usual <= 65536.
-  const int64_t luma = 13933 * r + 46871 * g + 4732 * b + kYuvHalf;
-  return (int)(luma >> YUV_FIX);
-}
 
 static uint32_t ScaleDown(uint16_t a, uint16_t b, uint16_t c, uint16_t d,
                           int bit_depth,
@@ -88,6 +71,10 @@ static WEBP_INLINE void UpdateW(const fixed_y_t* src, fixed_y_t* dst, int w,
                                 int bit_depth,
                                 SharpYuvTransferFunctionType transfer_type) {
   int i = 0;
+  if (transfer_type == kSharpYuvTransferFunctionSrgb) {
+    SharpYuvUpdateWSrgb(src, dst, w, bit_depth);
+    return;
+  }
   do {
     const uint32_t R =
         SharpYuvGammaToLinear(src[0 * w + i], bit_depth, transfer_type);
@@ -95,7 +82,7 @@ static WEBP_INLINE void UpdateW(const fixed_y_t* src, fixed_y_t* dst, int w,
         SharpYuvGammaToLinear(src[1 * w + i], bit_depth, transfer_type);
     const uint32_t B =
         SharpYuvGammaToLinear(src[2 * w + i], bit_depth, transfer_type);
-    const uint32_t Y = RGBToGray(R, G, B);
+    const uint32_t Y = SharpYuvRGBToGray(R, G, B);
     dst[i] = (fixed_y_t)SharpYuvLinearToGamma(Y, bit_depth, transfer_type);
   } while (++i < w);
 }
@@ -104,6 +91,10 @@ static void UpdateChroma(const fixed_y_t* src1, const fixed_y_t* src2,
                          fixed_t* dst, int uv_w, int bit_depth,
                          SharpYuvTransferFunctionType transfer_type) {
   int i = 0;
+  if (transfer_type == kSharpYuvTransferFunctionSrgb) {
+    SharpYuvUpdateChromaSrgb(src1, src2, dst, uv_w, bit_depth);
+    return;
+  }
   do {
     const int r =
         ScaleDown(src1[0 * uv_w + 0], src1[0 * uv_w + 1], src2[0 * uv_w + 0],
@@ -114,7 +105,7 @@ static void UpdateChroma(const fixed_y_t* src1, const fixed_y_t* src2,
     const int b =
         ScaleDown(src1[4 * uv_w + 0], src1[4 * uv_w + 1], src2[4 * uv_w + 0],
                   src2[4 * uv_w + 1], bit_depth, transfer_type);
-    const int W = RGBToGray(r, g, b);
+    const int W = SharpYuvRGBToGray(r, g, b);
     dst[0 * uv_w] = (fixed_t)(r - W);
     dst[1 * uv_w] = (fixed_t)(g - W);
     dst[2 * uv_w] = (fixed_t)(b - W);
@@ -128,7 +119,7 @@ static void StoreGray(const fixed_y_t* rgb, fixed_y_t* y, int w) {
   int i = 0;
   assert(w > 0);
   do {
-    y[i] = RGBToGray(rgb[0 * w + i], rgb[1 * w + i], rgb[2 * w + i]);
+    y[i] = SharpYuvRGBToGray(rgb[0 * w + i], rgb[1 * w + i], rgb[2 * w + i]);
   } while (++i < w);
 }
 
@@ -225,46 +216,25 @@ static void InterpolateTwoRows(const fixed_y_t* const best_y,
   }
 }
 
-static WEBP_INLINE int RGBToYUVComponent(int r, int g, int b,
-                                         const int coeffs[4], int sfix) {
-  const int64_t srounder = 1LL << (YUV_FIX + sfix - 1);
-  const int64_t luma = (int64_t)coeffs[0] * r + (int64_t)coeffs[1] * g +
-                       (int64_t)coeffs[2] * b + coeffs[3] + srounder;
-  return (int)(luma >> (YUV_FIX + sfix));
-}
-
 static int ConvertWRGBToYUV(const fixed_y_t* best_y, const fixed_t* best_uv,
                             uint8_t* y_ptr, int y_stride, uint8_t* u_ptr,
                             int u_stride, uint8_t* v_ptr, int v_stride,
                             int rgb_bit_depth, int yuv_bit_depth, int width,
                             int height,
                             const SharpYuvConversionMatrix* yuv_matrix) {
-  int i, j;
+  int j;
   const fixed_t* const best_uv_base = best_uv;
   const int w = (width + 1) & ~1;
   const int h = (height + 1) & ~1;
   const int uv_w = w >> 1;
   const int uv_h = h >> 1;
   const int sfix = GetPrecisionShift(rgb_bit_depth);
-  const int yuv_max = (1 << yuv_bit_depth) - 1;
 
   best_uv = best_uv_base;
   j = 0;
   do {
-    i = 0;
-    do {
-      const int off = (i >> 1);
-      const int W = best_y[i];
-      const int r = best_uv[off + 0 * uv_w] + W;
-      const int g = best_uv[off + 1 * uv_w] + W;
-      const int b = best_uv[off + 2 * uv_w] + W;
-      const int y = RGBToYUVComponent(r, g, b, yuv_matrix->rgb_to_y, sfix);
-      if (yuv_bit_depth <= 8) {
-        y_ptr[i] = clip_8b(y);
-      } else {
-        ((uint16_t*)y_ptr)[i] = clip(y, yuv_max);
-      }
-    } while (++i < width);
+    SharpYuvConvertRowY(best_y, best_uv, width, uv_w, yuv_matrix->rgb_to_y,
+                        sfix, yuv_bit_depth, y_ptr);
     best_y += w;
     best_uv += (j & 1) * 3 * uv_w;
     y_ptr += y_stride;
@@ -273,23 +243,11 @@ static int ConvertWRGBToYUV(const fixed_y_t* best_y, const fixed_t* best_uv,
   best_uv = best_uv_base;
   j = 0;
   do {
-    i = 0;
-    do {
-      // Note r, g and b values here are off by W, but a constant offset on all
-      // 3 components doesn't change the value of u and v with a YCbCr matrix.
-      const int r = best_uv[i + 0 * uv_w];
-      const int g = best_uv[i + 1 * uv_w];
-      const int b = best_uv[i + 2 * uv_w];
-      const int u = RGBToYUVComponent(r, g, b, yuv_matrix->rgb_to_u, sfix);
-      const int v = RGBToYUVComponent(r, g, b, yuv_matrix->rgb_to_v, sfix);
-      if (yuv_bit_depth <= 8) {
-        u_ptr[i] = clip_8b(u);
-        v_ptr[i] = clip_8b(v);
-      } else {
-        ((uint16_t*)u_ptr)[i] = clip(u, yuv_max);
-        ((uint16_t*)v_ptr)[i] = clip(v, yuv_max);
-      }
-    } while (++i < uv_w);
+    // Note r, g and b values here are off by W, but a constant offset on all
+    // 3 components doesn't change the value of u and v with a YCbCr matrix.
+    SharpYuvConvertRowUV(best_uv, uv_w, yuv_matrix->rgb_to_u,
+                         yuv_matrix->rgb_to_v, sfix, yuv_bit_depth, u_ptr,
+                         v_ptr);
     best_uv += 3 * uv_w;
     u_ptr += u_stride;
     v_ptr += v_stride;
