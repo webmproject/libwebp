@@ -477,7 +477,7 @@ static int PaletteSortModifiedZeng(
     const WebPPicture* const pic,
     const uint32_t* const WEBP_COUNTED_BY(num_colors) palette_in,
     uint32_t num_colors, uint32_t* const WEBP_COUNTED_BY(num_colors) palette) {
-  uint32_t i, j, ind;
+  uint32_t i, ind;
   uint8_t remapping[MAX_PALETTE_SIZE];
   uint32_t* cooccurrence;
   struct Sum sums[MAX_PALETTE_SIZE];
@@ -514,6 +514,7 @@ static int PaletteSortModifiedZeng(
   if (num_sums > 0) {
     // Initialize the sums with the first two remappings and find the best one
     struct Sum* best_sum = &sums[0];
+    int32_t j;
     best_sum->index = 0u;
     best_sum->sum = 0u;
     for (i = 0, j = 0; i < num_colors; ++i) {
@@ -530,9 +531,9 @@ static int PaletteSortModifiedZeng(
       // Compute delta to know if we need to prepend or append the best index.
       int32_t delta = 0;
       const int32_t n = num_colors - num_sums;
-      for (ind = first, j = 0; (ind + j) % num_colors != last + 1; ++j) {
+      for (ind = first, j = 0; j < n; ++j) {
         const uint16_t l_j = remapping[(ind + j) % num_colors];
-        delta += (n - 1 - 2 * (int32_t)j) *
+        delta += (n - 1 - 2 * j) *
                  (int32_t)cooccurrence[best_index * num_colors + l_j];
       }
       if (delta > 0) {
