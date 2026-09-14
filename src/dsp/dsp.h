@@ -50,6 +50,21 @@ extern "C" {
 #endif
 
 //------------------------------------------------------------------------------
+// WEBP_NO_UNROLL
+
+// Place right before a 'for' loop to tell the compiler not to unroll it.
+// Meant for small, fixed-trip-count SIMD loops that a compiler would
+// otherwise unroll into much larger code, hurting icache locality more than
+// the unrolling saves.
+#if defined(__clang__)
+#define WEBP_NO_UNROLL _Pragma("clang loop unroll(disable)")
+#elif defined(__GNUC__)
+#define WEBP_NO_UNROLL _Pragma("GCC unroll 1")
+#else
+#define WEBP_NO_UNROLL
+#endif
+
+//------------------------------------------------------------------------------
 // Init stub generator
 
 // Defines an init function stub to ensure each module exposes a symbol,
