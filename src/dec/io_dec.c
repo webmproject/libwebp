@@ -246,8 +246,15 @@ static int EmitAlphaRGBA4444(const VP8Io* const io, WebPDecParams* const p,
 
 #if !defined(WEBP_REDUCE_SIZE)
 static int Rescale(const uint8_t* src, int src_stride, int new_lines,
-                   WebPRescaler* const wrk) {
+                   WebPRescaler* const wrk, uint8_t* const dst,
+                   int dst_stride) {
   int num_lines_out = 0;
+
+  // The output buffer may be replaced between incremental decode calls when
+  // using external memory. Rebase the rescaler's destination from the current
+  // buffer instead of retaining the pointer captured during setup.
+  wrk->dst = dst + (ptrdiff_t)wrk->dst_y * dst_stride;
+  wrk->dst_stride = dst_stride;
   while (new_lines > 0) {  // import new contributions of source rows.
     const int lines_in = WebPRescalerImport(wrk, new_lines, src, src_stride);
     src += lines_in * src_stride;
@@ -258,6 +265,7 @@ static int Rescale(const uint8_t* src, int src_stride, int new_lines,
 }
 
 static int EmitRescaledYUV(const VP8Io* const io, WebPDecParams* const p) {
+  const WebPYUVABuffer* const buf = &p->output->u.YUVA;
   const int mb_h = io->mb_h;
   const int uv_mb_h = (mb_h + 1) >> 1;
   WebPRescaler* const scaler = p->scaler_y;
@@ -270,9 +278,10 @@ static int EmitRescaledYUV(const VP8Io* const io, WebPDecParams* const p) {
     WebPMultRows((uint8_t*)io->y, io->y_stride, io->a, io->width, io->mb_w,
                  mb_h, 0);
   }
-  num_lines_out = Rescale(io->y, io->y_stride, mb_h, scaler);
-  Rescale(io->u, io->uv_stride, uv_mb_h, p->scaler_u);
-  Rescale(io->v, io->uv_stride, uv_mb_h, p->scaler_v);
+  num_lines_out =
+      Rescale(io->y, io->y_stride, mb_h, scaler, buf->y, buf->y_stride);
+  Rescale(io->u, io->uv_stride, uv_mb_h, p->scaler_u, buf->u, buf->u_stride);
+  Rescale(io->v, io->uv_stride, uv_mb_h, p->scaler_v, buf->v, buf->v_stride);
   return num_lines_out;
 }
 
@@ -282,7 +291,8 @@ static int EmitRescaledAlphaYUV(const VP8Io* const io, WebPDecParams* const p,
   uint8_t* const dst_a = buf->a + (ptrdiff_t)p->last_y * buf->a_stride;
   if (io->a != NULL) {
     uint8_t* const dst_y = buf->y + (ptrdiff_t)p->last_y * buf->y_stride;
-    const int num_lines_out = Rescale(io->a, io->width, io->mb_h, p->scaler_a);
+    const int num_lines_out =
+        Rescale(io->a, io->width, io->mb_h, p->scaler_a, buf->a, buf->a_stride);
     assert(expected_num_lines_out == num_lines_out);
     if (num_lines_out > 0) {  // unmultiply the Y
       WebPMultRows(dst_y, buf->y_stride, dst_a, buf->a_stride,
