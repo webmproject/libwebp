@@ -182,6 +182,7 @@ CFLAGS = $(CFLAGS) /D_UNICODE /DUNICODE
 
 SHARPYUV_OBJS = \
     $(DIROBJ)\sharpyuv\sharpyuv.obj \
+    $(DIROBJ)\sharpyuv\sharpyuv_avx2.obj \
     $(DIROBJ)\sharpyuv\sharpyuv_cpu.obj \
     $(DIROBJ)\sharpyuv\sharpyuv_csp.obj \
     $(DIROBJ)\sharpyuv\sharpyuv_dsp.obj \
