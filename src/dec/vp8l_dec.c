@@ -435,6 +435,11 @@ static int ReadHuffmanCodes(VP8LDecoder* const dec, int xsize, int ysize,
     } else {
       num_htree_groups = num_htree_groups_max;
     }
+    if (num_htree_groups == 1) {
+      WebPSafeFree(huffman_image);
+      huffman_image = NULL;
+      hdr->huffman_subsample_bits = 0;
+    }
   }
 
   if (br->eos) goto Error;
@@ -485,8 +490,8 @@ int ReadHuffmanCodesHelper(int color_cache_bits, int num_htree_groups,
   // MAX_HUFF_IMAGE_SIZE is above what the libwebp encoder allows so something
   // fishy might be happening. Do not allocate too much yet.
   total_huffman_table_size =
-      (num_htree_groups_max > MAX_HUFF_IMAGE_SIZE ? MAX_HUFF_IMAGE_SIZE
-                                                  : num_htree_groups) *
+      (num_htree_groups > MAX_HUFF_IMAGE_SIZE ? MAX_HUFF_IMAGE_SIZE
+                                              : num_htree_groups) *
       table_size;
   if (*htree_groups == NULL || code_lengths == NULL ||
       !VP8LHuffmanTablesAllocate(total_huffman_table_size, huffman_tables)) {
