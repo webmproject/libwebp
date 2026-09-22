@@ -37,8 +37,6 @@
 
 WEBP_ASSUME_UNSAFE_INDEXABLE_ABI
 
-#define NUM_ARGB_CACHE_ROWS 16
-
 static const int kCodeLengthLiterals = 16;
 static const int kCodeLengthRepeatCode = 16;
 static const uint8_t kCodeLengthExtraBits[3] = {2, 3, 7};
@@ -887,11 +885,32 @@ static void ApplyInverseTransforms(VP8LDecoder* const dec, int start_row,
   }
 }
 
+// Returns the full-image pixel offset corresponding to the start of the
+// current sliding window buffer ('dec->window_start_row').
+static WEBP_INLINE ptrdiff_t GetWindowOffset(const VP8LDecoder* const dec) {
+  return (ptrdiff_t)dec->window_start_row * dec->width;
+}
+
+// Converts a pixel offset within the sliding window buffer back to a full-image
+// pixel offset.
+static WEBP_INLINE int GetAbsoluteOffset(const VP8LDecoder* const dec,
+                                         ptrdiff_t window_offset) {
+  return (int)(window_offset + GetWindowOffset(dec));
+}
+
+// Returns the pixel offset of image row 'row' relative to the start of the
+// sliding window buffer.
+static WEBP_INLINE ptrdiff_t GetWindowRowOffset(const VP8LDecoder* const dec,
+                                                int row) {
+  return (ptrdiff_t)(row - dec->window_start_row) * dec->width;
+}
+
 // Processes (transforms, scales & color-converts) the rows decoded after the
 // last call.
 static void ProcessRows(VP8LDecoder* const dec, int row,
                         int wait_for_biggest_batch) {
-  const uint32_t* const rows = dec->pixels + dec->width * dec->last_row;
+  const uint32_t* const rows =
+      dec->pixels + GetWindowRowOffset(dec, dec->last_row);
   int num_rows;
 
   // In case of YUV conversion and if we do not need to get to the last row.
@@ -1000,7 +1019,8 @@ static void ExtractPalettedAlphaRows(VP8LDecoder* const dec, int last_row) {
     // Special method for paletted alpha data. We only process the cropped area.
     const int width = dec->io->width;
     uint8_t* out = alph_dec->output + width * first_row;
-    const uint8_t* const in = (uint8_t*)dec->pixels + dec->width * first_row;
+    const uint8_t* const in =
+        (uint8_t*)dec->pixels + GetWindowRowOffset(dec, first_row);
     VP8LTransform* const transform = &dec->transforms[0];
     assert(dec->next_transform == 1);
     assert(transform->type == COLOR_INDEXING_TRANSFORM);
@@ -1132,6 +1152,119 @@ static WEBP_INLINE void CopyBlock32b(uint32_t* const dst, int dist,
 
 //------------------------------------------------------------------------------
 
+// Returns the maximum number of previous rows that a backward reference can
+// reach. Linear distance codes span up to LZ77_WINDOW_SIZE pixels, while the 2D
+// neighborhood distance codes in kCodeToPlane (see PlaneCodeToDistance) have
+// yoffset <= 7 and xoffset <= 8, reaching up to 7 * width + 8 pixels.
+static int GetMaxDistanceRows(int width) {
+  const int max_plane_dist = 7 * width + 8;
+  const int max_dist =
+      (LZ77_WINDOW_SIZE > max_plane_dist) ? LZ77_WINDOW_SIZE : max_plane_dist;
+  return (max_dist + width - 1) / width;
+}
+
+int VP8LGetWindowRows(int width, int height, int max_history_rows) {
+  // A backward reference of MAX_LENGTH pixels starting mid-row can span 1 extra
+  // row beyond ceil(MAX_LENGTH / width).
+  const int max_length_rows = (MAX_LENGTH + width - 1) / width + 1;
+  // Minimum rows required in the window at any shift point:
+  // - max_history_rows: backward-reference history prior to last_row/saved_row.
+  // - NUM_ARGB_CACHE_ROWS: decoded rows queued before ProcessRows/SaveState.
+  // - max_length_rows: headroom for a MAX_LENGTH copy before the next shift.
+  // - 2: 1 for the current partially-decoded row + 1 for the (num_window_rows -
+  //   1) margin in GetWindowLimit().
+  const int min_rows =
+      max_history_rows + NUM_ARGB_CACHE_ROWS + max_length_rows + 2;
+  // Allocate 2x min_rows so that ShiftWindow() shifts ~min_rows at a time
+  // rather than on every batch, amortizing the memmove() cost.
+  const int num_window_rows = 2 * min_rows;
+  return (num_window_rows < height) ? num_window_rows : height;
+}
+
+// Returns the number of rows to allocate in the internal sliding window buffer
+// (capped to 'height' if the entire image fits within the window).
+static int GetWindowRows(int width, int height) {
+  return VP8LGetWindowRows(width, height, GetMaxDistanceRows(width));
+}
+
+// Returns the pixel offset threshold within the window buffer at which the
+// window must be shifted forward to make room for further decoding, or 0 if
+// sliding window mode is disabled (e.g., when the full image fits in memory or
+// no row processing callback is active).
+static ptrdiff_t GetWindowLimit(const VP8LDecoder* const dec, int height,
+                                int has_process_func) {
+  if (!has_process_func || dec->num_window_rows >= height) return 0;
+  return (ptrdiff_t)(dec->num_window_rows - 1) * dec->width - MAX_LENGTH;
+}
+
+ptrdiff_t VP8LShiftWindowBuffer(void* const data, int width, size_t elem_size,
+                                int min_keep_row, ptrdiff_t src_offset,
+                                int* const window_start_row) {
+  const int shift_rows = min_keep_row - *window_start_row;
+  ptrdiff_t shift_pixels, copy_pixels;
+  if (shift_rows <= 0) return 0;
+  shift_pixels = (ptrdiff_t)shift_rows * width;
+  copy_pixels = src_offset - shift_pixels;
+  if (copy_pixels > 0) {
+    WEBP_UNSAFE_MEMMOVE(data, (uint8_t*)data + shift_pixels * elem_size,
+                        (size_t)copy_pixels * elem_size);
+  }
+  *window_start_row += shift_rows;
+  return shift_pixels;
+}
+
+// Shifts already-processed rows out of the sliding window buffer if
+// 'src_offset' has reached 'window_limit', retaining enough history rows for
+// maximum backward-reference distance and incremental checkpoints.
+// Returns the number of pixels shifted, or 0 if no shift occurred.
+static ptrdiff_t ShiftWindow(VP8LDecoder* const dec, void* const data,
+                             ptrdiff_t src_offset, ptrdiff_t window_limit,
+                             size_t elem_size) {
+  int min_row, min_window_start_row;
+  if (window_limit == 0 || src_offset < window_limit) return 0;
+  min_row = dec->last_row;
+  if (dec->incremental) {
+    const int saved_row = dec->saved_last_pixel / dec->width;
+    if (saved_row < min_row) min_row = saved_row;
+  }
+  min_window_start_row = min_row - GetMaxDistanceRows(dec->width);
+  return VP8LShiftWindowBuffer(data, dec->width, elem_size,
+                               min_window_start_row, src_offset,
+                               &dec->window_start_row);
+}
+
+// Shifts the 8-bit paletted alpha sliding window buffer and updates active
+// decode pointers if 'src' has reached 'window_limit'.
+static void ShiftWindow8b(VP8LDecoder* const dec, uint8_t* const data,
+                          ptrdiff_t window_limit, uint8_t** const src,
+                          const uint8_t** const src_end,
+                          const uint8_t** const src_last) {
+  const ptrdiff_t shift_pixels =
+      ShiftWindow(dec, data, *src - data, window_limit, sizeof(*data));
+  if (shift_pixels > 0) {
+    *src -= shift_pixels;
+    *src_end -= shift_pixels;
+    *src_last -= shift_pixels;
+  }
+}
+
+// Shifts the 32-bit ARGB sliding window buffer and updates active decode
+// pointers if 'src' has reached 'window_limit'.
+static void ShiftWindow32b(VP8LDecoder* const dec, uint32_t* const data,
+                           ptrdiff_t window_limit, uint32_t** const src,
+                           uint32_t** const last_cached,
+                           uint32_t** const src_end,
+                           uint32_t** const src_last) {
+  const ptrdiff_t shift_pixels =
+      ShiftWindow(dec, data, *src - data, window_limit, sizeof(*data));
+  if (shift_pixels > 0) {
+    *src -= shift_pixels;
+    *last_cached -= shift_pixels;
+    *src_end -= shift_pixels;
+    *src_last -= shift_pixels;
+  }
+}
+
 static int DecodeAlphaData(VP8LDecoder* const dec, uint8_t* const data,
                            int width, int height, int last_row) {
   int ok = 1;
@@ -1139,11 +1272,13 @@ static int DecodeAlphaData(VP8LDecoder* const dec, uint8_t* const data,
   int col = dec->last_pixel % width;
   VP8LBitReader* const br = &dec->br;
   VP8LMetadata* const hdr = &dec->hdr;
-  uint8_t* src = data + dec->last_pixel;
+  const ptrdiff_t window_limit =
+      GetWindowLimit(dec, height, /*has_process_func=*/1);
+  uint8_t* src = data + dec->last_pixel - GetWindowOffset(dec);
   // End of data.
-  const uint8_t* const src_end = data + width * height;
+  const uint8_t* src_end = data + GetWindowRowOffset(dec, height);
   // Last pixel to decode.
-  const uint8_t* const src_last = data + width * last_row;
+  const uint8_t* src_last = data + GetWindowRowOffset(dec, last_row);
   const int len_code_limit = NUM_LITERAL_CODES + NUM_LENGTH_CODES;
   const int mask = hdr->huffman_mask;
   assert(src <= src_end);
@@ -1156,12 +1291,13 @@ static int DecodeAlphaData(VP8LDecoder* const dec, uint8_t* const data,
     // backward reference.
     const uint8_t* const block_start = src;
     const uint8_t* block_end;
-    if (mask == ~0) {
+    if (mask == ~0 && window_limit == 0) {
       // No block, we decode until src_last.
       block_end = src_last;
     } else {
-      const uint32_t block_size_left = mask + 1 - (col & mask);
       const uint32_t line_size_left = width - col;
+      const uint32_t block_size_left =
+          (mask == ~0) ? line_size_left : (uint32_t)(mask + 1 - (col & mask));
       // End of the block if it is full, or end of the line.
       block_end = src + (block_size_left < line_size_left ? block_size_left
                                                           : line_size_left);
@@ -1199,8 +1335,11 @@ static int DecodeAlphaData(VP8LDecoder* const dec, uint8_t* const data,
     while (col >= width) {
       col -= width;
       ++row;
-      if (row <= last_row && (row % NUM_ARGB_CACHE_ROWS == 0)) {
+      if (row <= last_row &&
+          (row % NUM_ARGB_CACHE_ROWS == 0 ||
+           (window_limit > 0 && src - data >= window_limit))) {
         ExtractPalettedAlphaRows(dec, row);
+        ShiftWindow8b(dec, data, window_limit, &src, &src_end, &src_last);
       }
     }
   }
@@ -1213,7 +1352,7 @@ End:
     return VP8LSetError(
         dec, br->eos ? VP8_STATUS_SUSPENDED : VP8_STATUS_BITSTREAM_ERROR);
   }
-  dec->last_pixel = (int)(src - data);
+  dec->last_pixel = GetAbsoluteOffset(dec, src - data);
   return ok;
 }
 
@@ -1244,10 +1383,12 @@ static int DecodeImageData(VP8LDecoder* const dec, uint32_t* const data,
   int col = dec->last_pixel % width;
   VP8LBitReader* const br = &dec->br;
   VP8LMetadata* const hdr = &dec->hdr;
-  uint32_t* src = data + dec->last_pixel;
+  const ptrdiff_t window_limit =
+      GetWindowLimit(dec, height, process_func != NULL);
+  uint32_t* src = data + dec->last_pixel - GetWindowOffset(dec);
   uint32_t* last_cached = src;
-  uint32_t* const src_end = data + width * height;     // End of data
-  uint32_t* const src_last = data + width * last_row;  // Last pixel to decode
+  uint32_t* src_end = data + GetWindowRowOffset(dec, height);
+  uint32_t* src_last = data + GetWindowRowOffset(dec, last_row);
   const int len_code_limit = NUM_LITERAL_CODES + NUM_LENGTH_CODES;
   const int color_cache_limit = len_code_limit + hdr->color_cache_size;
   int next_sync_row = dec->incremental ? row : 1 << 24;
@@ -1262,7 +1403,7 @@ static int DecodeImageData(VP8LDecoder* const dec, uint32_t* const data,
   while (src < src_last) {
     int code;
     if (row >= next_sync_row) {
-      SaveState(dec, (int)(src - data));
+      SaveState(dec, GetAbsoluteOffset(dec, src - data));
       next_sync_row = row + SYNC_EVERY_N_ROWS;
     }
     // Only update when changing tile. Note we could use this test:
@@ -1313,6 +1454,8 @@ static int DecodeImageData(VP8LDecoder* const dec, uint32_t* const data,
             VP8LColorCacheInsert(color_cache, *last_cached++);
           }
         }
+        ShiftWindow32b(dec, data, window_limit, &src, &last_cached, &src_end,
+                       &src_last);
       }
     } else if (code < len_code_limit) {  // Backward reference
       int dist_code, dist;
@@ -1349,6 +1492,8 @@ static int DecodeImageData(VP8LDecoder* const dec, uint32_t* const data,
           VP8LColorCacheInsert(color_cache, *last_cached++);
         }
       }
+      ShiftWindow32b(dec, data, window_limit, &src, &last_cached, &src_end,
+                     &src_last);
     } else if (code < color_cache_limit) {  // Color cache
       const int key = code - len_code_limit;
       assert(color_cache != NULL);
@@ -1384,7 +1529,7 @@ static int DecodeImageData(VP8LDecoder* const dec, uint32_t* const data,
                    /*wait_for_biggest_batch=*/0);
     }
     dec->status = VP8_STATUS_OK;
-    dec->last_pixel = (int)(src - data);  // end-of-scan marker
+    dec->last_pixel = GetAbsoluteOffset(dec, src - data);
   } else {
     // if not incremental, and we are past the end of buffer (eos=1), then this
     // is a real bitstream error.
@@ -1526,6 +1671,8 @@ static void ClearInternalBuffers(VP8LDecoder* const dec) {
   dec->pixels = NULL;
   dec->argb_cache = NULL;
   dec->accumulated_rgb_pixels = NULL;
+  dec->num_window_rows = 0;
+  dec->window_start_row = 0;
 }
 
 // Resets the decoder in its initial state, reclaiming memory.
@@ -1654,7 +1801,8 @@ End:
 //------------------------------------------------------------------------------
 // Allocate internal buffers dec->pixels and dec->argb_cache.
 static int AllocateInternalBuffers32b(VP8LDecoder* const dec, int final_width) {
-  const uint64_t num_pixels = (uint64_t)dec->width * dec->height;
+  const int num_window_rows = GetWindowRows(dec->width, dec->height);
+  const uint64_t num_pixels = (uint64_t)dec->width * num_window_rows;
   // Scratch buffer corresponding to top-prediction row for transforming the
   // first row in the row-blocks. Not needed for paletted alpha.
   const uint64_t cache_top_pixels = final_width;
@@ -1676,6 +1824,8 @@ static int AllocateInternalBuffers32b(VP8LDecoder* const dec, int final_width) {
     ClearInternalBuffers(dec);
     return VP8LSetError(dec, VP8_STATUS_OUT_OF_MEMORY);
   }
+  dec->num_window_rows = num_window_rows;
+  dec->window_start_row = 0;
   dec->argb_cache = dec->pixels + num_pixels + cache_top_pixels;
   dec->accumulated_rgb_pixels =
       accumulated_rgb_pixels == 0
@@ -1687,12 +1837,15 @@ static int AllocateInternalBuffers32b(VP8LDecoder* const dec, int final_width) {
 }
 
 static int AllocateInternalBuffers8b(VP8LDecoder* const dec) {
-  const uint64_t total_num_pixels = (uint64_t)dec->width * dec->height;
+  const int num_window_rows = GetWindowRows(dec->width, dec->height);
+  const uint64_t total_num_pixels = (uint64_t)dec->width * num_window_rows;
   ClearInternalBuffers(dec);
   dec->pixels = (uint32_t*)WebPSafeMalloc(total_num_pixels, sizeof(uint8_t));
   if (dec->pixels == NULL) {
     return VP8LSetError(dec, VP8_STATUS_OUT_OF_MEMORY);
   }
+  dec->num_window_rows = num_window_rows;
+  dec->window_start_row = 0;
   return 1;
 }
 
@@ -1703,7 +1856,7 @@ static void ExtractAlphaRows(VP8LDecoder* const dec, int last_row,
                              int wait_for_biggest_batch) {
   int cur_row = dec->last_row;
   int num_rows = last_row - cur_row;
-  const uint32_t* in = dec->pixels + dec->width * cur_row;
+  const uint32_t* in = dec->pixels + GetWindowRowOffset(dec, cur_row);
 
   if (wait_for_biggest_batch && last_row % NUM_ARGB_CACHE_ROWS != 0) {
     return;

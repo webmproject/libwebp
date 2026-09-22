@@ -28,9 +28,6 @@
 
 #define MIN_BLOCK_SIZE 256  // minimum block size for backward references
 
-// 1M window (4M bytes) minus 120 special codes for short distances.
-#define WINDOW_SIZE ((1 << WINDOW_SIZE_BITS) - 120)
-
 // Minimum number of pixels for which it is cheaper to encode a
 // distance + length instead of each pixel as a literal.
 #define MIN_LENGTH 4
@@ -240,12 +237,13 @@ static int GetMaxItersForQuality(int quality) {
 }
 
 static int GetWindowSizeForHashChain(int quality, int xsize) {
-  const int max_window_size = (quality > 75)   ? WINDOW_SIZE
+  const int max_window_size = (quality > 75)   ? LZ77_WINDOW_SIZE
                               : (quality > 50) ? (xsize << 8)
                               : (quality > 25) ? (xsize << 6)
                                                : (xsize << 4);
   assert(xsize > 0);
-  return (max_window_size > WINDOW_SIZE) ? WINDOW_SIZE : max_window_size;
+  return (max_window_size > LZ77_WINDOW_SIZE) ? LZ77_WINDOW_SIZE
+                                              : max_window_size;
 }
 
 static WEBP_INLINE int MaxFindCopyLength(int len) {
@@ -410,7 +408,7 @@ int VP8LHashChainFill(VP8LHashChain* const p, int quality,
     max_base_position = base_position;
     while (1) {
       assert(best_length <= MAX_LENGTH);
-      assert(best_distance <= WINDOW_SIZE);
+      assert(best_distance <= LZ77_WINDOW_SIZE);
       p->offset_length[base_position] =
           (best_distance << MAX_LENGTH_BITS) | (uint32_t)best_length;
       --base_position;

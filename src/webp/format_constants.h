@@ -45,6 +45,13 @@
 #define NUM_DISTANCE_CODES 40
 #define CODE_LENGTH_CODES 19
 
+#define MAX_LENGTH_BITS 12
+#define LZ77_WINDOW_SIZE_BITS 20
+// We want the max value to be attainable and stored in MAX_LENGTH_BITS bits.
+#define MAX_LENGTH ((1 << MAX_LENGTH_BITS) - 1)
+// 1M window (4M bytes) minus 120 special codes for short distances.
+#define LZ77_WINDOW_SIZE ((1 << LZ77_WINDOW_SIZE_BITS) - 120)
+
 #define MIN_HUFFMAN_BITS 2  // min number of Huffman bits
 #define NUM_HUFFMAN_BITS 3
 

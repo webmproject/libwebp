@@ -33,6 +33,8 @@ WEBP_ASSUME_UNSAFE_INDEXABLE_ABI
 extern "C" {
 #endif
 
+#define NUM_ARGB_CACHE_ROWS 16
+
 typedef enum { READ_DATA = 0, READ_HDR = 1, READ_DIM = 2 } VP8LDecodeState;
 
 typedef struct VP8LTransform VP8LTransform;
@@ -79,11 +81,13 @@ struct VP8LDecoder {
 
   int width;
   int height;
-  int last_row;      // last input row decoded so far.
-  int last_pixel;    // last pixel decoded so far. However, it may
-                     // not be transformed, scaled and
-                     // color-converted yet.
-  int last_out_row;  // last row output so far.
+  int last_row;          // last input row decoded so far.
+  int last_pixel;        // last pixel decoded so far. However, it may
+                         // not be transformed, scaled and
+                         // color-converted yet.
+  int last_out_row;      // last row output so far.
+  int num_window_rows;   // number of rows allocated in dec->pixels.
+  int window_start_row;  // first image row currently stored in dec->pixels.
 
   VP8LMetadata hdr;
 
@@ -140,6 +144,19 @@ WEBP_NODISCARD int ReadHuffmanCodesHelper(
     int color_cache_bits, int num_htree_groups, int num_htree_groups_max,
     const int* const mapping, VP8LDecoder* const dec,
     HuffmanTables* const huffman_tables, HTreeGroup** const htree_groups);
+
+// Returns the number of rows to allocate in a sliding window buffer of width
+// 'width' and image height 'height' that needs to retain at least
+// 'max_history_rows' previous rows.
+int VP8LGetWindowRows(int width, int height, int max_history_rows);
+
+// Shifts rows prior to 'min_keep_row' out of 'data' (which holds pixels of
+// size 'elem_size' starting at row '*window_start_row' up to window pixel
+// offset 'src_offset'), updates '*window_start_row', and returns the number of
+// shifted pixels (or 0 if no shift occurred).
+ptrdiff_t VP8LShiftWindowBuffer(void* const data, int width, size_t elem_size,
+                                int min_keep_row, ptrdiff_t src_offset,
+                                int* const window_start_row);
 
 //------------------------------------------------------------------------------
 

@@ -105,21 +105,17 @@ static WEBP_INLINE uint32_t PixOrCopyDistance(const PixOrCopy* const p) {
 #define HASH_BITS 18
 #define HASH_SIZE (1 << HASH_BITS)
 
-// If you change this, you need MAX_LENGTH_BITS + WINDOW_SIZE_BITS <= 32 as it
-// is used in VP8LHashChain.
-#define MAX_LENGTH_BITS 12
-#define WINDOW_SIZE_BITS 20
-// We want the max value to be attainable and stored in MAX_LENGTH_BITS bits.
-#define MAX_LENGTH ((1 << MAX_LENGTH_BITS) - 1)
-#if MAX_LENGTH_BITS + WINDOW_SIZE_BITS > 32
-#error "MAX_LENGTH_BITS + WINDOW_SIZE_BITS > 32"
+// If you change this, you need MAX_LENGTH_BITS + LZ77_WINDOW_SIZE_BITS <= 32 as
+// it is used in VP8LHashChain.
+#if MAX_LENGTH_BITS + LZ77_WINDOW_SIZE_BITS > 32
+#error "MAX_LENGTH_BITS + LZ77_WINDOW_SIZE_BITS > 32"
 #endif
 
 typedef struct VP8LHashChain VP8LHashChain;
 struct VP8LHashChain {
   // The 20 most significant bits contain the offset at which the best match
   // is found. These 20 bits are the limit defined by GetWindowSizeForHashChain
-  // (through WINDOW_SIZE = 1<<20).
+  // (through LZ77_WINDOW_SIZE = 1<<20).
   // The lower 12 bits contain the length of the match. The 12 bit limit is
   // defined in MaxFindCopyLength with MAX_LENGTH=4096.
   uint32_t* offset_length;
