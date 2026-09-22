@@ -49,10 +49,13 @@ int ImgIoUtilReadFromStdin(const uint8_t** data, size_t* data_size) {
   if (!ImgIoUtilSetBinaryMode(stdin)) return 0;
 
   while (!feof(stdin)) {
+    void* new_data;
     // We double the buffer size each time and read as much as possible.
     const size_t extra_size = (max_size == 0) ? kBlockSize : max_size;
+    // Leave room for the terminating '\0' without wrapping the allocation size.
+    if (max_size >= (size_t)(-1) - extra_size) goto Error;
     // we allocate one extra byte for the \0 terminator
-    void* const new_data = realloc(input, max_size + extra_size + 1);
+    new_data = realloc(input, max_size + extra_size + 1);
     if (new_data == NULL) goto Error;
     input = (uint8_t*)new_data;
     max_size += extra_size;
