@@ -36,6 +36,7 @@
 #include "fuzztest/fuzztest.h"
 #include "src/dsp/cpu.h"
 #include "src/webp/decode.h"
+#include "src/webp/demux.h"
 #include "src/webp/encode.h"
 #include "src/webp/types.h"
 
@@ -93,6 +94,8 @@ struct UniquePtrDeleter {
   void operator()(WebPDecoderConfig* config) const {
     WebPFreeDecBuffer(&config->output);
   }
+  void operator()(WebPDemuxer* demux) const { WebPDemuxDelete(demux); }
+  void operator()(WebPIterator* iter) const { WebPDemuxReleaseIterator(iter); }
 };
 
 // Like WebPPicture but with no C array.
