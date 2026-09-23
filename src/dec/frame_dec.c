@@ -24,6 +24,7 @@
 #include "src/utils/thread_utils.h"
 #include "src/utils/utils.h"
 #include "src/webp/decode.h"
+#include "src/webp/format_constants.h"
 #include "src/webp/types.h"
 
 WEBP_ASSUME_UNSAFE_INDEXABLE_ABI
@@ -363,10 +364,15 @@ void VP8InitDithering(const WebPDecoderOptions* const options,
       }
     }
     // potentially allow alpha dithering
-    dec->alpha_dithering = options->alpha_dithering_strength;
-    if (dec->alpha_dithering > 100) {
-      dec->alpha_dithering = 100;
-    } else if (dec->alpha_dithering < 0) {
+    if (dec->alpha_data != NULL && dec->alpha_data_size > ALPHA_HEADER_LEN &&
+        ((dec->alpha_data[0] >> 4) & 0x03) == ALPHA_PREPROCESSED_LEVELS) {
+      dec->alpha_dithering = options->alpha_dithering_strength;
+      if (dec->alpha_dithering > 100) {
+        dec->alpha_dithering = 100;
+      } else if (dec->alpha_dithering < 0) {
+        dec->alpha_dithering = 0;
+      }
+    } else {
       dec->alpha_dithering = 0;
     }
   }

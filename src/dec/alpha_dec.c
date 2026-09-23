@@ -226,10 +226,7 @@ WEBP_NODISCARD const uint8_t* VP8DecompressAlphaRows(VP8Decoder* const dec,
           goto Error;
         }
       }
-      // if we allowed use of alpha dithering, check whether it's needed at all
-      if (dec->alph_dec->pre_processing != ALPHA_PREPROCESSED_LEVELS) {
-        dec->alpha_dithering = 0;  // disable dithering
-      } else {
+      if (dec->alpha_dithering > 0) {
         num_rows = height - row;  // decode everything in one pass
       }
     }
