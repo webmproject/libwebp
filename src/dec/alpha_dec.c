@@ -136,7 +136,7 @@ WEBP_NODISCARD static int ALPHDecode(VP8Decoder* const dec, int row,
   const int height = alph_dec->io.crop_bottom;
   if (alph_dec->method == ALPHA_NO_COMPRESSION) {
     int y;
-    const uint8_t* prev_line = dec->alpha_prev_line;
+    const uint8_t* prev_line = alph_dec->prev_line;
     const uint8_t* deltas = dec->alpha_data + ALPHA_HEADER_LEN + row * width;
     uint8_t* dst = dec->alpha_plane + row * width;
     assert(deltas <= &dec->alpha_data[dec->alpha_data_size]);
@@ -147,7 +147,7 @@ WEBP_NODISCARD static int ALPHDecode(VP8Decoder* const dec, int row,
       dst += width;
       deltas += width;
     }
-    dec->alpha_prev_line = prev_line;
+    alph_dec->prev_line = prev_line;
   } else {  // alph_dec->method == ALPHA_LOSSLESS_COMPRESSION
     assert(alph_dec->vp8l_dec != NULL);
     if (!VP8LDecodeAlphaImageStream(alph_dec, row + num_rows)) {
@@ -167,27 +167,8 @@ WEBP_NODISCARD static int ALPHDecode(VP8Decoder* const dec, int row,
   return 1;
 }
 
-WEBP_NODISCARD static int AllocateAlphaPlane(VP8Decoder* const dec,
-                                             const VP8Io* const io) {
-  const int stride = io->width;
-  const int height = io->crop_bottom;
-  const uint64_t alpha_size = (uint64_t)stride * height;
-  assert(dec->alpha_plane_mem == NULL);
-  dec->alpha_plane_mem =
-      (uint8_t*)WebPSafeMalloc(alpha_size, sizeof(*dec->alpha_plane));
-  if (dec->alpha_plane_mem == NULL) {
-    return VP8SetError(dec, VP8_STATUS_OUT_OF_MEMORY,
-                       "Alpha decoder initialization failed.");
-  }
-  dec->alpha_plane = dec->alpha_plane_mem;
-  dec->alpha_prev_line = NULL;
-  return 1;
-}
-
 void WebPDeallocateAlphaMemory(VP8Decoder* const dec) {
   assert(dec != NULL);
-  WebPSafeFree(dec->alpha_plane_mem);
-  dec->alpha_plane_mem = NULL;
   dec->alpha_plane = NULL;
   ALPHDelete(dec->alph_dec);
   dec->alph_dec = NULL;
@@ -210,13 +191,13 @@ WEBP_NODISCARD const uint8_t* VP8DecompressAlphaRows(VP8Decoder* const dec,
 
   if (!dec->is_alpha_decoded) {
     if (dec->alph_dec == NULL) {  // Initialize decoder.
+      assert(dec->alpha_plane != NULL);
       dec->alph_dec = ALPHNew();
       if (dec->alph_dec == NULL) {
         VP8SetError(dec, VP8_STATUS_OUT_OF_MEMORY,
                     "Alpha decoder initialization failed.");
         return NULL;
       }
-      if (!AllocateAlphaPlane(dec, io)) goto Error;
       {
         const VP8StatusCode status =
             ALPHInit(dec->alph_dec, dec->alpha_data, dec->alpha_data_size, io,
