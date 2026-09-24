@@ -46,7 +46,7 @@ fuzztest_setup_fuzzing_flags()
 
 add_library(fuzz_utils fuzz_utils.h fuzz_utils.cc img_alpha.h img_grid.h
                        img_peak.h)
-target_link_libraries(fuzz_utils PUBLIC webpdecoder)
+target_link_libraries(fuzz_utils PUBLIC imagedec webpdecoder)
 target_include_directories(fuzz_utils PUBLIC ${CMAKE_SOURCE_DIR}
                                              ${CMAKE_BINARY_DIR})
 link_fuzztest(fuzz_utils)

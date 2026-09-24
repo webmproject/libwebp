@@ -19,6 +19,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
+#include <cstring>
 #include <iostream>
 #include <string_view>
 
@@ -32,6 +33,8 @@ namespace {
 
 void TestReader(const uint8_t* data, size_t size, WebPImageReader reader,
                 bool keep_alpha, bool use_argb) {
+  if (fuzz_utils::IsImageTooBig(data, size)) return;
+
   WebPPicture pic;
   if (!WebPPictureInit(&pic)) {
     std::cerr << "WebPPictureInit failed" << std::endl;
@@ -43,9 +46,8 @@ void TestReader(const uint8_t* data, size_t size, WebPImageReader reader,
   MetadataInit(&metadata);
   pic.use_argb = use_argb ? 1 : 0;
 
-  if (!fuzz_utils::IsImageTooBig(data, size)) {
-    (void)(*reader)(data, size, &pic, keep_alpha ? 1 : 0, &metadata);
-  }
+  (void)(*reader)(data, size, &pic, keep_alpha ? 1 : 0, &metadata);
+
   WebPPictureFree(&pic);
   MetadataFree(&metadata);
   nalloc_end();

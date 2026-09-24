@@ -49,13 +49,13 @@ namespace fuzz_utils {
 // Enabling some sanitizers slow down runtime significantly.
 // Use a very low threshold in this case to avoid timeouts.
 #if defined(__SANITIZE_ADDRESS__)  // GCC
-static const size_t kFuzzPxLimit = 1024 * 1024 / 10;
+static const uint64_t kFuzzPxLimit = 1024 * 1024 / 10;
 #elif !defined(__has_feature)  // Clang
-static const size_t kFuzzPxLimit = 1024 * 1024;
+static const uint64_t kFuzzPxLimit = 1024 * 1024;
 #elif __has_feature(address_sanitizer) || __has_feature(memory_sanitizer)
-static const size_t kFuzzPxLimit = 1024 * 1024 / 18;
+static const uint64_t kFuzzPxLimit = 1024 * 1024 / 18;
 #else
-static const size_t kFuzzPxLimit = 1024 * 1024;
+static const uint64_t kFuzzPxLimit = 1024 * 1024;
 #endif
 
 // Demuxed or decoded animation frames.

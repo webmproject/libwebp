@@ -20,6 +20,7 @@
 #include <string.h>
 
 #ifdef WEBP_HAVE_TIFF
+#include <tiff.h>
 #include <tiffio.h>
 
 #include "./imageio_util.h"
@@ -150,8 +151,10 @@ static void MultARGBRow(uint8_t* ptr, int width) {
   }
 }
 
-int ReadTIFF(const uint8_t* const data, size_t data_size,
-             WebPPicture* const pic, int keep_alpha, Metadata* const metadata) {
+static int ReadTIFFInternal(const uint8_t* const data, size_t data_size,
+                            WebPPicture* const pic, int keep_alpha,
+                            Metadata* const metadata, int* const width_out,
+                            int* const height_out) {
   MyData my_data = {data, (toff_t)data_size, 0};
   TIFF* tif;
   uint32_t image_width, image_height, tile_width, tile_height;
@@ -163,42 +166,46 @@ int ReadTIFF(const uint8_t* const data, size_t data_size,
   int64_t alloc_size;
   int ok = 0;
   tdir_t dircount;
+  TIFFErrorHandler prev_error_handler = NULL;
+  TIFFErrorHandler prev_warning_handler = NULL;
 
-  if (data == NULL || data_size == 0 || data_size > INT_MAX || pic == NULL) {
+  if (data == NULL || data_size < 4 || data_size > INT_MAX ||
+      (data[0] != 'I' && data[0] != 'M') || data[0] != data[1]) {
     return 0;
+  }
+  if (pic == NULL && (width_out == NULL || height_out == NULL)) return 0;
+
+  if (pic == NULL) {
+    prev_error_handler = TIFFSetErrorHandler(NULL);
+    prev_warning_handler = TIFFSetWarningHandler(NULL);
   }
 
   tif = TIFFClientOpen("Memory", "r", &my_data, MyRead, MyRead, MySeek, MyClose,
                        MySize, MyMapFile, MyUnmapFile);
   if (tif == NULL) {
-    fprintf(stderr, "Error! Cannot parse TIFF file\n");
+    if (pic != NULL) fprintf(stderr, "Error! Cannot parse TIFF file\n");
+    if (pic == NULL) {
+      TIFFSetErrorHandler(prev_error_handler);
+      TIFFSetWarningHandler(prev_warning_handler);
+    }
     return 0;
   }
 
-  dircount = TIFFNumberOfDirectories(tif);
-  if (dircount > 1) {
-    fprintf(stderr,
-            "Warning: multi-directory TIFF files are not supported.\n"
-            "Only the first will be used, %d will be ignored.\n",
-            dircount - 1);
-  }
-  if (!TIFFGetFieldDefaulted(tif, TIFFTAG_SAMPLESPERPIXEL, &samples_per_px)) {
-    fprintf(stderr, "Error! Cannot retrieve TIFF samples-per-pixel info.\n");
-    goto End;
-  }
-  if (!(samples_per_px == 1 || samples_per_px == 3 || samples_per_px == 4)) {
-    goto End;  // not supported
-  }
-
   if (!(TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &image_width) &&
-        TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &image_height))) {
-    fprintf(stderr, "Error! Cannot retrieve TIFF image dimensions.\n");
+        TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &image_height) &&
+        image_width > 0 && image_height > 0 && image_width <= INT_MAX &&
+        image_height <= INT_MAX)) {
+    if (pic != NULL) {
+      fprintf(stderr, "Error! Cannot retrieve TIFF image dimensions.\n");
+    }
     goto End;
   }
   stride = (uint64_t)image_width * sizeof(*raster);
   if (!ImgIoUtilCheckSizeArgumentsOverflow(stride, image_height)) {
-    fprintf(stderr, "Error! TIFF image dimension (%d x %d) is too large.\n",
-            image_width, image_height);
+    if (pic != NULL) {
+      fprintf(stderr, "Error! TIFF image dimension (%d x %d) is too large.\n",
+              image_width, image_height);
+    }
     goto End;
   }
 
@@ -214,10 +221,34 @@ int ReadTIFF(const uint8_t* const data, size_t data_size,
         (tile_height > 32 && tile_height / 2 > image_height) ||
         !ImgIoUtilCheckSizeArgumentsOverflow(
             (uint64_t)tile_width * sizeof(*raster), tile_height)) {
-      fprintf(stderr, "Error! TIFF tile dimension (%d x %d) is too large.\n",
-              tile_width, tile_height);
+      if (pic != NULL) {
+        fprintf(stderr, "Error! TIFF tile dimension (%d x %d) is too large.\n",
+                tile_width, tile_height);
+      }
       goto End;
     }
+  }
+
+  if (width_out != NULL) *width_out = (int)image_width;
+  if (height_out != NULL) *height_out = (int)image_height;
+  if (pic == NULL) {
+    ok = 1;
+    goto End;
+  }
+
+  dircount = TIFFNumberOfDirectories(tif);
+  if (dircount > 1) {
+    fprintf(stderr,
+            "Warning: multi-directory TIFF files are not supported.\n"
+            "Only the first will be used, %d will be ignored.\n",
+            dircount - 1);
+  }
+  if (!TIFFGetFieldDefaulted(tif, TIFFTAG_SAMPLESPERPIXEL, &samples_per_px)) {
+    fprintf(stderr, "Error! Cannot retrieve TIFF samples-per-pixel info.\n");
+    goto End;
+  }
+  if (!(samples_per_px == 1 || samples_per_px == 3 || samples_per_px == 4)) {
+    goto End;  // not supported
   }
 
   if (samples_per_px > 3 && !TIFFGetField(tif, TIFFTAG_EXTRASAMPLES,
@@ -272,7 +303,23 @@ int ReadTIFF(const uint8_t* const data, size_t data_size,
   }
 End:
   TIFFClose(tif);
+  if (pic == NULL) {
+    TIFFSetErrorHandler(prev_error_handler);
+    TIFFSetWarningHandler(prev_warning_handler);
+  }
   return ok;
+}
+
+int ReadTIFF(const uint8_t* const data, size_t data_size,
+             WebPPicture* const pic, int keep_alpha, Metadata* const metadata) {
+  if (pic == NULL) return 0;
+  return ReadTIFFInternal(data, data_size, pic, keep_alpha, metadata, NULL,
+                          NULL);
+}
+
+int ReadTiffDimensions(const uint8_t* const data, size_t data_size,
+                       int* const width, int* const height) {
+  return ReadTIFFInternal(data, data_size, NULL, 0, NULL, width, height);
 }
 #else   // !WEBP_HAVE_TIFF
 int ReadTIFF(const uint8_t* const data, size_t data_size,
@@ -286,6 +333,15 @@ int ReadTIFF(const uint8_t* const data, size_t data_size,
   fprintf(stderr,
           "TIFF support not compiled. Please install the libtiff "
           "development package before building.\n");
+  return 0;
+}
+
+int ReadTiffDimensions(const uint8_t* const data, size_t data_size,
+                       int* const width, int* const height) {
+  (void)data;
+  (void)data_size;
+  (void)width;
+  (void)height;
   return 0;
 }
 #endif  // WEBP_HAVE_TIFF

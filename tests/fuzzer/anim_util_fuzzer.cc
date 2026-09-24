@@ -37,42 +37,48 @@ void ReadAnimatedImageTest(std::string_view blob) {
 
   // Check GIF canvas and sub-image dimensions. ReadAnimatedGIF calls DGifSlurp
   // (which allocates every sub-image's RasterBits) and AllocateFrames (which
-  // allocates all frame canvases simultaneously).
-  if (size >= 13 && (std::memcmp(data, "GIF87a", 6) == 0 ||
-                     std::memcmp(data, "GIF89a", 6) == 0)) {
-    uint32_t canvas_width = data[6] | (data[7] << 8);
-    uint32_t canvas_height = data[8] | (data[9] << 8);
-    if ((size_t)canvas_width * canvas_height > fuzz_utils::kFuzzPxLimit) {
+  // allocates all frame canvases simultaneously). Note that IsGIF() and
+  // DGifOpen() accept "GIFVER" in addition to "GIF87a" and "GIF89a".
+  if (size >= 3 && std::memcmp(data, "GIF", 3) == 0) {
+    if (size < 13) return;
+    uint64_t canvas_width = data[6] | (data[7] << 8);
+    uint64_t canvas_height = data[8] | (data[9] << 8);
+    if (canvas_width * canvas_height > fuzz_utils::kFuzzPxLimit) {
       return;
     }
     size_t offset = 13;
     if (data[10] & 0x80) {
       offset += 3 * (1u << ((data[10] & 0x07) + 1));
     }
-    size_t frame_count = 0;
-    size_t total_raster_pixels = 0;
+    uint64_t frame_count = 0;
+    uint64_t total_raster_pixels = 0;
     while (offset < size && data[offset] != 0x3b) {
       if (data[offset] == 0x21) {  // Extension block.
-        if (offset + 2 > size) break;
+        if (offset + 2 > size) return;
         offset += 2;
         while (offset < size && data[offset] != 0) {
           offset += 1 + data[offset];
         }
+        if (offset >= size) return;
         offset += 1;
       } else if (data[offset] == 0x2c) {  // Image descriptor.
-        if (offset + 10 > size) break;
-        const uint32_t w = data[offset + 5] | (data[offset + 6] << 8);
-        const uint32_t h = data[offset + 7] | (data[offset + 8] << 8);
+        if (offset + 10 > size) return;
+        const uint64_t left = data[offset + 1] | (data[offset + 2] << 8);
+        const uint64_t top = data[offset + 3] | (data[offset + 4] << 8);
+        const uint64_t w = data[offset + 5] | (data[offset + 6] << 8);
+        const uint64_t h = data[offset + 7] | (data[offset + 8] << 8);
         const uint8_t packed = data[offset + 9];
         ++frame_count;
         if (frame_count == 1 && (canvas_width == 0 || canvas_height == 0)) {
           canvas_width = w;
           canvas_height = h;
         }
-        total_raster_pixels += (size_t)w * h;
-        if ((size_t)w * h > fuzz_utils::kFuzzPxLimit ||
+        total_raster_pixels += w * h;
+        if (frame_count > fuzz_utils::kFuzzFrameLimit ||
+            w * h > fuzz_utils::kFuzzPxLimit ||
+            (left + w) * (top + h) > fuzz_utils::kFuzzPxLimit ||
             total_raster_pixels > fuzz_utils::kFuzzPxLimit ||
-            (size_t)canvas_width * canvas_height * frame_count >
+            canvas_width * canvas_height * frame_count >
                 fuzz_utils::kFuzzPxLimit) {
           return;
         }
@@ -80,14 +86,15 @@ void ReadAnimatedImageTest(std::string_view blob) {
         if (packed & 0x80) {
           offset += 3 * (1u << ((packed & 0x07) + 1));
         }
-        if (offset >= size) break;
+        if (offset >= size) return;
         offset += 1;  // LZW minimum code size.
         while (offset < size && data[offset] != 0) {
           offset += 1 + data[offset];
         }
+        if (offset >= size) return;
         offset += 1;
       } else {
-        break;
+        return;
       }
     }
   }
@@ -97,11 +104,12 @@ void ReadAnimatedImageTest(std::string_view blob) {
   std::unique_ptr<WebPDemuxer, fuzz_utils::UniquePtrDeleter> demux(
       WebPDemux(&webp_data));
   if (demux != nullptr) {
-    const uint32_t cw = WebPDemuxGetI(demux.get(), WEBP_FF_CANVAS_WIDTH);
-    const uint32_t ch = WebPDemuxGetI(demux.get(), WEBP_FF_CANVAS_HEIGHT);
+    const uint64_t cw = WebPDemuxGetI(demux.get(), WEBP_FF_CANVAS_WIDTH);
+    const uint64_t ch = WebPDemuxGetI(demux.get(), WEBP_FF_CANVAS_HEIGHT);
     const uint32_t frame_count =
         WebPDemuxGetI(demux.get(), WEBP_FF_FRAME_COUNT);
-    if ((size_t)cw * ch * frame_count > fuzz_utils::kFuzzPxLimit) {
+    if (frame_count > fuzz_utils::kFuzzFrameLimit ||
+        cw * ch * frame_count > fuzz_utils::kFuzzPxLimit) {
       return;
     }
     WebPIterator iter;
@@ -109,10 +117,10 @@ void ReadAnimatedImageTest(std::string_view blob) {
     std::unique_ptr<WebPIterator, fuzz_utils::UniquePtrDeleter> iter_deleter(
         &iter);
     for (uint32_t i = 0; i < frame_count; ++i) {
-      if (!WebPDemuxGetFrame(demux.get(), i + 1, &iter)) break;
+      if (!WebPDemuxGetFrame(demux.get(), i + 1, &iter)) return;
       int w, h;
-      if (WebPGetInfo(iter.fragment.bytes, iter.fragment.size, &w, &h) &&
-          (size_t)w * h > fuzz_utils::kFuzzPxLimit) {
+      if (!WebPGetInfo(iter.fragment.bytes, iter.fragment.size, &w, &h) ||
+          static_cast<uint64_t>(w) * h > fuzz_utils::kFuzzPxLimit) {
         return;
       }
     }

@@ -297,4 +297,18 @@ End:
   return ok;
 }
 
+int ReadPnmDimensions(const uint8_t* const data, size_t data_size,
+                      int* const width, int* const height) {
+  PNMInfo info;
+  if (data == NULL || width == NULL || height == NULL) return 0;
+  info.data = data;
+  info.data_size = data_size;
+  if (ReadHeader(&info) == 0 || info.type < 5 || info.type > 7) {
+    return 0;
+  }
+  *width = info.width;
+  *height = info.height;
+  return 1;
+}
+
 // -----------------------------------------------------------------------------

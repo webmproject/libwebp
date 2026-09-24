@@ -264,8 +264,12 @@ static void ContextSetup(volatile struct jpeg_decompress_struct* const cinfo,
   ctx->pub.next_input_byte = NULL;
 }
 
-int ReadJPEG(const uint8_t* const data, size_t data_size,
-             WebPPicture* const pic, int keep_alpha, Metadata* const metadata) {
+static void my_output_message_silent(j_common_ptr dinfo) { (void)dinfo; }
+
+static int ReadJPEGInternal(const uint8_t* const data, size_t data_size,
+                            WebPPicture* const pic, int keep_alpha,
+                            Metadata* const metadata, int* const width_out,
+                            int* const height_out) {
   volatile int ok = 0;
   int width, height;
   int64_t stride;
@@ -275,7 +279,10 @@ int ReadJPEG(const uint8_t* const data, size_t data_size,
   JSAMPROW buffer[1];
   JPEGReadContext ctx;
 
-  if (data == NULL || data_size == 0 || pic == NULL) return 0;
+  if (data == NULL || data_size < 2 || data[0] != 0xFF || data[1] != 0xD8) {
+    return 0;
+  }
+  if (pic == NULL && (width_out == NULL || height_out == NULL)) return 0;
 
   (void)keep_alpha;
   memset(&ctx, 0, sizeof(ctx));
@@ -285,6 +292,9 @@ int ReadJPEG(const uint8_t* const data, size_t data_size,
   memset((j_decompress_ptr)&dinfo, 0, sizeof(dinfo));  // for setjmp safety
   dinfo.err = jpeg_std_error(&jerr.pub);
   jerr.pub.error_exit = my_error_exit;
+  if (pic == NULL) {
+    jerr.pub.output_message = my_output_message_silent;
+  }
 
   if (setjmp(jerr.setjmp_buffer)) {
   Error:
@@ -297,6 +307,13 @@ int ReadJPEG(const uint8_t* const data, size_t data_size,
   ContextSetup(&dinfo, &ctx);
   if (metadata != NULL) SaveMetadataMarkers((j_decompress_ptr)&dinfo);
   jpeg_read_header((j_decompress_ptr)&dinfo, TRUE);
+
+  if (width_out != NULL) *width_out = dinfo.image_width;
+  if (height_out != NULL) *height_out = dinfo.image_height;
+  if (pic == NULL) {
+    jpeg_destroy_decompress((j_decompress_ptr)&dinfo);
+    return 1;
+  }
 
   dinfo.out_color_space = JCS_RGB;
   dinfo.do_fancy_upsampling = TRUE;
@@ -354,6 +371,18 @@ End:
   free(rgb);
   return ok;
 }
+
+int ReadJPEG(const uint8_t* const data, size_t data_size,
+             WebPPicture* const pic, int keep_alpha, Metadata* const metadata) {
+  if (pic == NULL) return 0;
+  return ReadJPEGInternal(data, data_size, pic, keep_alpha, metadata, NULL,
+                          NULL);
+}
+
+int ReadJpegDimensions(const uint8_t* const data, size_t data_size,
+                       int* const width, int* const height) {
+  return ReadJPEGInternal(data, data_size, NULL, 0, NULL, width, height);
+}
 #else   // !WEBP_HAVE_JPEG
 int ReadJPEG(const uint8_t* const data, size_t data_size,
              struct WebPPicture* const pic, int keep_alpha,
@@ -366,6 +395,15 @@ int ReadJPEG(const uint8_t* const data, size_t data_size,
   fprintf(stderr,
           "JPEG support not compiled. Please install the libjpeg "
           "development package before building.\n");
+  return 0;
+}
+
+int ReadJpegDimensions(const uint8_t* const data, size_t data_size,
+                       int* const width, int* const height) {
+  (void)data;
+  (void)data_size;
+  (void)width;
+  (void)height;
   return 0;
 }
 #endif  // WEBP_HAVE_JPEG

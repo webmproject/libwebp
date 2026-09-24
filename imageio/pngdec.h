@@ -32,6 +32,11 @@ int ReadPNG(const uint8_t* const data, size_t data_size,
             struct WebPPicture* const pic, int keep_alpha,
             struct Metadata* const metadata);
 
+// Reads a PNG header from 'data', returning the 'width' and 'height'.
+// Returns true on success.
+int ReadPngDimensions(const uint8_t* const data, size_t data_size,
+                      int* const width, int* const height);
+
 #ifdef __cplusplus
 }  // extern "C"
 #endif

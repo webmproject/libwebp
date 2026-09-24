@@ -245,9 +245,22 @@ static void ReadFunc(png_structp png_ptr, png_bytep data, png_size_t length) {
   ctx->offset += length;
 }
 
-int ReadPNG(const uint8_t* const data, size_t data_size,
-            struct WebPPicture* const pic, int keep_alpha,
-            struct Metadata* const metadata) {
+static void PNGAPI error_function_silent(png_structp png,
+                                         png_const_charp error) {
+  (void)error;
+  longjmp(png_jmpbuf(png), 1);
+}
+
+static void PNGAPI warning_function_silent(png_structp png,
+                                           png_const_charp warning) {
+  (void)png;
+  (void)warning;
+}
+
+static int ReadPNGInternal(const uint8_t* const data, size_t data_size,
+                           struct WebPPicture* const pic, int keep_alpha,
+                           struct Metadata* const metadata,
+                           int* const width_out, int* const height_out) {
   volatile png_structp png = NULL;
   volatile png_infop info = NULL;
   volatile png_infop end_info = NULL;
@@ -261,7 +274,11 @@ int ReadPNG(const uint8_t* const data, size_t data_size,
   int64_t stride;
   uint8_t* volatile rgb = NULL;
 
-  if (data == NULL || data_size == 0 || pic == NULL) return 0;
+  if (data == NULL || data_size < 8 ||
+      png_sig_cmp((png_bytep)data, 0, 8) != 0) {
+    return 0;
+  }
+  if (pic == NULL && (width_out == NULL || height_out == NULL)) return 0;
 
   context.data = data;
   context.data_size = data_size;
@@ -270,7 +287,11 @@ int ReadPNG(const uint8_t* const data, size_t data_size,
                                  MallocFunc, FreeFunc);
   if (png == NULL) goto End;
 
-  png_set_error_fn(png, 0, error_function, NULL);
+  if (pic == NULL) {
+    png_set_error_fn(png, 0, error_function_silent, warning_function_silent);
+  } else {
+    png_set_error_fn(png, 0, error_function, NULL);
+  }
   if (setjmp(png_jmpbuf(png))) {
   Error:
     MetadataFree(metadata);
@@ -281,21 +302,31 @@ int ReadPNG(const uint8_t* const data, size_t data_size,
     (LOCAL_PNG_PREREQ(1, 4) && PNG_LIBPNG_VER_RELEASE >= 1)
   // If it looks like the bitstream is going to need more memory than libpng's
   // internal limit (default: 8M), try to (reasonably) raise it.
-  if (data_size > png_get_chunk_malloc_max(png) && data_size < (1u << 24)) {
+  if (pic != NULL && data_size > png_get_chunk_malloc_max(png) &&
+      data_size < (1u << 24)) {
     png_set_chunk_malloc_max(png, data_size);
   }
 #endif
 
   info = png_create_info_struct(png);
   if (info == NULL) goto Error;
-  end_info = png_create_info_struct(png);
-  if (end_info == NULL) goto Error;
+  if (pic != NULL) {
+    end_info = png_create_info_struct(png);
+    if (end_info == NULL) goto Error;
+  }
 
   png_set_read_fn(png, &context, ReadFunc);
   png_read_info(png, info);
   if (!png_get_IHDR(png, info, &width, &height, &bit_depth, &color_type,
                     &interlaced, NULL, NULL))
     goto Error;
+
+  if (width_out != NULL) *width_out = (int)width;
+  if (height_out != NULL) *height_out = (int)height;
+  if (pic == NULL) {
+    ok = 1;
+    goto End;
+  }
 
   png_set_strip_16(png);
   png_set_packing(png);
@@ -374,6 +405,19 @@ End:
   free(rgb);
   return ok;
 }
+
+int ReadPNG(const uint8_t* const data, size_t data_size,
+            struct WebPPicture* const pic, int keep_alpha,
+            struct Metadata* const metadata) {
+  if (pic == NULL) return 0;
+  return ReadPNGInternal(data, data_size, pic, keep_alpha, metadata, NULL,
+                         NULL);
+}
+
+int ReadPngDimensions(const uint8_t* const data, size_t data_size,
+                      int* const width, int* const height) {
+  return ReadPNGInternal(data, data_size, NULL, 0, NULL, width, height);
+}
 #else   // !WEBP_HAVE_PNG
 int ReadPNG(const uint8_t* const data, size_t data_size,
             struct WebPPicture* const pic, int keep_alpha,
@@ -386,6 +430,15 @@ int ReadPNG(const uint8_t* const data, size_t data_size,
   fprintf(stderr,
           "PNG support not compiled. Please install the libpng "
           "development package before building.\n");
+  return 0;
+}
+
+int ReadPngDimensions(const uint8_t* const data, size_t data_size,
+                      int* const width, int* const height) {
+  (void)data;
+  (void)data_size;
+  (void)width;
+  (void)height;
   return 0;
 }
 #endif  // WEBP_HAVE_PNG

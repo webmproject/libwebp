@@ -29,6 +29,10 @@
 #include "./img_alpha.h"
 #include "./img_grid.h"
 #include "./img_peak.h"
+#include "imageio/jpegdec.h"
+#include "imageio/pngdec.h"
+#include "imageio/pnmdec.h"
+#include "imageio/tiffdec.h"
 #include "src/dsp/cpu.h"
 #include "webp/decode.h"
 #include "webp/encode.h"
@@ -128,69 +132,26 @@ std::vector<std::string> ReadFilesFromDirectory(std::string_view dir) {
 }
 
 //------------------------------------------------------------------------------
-// The code in this section is copied from
-// https://github.com/webmproject/sjpeg/blob/
-//                1c025b3dbc2246de3e1d7c287970f1a01291800f/src/jpeg_tools.cc#L47
-// (same license as this file).
-
-namespace {
-// Constants below are marker codes defined in JPEG spec
-// ISO/IEC 10918-1 : 1993(E) Table B.1
-// See also: http://www.w3.org/Graphics/JPEG/itu-t81.pdf
-
-#define M_SOF0 0xffc0
-#define M_SOF1 0xffc1
-
-const uint8_t* GetSOFData(const uint8_t* src, int size) {
-  if (src == NULL) return NULL;
-  const uint8_t* const end = src + size - 8;  // 8 bytes of safety, for marker
-  src += 2;                                   // skip M_SOI
-  for (; src < end && *src != 0xff; ++src) {  /* search first 0xff marker */
-  }
-  while (src < end) {
-    const uint32_t marker = static_cast<uint32_t>((src[0] << 8) | src[1]);
-    if (marker == M_SOF0 || marker == M_SOF1) return src;
-    const size_t s = 2 + ((src[2] << 8) | src[3]);
-    src += s;
-  }
-  return NULL;  // No SOF marker found
-}
-
-bool SjpegDimensions(const uint8_t* src0, size_t size, int* width, int* height,
-                     int* is_yuv420) {
-  if (width == NULL || height == NULL) return false;
-  const uint8_t* src = GetSOFData(src0, size);
-  const size_t left_over = size - (src - src0);
-  if (src == NULL || left_over < 8 + 3 * 1) return false;
-  if (height != NULL) *height = (src[5] << 8) | src[6];
-  if (width != NULL) *width = (src[7] << 8) | src[8];
-  if (is_yuv420 != NULL) {
-    const size_t nb_comps = src[9];
-    *is_yuv420 = (nb_comps == 3);
-    if (left_over < 11 + 3 * nb_comps) return false;
-    for (int c = 0; *is_yuv420 && c < 3; ++c) {
-      const int expected_dim = (c == 0 ? 0x22 : 0x11);
-      *is_yuv420 &= (src[11 + c * 3] == expected_dim);
-    }
-  }
-  return true;
-}
-}  // namespace
-
-//------------------------------------------------------------------------------
 
 bool IsImageTooBig(const uint8_t* data, size_t size) {
-  int width, height, components;
-  if (SjpegDimensions(data, size, &width, &height, &components) ||
-      WebPGetInfo(data, size, &width, &height)) {
+  int width = 0, height = 0;
+  if (ReadJpegDimensions(data, size, &width, &height) ||
+      WebPGetInfo(data, size, &width, &height) ||
+      ReadPngDimensions(data, size, &width, &height) ||
+      ReadPnmDimensions(data, size, &width, &height) ||
+      ReadTiffDimensions(data, size, &width, &height)) {
+    if (width <= 0 || height <= 0) return false;
     // Look at the number of 8x8px blocks rather than the overall pixel count
     // when comparing to memory and duration thresholds.
-    const size_t ceiled_width = ((size_t)width + 7) / 8 * 8;
-    const size_t ceiled_height = ((size_t)height + 7) / 8 * 8;
+    const uint64_t ceiled_width = ((uint64_t)width + 7) / 8 * 8;
+    const uint64_t ceiled_height = ((uint64_t)height + 7) / 8 * 8;
     // Threshold to avoid out-of-memory and timeout issues.
     // The threshold is arbitrary but below the fuzzer limit of 2 GB.
     // The value cannot be 2 GB because of the added memory by MSAN.
-    if (ceiled_width * ceiled_height > kFuzzPxLimit) return true;
+    if (ceiled_width > kFuzzPxLimit || ceiled_height > kFuzzPxLimit ||
+        ceiled_width * ceiled_height > kFuzzPxLimit) {
+      return true;
+    }
   }
   return false;
 }

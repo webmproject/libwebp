@@ -32,6 +32,11 @@ int ReadTIFF(const uint8_t* const data, size_t data_size,
              struct WebPPicture* const pic, int keep_alpha,
              struct Metadata* const metadata);
 
+// Reads a TIFF header from 'data', returning the 'width' and 'height'.
+// Returns true on success. This function is not thread-safe.
+int ReadTiffDimensions(const uint8_t* const data, size_t data_size,
+                       int* const width, int* const height);
+
 #ifdef __cplusplus
 }  // extern "C"
 #endif
