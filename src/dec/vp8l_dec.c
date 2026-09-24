@@ -480,6 +480,12 @@ int ReadHuffmanCodesHelper(int color_cache_bits, int num_htree_groups,
       num_htree_groups > num_htree_groups_max) {
     goto Error;
   }
+  // Each Huffman group has 5 trees, each requiring at least 4 bits in the
+  // bitstream (20 bits per group).
+  if ((uint64_t)(dec->br.len - dec->br.pos) * 8 + VP8L_LBITS <
+      (uint64_t)num_htree_groups_max * 20) {
+    goto Error;
+  }
 
   code_lengths =
       (int*)WebPSafeCalloc((uint64_t)max_alphabet_size, sizeof(*code_lengths));
