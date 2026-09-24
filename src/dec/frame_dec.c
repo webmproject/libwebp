@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "src/dec/alphai_dec.h"
 #include "src/dec/common_dec.h"
 #include "src/dec/vp8_dec.h"
 #include "src/dec/vp8i_dec.h"
@@ -704,7 +705,7 @@ int VP8GetThreadMethod(const WebPDecoderOptions* const options,
 //------------------------------------------------------------------------------
 // Memory setup
 
-static int AllocateMemory(VP8Decoder* const dec) {
+static int AllocateMemory(VP8Decoder* const dec, const VP8Io* const io) {
   const int num_caches = dec->num_caches;
   const int mb_w = dec->mb_w;
   // Note: we use 'size_t' when there's no overflow risk, uint64_t otherwise.
@@ -722,11 +723,9 @@ static int AllocateMemory(VP8Decoder* const dec) {
   const size_t cache_height =
       (16 * num_caches + kFilterExtraRows[dec->filter_type]) * 3 / 2;
   const size_t cache_size = (size_t)cache_y_stride * cache_height;
-  // alpha_size is the only one that scales as width x height.
+  // alpha_size is the only one that may scale with height.
   const uint64_t alpha_size =
-      (dec->alpha_data != NULL)
-          ? (uint64_t)dec->pic_hdr.width * dec->pic_hdr.height
-          : 0ULL;
+      (uint64_t)dec->pic_hdr.width * WebPGetAlphaWindowRows(dec, io);
   const uint64_t needed = (uint64_t)intra_pred_mode_size + top_size +
                           mb_info_size + f_info_size + yuv_size + mb_data_size +
                           cache_size + alpha_size + WEBP_ALIGN_CST;
@@ -824,7 +823,7 @@ static void InitIo(VP8Decoder* const dec, VP8Io* io) {
 
 int VP8InitFrame(VP8Decoder* const dec, VP8Io* const io) {
   if (!InitThreadContext(dec)) return 0;  // call first. Sets dec->num_caches.
-  if (!AllocateMemory(dec)) return 0;
+  if (!AllocateMemory(dec, io)) return 0;
   InitIo(dec, io);
   VP8DspInit();  // Init critical function pointers and look-up tables.
   return 1;

@@ -1018,17 +1018,20 @@ static void ExtractPalettedAlphaRows(VP8LDecoder* const dec, int last_row) {
   if (last_row > first_row) {
     // Special method for paletted alpha data. We only process the cropped area.
     const int width = dec->io->width;
-    uint8_t* out = alph_dec->output + width * first_row;
+    uint8_t* out;
     const uint8_t* const in =
         (uint8_t*)dec->pixels + GetWindowRowOffset(dec, first_row);
     VP8LTransform* const transform = &dec->transforms[0];
     assert(dec->next_transform == 1);
     assert(transform->type == COLOR_INDEXING_TRANSFORM);
+    WebPShiftAlphaWindow(alph_dec, dec->last_out_row, last_row);
+    out = alph_dec->output + GetAlphaWindowRowOffset(alph_dec, first_row);
     VP8LColorIndexInverseTransformAlpha(transform, first_row, last_row, in,
                                         out);
     AlphaApplyFilter(alph_dec, first_row, last_row, out, width);
+    dec->last_out_row = last_row;
   }
-  dec->last_row = dec->last_out_row = last_row;
+  dec->last_row = last_row;
 }
 
 //------------------------------------------------------------------------------
@@ -1870,8 +1873,10 @@ static void ExtractAlphaRows(VP8LDecoder* const dec, int last_row,
     uint8_t* const output = alph_dec->output;
     const int width = dec->io->width;  // the final width (!= dec->width)
     const int cache_pixs = width * num_rows_to_process;
-    uint8_t* const dst = output + width * cur_row;
+    uint8_t* dst;
     const uint32_t* const src = dec->argb_cache;
+    WebPShiftAlphaWindow(alph_dec, cur_row, cur_row + num_rows_to_process);
+    dst = output + GetAlphaWindowRowOffset(alph_dec, cur_row);
     ApplyInverseTransforms(dec, cur_row, num_rows_to_process, in);
     WebPExtractGreen(src, dst, cache_pixs);
     AlphaApplyFilter(alph_dec, cur_row, cur_row + num_rows_to_process, dst,
