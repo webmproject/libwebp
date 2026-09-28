@@ -620,7 +620,7 @@ WEBP_NODISCARD static int AllocateAndInitRescaler(VP8LDecoder* const dec,
   if (!WebPRescalerInit(dec->rescaler, in_width, in_height,
                         (uint8_t*)scaled_data, out_width, out_height, 0,
                         num_channels, work)) {
-    return 0;
+    return VP8LSetError(dec, VP8_STATUS_INVALID_PARAM);
   }
   return 1;
 }
