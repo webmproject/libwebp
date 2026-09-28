@@ -87,7 +87,8 @@ void VP8LFreeHistogramSet(VP8LHistogramSet* const histo);
 
 // Allocate an array of pointer to histograms, allocated and initialized
 // using 'cache_bits'. Return NULL in case of memory error.
-VP8LHistogramSet* VP8LAllocateHistogramSet(int size, int cache_bits);
+WEBP_NODISCARD VP8LHistogramSet* VP8LAllocateHistogramSet(int size,
+                                                          int cache_bits);
 
 // Set the histograms in set to 0.
 void VP8LHistogramSetClear(VP8LHistogramSet* const set);
@@ -95,7 +96,7 @@ void VP8LHistogramSetClear(VP8LHistogramSet* const set);
 // Allocate and initialize histogram object with specified 'cache_bits'.
 // Returns NULL in case of memory error.
 // Special case of VP8LAllocateHistogramSet, with size equals 1.
-VP8LHistogram* VP8LAllocateHistogram(int cache_bits);
+WEBP_NODISCARD VP8LHistogram* VP8LAllocateHistogram(int cache_bits);
 
 static WEBP_INLINE int VP8LHistogramNumCodes(int palette_code_bits) {
   return NUM_LITERAL_CODES + NUM_LENGTH_CODES +
@@ -104,14 +105,12 @@ static WEBP_INLINE int VP8LHistogramNumCodes(int palette_code_bits) {
 
 // Builds the histogram image. pic and percent are for progress.
 // Returns false in case of error (stored in pic->error_code).
-int VP8LGetHistoImageSymbols(int xsize, int ysize,
-                             const VP8LBackwardRefs* const refs, int quality,
-                             int low_effort, int histogram_bits, int cache_bits,
-                             VP8LHistogramSet* const image_histo,
-                             VP8LHistogram* const tmp_histo,
-                             uint32_t* const histogram_symbols,
-                             const WebPPicture* const pic, int percent_range,
-                             int* const percent);
+WEBP_NODISCARD int VP8LGetHistoImageSymbols(
+    int xsize, int ysize, const VP8LBackwardRefs* const refs, int quality,
+    int low_effort, int histogram_bits, int cache_bits,
+    VP8LHistogramSet* const image_histo, VP8LHistogram* const tmp_histo,
+    uint32_t* const histogram_symbols, const WebPPicture* const pic,
+    int percent_range, int* const percent);
 
 // Returns the entropy for the symbols in the input array.
 uint64_t VP8LBitsEntropy(const uint32_t* const array, int n);

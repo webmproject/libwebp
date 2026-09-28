@@ -97,9 +97,9 @@ static int VP8LSetError(VP8LDecoder* const dec, VP8StatusCode error) {
   return 0;
 }
 
-static int DecodeImageStream(int xsize, int ysize, int is_level0,
-                             VP8LDecoder* const dec,
-                             uint32_t** const decoded_data);
+WEBP_NODISCARD static int DecodeImageStream(int xsize, int ysize, int is_level0,
+                                            VP8LDecoder* const dec,
+                                            uint32_t** const decoded_data);
 
 //------------------------------------------------------------------------------
 
@@ -109,8 +109,9 @@ int VP8LCheckSignature(const uint8_t* const WEBP_COUNTED_BY(size) data,
           (data[4] >> 5) == 0);  // version
 }
 
-static int ReadImageInfo(VP8LBitReader* const br, int* const width,
-                         int* const height, int* const has_alpha) {
+WEBP_NODISCARD static int ReadImageInfo(VP8LBitReader* const br,
+                                        int* const width, int* const height,
+                                        int* const has_alpha) {
   if (VP8LReadBits(br, 8) != VP8L_MAGIC_BYTE) return 0;
   *width = VP8LReadBits(br, VP8L_IMAGE_SIZE_BITS) + 1;
   *height = VP8LReadBits(br, VP8L_IMAGE_SIZE_BITS) + 1;
@@ -240,9 +241,9 @@ static void BuildPackedTable(HTreeGroup* const htree_group) {
   }
 }
 
-static int ReadHuffmanCodeLengths(VP8LDecoder* const dec,
-                                  const int* const code_length_code_lengths,
-                                  int num_symbols, int* const code_lengths) {
+WEBP_NODISCARD static int ReadHuffmanCodeLengths(
+    VP8LDecoder* const dec, const int* const code_length_code_lengths,
+    int num_symbols, int* const code_lengths) {
   int ok = 0;
   VP8StatusCode status = VP8_STATUS_BITSTREAM_ERROR;
   VP8LBitReader* const br = &dec->br;
@@ -311,9 +312,10 @@ End:
 
 // 'code_lengths' is pre-allocated temporary buffer, used for creating Huffman
 // tree.
-static int ReadHuffmanCode(int alphabet_size, VP8LDecoder* const dec,
-                           int* const code_lengths,
-                           HuffmanTables* const table) {
+WEBP_NODISCARD static int ReadHuffmanCode(int alphabet_size,
+                                          VP8LDecoder* const dec,
+                                          int* const code_lengths,
+                                          HuffmanTables* const table) {
   int ok = 0;
   int size = 0;
   VP8LBitReader* const br = &dec->br;
@@ -362,8 +364,9 @@ static int ReadHuffmanCode(int alphabet_size, VP8LDecoder* const dec,
   return size;
 }
 
-static int ReadHuffmanCodes(VP8LDecoder* const dec, int xsize, int ysize,
-                            int color_cache_bits, int allow_recursion) {
+WEBP_NODISCARD static int ReadHuffmanCodes(VP8LDecoder* const dec, int xsize,
+                                           int ysize, int color_cache_bits,
+                                           int allow_recursion) {
   int i;
   VP8LBitReader* const br = &dec->br;
   VP8LMetadata* const hdr = &dec->hdr;
@@ -585,7 +588,8 @@ Error:
 // Scaling.
 
 #if !defined(WEBP_REDUCE_SIZE)
-static int AllocateAndInitRescaler(VP8LDecoder* const dec, VP8Io* const io) {
+WEBP_NODISCARD static int AllocateAndInitRescaler(VP8LDecoder* const dec,
+                                                  VP8Io* const io) {
   const int num_channels = 4;
   const int in_width = io->mb_w;
   const int out_width = io->scaled_width;
@@ -825,8 +829,9 @@ static int EmitRowsYUVA(const uint8_t* const in, const VP8Io* const io,
 // start of the cropped window. Note that pixels are in ARGB format even if
 // 'in_data' is uint8_t*.
 // Returns true if the crop window is not empty.
-static int SetCropWindow(VP8Io* const io, int y_start, int y_end,
-                         uint8_t** const in_data, int pixel_stride) {
+WEBP_NODISCARD static int SetCropWindow(VP8Io* const io, int y_start, int y_end,
+                                        uint8_t** const in_data,
+                                        int pixel_stride) {
   assert(y_start < y_end);
   assert(io->crop_left < io->crop_right);
   if (y_end > io->crop_bottom) {
@@ -1274,8 +1279,9 @@ static void ShiftWindow32b(VP8LDecoder* const dec, uint32_t* const data,
   }
 }
 
-static int DecodeAlphaData(VP8LDecoder* const dec, uint8_t* const data,
-                           int width, int height, int last_row) {
+WEBP_NODISCARD static int DecodeAlphaData(VP8LDecoder* const dec,
+                                          uint8_t* const data, int width,
+                                          int height, int last_row) {
   int ok = 1;
   int row = dec->last_pixel / width;
   int col = dec->last_pixel % width;
@@ -1385,9 +1391,10 @@ static void RestoreState(VP8LDecoder* const dec) {
 }
 
 #define SYNC_EVERY_N_ROWS 8  // minimum number of rows between check-points
-static int DecodeImageData(VP8LDecoder* const dec, uint32_t* const data,
-                           int width, int height, int last_row,
-                           ProcessRowsFunc process_func) {
+WEBP_NODISCARD static int DecodeImageData(VP8LDecoder* const dec,
+                                          uint32_t* const data, int width,
+                                          int height, int last_row,
+                                          ProcessRowsFunc process_func) {
   int row = dec->last_pixel / width;
   int col = dec->last_pixel % width;
   VP8LBitReader* const br = &dec->br;
@@ -1560,7 +1567,8 @@ static void ClearTransform(VP8LTransform* const transform) {
 
 // For security reason, we need to remap the color map to span
 // the total possible bundled values, and not just the num_colors.
-static int ExpandColorMap(int num_colors, VP8LTransform* const transform) {
+WEBP_NODISCARD static int ExpandColorMap(int num_colors,
+                                         VP8LTransform* const transform) {
   int i;
   const int final_num_colors = 1 << (8 >> transform->bits);
   uint32_t* const new_color_map = (uint32_t*)WebPSafeMalloc(
@@ -1585,7 +1593,8 @@ static int ExpandColorMap(int num_colors, VP8LTransform* const transform) {
 }
 
 // Only 'xsize' can be modified (by COLOR_INDEXING_TRANSFORM).
-static int ReadTransform(int* const xsize, int ysize, VP8LDecoder* const dec) {
+WEBP_NODISCARD static int ReadTransform(int* const xsize, int ysize,
+                                        VP8LDecoder* const dec) {
   int ok = 1;
   VP8LBitReader* const br = &dec->br;
   VP8LTransform* transform = &dec->transforms[dec->next_transform];
@@ -1721,9 +1730,9 @@ static void UpdateDecoder(VP8LDecoder* const dec, int width, int height) {
   hdr->huffman_mask = (num_bits == 0) ? ~0 : (1 << num_bits) - 1;
 }
 
-static int DecodeImageStream(int xsize, int ysize, int is_level0,
-                             VP8LDecoder* const dec,
-                             uint32_t** const decoded_data) {
+WEBP_NODISCARD static int DecodeImageStream(int xsize, int ysize, int is_level0,
+                                            VP8LDecoder* const dec,
+                                            uint32_t** const decoded_data) {
   int ok = 1;
   int transform_xsize = xsize;
   int transform_ysize = ysize;
@@ -1809,7 +1818,8 @@ End:
 
 //------------------------------------------------------------------------------
 // Allocate internal buffers dec->pixels and dec->argb_cache.
-static int AllocateInternalBuffers32b(VP8LDecoder* const dec, int final_width) {
+WEBP_NODISCARD static int AllocateInternalBuffers32b(VP8LDecoder* const dec,
+                                                     int final_width) {
   const int num_window_rows = GetWindowRows(dec->width, dec->height);
   const uint64_t num_pixels = (uint64_t)dec->width * num_window_rows;
   // Scratch buffer corresponding to top-prediction row for transforming the
@@ -1845,7 +1855,7 @@ static int AllocateInternalBuffers32b(VP8LDecoder* const dec, int final_width) {
   return 1;
 }
 
-static int AllocateInternalBuffers8b(VP8LDecoder* const dec) {
+WEBP_NODISCARD static int AllocateInternalBuffers8b(VP8LDecoder* const dec) {
   const int num_window_rows = GetWindowRows(dec->width, dec->height);
   const uint64_t total_num_pixels = (uint64_t)dec->width * num_window_rows;
   ClearInternalBuffers(dec);

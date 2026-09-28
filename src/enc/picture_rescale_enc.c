@@ -48,9 +48,10 @@ static void SnapTopLeftPosition(const WebPPicture* const pic, int* const left,
 }
 
 // Adjust top-left corner and verify that the sub-rectangle is valid.
-static int AdjustAndCheckRectangle(const WebPPicture* const pic,
-                                   int* const left, int* const top, int width,
-                                   int height) {
+WEBP_NODISCARD static int AdjustAndCheckRectangle(const WebPPicture* const pic,
+                                                  int* const left,
+                                                  int* const top, int width,
+                                                  int height) {
   SnapTopLeftPosition(pic, left, top);
   if ((*left) < 0 || (*top) < 0) return 0;
   if (width <= 0 || height <= 0) return 0;
@@ -171,10 +172,12 @@ int WebPPictureCrop(WebPPicture* pic, int left, int top, int width,
 //------------------------------------------------------------------------------
 // Simple picture rescaler
 
-static int RescalePlane(const uint8_t* src, int src_width, int src_height,
-                        int src_stride, uint8_t* dst, int dst_width,
-                        int dst_height, int dst_stride, rescaler_t* const work,
-                        int num_channels) {
+WEBP_NODISCARD static int RescalePlane(const uint8_t* src, int src_width,
+                                       int src_height, int src_stride,
+                                       uint8_t* dst, int dst_width,
+                                       int dst_height, int dst_stride,
+                                       rescaler_t* const work,
+                                       int num_channels) {
   WebPRescaler rescaler;
   int y = 0;
   if (!WebPRescalerInit(&rescaler, src_width, src_height, dst, dst_width,

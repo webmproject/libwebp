@@ -126,7 +126,7 @@ WEBP_NODISCARD int WebPISetIOHooks(WebPIDecoder* const idec, VP8IoPutHook put,
 typedef struct VP8Decoder VP8Decoder;
 
 // Create a new decoder object.
-VP8Decoder* VP8New(void);
+WEBP_NODISCARD VP8Decoder* VP8New(void);
 
 // Must be called to make sure 'io' is initialized properly.
 // Returns false in case of version mismatch. Upon such failure, no other
@@ -160,30 +160,29 @@ void VP8Delete(VP8Decoder* const dec);
 // Miscellaneous VP8/VP8L bitstream probing functions.
 
 // Returns true if the next 3 bytes in data contain the VP8 signature.
-WEBP_EXTERN int VP8CheckSignature(
+WEBP_NODISCARD WEBP_EXTERN int VP8CheckSignature(
     const uint8_t* const WEBP_COUNTED_BY(data_size) data, size_t data_size);
 
 // Validates the VP8 data-header and retrieves basic header information viz
 // width and height. Returns 0 in case of formatting error. *width/*height
 // can be passed NULL.
-WEBP_EXTERN int VP8GetInfo(
+WEBP_NODISCARD WEBP_EXTERN int VP8GetInfo(
     const uint8_t* WEBP_COUNTED_BY(data_size) data,
     size_t data_size,   // data available so far
     size_t chunk_size,  // total data size expected in the chunk
     int* const width, int* const height);
 
 // Returns true if the next byte(s) in data is a VP8L signature.
-WEBP_EXTERN int VP8LCheckSignature(const uint8_t* const WEBP_COUNTED_BY(size)
-                                       data,
-                                   size_t size);
+WEBP_NODISCARD WEBP_EXTERN int VP8LCheckSignature(
+    const uint8_t* const WEBP_COUNTED_BY(size) data, size_t size);
 
 // Validates the VP8L data-header and retrieves basic header information viz
 // width, height and alpha. Returns 0 in case of formatting error.
 // width/height/has_alpha can be passed NULL.
-WEBP_EXTERN int VP8LGetInfo(const uint8_t* WEBP_COUNTED_BY(data_size) data,
-                            size_t data_size,  // data available so far
-                            int* const width, int* const height,
-                            int* const has_alpha);
+WEBP_NODISCARD WEBP_EXTERN int VP8LGetInfo(
+    const uint8_t* WEBP_COUNTED_BY(data_size) data,
+    size_t data_size,  // data available so far
+    int* const width, int* const height, int* const has_alpha);
 
 #ifdef __cplusplus
 }  // extern "C"

@@ -333,8 +333,8 @@ void VP8TBufferClear(VP8TBuffer* const b);  // de-allocate pages memory
 
 // Finalizes bitstream when probabilities are known.
 // Deletes the allocated token memory if final_pass is true.
-int VP8EmitTokens(VP8TBuffer* const b, VP8BitWriter* const bw,
-                  const uint8_t* const probas, int final_pass);
+WEBP_NODISCARD int VP8EmitTokens(VP8TBuffer* const b, VP8BitWriter* const bw,
+                                 const uint8_t* const probas, int final_pass);
 
 // record the coding of coefficients without knowing the probabilities yet
 int VP8RecordCoeffTokens(int ctx, const struct VP8Residual* const res,
@@ -435,7 +435,7 @@ void VP8CodeIntraModes(VP8Encoder* const enc);
 // Generates the final bitstream by coding the partition0 and headers,
 // and appending an assembly of all the pre-coded token partitions.
 // Return true if everything is ok.
-int VP8EncWrite(VP8Encoder* const enc);
+WEBP_NODISCARD int VP8EncWrite(VP8Encoder* const enc);
 // Release memory allocated for bit-writing in VP8EncLoop & seq.
 void VP8EncFreeBitWriters(VP8Encoder* const enc);
 
@@ -454,8 +454,8 @@ int VP8GetCostLuma16(VP8EncIterator* const it, const VP8ModeScore* const rd);
 int VP8GetCostLuma4(VP8EncIterator* const it, const int16_t levels[16]);
 int VP8GetCostUV(VP8EncIterator* const it, const VP8ModeScore* const rd);
 // Main coding calls
-int VP8EncLoop(VP8Encoder* const enc);
-int VP8EncTokenLoop(VP8Encoder* const enc);
+WEBP_NODISCARD int VP8EncLoop(VP8Encoder* const enc);
+WEBP_NODISCARD int VP8EncTokenLoop(VP8Encoder* const enc);
 
 // in webpenc.c
 // Assign an error code to a picture. Return false for convenience.
@@ -466,7 +466,7 @@ int WebPReportProgress(const WebPPicture* const pic, int percent,
 // in analysis.c
 // Main analysis loop. Decides the segmentations and complexity.
 // Assigns a first guess for Intra16 and 'uvmode' prediction modes.
-int VP8EncAnalyze(VP8Encoder* const enc);
+WEBP_NODISCARD int VP8EncAnalyze(VP8Encoder* const enc);
 
 // in quant.c
 // Sets up segment's quantization values, 'base_quant' and filter strengths.
@@ -476,10 +476,13 @@ int VP8Decimate(VP8EncIterator* WEBP_RESTRICT const it,
                 VP8ModeScore* WEBP_RESTRICT const rd, VP8RDLevel rd_opt);
 
 // in alpha.c
-void VP8EncInitAlpha(VP8Encoder* const enc);   // initialize alpha compression
-int VP8EncStartAlpha(VP8Encoder* const enc);   // start alpha coding process
-int VP8EncFinishAlpha(VP8Encoder* const enc);  // finalize compressed data
-int VP8EncDeleteAlpha(VP8Encoder* const enc);  // delete compressed data
+void VP8EncInitAlpha(VP8Encoder* const enc);  // initialize alpha compression
+WEBP_NODISCARD int VP8EncStartAlpha(
+    VP8Encoder* const enc);  // start alpha coding process
+WEBP_NODISCARD int VP8EncFinishAlpha(
+    VP8Encoder* const enc);  // finalize compressed data
+WEBP_NODISCARD int VP8EncDeleteAlpha(
+    VP8Encoder* const enc);  // delete compressed data
 
 // autofilter
 void VP8InitFilter(VP8EncIterator* const it);
@@ -495,7 +498,7 @@ int VP8FilterStrengthFromDelta(int sharpness, int delta);
 // Returns true if 'picture' is non-NULL and dimensions/colorspace are within
 // their valid ranges. If returning false, the 'error_code' in 'picture' is
 // updated.
-int WebPValidatePicture(const WebPPicture* const picture);
+WEBP_NODISCARD int WebPValidatePicture(const WebPPicture* const picture);
 
 // Remove reference to the ARGB/YUVA buffer (doesn't free anything).
 void WebPPictureResetBuffers(WebPPicture* const picture);
@@ -503,13 +506,13 @@ void WebPPictureResetBuffers(WebPPicture* const picture);
 // Allocates ARGB buffer according to set width/height (previous one is
 // always free'd). Preserves the YUV(A) buffer. Returns false in case of error
 // (invalid param, out-of-memory).
-int WebPPictureAllocARGB(WebPPicture* const picture);
+WEBP_NODISCARD int WebPPictureAllocARGB(WebPPicture* const picture);
 
 // Allocates YUVA buffer according to set width/height (previous one is always
 // free'd). Uses picture->csp to determine whether an alpha buffer is needed.
 // Preserves the ARGB buffer.
 // Returns false in case of error (invalid param, out-of-memory).
-int WebPPictureAllocYUVA(WebPPicture* const picture);
+WEBP_NODISCARD int WebPPictureAllocYUVA(WebPPicture* const picture);
 
 // Replace samples that are fully transparent by 'color' to help compressibility
 // (no guarantee, though). Assumes pic->use_argb is true.

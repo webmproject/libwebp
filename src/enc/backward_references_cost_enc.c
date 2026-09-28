@@ -61,8 +61,9 @@ static void ConvertPopulationCountTableToBitEstimates(
   }
 }
 
-static int CostModelBuild(CostModel* const m, int xsize, int cache_bits,
-                          const VP8LBackwardRefs* const refs) {
+WEBP_NODISCARD static int CostModelBuild(CostModel* const m, int xsize,
+                                         int cache_bits,
+                                         const VP8LBackwardRefs* const refs) {
   int ok = 0;
   VP8LHistogram* const histo = VP8LAllocateHistogram(cache_bits);
   if (histo == NULL) goto Error;
@@ -245,9 +246,10 @@ static void CostManagerClear(CostManager* const manager) {
   CostManagerInitFreeList(manager);
 }
 
-static int CostManagerInit(CostManager* const manager,
-                           uint16_t* const dist_array, int pix_count,
-                           const CostModel* const cost_model) {
+WEBP_NODISCARD static int CostManagerInit(CostManager* const manager,
+                                          uint16_t* const dist_array,
+                                          int pix_count,
+                                          const CostModel* const cost_model) {
   int i;
   const int cost_cache_size = (pix_count > MAX_LENGTH) ? MAX_LENGTH : pix_count;
 
@@ -564,7 +566,7 @@ static WEBP_INLINE void PushInterval(CostManager* const manager,
   }
 }
 
-static int BackwardReferencesHashChainDistanceOnly(
+WEBP_NODISCARD static int BackwardReferencesHashChainDistanceOnly(
     int xsize, int ysize, const uint32_t* const argb, int cache_bits,
     const VP8LHashChain* const hash_chain, const VP8LBackwardRefs* const refs,
     uint16_t* const dist_array) {
@@ -705,7 +707,7 @@ static void TraceBackwards(uint16_t* const dist_array, int dist_array_size,
   *chosen_path_size = (int)(dist_array + dist_array_size - path);
 }
 
-static int BackwardReferencesHashChainFollowChosenPath(
+WEBP_NODISCARD static int BackwardReferencesHashChainFollowChosenPath(
     const uint32_t* const argb, int cache_bits,
     const uint16_t* const chosen_path, int chosen_path_size,
     const VP8LHashChain* const hash_chain, VP8LBackwardRefs* const refs) {
@@ -757,7 +759,7 @@ Error:
 }
 
 // Returns 1 on success.
-extern int VP8LBackwardReferencesTraceBackwards(
+WEBP_NODISCARD extern int VP8LBackwardReferencesTraceBackwards(
     int xsize, int ysize, const uint32_t* const argb, int cache_bits,
     const VP8LHashChain* const hash_chain,
     const VP8LBackwardRefs* const refs_src, VP8LBackwardRefs* const refs_dst);

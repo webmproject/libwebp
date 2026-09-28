@@ -100,10 +100,12 @@ static WEBP_INLINE uint8_t HashPix(uint32_t pix) {
   return ((((uint64_t)pix + (pix >> 19)) * 0x39c5fba7ull) & 0xffffffffu) >> 24;
 }
 
-static int AnalyzeEntropy(const uint32_t* argb, int width, int height,
-                          int argb_stride, int use_palette, int palette_size,
-                          int transform_bits, EntropyIx* const min_entropy_ix,
-                          int* const red_and_blue_always_zero) {
+WEBP_NODISCARD static int AnalyzeEntropy(const uint32_t* argb, int width,
+                                         int height, int argb_stride,
+                                         int use_palette, int palette_size,
+                                         int transform_bits,
+                                         EntropyIx* const min_entropy_ix,
+                                         int* const red_and_blue_always_zero) {
   Histograms* histo;
 
   if (use_palette && palette_size <= 16) {
@@ -325,10 +327,9 @@ static void AddPaletteSortingConfigs(
   }
 }
 
-static int EncoderAnalyze(VP8LEncoder* const enc,
-                          CrunchConfig crunch_configs[CRUNCH_CONFIGS_MAX],
-                          int* const crunch_configs_size,
-                          int* const red_and_blue_always_zero) {
+WEBP_NODISCARD static int EncoderAnalyze(
+    VP8LEncoder* const enc, CrunchConfig crunch_configs[CRUNCH_CONFIGS_MAX],
+    int* const crunch_configs_size, int* const red_and_blue_always_zero) {
   const WebPPicture* const pic = enc->pic;
   const int width = pic->width;
   const int height = pic->height;
@@ -428,7 +429,7 @@ static int EncoderAnalyze(VP8LEncoder* const enc,
   return 1;
 }
 
-static int EncoderInit(VP8LEncoder* const enc) {
+WEBP_NODISCARD static int EncoderInit(VP8LEncoder* const enc) {
   const WebPPicture* const pic = enc->pic;
   const int width = pic->width;
   const int height = pic->height;
@@ -445,7 +446,7 @@ static int EncoderInit(VP8LEncoder* const enc) {
 }
 
 // Returns false in case of memory error.
-static int GetHuffBitLengthsAndCodes(
+WEBP_NODISCARD static int GetHuffBitLengthsAndCodes(
     const VP8LHistogramSet* const histogram_image,
     HuffmanTreeCode* const huffman_codes) {
   int i, k;
@@ -703,12 +704,10 @@ static WEBP_INLINE void WriteHuffmanCodeWithExtraBits(
   VP8LPutBits(bw, (bits << depth) | symbol, depth + n_bits);
 }
 
-static int StoreImageToBitMask(VP8LBitWriter* const bw, int width,
-                               int histo_bits,
-                               const VP8LBackwardRefs* const refs,
-                               const uint32_t* histogram_symbols,
-                               const HuffmanTreeCode* const huffman_codes,
-                               const WebPPicture* const pic) {
+WEBP_NODISCARD static int StoreImageToBitMask(
+    VP8LBitWriter* const bw, int width, int histo_bits,
+    const VP8LBackwardRefs* const refs, const uint32_t* histogram_symbols,
+    const HuffmanTreeCode* const huffman_codes, const WebPPicture* const pic) {
   const int histo_xsize = histo_bits ? VP8LSubSampleSize(width, histo_bits) : 1;
   const int tile_mask = (histo_bits == 0) ? 0 : -(1 << histo_bits);
   // x and y trace the position in the image.
@@ -771,13 +770,11 @@ static int StoreImageToBitMask(VP8LBitWriter* const bw, int width,
 
 // Special case of EncodeImageInternal() for cache-bits=0, histo_bits=31.
 // pic and percent are for progress.
-static int EncodeImageNoHuffman(VP8LBitWriter* const bw,
-                                const uint32_t* const argb,
-                                VP8LHashChain* const hash_chain,
-                                VP8LBackwardRefs* const refs_array, int width,
-                                int height, int quality, int low_effort,
-                                const WebPPicture* const pic, int percent_range,
-                                int* const percent) {
+WEBP_NODISCARD static int EncodeImageNoHuffman(
+    VP8LBitWriter* const bw, const uint32_t* const argb,
+    VP8LHashChain* const hash_chain, VP8LBackwardRefs* const refs_array,
+    int width, int height, int quality, int low_effort,
+    const WebPPicture* const pic, int percent_range, int* const percent) {
   int i;
   int max_tokens = 0;
   VP8LBackwardRefs* refs;
@@ -864,7 +861,7 @@ Error:
 }
 
 // pic and percent are for progress.
-static int EncodeImageInternal(
+WEBP_NODISCARD static int EncodeImageInternal(
     VP8LBitWriter* const bw, const uint32_t* const argb,
     VP8LHashChain* const hash_chain, VP8LBackwardRefs refs_array[4], int width,
     int height, int quality, int low_effort, const CrunchConfig* const config,
@@ -1102,11 +1099,10 @@ static void ApplySubtractGreen(VP8LEncoder* const enc, int width, int height,
   VP8LSubtractGreenFromBlueAndRed(enc->argb, width * height);
 }
 
-static int ApplyPredictFilter(VP8LEncoder* const enc, int width, int height,
-                              int quality, int low_effort,
-                              int used_subtract_green, VP8LBitWriter* const bw,
-                              int percent_range, int* const percent,
-                              int* const best_bits) {
+WEBP_NODISCARD static int ApplyPredictFilter(
+    VP8LEncoder* const enc, int width, int height, int quality, int low_effort,
+    int used_subtract_green, VP8LBitWriter* const bw, int percent_range,
+    int* const percent, int* const best_bits) {
   const int near_lossless_strength =
       enc->use_palette ? 100 : enc->config->near_lossless;
   const int max_bits = ClampBits(width, height, enc->predictor_transform_bits,
@@ -1135,10 +1131,10 @@ static int ApplyPredictFilter(VP8LEncoder* const enc, int width, int height,
       percent_range - percent_range / 2, percent);
 }
 
-static int ApplyCrossColorFilter(VP8LEncoder* const enc, int width, int height,
-                                 int quality, int low_effort,
-                                 VP8LBitWriter* const bw, int percent_range,
-                                 int* const percent, int* const best_bits) {
+WEBP_NODISCARD static int ApplyCrossColorFilter(
+    VP8LEncoder* const enc, int width, int height, int quality, int low_effort,
+    VP8LBitWriter* const bw, int percent_range, int* const percent,
+    int* const best_bits) {
   const int min_bits = enc->cross_color_transform_bits;
 
   if (!VP8LColorSpaceTransform(width, height, min_bits, quality, enc->argb,
@@ -1159,8 +1155,8 @@ static int ApplyCrossColorFilter(VP8LEncoder* const enc, int width, int height,
 
 // -----------------------------------------------------------------------------
 
-static int WriteRiffHeader(const WebPPicture* const pic, size_t riff_size,
-                           size_t vp8l_size) {
+WEBP_NODISCARD static int WriteRiffHeader(const WebPPicture* const pic,
+                                          size_t riff_size, size_t vp8l_size) {
   uint8_t riff[RIFF_HEADER_SIZE + CHUNK_HEADER_SIZE + VP8L_SIGNATURE_SIZE] = {
       'R', 'I', 'F', 'F', 0,   0,   0,
       0,   'W', 'E', 'B', 'P', 'V', 'P',
@@ -1171,8 +1167,8 @@ static int WriteRiffHeader(const WebPPicture* const pic, size_t riff_size,
   return pic->writer(riff, sizeof(riff), pic);
 }
 
-static int WriteImageSize(const WebPPicture* const pic,
-                          VP8LBitWriter* const bw) {
+WEBP_NODISCARD static int WriteImageSize(const WebPPicture* const pic,
+                                         VP8LBitWriter* const bw) {
   const int width = pic->width - 1;
   const int height = pic->height - 1;
   assert(width < WEBP_MAX_DIMENSION && height < WEBP_MAX_DIMENSION);
@@ -1182,14 +1178,16 @@ static int WriteImageSize(const WebPPicture* const pic,
   return !bw->error;
 }
 
-static int WriteRealAlphaAndVersion(VP8LBitWriter* const bw, int has_alpha) {
+WEBP_NODISCARD static int WriteRealAlphaAndVersion(VP8LBitWriter* const bw,
+                                                   int has_alpha) {
   VP8LPutBits(bw, has_alpha, 1);
   VP8LPutBits(bw, VP8L_VERSION, VP8L_VERSION_BITS);
   return !bw->error;
 }
 
-static int WriteImage(const WebPPicture* const pic, VP8LBitWriter* const bw,
-                      size_t* const coded_size) {
+WEBP_NODISCARD static int WriteImage(const WebPPicture* const pic,
+                                     VP8LBitWriter* const bw,
+                                     size_t* const coded_size) {
   const uint8_t* const webpll_data = VP8LBitWriterFinish(bw);
   const size_t webpll_size = VP8LBitWriterNumBytes(bw);
   const size_t vp8l_size = VP8L_SIGNATURE_SIZE + webpll_size;
@@ -1229,8 +1227,8 @@ static void ClearTransformBuffer(VP8LEncoder* const enc) {
 // Flags influencing the memory allocated:
 //  enc->transform_bits
 //  enc->use_predict, enc->use_cross_color
-static int AllocateTransformBuffer(VP8LEncoder* const enc, int width,
-                                   int height) {
+WEBP_NODISCARD static int AllocateTransformBuffer(VP8LEncoder* const enc,
+                                                  int width, int height) {
   const uint64_t image_size = (uint64_t)width * height;
   // VP8LResidualImage needs room for 2 scanlines of uint32 pixels with an extra
   // pixel in each, plus 2 regular scanlines of bytes.
@@ -1270,7 +1268,7 @@ static int AllocateTransformBuffer(VP8LEncoder* const enc, int width,
   return 1;
 }
 
-static int MakeInputImageCopy(VP8LEncoder* const enc) {
+WEBP_NODISCARD static int MakeInputImageCopy(VP8LEncoder* const enc) {
   const WebPPicture* const picture = enc->pic;
   const int width = picture->width;
   const int height = picture->height;
@@ -1353,10 +1351,12 @@ static WEBP_INLINE uint32_t ApplyPaletteHash2(uint32_t color) {
 // using 'row' as a temporary buffer of size 'width'.
 // We assume that all src[] values have a corresponding entry in the palette.
 // Note: src[] can be the same as dst[]
-static int ApplyPalette(const uint32_t* src, uint32_t src_stride, uint32_t* dst,
-                        uint32_t dst_stride, const uint32_t* palette,
-                        int palette_size, int width, int height, int xbits,
-                        const WebPPicture* const pic) {
+WEBP_NODISCARD static int ApplyPalette(const uint32_t* src, uint32_t src_stride,
+                                       uint32_t* dst, uint32_t dst_stride,
+                                       const uint32_t* palette,
+                                       int palette_size, int width, int height,
+                                       int xbits,
+                                       const WebPPicture* const pic) {
   // TODO(skal): this tmp buffer is not needed if VP8LBundleColorMap() can be
   // made to work in-place.
   uint8_t* const tmp_row = (uint8_t*)WebPSafeMalloc(width, sizeof(*tmp_row));
@@ -1416,7 +1416,7 @@ static int ApplyPalette(const uint32_t* src, uint32_t src_stride, uint32_t* dst,
 #undef APPLY_PALETTE_GREEDY_MAX
 
 // Note: Expects "enc->palette" to be set properly.
-static int MapImageFromPalette(VP8LEncoder* const enc) {
+WEBP_NODISCARD static int MapImageFromPalette(VP8LEncoder* const enc) {
   const WebPPicture* const pic = enc->pic;
   const int width = pic->width;
   const int height = pic->height;
@@ -1444,9 +1444,9 @@ static int MapImageFromPalette(VP8LEncoder* const enc) {
 }
 
 // Save palette[] to bitstream.
-static int EncodePalette(VP8LBitWriter* const bw, int low_effort,
-                         VP8LEncoder* const enc, int percent_range,
-                         int* const percent) {
+WEBP_NODISCARD static int EncodePalette(VP8LBitWriter* const bw, int low_effort,
+                                        VP8LEncoder* const enc,
+                                        int percent_range, int* const percent) {
   int i;
   uint32_t tmp_palette[MAX_PALETTE_SIZE];
   const int palette_size = enc->palette_size;
@@ -1474,8 +1474,8 @@ static int EncodePalette(VP8LBitWriter* const bw, int low_effort,
 // -----------------------------------------------------------------------------
 // VP8LEncoder
 
-static VP8LEncoder* VP8LEncoderNew(const WebPConfig* const config,
-                                   const WebPPicture* const picture) {
+WEBP_NODISCARD static VP8LEncoder* VP8LEncoderNew(
+    const WebPConfig* const config, const WebPPicture* const picture) {
   VP8LEncoder* const enc = (VP8LEncoder*)WebPSafeCalloc(1ULL, sizeof(*enc));
   if (enc == NULL) {
     WebPEncodingSetError(picture, VP8_ENC_ERROR_OUT_OF_MEMORY);
@@ -1514,7 +1514,7 @@ typedef struct {
   WebPAuxStats* stats;
 } StreamEncodeContext;
 
-static int EncodeStreamHook(void* input, void* data2) {
+WEBP_NODISCARD static int EncodeStreamHook(void* input, void* data2) {
   StreamEncodeContext* const params = (StreamEncodeContext*)input;
   const WebPConfig* const config = params->config;
   const WebPPicture* const picture = params->picture;

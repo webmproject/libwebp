@@ -174,8 +174,9 @@ static void ResetSegmentHeader(VP8SegmentHeader* const hdr) {
 }
 
 // Paragraph 9.3
-static int ParseSegmentHeader(VP8BitReader* br, VP8SegmentHeader* hdr,
-                              VP8Proba* proba) {
+WEBP_NODISCARD static int ParseSegmentHeader(VP8BitReader* br,
+                                             VP8SegmentHeader* hdr,
+                                             VP8Proba* proba) {
   assert(br != NULL);
   assert(hdr != NULL);
   hdr->use_segment = VP8Get(br, "global-header");
@@ -254,7 +255,8 @@ static VP8StatusCode ParsePartitions(VP8Decoder* const dec,
 }
 
 // Paragraph 9.4
-static int ParseFilterHeader(VP8BitReader* br, VP8Decoder* const dec) {
+WEBP_NODISCARD static int ParseFilterHeader(VP8BitReader* br,
+                                            VP8Decoder* const dec) {
   VP8FilterHeader* const hdr = &dec->filter_hdr;
   hdr->simple = VP8Get(br, "global-header");
   hdr->level = VP8GetValue(br, 6, "global-header");
@@ -530,8 +532,8 @@ static WEBP_INLINE uint32_t NzCodeBits(uint32_t nz_coeffs, int nz, int dc_nz) {
   return nz_coeffs;
 }
 
-static int ParseResiduals(VP8Decoder* const dec, VP8MB* const mb,
-                          VP8BitReader* const token_br) {
+WEBP_NODISCARD static int ParseResiduals(VP8Decoder* const dec, VP8MB* const mb,
+                                         VP8BitReader* const token_br) {
   const VP8BandProbas*(*const bands)[16 + 1] = dec->proba.bands_ptr;
   const VP8BandProbas* const* ac_proba;
   VP8MBData* const block = dec->mb_data + dec->mb_x;
@@ -659,7 +661,7 @@ void VP8InitScanline(VP8Decoder* const dec) {
   dec->mb_x = 0;
 }
 
-static int ParseFrame(VP8Decoder* const dec, VP8Io* io) {
+WEBP_NODISCARD static int ParseFrame(VP8Decoder* const dec, VP8Io* io) {
   for (dec->mb_y = 0; dec->mb_y < dec->br_mb_y; ++dec->mb_y) {
     // Parse bitstream for this row.
     VP8BitReader* const token_br =

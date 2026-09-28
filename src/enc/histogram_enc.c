@@ -787,7 +787,8 @@ typedef struct {
   int max_size;
 } HistoQueue;
 
-static int HistoQueueInit(HistoQueue* const histo_queue, const int max_size) {
+WEBP_NODISCARD static int HistoQueueInit(HistoQueue* const histo_queue,
+                                         const int max_size) {
   histo_queue->size = 0;
   histo_queue->max_size = max_size;
   // We allocate max_size + 1 because the last element at index "size" is
@@ -896,7 +897,8 @@ static int64_t HistoQueuePush(HistoQueue* const histo_queue,
 
 // Combines histograms by continuously choosing the one with the highest cost
 // reduction.
-static int HistogramCombineGreedy(VP8LHistogramSet* const image_histo) {
+WEBP_NODISCARD static int HistogramCombineGreedy(
+    VP8LHistogramSet* const image_histo) {
   int ok = 0;
   const int image_histo_size = image_histo->size;
   int i, j;
@@ -963,9 +965,9 @@ End:
 // Perform histogram aggregation using a stochastic approach.
 // 'do_greedy' is set to 1 if a greedy approach needs to be performed
 // afterwards, 0 otherwise.
-static int HistogramCombineStochastic(VP8LHistogramSet* const image_histo,
-                                      int min_cluster_size,
-                                      int* const do_greedy) {
+WEBP_NODISCARD static int HistogramCombineStochastic(
+    VP8LHistogramSet* const image_histo, int min_cluster_size,
+    int* const do_greedy) {
   int j, iter;
   uint32_t seed = 1;
   int tries_with_no_success = 0;

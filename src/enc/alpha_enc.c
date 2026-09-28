@@ -51,10 +51,12 @@
 
 #include "src/enc/vp8li_enc.h"
 
-static int EncodeLossless(const uint8_t* const data, int width, int height,
-                          int effort_level,  // in [0..6] range
-                          int use_quality_100, VP8LBitWriter* const bw,
-                          WebPAuxStats* const stats) {
+WEBP_NODISCARD static int EncodeLossless(const uint8_t* const data, int width,
+                                         int height,
+                                         int effort_level,  // in [0..6] range
+                                         int use_quality_100,
+                                         VP8LBitWriter* const bw,
+                                         WebPAuxStats* const stats) {
   int ok = 0;
   WebPConfig config;
   WebPPicture picture;
@@ -107,10 +109,11 @@ typedef struct {
 } FilterTrial;
 
 // This function always returns an initialized 'bw' object, even upon error.
-static int EncodeAlphaInternal(const uint8_t* const data, int width, int height,
-                               int method, int filter, int reduce_levels,
-                               int effort_level,  // in [0..6] range
-                               uint8_t* const tmp_alpha, FilterTrial* result) {
+WEBP_NODISCARD static int EncodeAlphaInternal(
+    const uint8_t* const data, int width, int height, int method, int filter,
+    int reduce_levels,
+    int effort_level,  // in [0..6] range
+    uint8_t* const tmp_alpha, FilterTrial* result) {
   int ok = 0;
   const uint8_t* alpha_src;
   WebPFilterFunc filter_func;
@@ -234,15 +237,13 @@ static uint32_t GetFilterMap(const uint8_t* alpha, int width, int height,
 
 static void InitFilterTrial(FilterTrial* const score) {
   score->score = (size_t)~0U;
-  VP8BitWriterInit(&score->bw, 0);
+  (void)VP8BitWriterInit(&score->bw, 0);
 }
 
-static int ApplyFiltersAndEncode(const uint8_t* alpha, int width, int height,
-                                 size_t data_size, int method, int filter,
-                                 int reduce_levels, int effort_level,
-                                 uint8_t** const output,
-                                 size_t* const output_size,
-                                 WebPAuxStats* const stats) {
+WEBP_NODISCARD static int ApplyFiltersAndEncode(
+    const uint8_t* alpha, int width, int height, size_t data_size, int method,
+    int filter, int reduce_levels, int effort_level, uint8_t** const output,
+    size_t* const output_size, WebPAuxStats* const stats) {
   int ok = 1;
   FilterTrial best;
   uint32_t try_map = GetFilterMap(alpha, width, height, filter, effort_level);
@@ -295,9 +296,10 @@ static int ApplyFiltersAndEncode(const uint8_t* alpha, int width, int height,
   return ok;
 }
 
-static int EncodeAlpha(VP8Encoder* const enc, int quality, int method,
-                       int filter, int effort_level, uint8_t** const output,
-                       size_t* const output_size) {
+WEBP_NODISCARD static int EncodeAlpha(VP8Encoder* const enc, int quality,
+                                      int method, int filter, int effort_level,
+                                      uint8_t** const output,
+                                      size_t* const output_size) {
   const WebPPicture* const pic = enc->pic;
   const int width = pic->width;
   const int height = pic->height;
@@ -368,7 +370,7 @@ static int EncodeAlpha(VP8Encoder* const enc, int quality, int method,
 //------------------------------------------------------------------------------
 // Main calls
 
-static int CompressAlphaJob(void* arg1, void* unused) {
+WEBP_NODISCARD static int CompressAlphaJob(void* arg1, void* unused) {
   VP8Encoder* const enc = (VP8Encoder*)arg1;
   const WebPConfig* config = enc->config;
   uint8_t* alpha_data = NULL;

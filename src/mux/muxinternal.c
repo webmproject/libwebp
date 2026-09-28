@@ -284,8 +284,8 @@ int MuxImageCount(const WebPMuxImage* wpi_list, WebPChunkId id) {
 // Outputs a pointer to 'prev_wpi->next',
 //   where 'prev_wpi' is the pointer to the image at position (nth - 1).
 // Returns true if nth image was found.
-static int SearchImageToGetOrDelete(WebPMuxImage** wpi_list, uint32_t nth,
-                                    WebPMuxImage*** const location) {
+WEBP_NODISCARD static int SearchImageToGetOrDelete(
+    WebPMuxImage** wpi_list, uint32_t nth, WebPMuxImage*** const location) {
   uint32_t count = 0;
   assert(wpi_list);
   *location = wpi_list;

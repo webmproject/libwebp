@@ -107,8 +107,9 @@ int MuxImageFinalize(WebPMuxImage* const wpi) {
   return ok;
 }
 
-static int MuxImageParse(const WebPChunk* const chunk, int copy_data,
-                         WebPMuxImage* const wpi) {
+WEBP_NODISCARD static int MuxImageParse(const WebPChunk* const chunk,
+                                        int copy_data,
+                                        WebPMuxImage* const wpi) {
   const uint8_t* bytes = chunk->data.bytes;
   size_t size = chunk->data.size;
   const uint8_t* const last = (bytes == NULL) ? NULL : bytes + size;

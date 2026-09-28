@@ -546,8 +546,9 @@ typedef struct {
   WebPPicture sub_frame_lossy;  // subframe pic for lossy compression.
 } SubFrameParams;
 
-static int SubFrameParamsInit(SubFrameParams* const params, int should_try,
-                              int empty_rect_allowed) {
+WEBP_NODISCARD static int SubFrameParamsInit(SubFrameParams* const params,
+                                             int should_try,
+                                             int empty_rect_allowed) {
   params->should_try = should_try;
   params->empty_rect_allowed = empty_rect_allowed;
   if (!WebPPictureInit(&params->sub_frame_ll) ||
@@ -565,12 +566,12 @@ static void SubFrameParamsFree(SubFrameParams* const params) {
 // Given previous and current canvas, picks the optimal rectangle for the
 // current frame based on 'is_lossless' and other parameters. Assumes that the
 // initial guess 'rect' is valid.
-static int GetSubRect(const WebPPicture* const prev_canvas,
-                      const WebPPicture* const curr_canvas, int is_key_frame,
-                      int is_first_frame, int empty_rect_allowed,
-                      int is_lossless, float quality,
-                      FrameRectangle* const rect,
-                      WebPPicture* const sub_frame) {
+WEBP_NODISCARD static int GetSubRect(const WebPPicture* const prev_canvas,
+                                     const WebPPicture* const curr_canvas,
+                                     int is_key_frame, int is_first_frame,
+                                     int empty_rect_allowed, int is_lossless,
+                                     float quality, FrameRectangle* const rect,
+                                     WebPPicture* const sub_frame) {
   if (!is_key_frame || is_first_frame) {  // Optimize frame rectangle.
     // Note: This behaves as expected for first frame, as 'prev_canvas' is
     // initialized to a fully transparent canvas in the beginning.
@@ -596,10 +597,11 @@ static int GetSubRect(const WebPPicture* const prev_canvas,
 
 // Picks optimal frame rectangle for both lossless and lossy compression. The
 // initial guess for frame rectangles will be the full canvas.
-static int GetSubRects(const WebPPicture* const prev_canvas,
-                       const WebPPicture* const curr_canvas, int is_key_frame,
-                       int is_first_frame, float quality,
-                       SubFrameParams* const params) {
+WEBP_NODISCARD static int GetSubRects(const WebPPicture* const prev_canvas,
+                                      const WebPPicture* const curr_canvas,
+                                      int is_key_frame, int is_first_frame,
+                                      float quality,
+                                      SubFrameParams* const params) {
   // Lossless frame rectangle.
   params->rect_ll.x_offset = 0;
   params->rect_ll.y_offset = 0;
@@ -665,9 +667,9 @@ static uint32_t RectArea(const FrameRectangle* const rect) {
   return (uint32_t)rect->width * rect->height;
 }
 
-static int IsLosslessBlendingPossible(const WebPPicture* const src,
-                                      const WebPPicture* const dst,
-                                      const FrameRectangle* const rect) {
+WEBP_NODISCARD static int IsLosslessBlendingPossible(
+    const WebPPicture* const src, const WebPPicture* const dst,
+    const FrameRectangle* const rect) {
   int i, j;
   assert(src->width == dst->width && src->height == dst->height);
   assert(rect->x_offset + rect->width <= dst->width);
@@ -687,10 +689,9 @@ static int IsLosslessBlendingPossible(const WebPPicture* const src,
   return 1;
 }
 
-static int IsLossyBlendingPossible(const WebPPicture* const src,
-                                   const WebPPicture* const dst,
-                                   const FrameRectangle* const rect,
-                                   float quality) {
+WEBP_NODISCARD static int IsLossyBlendingPossible(
+    const WebPPicture* const src, const WebPPicture* const dst,
+    const FrameRectangle* const rect, float quality) {
   const int max_allowed_diff_lossy = QualityToMaxDiff(quality);
   int i, j;
   assert(src->width == dst->width && src->height == dst->height);
@@ -716,10 +717,10 @@ static int IsLossyBlendingPossible(const WebPPicture* const src,
 // transparent pixels.
 // Returns true if at least one pixel gets modified.
 // Remember the modified pixel locations as 1s in carryover_mask.
-static int IncreaseTransparency(const WebPPicture* const src,
-                                const FrameRectangle* const rect,
-                                WebPPicture* const dst,
-                                uint8_t* const carryover_mask) {
+WEBP_NODISCARD static int IncreaseTransparency(const WebPPicture* const src,
+                                               const FrameRectangle* const rect,
+                                               WebPPicture* const dst,
+                                               uint8_t* const carryover_mask) {
   int i, j;
   int modified = 0;
   // carryover_mask spans over the rect part of the canvas.
@@ -748,10 +749,11 @@ static int IncreaseTransparency(const WebPPicture* const src,
 // Assumes lossy compression is being used.
 // Returns true if at least one pixel gets modified.
 // Remember the modified pixel locations as 1s in carryover_mask.
-static int FlattenSimilarBlocks(const WebPPicture* const src,
-                                const FrameRectangle* const rect,
-                                WebPPicture* const dst, float quality,
-                                uint8_t* const carryover_mask) {
+WEBP_NODISCARD static int FlattenSimilarBlocks(const WebPPicture* const src,
+                                               const FrameRectangle* const rect,
+                                               WebPPicture* const dst,
+                                               float quality,
+                                               uint8_t* const carryover_mask) {
   const int max_allowed_diff_lossy = QualityToMaxDiff(quality);
   int i, j;
   int modified = 0;
@@ -810,8 +812,9 @@ static int FlattenSimilarBlocks(const WebPPicture* const src,
   return modified;
 }
 
-static int EncodeFrame(const WebPConfig* const config, WebPPicture* const pic,
-                       WebPMemoryWriter* const memory) {
+WEBP_NODISCARD static int EncodeFrame(const WebPConfig* const config,
+                                      WebPPicture* const pic,
+                                      WebPMemoryWriter* const memory) {
   pic->use_argb = 1;
   pic->writer = WebPMemoryWrite;
   pic->custom_ptr = memory;
@@ -1084,7 +1087,8 @@ static WebPEncodingError GenerateCandidates(
 #undef MIN_COLORS_LOSSY
 #undef MAX_COLORS_LOSSLESS
 
-static int IncreasePreviousDuration(WebPAnimEncoder* const enc, int duration) {
+WEBP_NODISCARD static int IncreasePreviousDuration(WebPAnimEncoder* const enc,
+                                                   int duration) {
   const size_t position = enc->count - 1;
   EncodedFrame* const prev_enc_frame = GetFrame(enc, position);
   int new_duration;
@@ -1342,8 +1346,8 @@ static int64_t KeyFramePenalty(const EncodedFrame* const encoded_frame) {
           (int64_t)encoded_frame->sub_frame.bitstream.size);
 }
 
-static int CacheFrame(WebPAnimEncoder* const enc,
-                      const WebPConfig* const config) {
+WEBP_NODISCARD static int CacheFrame(WebPAnimEncoder* const enc,
+                                     const WebPConfig* const config) {
   int ok = 0;
   int frame_skipped = 0;
   WebPEncodingError error_code = VP8_ENC_OK;
@@ -1518,7 +1522,7 @@ End:
   return ok;
 }
 
-static int FlushFrames(WebPAnimEncoder* const enc) {
+WEBP_NODISCARD static int FlushFrames(WebPAnimEncoder* const enc) {
   while (enc->flush_count > 0) {
     WebPMuxError err;
     EncodedFrame* const curr = GetFrame(enc, 0);
@@ -1677,9 +1681,9 @@ WEBP_NODISCARD static int DecodeFrameOntoCanvas(
   return 1;
 }
 
-static int FrameToFullCanvas(WebPAnimEncoder* const enc,
-                             const WebPMuxFrameInfo* const frame,
-                             WebPData* const full_image) {
+WEBP_NODISCARD static int FrameToFullCanvas(WebPAnimEncoder* const enc,
+                                            const WebPMuxFrameInfo* const frame,
+                                            WebPData* const full_image) {
   WebPPicture* const canvas_buf = &enc->curr_canvas_copy;
   WebPMemoryWriter mem1, mem2;
   WebPMemoryWriterInit(&mem1);

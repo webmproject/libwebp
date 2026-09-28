@@ -459,8 +459,8 @@ struct WebPAnimEncoderOptions {
 };
 
 // Internal, version-checked, entry point.
-WEBP_EXTERN int WebPAnimEncoderOptionsInitInternal(WebPAnimEncoderOptions*,
-                                                   int);
+WEBP_NODISCARD WEBP_EXTERN int WebPAnimEncoderOptionsInitInternal(
+    WebPAnimEncoderOptions*, int);
 
 // Should always be called, to initialize a fresh WebPAnimEncoderOptions
 // structure before modification. Returns false in case of version mismatch.
@@ -472,7 +472,7 @@ WEBP_NODISCARD static WEBP_INLINE int WebPAnimEncoderOptionsInit(
 }
 
 // Internal, version-checked, entry point.
-WEBP_EXTERN WebPAnimEncoder* WebPAnimEncoderNewInternal(
+WEBP_NODISCARD WEBP_EXTERN WebPAnimEncoder* WebPAnimEncoderNewInternal(
     int, int, const WebPAnimEncoderOptions*, int);
 
 // Creates and initializes a WebPAnimEncoder object.
@@ -483,7 +483,7 @@ WEBP_EXTERN WebPAnimEncoder* WebPAnimEncoderNewInternal(
 // Returns:
 //   A pointer to the newly created WebPAnimEncoder object.
 //   Or NULL in case of memory error.
-static WEBP_INLINE WebPAnimEncoder* WebPAnimEncoderNew(
+WEBP_NODISCARD static WEBP_INLINE WebPAnimEncoder* WebPAnimEncoderNew(
     int width, int height, const WebPAnimEncoderOptions* enc_options) {
   return WebPAnimEncoderNewInternal(width, height, enc_options,
                                     WEBP_MUX_ABI_VERSION);

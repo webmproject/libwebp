@@ -44,7 +44,7 @@ extern "C" {
 #endif
 #endif  // WEBP_MAX_ALLOCABLE_MEMORY
 
-static WEBP_INLINE int CheckSizeOverflow(uint64_t size) {
+WEBP_NODISCARD static WEBP_INLINE int CheckSizeOverflow(uint64_t size) {
   return size == (size_t)size;
 }
 
@@ -54,11 +54,11 @@ static WEBP_INLINE int CheckSizeOverflow(uint64_t size) {
 // somewhere (like: malloc(num_pixels * sizeof(*something))). That's why this
 // safe malloc() borrows the signature from calloc(), pointing at the dangerous
 // underlying multiply involved.
-WEBP_EXTERN void* WEBP_SIZED_BY_OR_NULL(nmemb* size)
+WEBP_NODISCARD WEBP_EXTERN void* WEBP_SIZED_BY_OR_NULL(nmemb* size)
     WebPSafeMalloc(uint64_t nmemb, size_t size);
 // Note that WebPSafeCalloc() expects the second argument type to be 'size_t'
 // in order to favor the "calloc(num_foo, sizeof(foo))" pattern.
-WEBP_EXTERN void* WEBP_SIZED_BY_OR_NULL(nmemb* size)
+WEBP_NODISCARD WEBP_EXTERN void* WEBP_SIZED_BY_OR_NULL(nmemb* size)
     WebPSafeCalloc(uint64_t nmemb, size_t size);
 
 // Companion deallocation function to the above allocations.

@@ -145,8 +145,8 @@ static void MapConfigToTools(VP8Encoder* const enc) {
 //              LFStats: 2048
 // Picture size (yuv): 419328
 
-static VP8Encoder* InitVP8Encoder(const WebPConfig* const config,
-                                  WebPPicture* const picture) {
+WEBP_NODISCARD static VP8Encoder* InitVP8Encoder(const WebPConfig* const config,
+                                                 WebPPicture* const picture) {
   VP8Encoder* enc;
   const int use_filter =
       (config->filter_strength > 0) || (config->autofilter > 0);
@@ -256,7 +256,7 @@ static VP8Encoder* InitVP8Encoder(const WebPConfig* const config,
   return enc;
 }
 
-static int DeleteVP8Encoder(VP8Encoder* enc) {
+WEBP_NODISCARD static int DeleteVP8Encoder(VP8Encoder* enc) {
   int ok = 1;
   if (enc != NULL) {
     ok = VP8EncDeleteAlpha(enc);

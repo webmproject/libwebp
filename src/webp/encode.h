@@ -48,18 +48,22 @@ WEBP_EXTERN int WebPGetEncoderVersion(void);
 // These functions compress using the lossy format, and the quality_factor
 // can go from 0 (smaller output, lower quality) to 100 (best quality,
 // larger output).
-WEBP_EXTERN size_t WebPEncodeRGB(const uint8_t* rgb, int width, int height,
-                                 int stride, float quality_factor,
-                                 uint8_t** output);
-WEBP_EXTERN size_t WebPEncodeBGR(const uint8_t* bgr, int width, int height,
-                                 int stride, float quality_factor,
-                                 uint8_t** output);
-WEBP_EXTERN size_t WebPEncodeRGBA(const uint8_t* rgba, int width, int height,
-                                  int stride, float quality_factor,
-                                  uint8_t** output);
-WEBP_EXTERN size_t WebPEncodeBGRA(const uint8_t* bgra, int width, int height,
-                                  int stride, float quality_factor,
-                                  uint8_t** output);
+WEBP_NODISCARD WEBP_EXTERN size_t WebPEncodeRGB(const uint8_t* rgb, int width,
+                                                int height, int stride,
+                                                float quality_factor,
+                                                uint8_t** output);
+WEBP_NODISCARD WEBP_EXTERN size_t WebPEncodeBGR(const uint8_t* bgr, int width,
+                                                int height, int stride,
+                                                float quality_factor,
+                                                uint8_t** output);
+WEBP_NODISCARD WEBP_EXTERN size_t WebPEncodeRGBA(const uint8_t* rgba, int width,
+                                                 int height, int stride,
+                                                 float quality_factor,
+                                                 uint8_t** output);
+WEBP_NODISCARD WEBP_EXTERN size_t WebPEncodeBGRA(const uint8_t* bgra, int width,
+                                                 int height, int stride,
+                                                 float quality_factor,
+                                                 uint8_t** output);
 
 // These functions are the equivalent of the above, but compressing in a
 // lossless manner. Files are usually larger than lossy format, but will
@@ -69,18 +73,22 @@ WEBP_EXTERN size_t WebPEncodeBGRA(const uint8_t* bgra, int width, int height,
 // transparent areas (that is, areas with alpha values equal to 0) will be
 // modified to improve compression. To avoid this, use WebPEncode() and set
 // WebPConfig::exact to 1.
-WEBP_EXTERN size_t WebPEncodeLosslessRGB(const uint8_t* rgb, int width,
-                                         int height, int stride,
-                                         uint8_t** output);
-WEBP_EXTERN size_t WebPEncodeLosslessBGR(const uint8_t* bgr, int width,
-                                         int height, int stride,
-                                         uint8_t** output);
-WEBP_EXTERN size_t WebPEncodeLosslessRGBA(const uint8_t* rgba, int width,
-                                          int height, int stride,
-                                          uint8_t** output);
-WEBP_EXTERN size_t WebPEncodeLosslessBGRA(const uint8_t* bgra, int width,
-                                          int height, int stride,
-                                          uint8_t** output);
+WEBP_NODISCARD WEBP_EXTERN size_t WebPEncodeLosslessRGB(const uint8_t* rgb,
+                                                        int width, int height,
+                                                        int stride,
+                                                        uint8_t** output);
+WEBP_NODISCARD WEBP_EXTERN size_t WebPEncodeLosslessBGR(const uint8_t* bgr,
+                                                        int width, int height,
+                                                        int stride,
+                                                        uint8_t** output);
+WEBP_NODISCARD WEBP_EXTERN size_t WebPEncodeLosslessRGBA(const uint8_t* rgba,
+                                                         int width, int height,
+                                                         int stride,
+                                                         uint8_t** output);
+WEBP_NODISCARD WEBP_EXTERN size_t WebPEncodeLosslessBGRA(const uint8_t* bgra,
+                                                         int width, int height,
+                                                         int stride,
+                                                         uint8_t** output);
 
 //------------------------------------------------------------------------------
 // Coding parameters
@@ -281,7 +289,7 @@ typedef enum WebPEncCSP {
 } WebPEncCSP;
 
 // Encoding error conditions.
-typedef enum WebPEncodingError {
+typedef enum WEBP_NODISCARD WebPEncodingError {
   VP8_ENC_OK = 0,
   VP8_ENC_ERROR_OUT_OF_MEMORY,            // memory error allocating objects
   VP8_ENC_ERROR_BITSTREAM_OUT_OF_MEMORY,  // memory error while flushing bits

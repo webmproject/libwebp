@@ -420,7 +420,7 @@ static void DitherRow(VP8Decoder* const dec) {
 #define MACROBLOCK_VPOS(mb_y) ((mb_y) * 16)  // vertical position of a MB
 
 // Finalize and transmit a complete row. Return false in case of user-abort.
-static int FinishRow(void* arg1, void* arg2) {
+WEBP_NODISCARD static int FinishRow(void* arg1, void* arg2) {
   VP8Decoder* const dec = (VP8Decoder*)arg1;
   VP8Io* const io = (VP8Io*)arg2;
   int ok = 1;
@@ -664,7 +664,7 @@ int VP8ExitCritical(VP8Decoder* const dec, VP8Io* const io) {
 #define ST_CACHE_LINES 1  // 1 cache row only for single-threaded case
 
 // Initialize multi/single-thread worker
-static int InitThreadContext(VP8Decoder* const dec) {
+WEBP_NODISCARD static int InitThreadContext(VP8Decoder* const dec) {
   dec->cache_id = 0;
   if (dec->mt_method > 0) {
     WebPWorker* const worker = &dec->worker;
@@ -705,7 +705,8 @@ int VP8GetThreadMethod(const WebPDecoderOptions* const options,
 //------------------------------------------------------------------------------
 // Memory setup
 
-static int AllocateMemory(VP8Decoder* const dec, const VP8Io* const io) {
+WEBP_NODISCARD static int AllocateMemory(VP8Decoder* const dec,
+                                         const VP8Io* const io) {
   const int num_caches = dec->num_caches;
   const int mb_w = dec->mb_w;
   // Note: we use 'size_t' when there's no overflow risk, uint64_t otherwise.

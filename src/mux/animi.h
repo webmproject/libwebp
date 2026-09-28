@@ -30,11 +30,11 @@ extern "C" {
 //   x_offset, y_offset, width, height - (in/out) rectangle between the two
 //                                                input pictures.
 // Returns true on success.
-int WebPAnimEncoderRefineRect(const struct WebPPicture* const prev_canvas,
-                              const struct WebPPicture* const curr_canvas,
-                              int is_lossless, float quality,
-                              int* const x_offset, int* const y_offset,
-                              int* const width, int* const height);
+WEBP_NODISCARD int WebPAnimEncoderRefineRect(
+    const struct WebPPicture* const prev_canvas,
+    const struct WebPPicture* const curr_canvas, int is_lossless, float quality,
+    int* const x_offset, int* const y_offset, int* const width,
+    int* const height);
 
 #ifdef __cplusplus
 }  // extern "C"

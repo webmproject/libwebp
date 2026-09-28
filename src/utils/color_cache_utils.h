@@ -76,7 +76,8 @@ static WEBP_INLINE int VP8LColorCacheContains(const VP8LColorCache* const cc,
 
 // Initializes the color cache with 'hash_bits' bits for the keys.
 // Returns false in case of memory error.
-int VP8LColorCacheInit(VP8LColorCache* const color_cache, int hash_bits);
+WEBP_NODISCARD int VP8LColorCacheInit(VP8LColorCache* const color_cache,
+                                      int hash_bits);
 
 void VP8LColorCacheCopy(const VP8LColorCache* const src,
                         VP8LColorCache* const dst);

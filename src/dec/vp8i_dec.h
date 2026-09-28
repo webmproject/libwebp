@@ -282,7 +282,8 @@ int VP8SetError(VP8Decoder* const dec, VP8StatusCode error,
 void VP8ResetProba(VP8Proba* const proba);
 void VP8ParseProba(VP8BitReader* const br, VP8Decoder* const dec);
 // parses one row of intra mode data in partition 0, returns !eof
-int VP8ParseIntraModeRow(VP8BitReader* const br, VP8Decoder* const dec);
+WEBP_NODISCARD int VP8ParseIntraModeRow(VP8BitReader* const br,
+                                        VP8Decoder* const dec);
 
 // in quant.c
 void VP8ParseQuant(VP8Decoder* const dec);
@@ -314,9 +315,9 @@ WEBP_NODISCARD int VP8DecodeMB(VP8Decoder* const dec,
                                VP8BitReader* const token_br);
 
 // in alpha.c
-const uint8_t* VP8DecompressAlphaRows(VP8Decoder* const dec,
-                                      const VP8Io* const io, int row,
-                                      int num_rows);
+WEBP_NODISCARD const uint8_t* VP8DecompressAlphaRows(VP8Decoder* const dec,
+                                                     const VP8Io* const io,
+                                                     int row, int num_rows);
 
 //------------------------------------------------------------------------------
 

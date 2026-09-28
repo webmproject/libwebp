@@ -225,9 +225,9 @@ static void CountLevels(SmoothParams* const p) {
 }
 
 // Initialize all params.
-static int InitParams(uint8_t* WEBP_SIZED_BY((size_t)stride* height) const data,
-                      int width, int height, int stride, int radius,
-                      SmoothParams* const p) {
+WEBP_NODISCARD static int InitParams(
+    uint8_t* WEBP_SIZED_BY((size_t)stride* height) const data, int width,
+    int height, int stride, int radius, SmoothParams* const p) {
   const int R = 2 * radius + 1;  // total size of the kernel
 
   const size_t size_scratch_m = (R + 1) * width * sizeof(*p->start);

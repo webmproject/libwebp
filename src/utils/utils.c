@@ -179,7 +179,8 @@ static void SubMem(void* ptr) {
 #endif
 
 // Returns 0 in case of overflow of nmemb * size.
-static int CheckSizeArgumentsOverflow(uint64_t nmemb, size_t size) {
+WEBP_NODISCARD static int CheckSizeArgumentsOverflow(uint64_t nmemb,
+                                                     size_t size) {
   const uint64_t total_size = nmemb * size;
   if (nmemb == 0) return 1;
   if ((uint64_t)size > WEBP_MAX_ALLOCABLE_MEMORY / nmemb) return 0;
@@ -281,7 +282,8 @@ int WebPGetColorPalette(
 //------------------------------------------------------------------------------
 
 #if defined(WEBP_NEED_LOG_TABLE_8BIT)
-const uint8_t WebPLogTable8bit[256] = {  // 31 ^ clz(i)
+const uint8_t WebPLogTable8bit[256] = {
+    // 31 ^ clz(i)
     0, 0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4,
     4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
     5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6, 6, 6,

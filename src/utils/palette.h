@@ -68,10 +68,9 @@ int GetColorPalette(const struct WebPPicture* const pic,
 // PrepareMapToPalette. Returns 0 on memory allocation error.
 // For kSortedDefault and kMinimizeDelta methods, 0 (if present) is set as the
 // last element to optimize later storage.
-int PaletteSort(PaletteSorting method, const struct WebPPicture* const pic,
-                const uint32_t* const WEBP_COUNTED_BY(num_colors)
-                    palette_sorted,
-                uint32_t num_colors,
-                uint32_t* const WEBP_COUNTED_BY(num_colors) palette);
+WEBP_NODISCARD int PaletteSort(
+    PaletteSorting method, const struct WebPPicture* const pic,
+    const uint32_t* const WEBP_COUNTED_BY(num_colors) palette_sorted,
+    uint32_t num_colors, uint32_t* const WEBP_COUNTED_BY(num_colors) palette);
 
 #endif  // WEBP_UTILS_PALETTE_H_

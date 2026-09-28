@@ -412,8 +412,9 @@ static void RecordResiduals(VP8EncIterator* const it,
 
 #if !defined(DISABLE_TOKEN_BUFFER)
 
-static int RecordTokens(VP8EncIterator* const it, const VP8ModeScore* const rd,
-                        VP8TBuffer* const tokens) {
+WEBP_NODISCARD static int RecordTokens(VP8EncIterator* const it,
+                                       const VP8ModeScore* const rd,
+                                       VP8TBuffer* const tokens) {
   int x, y, ch;
   VP8Residual res;
   VP8Encoder* const enc = it->enc;
@@ -586,9 +587,10 @@ static void SetLoopParams(VP8Encoder* const enc, float q) {
 
 // Returns false if user aborted. '*size_p0' is partition #0's estimated size,
 // legitimately 0 with RD_OPT_NONE.
-static int OneStatPass(VP8Encoder* const enc, VP8RDLevel rd_opt, int nb_mbs,
-                       int percent_delta, PassStats* const s,
-                       uint64_t* const size_p0) {
+WEBP_NODISCARD static int OneStatPass(VP8Encoder* const enc, VP8RDLevel rd_opt,
+                                      int nb_mbs, int percent_delta,
+                                      PassStats* const s,
+                                      uint64_t* const size_p0) {
   VP8EncIterator it;
   uint64_t size = 0;
   uint64_t p0 = 0;
@@ -627,7 +629,7 @@ static int OneStatPass(VP8Encoder* const enc, VP8RDLevel rd_opt, int nb_mbs,
   return 1;
 }
 
-static int StatLoop(VP8Encoder* const enc) {
+WEBP_NODISCARD static int StatLoop(VP8Encoder* const enc) {
   const int method = enc->method;
   const int do_search = enc->do_search;
   const int fast_probe = ((method == 0 || method == 3) && !do_search);
@@ -695,7 +697,7 @@ static int StatLoop(VP8Encoder* const enc) {
 static const uint8_t kAverageBytesPerMB[8] = {50, 24, 16, 9, 7, 5, 3, 2};
 
 // Uses 'base_quant' -> must be called after VP8SetSegmentParams().
-static int InitBitWriters(VP8Encoder* const enc) {
+WEBP_NODISCARD static int InitBitWriters(VP8Encoder* const enc) {
   int p;
   int ok = 1;
   const int average_bytes_per_MB = kAverageBytesPerMB[enc->base_quant >> 4];
@@ -712,7 +714,7 @@ static int InitBitWriters(VP8Encoder* const enc) {
   return ok;
 }
 
-static int PostLoopFinalize(VP8EncIterator* const it, int ok) {
+WEBP_NODISCARD static int PostLoopFinalize(VP8EncIterator* const it, int ok) {
   VP8Encoder* const enc = it->enc;
   if (ok) {  // Finalize the partitions, check for extra errors.
     int p;

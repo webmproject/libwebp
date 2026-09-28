@@ -878,7 +878,8 @@ VP8StatusCode WebPIUpdate(WebPIDecoder* idec,
 
 //------------------------------------------------------------------------------
 
-static const WebPDecBuffer* GetOutputBuffer(const WebPIDecoder* const idec) {
+WEBP_NODISCARD static const WebPDecBuffer* GetOutputBuffer(
+    const WebPIDecoder* const idec) {
   if (idec == NULL || idec->dec == NULL) {
     return NULL;
   }

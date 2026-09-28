@@ -145,7 +145,8 @@ void VP8LRefsCursorNextBlock(VP8LRefsCursor* const c) {
 }
 
 // Create a new block, either from the free list or allocated
-static PixOrCopyBlock* BackwardRefsNewBlock(VP8LBackwardRefs* const refs) {
+WEBP_NODISCARD static PixOrCopyBlock* BackwardRefsNewBlock(
+    VP8LBackwardRefs* const refs) {
   PixOrCopyBlock* b = refs->free_blocks;
   if (b == NULL) {  // allocate new memory chunk
     const size_t total_size = sizeof(*b) + refs->block_size * sizeof(*b->start);
@@ -167,8 +168,8 @@ static PixOrCopyBlock* BackwardRefsNewBlock(VP8LBackwardRefs* const refs) {
 }
 
 // Return 1 on success, 0 on error.
-static int BackwardRefsClone(const VP8LBackwardRefs* const from,
-                             VP8LBackwardRefs* const to) {
+WEBP_NODISCARD static int BackwardRefsClone(const VP8LBackwardRefs* const from,
+                                            VP8LBackwardRefs* const to) {
   const PixOrCopyBlock* block_from = from->refs;
   VP8LClearBackwardRefs(to);
   while (block_from != NULL) {
@@ -463,9 +464,10 @@ static WEBP_INLINE void AddSingleLiteral(uint32_t pixel, int use_color_cache,
   VP8LBackwardRefsCursorAdd(refs, v);
 }
 
-static int BackwardReferencesRle(int xsize, int ysize,
-                                 const uint32_t* const argb, int cache_bits,
-                                 VP8LBackwardRefs* const refs) {
+WEBP_NODISCARD static int BackwardReferencesRle(int xsize, int ysize,
+                                                const uint32_t* const argb,
+                                                int cache_bits,
+                                                VP8LBackwardRefs* const refs) {
   const int pix_count = xsize * ysize;
   int i, k;
   const int use_color_cache = (cache_bits > 0);
@@ -507,10 +509,9 @@ static int BackwardReferencesRle(int xsize, int ysize,
   return !refs->error;
 }
 
-static int BackwardReferencesLz77(int xsize, int ysize,
-                                  const uint32_t* const argb, int cache_bits,
-                                  const VP8LHashChain* const hash_chain,
-                                  VP8LBackwardRefs* const refs) {
+WEBP_NODISCARD static int BackwardReferencesLz77(
+    int xsize, int ysize, const uint32_t* const argb, int cache_bits,
+    const VP8LHashChain* const hash_chain, VP8LBackwardRefs* const refs) {
   int i;
   int i_last_check = -1;
   int ok = 0;
@@ -579,11 +580,10 @@ Error:
 // We therefore limit the algorithm to the lowest 32 values in the PlaneCode
 // definition.
 #define WINDOW_OFFSETS_SIZE_MAX 32
-static int BackwardReferencesLz77Box(int xsize, int ysize,
-                                     const uint32_t* const argb, int cache_bits,
-                                     const VP8LHashChain* const hash_chain_best,
-                                     VP8LHashChain* hash_chain,
-                                     VP8LBackwardRefs* const refs) {
+WEBP_NODISCARD static int BackwardReferencesLz77Box(
+    int xsize, int ysize, const uint32_t* const argb, int cache_bits,
+    const VP8LHashChain* const hash_chain_best, VP8LHashChain* hash_chain,
+    VP8LBackwardRefs* const refs) {
   int i;
   const int pix_count = xsize * ysize;
   int window_offsets[WINDOW_OFFSETS_SIZE_MAX] = {0};
@@ -746,9 +746,9 @@ static void BackwardReferences2DLocality(int xsize,
 // implies disabling the local color cache). The local color cache is also
 // disabled for the lower (<= 25) quality.
 // Returns 0 in case of memory error.
-static int CalculateBestCacheSize(const uint32_t* argb, int quality,
-                                  const VP8LBackwardRefs* const refs,
-                                  int* const best_cache_bits) {
+WEBP_NODISCARD static int CalculateBestCacheSize(
+    const uint32_t* argb, int quality, const VP8LBackwardRefs* const refs,
+    int* const best_cache_bits) {
   int i;
   const int cache_bits_max = (quality <= 25) ? 0 : *best_cache_bits;
   uint64_t entropy_min = WEBP_UINT64_MAX;
@@ -852,9 +852,8 @@ Error:
 }
 
 // Update (in-place) backward references for specified cache_bits.
-static int BackwardRefsWithLocalCache(const uint32_t* const argb,
-                                      int cache_bits,
-                                      VP8LBackwardRefs* const refs) {
+WEBP_NODISCARD static int BackwardRefsWithLocalCache(
+    const uint32_t* const argb, int cache_bits, VP8LBackwardRefs* const refs) {
   int pixel_index = 0;
   VP8LColorCache hashers;
   VP8LRefsCursor c = VP8LRefsCursorInit(refs);
@@ -886,7 +885,7 @@ static int BackwardRefsWithLocalCache(const uint32_t* const argb,
   return 1;
 }
 
-static VP8LBackwardRefs* GetBackwardReferencesLowEffort(
+WEBP_NODISCARD static VP8LBackwardRefs* GetBackwardReferencesLowEffort(
     int width, int height, const uint32_t* const argb, int* const cache_bits,
     const VP8LHashChain* const hash_chain, VP8LBackwardRefs* const refs_lz77) {
   *cache_bits = 0;
@@ -897,17 +896,15 @@ static VP8LBackwardRefs* GetBackwardReferencesLowEffort(
   return refs_lz77;
 }
 
-extern int VP8LBackwardReferencesTraceBackwards(
+WEBP_NODISCARD extern int VP8LBackwardReferencesTraceBackwards(
     int xsize, int ysize, const uint32_t* const argb, int cache_bits,
     const VP8LHashChain* const hash_chain,
     const VP8LBackwardRefs* const refs_src, VP8LBackwardRefs* const refs_dst);
-static int GetBackwardReferences(int width, int height,
-                                 const uint32_t* const argb, int quality,
-                                 int lz77_types_to_try, int cache_bits_max,
-                                 int do_no_cache,
-                                 const VP8LHashChain* const hash_chain,
-                                 VP8LBackwardRefs* const refs,
-                                 int* const cache_bits_best) {
+WEBP_NODISCARD static int GetBackwardReferences(
+    int width, int height, const uint32_t* const argb, int quality,
+    int lz77_types_to_try, int cache_bits_max, int do_no_cache,
+    const VP8LHashChain* const hash_chain, VP8LBackwardRefs* const refs,
+    int* const cache_bits_best) {
   VP8LHistogram* histo = NULL;
   int i, lz77_type;
   // Index 0 is for a color cache, index 1 for no cache (if needed).

@@ -28,7 +28,8 @@ WEBP_ASSUME_UNSAFE_INDEXABLE_ABI
 //------------------------------------------------------------------------------
 // VP8BitWriter
 
-static int BitWriterResize(VP8BitWriter* const bw, size_t extra_size) {
+WEBP_NODISCARD static int BitWriterResize(VP8BitWriter* const bw,
+                                          size_t extra_size) {
   uint8_t* new_buf;
   size_t new_size;
   const uint64_t needed_size_64b = (uint64_t)bw->pos + extra_size;
@@ -203,7 +204,8 @@ void VP8BitWriterWipeOut(VP8BitWriter* const bw) {
 #define MIN_EXTRA_SIZE (32768ULL)
 
 // Returns 1 on success.
-static int VP8LBitWriterResize(VP8LBitWriter* const bw, size_t extra_size) {
+WEBP_NODISCARD static int VP8LBitWriterResize(VP8LBitWriter* const bw,
+                                              size_t extra_size) {
   uint8_t* WEBP_BIDI_INDEXABLE allocated_buf;
   size_t allocated_size;
   const size_t max_bytes = bw->end - bw->buf;

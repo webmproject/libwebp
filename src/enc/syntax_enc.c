@@ -31,7 +31,7 @@ static int IsVP8XNeeded(const VP8Encoder* const enc) {
                             // This could change in the future.
 }
 
-static int PutPaddingByte(const WebPPicture* const pic) {
+WEBP_NODISCARD static int PutPaddingByte(const WebPPicture* const pic) {
   const uint8_t pad_byte[1] = {0};
   return !!pic->writer(pad_byte, 1, pic);
 }
@@ -144,8 +144,9 @@ static WebPEncodingError PutVP8FrameHeader(const WebPPicture* const pic,
 }
 
 // WebP Headers.
-static int PutWebPHeaders(const VP8Encoder* const enc, size_t size0,
-                          size_t vp8_size, size_t riff_size) {
+WEBP_NODISCARD static int PutWebPHeaders(const VP8Encoder* const enc,
+                                         size_t size0, size_t vp8_size,
+                                         size_t riff_size) {
   WebPPicture* const pic = enc->pic;
   WebPEncodingError err = VP8_ENC_OK;
 
@@ -242,8 +243,8 @@ static void PutQuant(VP8BitWriter* const bw, const VP8Encoder* const enc) {
 }
 
 // Partition sizes
-static int EmitPartitionsSize(const VP8Encoder* const enc,
-                              WebPPicture* const pic) {
+WEBP_NODISCARD static int EmitPartitionsSize(const VP8Encoder* const enc,
+                                             WebPPicture* const pic) {
   uint8_t buf[3 * (MAX_NUM_PARTITIONS - 1)];
   int p;
   for (p = 0; p < enc->num_parts - 1; ++p) {
@@ -263,7 +264,7 @@ static int EmitPartitionsSize(const VP8Encoder* const enc,
 
 //------------------------------------------------------------------------------
 
-static int GeneratePartition0(VP8Encoder* const enc) {
+WEBP_NODISCARD static int GeneratePartition0(VP8Encoder* const enc) {
   VP8BitWriter* const bw = &enc->bw;
   const int mb_size = enc->mb_w * enc->mb_h;
   uint64_t pos1, pos2, pos3;

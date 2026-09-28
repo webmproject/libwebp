@@ -186,7 +186,7 @@ int MuxImageCount(const WebPMuxImage* wpi_list, WebPChunkId id);
 
 // Update width/height/has_alpha info from chunks within wpi.
 // Also remove ALPH chunk if not needed.
-int MuxImageFinalize(WebPMuxImage* const wpi);
+WEBP_NODISCARD int MuxImageFinalize(WebPMuxImage* const wpi);
 
 // Check if given ID corresponds to an image related chunk.
 static WEBP_INLINE int IsWPI(WebPChunkId id) {

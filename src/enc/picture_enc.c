@@ -230,9 +230,10 @@ void WebPMemoryWriterClear(WebPMemoryWriter* writer) {
 
 typedef int (*Importer)(WebPPicture* const, const uint8_t* const, int);
 
-static size_t Encode(const uint8_t* rgba, int width, int height, int stride,
-                     Importer import, float quality_factor, int lossless,
-                     uint8_t** output) {
+WEBP_NODISCARD static size_t Encode(const uint8_t* rgba, int width, int height,
+                                    int stride, Importer import,
+                                    float quality_factor, int lossless,
+                                    uint8_t** output) {
   WebPPicture pic;
   WebPConfig config;
   WebPMemoryWriter wrt;

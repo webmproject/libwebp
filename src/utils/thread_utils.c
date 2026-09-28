@@ -206,7 +206,7 @@ static void Init(WebPWorker* const worker) {
   worker->status = NOT_OK;
 }
 
-static int Sync(WebPWorker* const worker) {
+WEBP_NODISCARD static int Sync(WebPWorker* const worker) {
 #ifdef WEBP_USE_THREAD
   ChangeState(worker, OK);
 #endif
@@ -214,7 +214,7 @@ static int Sync(WebPWorker* const worker) {
   return !worker->had_error;
 }
 
-static int Reset(WebPWorker* const worker) {
+WEBP_NODISCARD static int Reset(WebPWorker* const worker) {
   int ok = 1;
   worker->had_error = 0;
   if (worker->status < OK) {

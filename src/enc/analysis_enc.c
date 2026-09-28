@@ -383,7 +383,7 @@ typedef struct {
 } SegmentJob;
 
 // main work call
-static int DoSegmentsJob(void* arg1, void* arg2) {
+WEBP_NODISCARD static int DoSegmentsJob(void* arg1, void* arg2) {
   SegmentJob* const job = (SegmentJob*)arg1;
   VP8EncIterator* const it = (VP8EncIterator*)arg2;
   int ok = 1;

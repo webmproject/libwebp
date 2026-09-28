@@ -79,9 +79,11 @@ static const int kMinDimensionIterativeConversion = 4;
 //------------------------------------------------------------------------------
 // Main function
 
-static int PreprocessARGB(const uint8_t* r_ptr, const uint8_t* g_ptr,
-                          const uint8_t* b_ptr, int step, int rgb_stride,
-                          WebPPicture* const picture) {
+WEBP_NODISCARD static int PreprocessARGB(const uint8_t* r_ptr,
+                                         const uint8_t* g_ptr,
+                                         const uint8_t* b_ptr, int step,
+                                         int rgb_stride,
+                                         WebPPicture* const picture) {
   const int ok = SharpYuvConvert(
       r_ptr, g_ptr, b_ptr, step, rgb_stride, /*rgb_bit_depth=*/8, picture->y,
       picture->y_stride, picture->u, picture->uv_stride, picture->v,
@@ -119,12 +121,12 @@ static WEBP_INLINE void ConvertRowsToUV(const uint16_t* rgb,
 
 extern void SharpYuvInit(VP8CPUInfo cpu_info_func);
 
-static int ImportYUVAFromRGBA(const uint8_t* r_ptr, const uint8_t* g_ptr,
-                              const uint8_t* b_ptr, const uint8_t* a_ptr,
-                              int step,        // bytes per pixel
-                              int rgb_stride,  // bytes per scanline
-                              float dithering, int use_iterative_conversion,
-                              WebPPicture* const picture) {
+WEBP_NODISCARD static int ImportYUVAFromRGBA(
+    const uint8_t* r_ptr, const uint8_t* g_ptr, const uint8_t* b_ptr,
+    const uint8_t* a_ptr,
+    int step,        // bytes per pixel
+    int rgb_stride,  // bytes per scanline
+    float dithering, int use_iterative_conversion, WebPPicture* const picture) {
   int y;
   const int width = picture->width;
   const int height = picture->height;
@@ -263,8 +265,10 @@ static int ImportYUVAFromRGBA(const uint8_t* r_ptr, const uint8_t* g_ptr,
 //------------------------------------------------------------------------------
 // call for ARGB->YUVA conversion
 
-static int PictureARGBToYUVA(WebPPicture* picture, WebPEncCSP colorspace,
-                             float dithering, int use_iterative_conversion) {
+WEBP_NODISCARD static int PictureARGBToYUVA(WebPPicture* picture,
+                                            WebPEncCSP colorspace,
+                                            float dithering,
+                                            int use_iterative_conversion) {
   if (picture == NULL) return 0;
   if (picture->argb == NULL) {
     return WebPEncodingSetError(picture, VP8_ENC_ERROR_NULL_PARAMETER);
@@ -366,8 +370,9 @@ int WebPPictureYUVAToARGB(WebPPicture* picture) {
 //------------------------------------------------------------------------------
 // automatic import / conversion
 
-static int Import(WebPPicture* const picture, const uint8_t* rgb,
-                  int rgb_stride, int step, int swap_rb, int import_alpha) {
+WEBP_NODISCARD static int Import(WebPPicture* const picture, const uint8_t* rgb,
+                                 int rgb_stride, int step, int swap_rb,
+                                 int import_alpha) {
   int y;
   // swap_rb -> b,g,r,a , !swap_rb -> r,g,b,a
   const uint8_t* r_ptr = rgb + (swap_rb ? 2 : 0);

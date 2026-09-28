@@ -43,7 +43,8 @@ struct VP8BitWriter {
 };
 
 // Initialize the object. Allocates some initial memory based on expected_size.
-int VP8BitWriterInit(VP8BitWriter* const bw, size_t expected_size);
+WEBP_NODISCARD int VP8BitWriterInit(VP8BitWriter* const bw,
+                                    size_t expected_size);
 // Finalize the bitstream coding. Returns a pointer to the internal buffer.
 uint8_t* VP8BitWriterFinish(VP8BitWriter* const bw);
 // Release any pending memory and zeroes the object. Not a mandatory call.
@@ -56,8 +57,8 @@ void VP8PutBits(VP8BitWriter* const bw, uint32_t value, int nb_bits);
 void VP8PutSignedBits(VP8BitWriter* const bw, int value, int nb_bits);
 
 // Appends some bytes to the internal buffer. Data is copied.
-int VP8BitWriterAppend(VP8BitWriter* const bw, const uint8_t* data,
-                       size_t size);
+WEBP_NODISCARD int VP8BitWriterAppend(VP8BitWriter* const bw,
+                                      const uint8_t* data, size_t size);
 
 // return approximate write position (in bits)
 static WEBP_INLINE uint64_t VP8BitWriterPos(const VP8BitWriter* const bw) {
@@ -113,10 +114,11 @@ static WEBP_INLINE size_t VP8LBitWriterNumBytes(const VP8LBitWriter* const bw) {
 }
 
 // Returns false in case of memory allocation error.
-int VP8LBitWriterInit(VP8LBitWriter* const bw, size_t expected_size);
+WEBP_NODISCARD int VP8LBitWriterInit(VP8LBitWriter* const bw,
+                                     size_t expected_size);
 // Returns false in case of memory allocation error.
-int VP8LBitWriterClone(const VP8LBitWriter* const src,
-                       VP8LBitWriter* const dst);
+WEBP_NODISCARD int VP8LBitWriterClone(const VP8LBitWriter* const src,
+                                      VP8LBitWriter* const dst);
 // Finalize the bitstream coding. Returns a pointer to the internal buffer.
 uint8_t* VP8LBitWriterFinish(VP8LBitWriter* const bw);
 // Release any pending memory and zeroes the object.

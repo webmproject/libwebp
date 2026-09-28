@@ -67,7 +67,7 @@ void VP8TBufferClear(VP8TBuffer* const b) {
   }
 }
 
-static int TBufferNewPage(VP8TBuffer* const b) {
+WEBP_NODISCARD static int TBufferNewPage(VP8TBuffer* const b) {
   VP8Tokens* page = NULL;
   if (!b->error) {
     const size_t size = sizeof(*page) + b->page_size * sizeof(token_t);

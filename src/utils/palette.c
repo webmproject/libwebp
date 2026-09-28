@@ -258,12 +258,11 @@ static void CoOccurrenceFindMax(
 }
 
 // Builds the cooccurrence matrix
-static int CoOccurrenceBuild(const WebPPicture* const pic,
-                             const uint32_t* const WEBP_COUNTED_BY(num_colors)
-                                 palette,
-                             uint32_t num_colors,
-                             uint32_t* WEBP_COUNTED_BY(num_colors* num_colors)
-                                 cooccurrence) {
+WEBP_NODISCARD static int CoOccurrenceBuild(
+    const WebPPicture* const pic,
+    const uint32_t* const WEBP_COUNTED_BY(num_colors) palette,
+    uint32_t num_colors,
+    uint32_t* WEBP_COUNTED_BY(num_colors* num_colors) cooccurrence) {
   uint32_t *lines, *line_top, *line_current, *line_tmp;
   int x, y;
   const uint32_t* src = pic->argb;
@@ -447,7 +446,7 @@ static void PaletteMinLARefine(const uint32_t* WEBP_RESTRICT const cooccurrence,
 #undef MINLA_MAX_SWEEPS
 
 // Refines the color order already in 'palette' and writes it back.
-static int PaletteMinLARefineColors(
+WEBP_NODISCARD static int PaletteMinLARefineColors(
     const WebPPicture* const pic,
     const uint32_t* const WEBP_COUNTED_BY(num_colors) palette_in,
     uint32_t num_colors, uint32_t* const WEBP_COUNTED_BY(num_colors) palette) {
@@ -473,7 +472,7 @@ static int PaletteMinLARefineColors(
   return 1;
 }
 
-static int PaletteSortModifiedZeng(
+WEBP_NODISCARD static int PaletteSortModifiedZeng(
     const WebPPicture* const pic,
     const uint32_t* const WEBP_COUNTED_BY(num_colors) palette_in,
     uint32_t num_colors, uint32_t* const WEBP_COUNTED_BY(num_colors) palette) {

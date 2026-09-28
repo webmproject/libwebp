@@ -89,19 +89,20 @@ typedef struct {
 // Encodes the picture.
 // Returns 0 if config or picture is NULL or picture doesn't have valid argb
 // input.
-int VP8LEncodeImage(const WebPConfig* const config,
-                    const WebPPicture* const picture);
+WEBP_NODISCARD int VP8LEncodeImage(const WebPConfig* const config,
+                                   const WebPPicture* const picture);
 
 // Encodes the main image stream using the supplied bit writer.
 // Returns false in case of error (stored in picture->error_code).
-int VP8LEncodeStream(const WebPConfig* const config,
-                     const WebPPicture* const picture, VP8LBitWriter* const bw);
+WEBP_NODISCARD int VP8LEncodeStream(const WebPConfig* const config,
+                                    const WebPPicture* const picture,
+                                    VP8LBitWriter* const bw);
 
 #if (WEBP_NEAR_LOSSLESS == 1)
 // in near_lossless.c
 // Near lossless preprocessing in RGB color-space.
-int VP8ApplyNearLossless(const WebPPicture* const picture, int quality,
-                         uint32_t* const argb_dst);
+WEBP_NODISCARD int VP8ApplyNearLossless(const WebPPicture* const picture,
+                                        int quality, uint32_t* const argb_dst);
 #endif
 
 //------------------------------------------------------------------------------
@@ -109,17 +110,17 @@ int VP8ApplyNearLossless(const WebPPicture* const picture, int quality,
 
 // pic and percent are for progress.
 // Returns false in case of error (stored in pic->error_code).
-int VP8LResidualImage(int width, int height, int min_bits, int max_bits,
-                      int low_effort, uint32_t* const argb,
-                      uint32_t* const argb_scratch, uint32_t* const image,
-                      int near_lossless, int exact, int used_subtract_green,
-                      const WebPPicture* const pic, int percent_range,
-                      int* const percent, int* const best_bits);
+WEBP_NODISCARD int VP8LResidualImage(
+    int width, int height, int min_bits, int max_bits, int low_effort,
+    uint32_t* const argb, uint32_t* const argb_scratch, uint32_t* const image,
+    int near_lossless, int exact, int used_subtract_green,
+    const WebPPicture* const pic, int percent_range, int* const percent,
+    int* const best_bits);
 
-int VP8LColorSpaceTransform(int width, int height, int bits, int quality,
-                            uint32_t* const argb, uint32_t* image,
-                            const WebPPicture* const pic, int percent_range,
-                            int* const percent, int* const best_bits);
+WEBP_NODISCARD int VP8LColorSpaceTransform(
+    int width, int height, int bits, int quality, uint32_t* const argb,
+    uint32_t* image, const WebPPicture* const pic, int percent_range,
+    int* const percent, int* const best_bits);
 
 void VP8LOptimizeSampling(uint32_t* const image, int full_width,
                           int full_height, int bits, int max_bits,
