@@ -492,12 +492,14 @@ static int EmitRescaledAlphaRGB(const VP8Io* const io, WebPDecParams* const p,
     WebPRescaler* const scaler = p->scaler_a;
     int lines_left = expected_num_out_lines;
     const int y_end = p->last_y + lines_left;
-    while (lines_left > 0) {
-      const int64_t row_offset = (ptrdiff_t)scaler->src_y - io->mb_y;
-      WebPRescalerImport(scaler, io->mb_h + io->mb_y - scaler->src_y,
-                         io->a + row_offset * io->width, io->width);
+    int j = 0;
+    assert(scaler->src_y == io->mb_y);
+    while (j < io->mb_h) {
+      j += WebPRescalerImport(scaler, io->mb_h - j,
+                              io->a + (ptrdiff_t)j * io->width, io->width);
       lines_left -= p->emit_alpha_row(p, y_end - lines_left, lines_left);
     }
+    assert(lines_left == 0);
   }
   return 0;
 }
