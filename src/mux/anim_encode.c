@@ -834,7 +834,6 @@ typedef struct {
                      // to fully transparent and this frame is blended.
                      // If this is true, such pixels are marked as 1s in
                      // WebPAnimEncoder::candidate_carryover_mask.
-  int evaluate;      // True if this candidate should be evaluated.
 } Candidate;
 
 // Generates a candidate encoded frame given a picture and metadata.
@@ -872,7 +871,6 @@ static WebPEncodingError EncodeCandidate(WebPPicture* const sub_frame,
     goto Err;
   }
 
-  candidate->evaluate = 1;
   return error_code;
 
 Err:
@@ -988,13 +986,11 @@ static void PickBestCandidate(WebPAnimEncoder* const enc,
     // Release the memory of the previous best candidate if any.
     if (*best_candidate != NULL) {
       WebPMemoryWriterClear(&(*best_candidate)->mem);
-      (*best_candidate)->evaluate = 0;
     }
     *best_candidate = candidate;
   } else {
     // Release the memory of the current candidate which is not the best one.
     WebPMemoryWriterClear(&candidate->mem);
-    candidate->evaluate = 0;
   }
 }
 
@@ -1058,6 +1054,9 @@ static WebPEncodingError GenerateCandidates(
                                  config_ll, use_blending_ll, candidate_ll);
     if (error_code != VP8_ENC_OK) return error_code;
     candidate_ll->carries_over = enc->curr_canvas_copy_modified;
+    // WebPEncode() clears the RGB bits of fully transparent pixels in
+    // lossless mode when exact=0, modifying curr_canvas_copy in-place.
+    enc->curr_canvas_copy_modified = 1;
     PickBestCandidate(enc, candidate_ll, dispose_method, is_key_frame,
                       best_candidate, encoded_frame);
   }
@@ -1204,7 +1203,6 @@ static WebPEncodingError SetFrame(WebPAnimEncoder* const enc,
                                   FrameRectangle* const best_candidate_rect,
                                   EncodedFrame* const encoded_frame,
                                   int* const frame_skipped) {
-  int i;
   WebPEncodingError error_code = VP8_ENC_OK;
   const WebPPicture* const curr_canvas = &enc->curr_canvas_copy;
   const WebPPicture* const canvas_carryover = &enc->canvas_carryover;
@@ -1327,12 +1325,6 @@ static WebPEncodingError SetFrame(WebPAnimEncoder* const enc,
   goto End;
 
 Err:
-  for (i = 0; i < CANDIDATE_COUNT; ++i) {
-    if (candidates[i].evaluate) {
-      WebPMemoryWriterClear(&candidates[i].mem);
-    }
-  }
-
 End:
   SubFrameParamsFree(&dispose_none_params);
   SubFrameParamsFree(&dispose_bg_params);
