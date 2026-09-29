@@ -103,6 +103,7 @@ extern VP8LConvertFunc VP8LConvertBGRAToRGB565;
 extern VP8LConvertFunc VP8LConvertBGRAToBGR;
 extern VP8LConvertFunc VP8LConvertBGRAToRGB_SSE;
 extern VP8LConvertFunc VP8LConvertBGRAToRGBA_SSE;
+extern VP8LConvertFunc VP8LConvertBGRAToBGR_SSE;
 
 // Converts from BGRA to other color spaces.
 void VP8LConvertFromBGRA(const uint32_t* const in_data, int num_pixels,

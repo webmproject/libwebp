@@ -623,6 +623,7 @@ VP8LConvertFunc VP8LConvertBGRAToRGBA_SSE;
 VP8LConvertFunc VP8LConvertBGRAToRGBA4444;
 VP8LConvertFunc VP8LConvertBGRAToRGB565;
 VP8LConvertFunc VP8LConvertBGRAToBGR;
+VP8LConvertFunc VP8LConvertBGRAToBGR_SSE;
 
 VP8LMapARGBFunc VP8LMapColor32b;
 VP8LMapAlphaFunc VP8LMapColor8b;

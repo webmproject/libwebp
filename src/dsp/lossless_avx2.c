@@ -394,6 +394,75 @@ static void TransformColorInverse_AVX2(const VP8LMultipliers* const m,
 //------------------------------------------------------------------------------
 // Color-space conversion functions
 
+// After shuffling each 128-bit lane from 16 BGRA bytes (4 pixels) to 12 RGB
+// bytes (three 32-bit ints), each 256-bit register holds six valid 32-bit ints
+// at indices (0, 1, 2, 4, 5, 6). Pack and rotate them by 2 ints per register so
+// they can be blended with the same 0xc0/0xf0/0xfc masks as in SSE4.1.
+#define ARGB_TO_RGB_AVX2                                               \
+  do {                                                                 \
+    const __m256i perm0 = _mm256_setr_epi32(0, 1, 2, 4, 5, 6, -1, -1); \
+    const __m256i perm1 = _mm256_setr_epi32(2, 4, 5, 6, -1, -1, 0, 1); \
+    const __m256i perm2 = _mm256_setr_epi32(5, 6, -1, -1, 0, 1, 2, 4); \
+    const __m256i perm3 = _mm256_setr_epi32(-1, -1, 0, 1, 2, 4, 5, 6); \
+    while (num_pixels >= 32) {                                         \
+      const __m256i in0 = _mm256_loadu_si256(in + 0);                  \
+      const __m256i in1 = _mm256_loadu_si256(in + 1);                  \
+      const __m256i in2 = _mm256_loadu_si256(in + 2);                  \
+      const __m256i in3 = _mm256_loadu_si256(in + 3);                  \
+      const __m256i a0 = _mm256_shuffle_epi8(in0, shuf);               \
+      const __m256i a1 = _mm256_shuffle_epi8(in1, shuf);               \
+      const __m256i a2 = _mm256_shuffle_epi8(in2, shuf);               \
+      const __m256i a3 = _mm256_shuffle_epi8(in3, shuf);               \
+      const __m256i b0 = _mm256_permutevar8x32_epi32(a0, perm0);       \
+      const __m256i b1 = _mm256_permutevar8x32_epi32(a1, perm1);       \
+      const __m256i b2 = _mm256_permutevar8x32_epi32(a2, perm2);       \
+      const __m256i b3 = _mm256_permutevar8x32_epi32(a3, perm3);       \
+      const __m256i c0 = _mm256_blend_epi32(b0, b1, 0xc0);             \
+      const __m256i c1 = _mm256_blend_epi32(b1, b2, 0xf0);             \
+      const __m256i c2 = _mm256_blend_epi32(b2, b3, 0xfc);             \
+      _mm256_storeu_si256(out + 0, c0);                                \
+      _mm256_storeu_si256(out + 1, c1);                                \
+      _mm256_storeu_si256(out + 2, c2);                                \
+      in += 4;                                                         \
+      out += 3;                                                        \
+      num_pixels -= 32;                                                \
+    }                                                                  \
+  } while (0)
+
+static void ConvertBGRAToRGB_AVX2(const uint32_t* WEBP_RESTRICT src,
+                                  int num_pixels, uint8_t* WEBP_RESTRICT dst) {
+  const __m256i* in = (const __m256i*)src;
+  __m256i* out = (__m256i*)dst;
+  const __m256i shuf =
+      _mm256_setr_epi8(2, 1, 0, 6, 5, 4, 10, 9, 8, 14, 13, 12, -1, -1, -1, -1,
+                       2, 1, 0, 6, 5, 4, 10, 9, 8, 14, 13, 12, -1, -1, -1, -1);
+
+  ARGB_TO_RGB_AVX2;
+
+  // left-overs
+  if (num_pixels > 0) {
+    VP8LConvertBGRAToRGB_SSE((const uint32_t*)in, num_pixels, (uint8_t*)out);
+  }
+}
+
+static void ConvertBGRAToBGR_AVX2(const uint32_t* WEBP_RESTRICT src,
+                                  int num_pixels, uint8_t* WEBP_RESTRICT dst) {
+  const __m256i* in = (const __m256i*)src;
+  __m256i* out = (__m256i*)dst;
+  const __m256i shuf =
+      _mm256_setr_epi8(0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14, -1, -1, -1, -1,
+                       0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14, -1, -1, -1, -1);
+
+  ARGB_TO_RGB_AVX2;
+
+  // left-overs
+  if (num_pixels > 0) {
+    VP8LConvertBGRAToBGR_SSE((const uint32_t*)in, num_pixels, (uint8_t*)out);
+  }
+}
+
+#undef ARGB_TO_RGB_AVX2
+
 static void ConvertBGRAToRGBA_AVX2(const uint32_t* WEBP_RESTRICT src,
                                    int num_pixels, uint8_t* WEBP_RESTRICT dst) {
   const __m256i* in = (const __m256i*)src;
@@ -432,7 +501,9 @@ WEBP_TSAN_IGNORE_FUNCTION void VP8LDspInitAVX2(void) {
 
   VP8LAddGreenToBlueAndRed = AddGreenToBlueAndRed_AVX2;
   VP8LTransformColorInverse = TransformColorInverse_AVX2;
+  VP8LConvertBGRAToRGB = ConvertBGRAToRGB_AVX2;
   VP8LConvertBGRAToRGBA = ConvertBGRAToRGBA_AVX2;
+  VP8LConvertBGRAToBGR = ConvertBGRAToBGR_AVX2;
 }
 
 #else  // !WEBP_USE_AVX2
