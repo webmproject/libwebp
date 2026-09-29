@@ -651,7 +651,9 @@ static void HelpLong(void) {
       "                           hexadecimal, e.g. 0xc0e0d0 for red=0xc0\n"
       "                           green=0xe0 and blue=0xd0\n");
   printf("  -noalpha ............... discard any transparency information\n");
-  printf("  -lossless .............. encode image losslessly, default=off\n");
+  printf(
+      "  -lossless .............. encode image losslessly, default=off\n"
+      "                           (see -exact for transparent pixels)\n");
   printf(
       "  -near_lossless <int> ... use near-lossless image preprocessing\n"
       "                           (0..100=off), default=100\n");
