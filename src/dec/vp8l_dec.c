@@ -770,12 +770,13 @@ static int EmitRowsYUVA(const uint8_t* const in, const VP8Io* const io,
   int num_rows = io->mb_h;
   const int y_pos_final = y_pos + num_rows;
   const int y_stride = dec->output->u.YUVA.y_stride;
-  const int uv_stride = dec->output->u.YUVA.u_stride;
+  const int u_stride = dec->output->u.YUVA.u_stride;
+  const int v_stride = dec->output->u.YUVA.v_stride;
   const int a_stride = dec->output->u.YUVA.a_stride;
   uint8_t* dst_a = dec->output->u.YUVA.a;
   uint8_t* dst_y = dec->output->u.YUVA.y + (ptrdiff_t)y_pos * y_stride;
-  uint8_t* dst_u = dec->output->u.YUVA.u + (ptrdiff_t)(y_pos >> 1) * uv_stride;
-  uint8_t* dst_v = dec->output->u.YUVA.v + (ptrdiff_t)(y_pos >> 1) * uv_stride;
+  uint8_t* dst_u = dec->output->u.YUVA.u + (ptrdiff_t)(y_pos >> 1) * u_stride;
+  uint8_t* dst_v = dec->output->u.YUVA.v + (ptrdiff_t)(y_pos >> 1) * v_stride;
   const uint8_t* r_ptr = in + CHANNEL_OFFSET(1);
   const uint8_t* g_ptr = in + CHANNEL_OFFSET(2);
   const uint8_t* b_ptr = in + CHANNEL_OFFSET(3);
@@ -796,15 +797,16 @@ static int EmitRowsYUVA(const uint8_t* const in, const VP8Io* const io,
   // Process pairs of lines.
   WebPImportYUVAFromRGBA(r_ptr, g_ptr, b_ptr, a_ptr, /*step=*/4, in_stride,
                          has_alpha, width, num_rows, tmp_rgb, y_stride,
-                         uv_stride, a_stride, dst_y, dst_u, dst_v, dst_a);
+                         u_stride, v_stride, a_stride, dst_y, dst_u, dst_v,
+                         dst_a);
 
   y_pos += num_rows;
   if (y_pos_final == io->crop_bottom - io->crop_top && y_pos < y_pos_final) {
     assert(y_pos + 1 == y_pos_final);
     // If we output the last line of an image with odd height.
     dst_y += (ptrdiff_t)num_rows * y_stride;
-    dst_u += (ptrdiff_t)(num_rows >> 1) * uv_stride;
-    dst_v += (ptrdiff_t)(num_rows >> 1) * uv_stride;
+    dst_u += (ptrdiff_t)(num_rows >> 1) * u_stride;
+    dst_v += (ptrdiff_t)(num_rows >> 1) * v_stride;
     r_ptr += (ptrdiff_t)num_rows * in_stride;
     g_ptr += (ptrdiff_t)num_rows * in_stride;
     b_ptr += (ptrdiff_t)num_rows * in_stride;

@@ -517,9 +517,10 @@ static void ImportYUVAFromRGBA_C(const uint8_t* r_ptr, const uint8_t* g_ptr,
                                  int step,        // bytes per pixel
                                  int rgb_stride,  // bytes per scanline
                                  int has_alpha, int width, int height,
-                                 uint16_t* tmp_rgb, int y_stride, int uv_stride,
-                                 int a_stride, uint8_t* dst_y, uint8_t* dst_u,
-                                 uint8_t* dst_v, uint8_t* dst_a) {
+                                 uint16_t* tmp_rgb, int y_stride, int u_stride,
+                                 int v_stride, int a_stride, uint8_t* dst_y,
+                                 uint8_t* dst_u, uint8_t* dst_v,
+                                 uint8_t* dst_a) {
   int y;
   const int is_rgb = (r_ptr < b_ptr);  // otherwise it's bgr
   const int uv_width = (width + 1) >> 1;
@@ -564,8 +565,8 @@ static void ImportYUVAFromRGBA_C(const uint8_t* r_ptr, const uint8_t* g_ptr,
     }
     // Convert to U/V
     WebPConvertRGBA32ToUV(tmp_rgb, dst_u, dst_v, uv_width);
-    dst_u += uv_stride;
-    dst_v += uv_stride;
+    dst_u += u_stride;
+    dst_v += v_stride;
     r_ptr += 2 * rgb_stride;
     b_ptr += 2 * rgb_stride;
     g_ptr += 2 * rgb_stride;
@@ -621,9 +622,9 @@ void (*WebPImportYUVAFromRGBA)(const uint8_t* r_ptr, const uint8_t* g_ptr,
                                int step,        // bytes per pixel
                                int rgb_stride,  // bytes per scanline
                                int has_alpha, int width, int height,
-                               uint16_t* tmp_rgb, int y_stride, int uv_stride,
-                               int a_stride, uint8_t* dst_y, uint8_t* dst_u,
-                               uint8_t* dst_v, uint8_t* dst_a);
+                               uint16_t* tmp_rgb, int y_stride, int u_stride,
+                               int v_stride, int a_stride, uint8_t* dst_y,
+                               uint8_t* dst_u, uint8_t* dst_v, uint8_t* dst_a);
 void (*WebPImportYUVAFromRGBALastLine)(
     const uint8_t* r_ptr, const uint8_t* g_ptr, const uint8_t* b_ptr,
     const uint8_t* a_ptr,
