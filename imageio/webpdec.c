@@ -41,21 +41,30 @@ static const char* const kStatusMessages[VP8_STATUS_NOT_ENOUGH_DATA + 1] = {
     "NOT_ENOUGH_DATA"};
 
 static void PrintAnimationWarning(const WebPDecoderConfig* const config) {
+#ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
   if (config->input.has_animation) {
     fprintf(stderr,
             "Error! Decoding of an animated WebP file is not supported.\n"
             "       Use webpmux to extract the individual frames or\n"
             "       vwebp to view this image.\n");
   }
+#else
+  (void)config;
+#endif
 }
 
 void PrintWebPError(const char* const in_file, int status) {
+#ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
   WFPRINTF(stderr, "Decoding of %s failed.\n", (const W_CHAR*)in_file);
   fprintf(stderr, "Status: %d", status);
   if (status >= VP8_STATUS_OK && status <= VP8_STATUS_NOT_ENOUGH_DATA) {
     fprintf(stderr, "(%s)", kStatusMessages[status]);
   }
   fprintf(stderr, "\n");
+#else
+  (void)in_file;
+  (void)status;
+#endif
 }
 
 int LoadWebP(const char* const in_file, const uint8_t** data, size_t* data_size,
