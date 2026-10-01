@@ -726,7 +726,7 @@ static void ConvertToYUVA(const uint32_t* const src, int width, int y_pos,
     WebPConvertARGBToUV(src, u, v, width, !(y_pos & 1));
   }
   // Lastly, store alpha if needed.
-  if (buf->a != NULL) {
+  if (WebPIsAlphaMode(output->colorspace) && buf->a != NULL) {
     uint8_t* const a = buf->a + (ptrdiff_t)y_pos * buf->a_stride;
 #if defined(WORDS_BIGENDIAN)
     WebPExtractAlpha((uint8_t*)src + 0, 0, width, 1, a, 0);
@@ -791,7 +791,8 @@ static int EmitRowsYUVA(const uint8_t* const in, const VP8Io* const io,
   const int u_stride = dec->output->u.YUVA.u_stride;
   const int v_stride = dec->output->u.YUVA.v_stride;
   const int a_stride = dec->output->u.YUVA.a_stride;
-  uint8_t* dst_a = dec->output->u.YUVA.a;
+  uint8_t* dst_a =
+      WebPIsAlphaMode(dec->output->colorspace) ? dec->output->u.YUVA.a : NULL;
   uint8_t* dst_y = dec->output->u.YUVA.y + (ptrdiff_t)y_pos * y_stride;
   uint8_t* dst_u = dec->output->u.YUVA.u + (ptrdiff_t)(y_pos >> 1) * u_stride;
   uint8_t* dst_v = dec->output->u.YUVA.v + (ptrdiff_t)(y_pos >> 1) * v_stride;
@@ -2078,7 +2079,10 @@ int VP8LDecodeImage(VP8LDecoder* const dec) {
 
     if (!WebPIsRGBMode(dec->output->colorspace)) {
       WebPInitConvertARGBToYUV();
-      if (dec->output->u.YUVA.a != NULL) WebPInitAlphaProcessing();
+      if (WebPIsAlphaMode(dec->output->colorspace) &&
+          dec->output->u.YUVA.a != NULL) {
+        WebPInitAlphaProcessing();
+      }
     }
     if (dec->incremental) {
       if (dec->hdr.color_cache_size > 0 &&

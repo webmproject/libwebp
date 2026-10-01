@@ -171,7 +171,7 @@ VP8StatusCode WebPFlipBuffer(WebPDecBuffer* const buffer) {
     buf->u_stride = -buf->u_stride;
     buf->v += ((H - 1) >> 1) * buf->v_stride;
     buf->v_stride = -buf->v_stride;
-    if (buf->a != NULL) {
+    if (WebPIsAlphaMode(buffer->colorspace) && buf->a != NULL) {
       buf->a += (H - 1) * buf->a_stride;
       buf->a_stride = -buf->a_stride;
     }

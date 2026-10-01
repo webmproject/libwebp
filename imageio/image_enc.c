@@ -509,7 +509,7 @@ int WebPWritePGM(FILE* fout, const WebPDecBuffer* const buffer) {
     const uint8_t* src_y = yuv->y;
     const uint8_t* src_u = yuv->u;
     const uint8_t* src_v = yuv->v;
-    const uint8_t* src_a = yuv->a;
+    const uint8_t* src_a = WebPIsAlphaMode(buffer->colorspace) ? yuv->a : NULL;
     const int uv_width = (width + 1) / 2;
     const int uv_height = (height + 1) / 2;
     const int a_height = (src_a != NULL) ? height : 0;
@@ -553,7 +553,7 @@ int WebPWriteYUV(FILE* fout, const WebPDecBuffer* const buffer) {
     const uint8_t* src_y = yuv->y;
     const uint8_t* src_u = yuv->u;
     const uint8_t* src_v = yuv->v;
-    const uint8_t* src_a = yuv->a;
+    const uint8_t* src_a = WebPIsAlphaMode(buffer->colorspace) ? yuv->a : NULL;
     const int uv_width = (width + 1) / 2;
     const int uv_height = (height + 1) / 2;
     const int a_height = (src_a != NULL) ? height : 0;
