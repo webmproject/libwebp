@@ -135,8 +135,9 @@ int WebPPlaneDistortion(const uint8_t* src, size_t src_stride,
   const AccumulateFunc metric = (type == 0)   ? AccumulateSSE
                                 : (type == 1) ? AccumulateSSIM
                                               : AccumulateLSIM;
-  if (src == NULL || ref == NULL || src_stride < x_step * width ||
-      ref_stride < x_step * width || result == NULL || distortion == NULL) {
+  if (src == NULL || ref == NULL || width <= 0 || height <= 0 || x_step == 0 ||
+      src_stride < x_step * width || ref_stride < x_step * width ||
+      result == NULL || distortion == NULL) {
     return 0;
   }
 
@@ -157,9 +158,12 @@ int WebPPlaneDistortion(const uint8_t* src, size_t src_stride,
       }
     }
     src = tmp1;
+    src_stride = width;
     ref = tmp2;
+    ref_stride = width;
   }
-  *distortion = (float)metric(src, width, ref, width, width, height);
+  *distortion =
+      (float)metric(src, (int)src_stride, ref, (int)ref_stride, width, height);
   WebPSafeFree(allocated);
 
   *result = (type == 1) ? (float)GetLogSSIM(*distortion, (double)width * height)
