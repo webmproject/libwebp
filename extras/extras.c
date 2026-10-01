@@ -444,7 +444,7 @@ static int SharpYuvEstimate420RiskImpl(const void* r_ptr, const void* g_ptr,
                                        int full_scan, float* score) {
   if (width < 1 || height < 1 || width == INT_MAX || height == INT_MAX ||
       r_ptr == NULL || g_ptr == NULL || b_ptr == NULL || options == NULL ||
-      score == NULL) {
+      options->yuv_matrix == NULL || score == NULL) {
     return 0;
   }
   if (rgb_bit_depth != 8) {

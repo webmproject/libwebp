@@ -49,7 +49,7 @@ static uint64_t SharpYuvUpdateY_SSE2(const uint16_t* ref, const uint16_t* src,
     sum = _mm_add_epi32(sum, I);
   }
   _mm_storeu_si128((__m128i*)tmp, sum);
-  diff = tmp[3] + tmp[2] + tmp[1] + tmp[0];
+  diff = (uint64_t)tmp[3] + tmp[2] + tmp[1] + tmp[0];
   for (; i < len; ++i) {
     const int diff_y = ref[i] - src[i];
     const int new_y = (int)dst[i] + diff_y;

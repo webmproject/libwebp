@@ -343,9 +343,9 @@ static int DoSharpArgbToYuv(const uint8_t* r_ptr, const uint8_t* g_ptr,
     best_uv += 3 * uv_w;
     target_y += 2 * w;
     target_uv += 3 * uv_w;
-    r_ptr += 2 * rgb_stride;
-    g_ptr += 2 * rgb_stride;
-    b_ptr += 2 * rgb_stride;
+    r_ptr += 2 * (ptrdiff_t)rgb_stride;
+    g_ptr += 2 * (ptrdiff_t)rgb_stride;
+    b_ptr += 2 * (ptrdiff_t)rgb_stride;
   }
 
   // Iterate and resolve clipping conflicts.
@@ -479,17 +479,19 @@ int SharpYuvConvertWithOptions(const void* r_ptr, const void* g_ptr,
                                void* u_ptr, int u_stride, void* v_ptr,
                                int v_stride, int yuv_bit_depth, int width,
                                int height, const SharpYuvOptions* options) {
-  const SharpYuvConversionMatrix* yuv_matrix = options->yuv_matrix;
-  SharpYuvTransferFunctionType transfer_type = options->transfer_type;
+  const SharpYuvConversionMatrix* yuv_matrix;
+  SharpYuvTransferFunctionType transfer_type;
   SharpYuvConversionMatrix scaled_matrix;
-  const int rgb_max = (1 << rgb_bit_depth) - 1;
-  const int rgb_round = 1 << (rgb_bit_depth - 1);
-  const int yuv_max = (1 << yuv_bit_depth) - 1;
-  const int sfix = GetPrecisionShift(rgb_bit_depth);
+  int rgb_max;
+  int rgb_round;
+  int yuv_max;
+  int sfix;
 
   if (width < 1 || height < 1 || width == INT_MAX || height == INT_MAX ||
       r_ptr == NULL || g_ptr == NULL || b_ptr == NULL || y_ptr == NULL ||
-      u_ptr == NULL || v_ptr == NULL) {
+      u_ptr == NULL || v_ptr == NULL || options == NULL ||
+      options->yuv_matrix == NULL || (int)options->transfer_type < 0 ||
+      options->transfer_type >= kSharpYuvTransferFunctionNum) {
     return 0;
   }
   if (rgb_bit_depth != 8 && rgb_bit_depth != 10 && rgb_bit_depth != 12 &&
@@ -499,6 +501,12 @@ int SharpYuvConvertWithOptions(const void* r_ptr, const void* g_ptr,
   if (yuv_bit_depth != 8 && yuv_bit_depth != 10 && yuv_bit_depth != 12) {
     return 0;
   }
+  yuv_matrix = options->yuv_matrix;
+  transfer_type = options->transfer_type;
+  rgb_max = (1 << rgb_bit_depth) - 1;
+  rgb_round = 1 << (rgb_bit_depth - 1);
+  yuv_max = (1 << yuv_bit_depth) - 1;
+  sfix = GetPrecisionShift(rgb_bit_depth);
   if (rgb_bit_depth > 8 && (rgb_step % 2 != 0 || rgb_stride % 2 != 0)) {
     // Step/stride should be even for uint16_t buffers.
     return 0;
