@@ -69,6 +69,11 @@ typedef struct HuffmanTables {
 WEBP_NODISCARD int VP8LHuffmanTablesAllocate(int size,
                                              HuffmanTables* huffman_tables);
 void VP8LHuffmanTablesDeallocate(HuffmanTables* const huffman_tables);
+// Ensures 'huffman_tables->curr_segment' has at least 'size' contiguous
+// HuffmanCodes available, allocating a new segment if needed. Returns 0 on
+// memory allocation error, 1 otherwise.
+WEBP_NODISCARD int VP8LHuffmanTablesEnsureCapacity(
+    int size, HuffmanTables* const huffman_tables);
 
 #define HUFFMAN_PACKED_BITS 6
 #define HUFFMAN_PACKED_TABLE_SIZE (1u << HUFFMAN_PACKED_BITS)
@@ -77,7 +82,7 @@ void VP8LHuffmanTablesDeallocate(HuffmanTables* const huffman_tables);
 // Includes special handling for the following cases:
 //  - is_trivial_literal: one common literal base for RED/BLUE/ALPHA (not GREEN)
 //  - is_trivial_code: only 1 code (no bit is read from bitstream)
-//  - use_packed_table: few enough literal symbols, so all the bit codes
+//  - packed_table != NULL: few enough literal symbols, so all the bit codes
 //    can fit into a small look-up table packed_table[]
 // The common literal base, if applicable, is stored in 'literal_arb'.
 typedef struct HTreeGroup HTreeGroup;
@@ -89,9 +94,8 @@ struct HTreeGroup {
                            // ARGB value of the pixel, with Green channel
                            // being set to zero.
   int is_trivial_code;     // true if is_trivial_literal with only one code
-  int use_packed_table;    // use packed table below for short literal code
   // table mapping input bits to a packed values, or escape case to literal code
-  HuffmanCode32 packed_table[HUFFMAN_PACKED_TABLE_SIZE];
+  HuffmanCode32* packed_table;
 };
 
 // Creates the instance of HTreeGroup with specified number of tree-groups.

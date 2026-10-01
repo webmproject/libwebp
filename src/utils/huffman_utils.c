@@ -232,6 +232,42 @@ static int BuildHuffmanTable(HuffmanCode* const WEBP_BIDI_INDEXABLE root_table,
   ((1 << MAX_CACHE_BITS) + NUM_LITERAL_CODES + NUM_LENGTH_CODES)
 // Cut-off value for switching between heap and stack allocation.
 #define SORTED_SIZE_CUTOFF 512
+int VP8LHuffmanTablesEnsureCapacity(int size,
+                                    HuffmanTables* const huffman_tables) {
+  if (huffman_tables->curr_segment->curr_table + size >
+      huffman_tables->curr_segment->start +
+          huffman_tables->curr_segment->size) {
+    // If 'huffman_tables' does not have enough memory, allocate a new segment.
+    // The available part of huffman_tables->curr_segment is left unused because
+    // we need a contiguous buffer.
+    const int segment_size = huffman_tables->curr_segment->size;
+    struct HuffmanTablesSegment* next =
+        (HuffmanTablesSegment*)WebPSafeMalloc(1, sizeof(*next));
+    if (next == NULL) return 0;
+    // Fill the new segment.
+    // We need at least 'size' but if that value is small, it is better to
+    // allocate a big chunk to prevent more allocations later. 'segment_size' is
+    // therefore chosen (any other arbitrary value could be chosen).
+    {
+      const int next_size = size > segment_size ? size : segment_size;
+      HuffmanCode* WEBP_BIDI_INDEXABLE const next_start =
+          (HuffmanCode*)WebPSafeMalloc(next_size, sizeof(*next_start));
+      if (next_start == NULL) {
+        WebPSafeFree(next);
+        return 0;
+      }
+      next->size = next_size;
+      next->start = next_start;
+    }
+    next->curr_table = next->start;
+    next->next = NULL;
+    // Point to the new segment.
+    huffman_tables->curr_segment->next = next;
+    huffman_tables->curr_segment = next;
+  }
+  return 1;
+}
+
 int VP8LBuildHuffmanTable(HuffmanTables* const root_table, int root_bits,
                           const int WEBP_COUNTED_BY(code_lengths_size)
                               code_lengths[],
@@ -241,37 +277,7 @@ int VP8LBuildHuffmanTable(HuffmanTables* const root_table, int root_bits,
   assert(code_lengths_size <= MAX_CODE_LENGTHS_SIZE);
   if (total_size == 0 || root_table == NULL) return total_size;
 
-  if (root_table->curr_segment->curr_table + total_size >=
-      root_table->curr_segment->start + root_table->curr_segment->size) {
-    // If 'root_table' does not have enough memory, allocate a new segment.
-    // The available part of root_table->curr_segment is left unused because we
-    // need a contiguous buffer.
-    const int segment_size = root_table->curr_segment->size;
-    struct HuffmanTablesSegment* next =
-        (HuffmanTablesSegment*)WebPSafeMalloc(1, sizeof(*next));
-    if (next == NULL) return -1;
-    // Fill the new segment.
-    // We need at least 'total_size' but if that value is small, it is better to
-    // allocate a big chunk to prevent more allocations later. 'segment_size' is
-    // therefore chosen (any other arbitrary value could be chosen).
-    {
-      const int next_size =
-          total_size > segment_size ? total_size : segment_size;
-      HuffmanCode* WEBP_BIDI_INDEXABLE const next_start =
-          (HuffmanCode*)WebPSafeMalloc(next_size, sizeof(*next_start));
-      if (next_start == NULL) {
-        WebPSafeFree(next);
-        return -1;
-      }
-      next->size = next_size;
-      next->start = next_start;
-    }
-    next->curr_table = next->start;
-    next->next = NULL;
-    // Point to the new segment.
-    root_table->curr_segment->next = next;
-    root_table->curr_segment = next;
-  }
+  if (!VP8LHuffmanTablesEnsureCapacity(total_size, root_table)) return -1;
   if (code_lengths_size <= SORTED_SIZE_CUTOFF) {
     // use local stack-allocated array.
     uint16_t sorted[SORTED_SIZE_CUTOFF];

@@ -199,8 +199,9 @@ static WEBP_INLINE int ReadPackedSymbols(const HTreeGroup* group,
                                          VP8LBitReader* const br,
                                          uint32_t* const dst) {
   const uint32_t val = VP8LPrefetchBits(br) & (HUFFMAN_PACKED_TABLE_SIZE - 1);
-  const HuffmanCode32 code = group->packed_table[val];
-  assert(group->use_packed_table);
+  HuffmanCode32 code;
+  assert(group->packed_table != NULL);
+  code = group->packed_table[val];
   if (code.bits < BITS_SPECIAL_MARKER) {
     VP8LSetBitPos(br, br->bit_pos + code.bits);
     *dst = code.value;
@@ -220,8 +221,18 @@ static int AccumulateHCode(HuffmanCode hcode, int shift,
   return hcode.bits;
 }
 
-static void BuildPackedTable(HTreeGroup* const htree_group) {
+static int BuildPackedTable(HTreeGroup* const htree_group,
+                            HuffmanTables* const huffman_tables) {
   uint32_t code;
+  const int total_size = HUFFMAN_PACKED_TABLE_SIZE *
+                         sizeof(*htree_group->packed_table) /
+                         sizeof(*huffman_tables->curr_segment->curr_table);
+  if (!VP8LHuffmanTablesEnsureCapacity(total_size, huffman_tables)) {
+    return 0;
+  }
+  htree_group->packed_table =
+      (HuffmanCode32*)huffman_tables->curr_segment->curr_table;
+  huffman_tables->curr_segment->curr_table += total_size;
   for (code = 0; code < HUFFMAN_PACKED_TABLE_SIZE; ++code) {
     uint32_t bits = code;
     HuffmanCode32* const huff = &htree_group->packed_table[bits];
@@ -239,6 +250,7 @@ static void BuildPackedTable(HTreeGroup* const htree_group) {
       (void)bits;
     }
   }
+  return 1;
 }
 
 WEBP_NODISCARD static int ReadHuffmanCodeLengths(
@@ -494,12 +506,15 @@ int ReadHuffmanCodesHelper(int color_cache_bits, int num_htree_groups,
       (int*)WebPSafeCalloc((uint64_t)max_alphabet_size, sizeof(*code_lengths));
   *htree_groups = VP8LHtreeGroupsNew(num_htree_groups);
 
-  // MAX_HUFF_IMAGE_SIZE is above what the libwebp encoder allows so something
-  // fishy might be happening. Do not allocate too much yet.
-  total_huffman_table_size =
-      (num_htree_groups > MAX_HUFF_IMAGE_SIZE ? MAX_HUFF_IMAGE_SIZE
-                                              : num_htree_groups) *
-      table_size;
+  // Cap the segment chunk size to ~320 KB (16 * table_size) for a small number
+  // of groups, or ~1 MB (52 * table_size) when there are many groups.
+  {
+    const int max_groups_per_chunk = (num_htree_groups > 256) ? 52 : 16;
+    total_huffman_table_size =
+        (num_htree_groups > max_groups_per_chunk ? max_groups_per_chunk
+                                                 : num_htree_groups) *
+        table_size;
+  }
   if (*htree_groups == NULL || code_lengths == NULL ||
       !VP8LHuffmanTablesAllocate(total_huffman_table_size, huffman_tables)) {
     VP8LSetError(dec, VP8_STATUS_OUT_OF_MEMORY);
@@ -567,9 +582,12 @@ int ReadHuffmanCodesHelper(int color_cache_bits, int num_htree_groups,
           htree_group->literal_arb |= htrees[GREEN][0].value << 8;
         }
       }
-      htree_group->use_packed_table =
-          !htree_group->is_trivial_code && (max_bits < HUFFMAN_PACKED_BITS);
-      if (htree_group->use_packed_table) BuildPackedTable(htree_group);
+      htree_group->packed_table = NULL;
+      if (!htree_group->is_trivial_code && (max_bits < HUFFMAN_PACKED_BITS) &&
+          !BuildPackedTable(htree_group, huffman_tables)) {
+        VP8LSetError(dec, VP8_STATUS_OUT_OF_MEMORY);
+        goto Error;
+      }
     }
   }
   ok = 1;
@@ -1436,7 +1454,7 @@ WEBP_NODISCARD static int DecodeImageData(VP8LDecoder* const dec,
       goto AdvanceByOne;
     }
     VP8LFillBitWindow(br);
-    if (htree_group->use_packed_table) {
+    if (htree_group->packed_table != NULL) {
       code = ReadPackedSymbols(htree_group, br, src);
       if (VP8LIsEndOfStream(br)) break;
       if (code == PACKED_NON_LITERAL_CODE) goto AdvanceByOne;
