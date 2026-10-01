@@ -78,12 +78,9 @@ if(MSVC AND CMAKE_C_COMPILER_ID STREQUAL "MSVC")
   else()
     set(SIMD_ENABLE_FLAGS "/arch:AVX2;/arch:AVX;/arch:SSE2;;;;;")
   endif()
-  set(SIMD_DISABLE_FLAGS)
 else()
   set(SIMD_ENABLE_FLAGS
       "-mavx2;-msse4.1;-msse2;-mips32;-mdspr2;-mfpu=neon;-mmsa;-mvsx")
-  set(SIMD_DISABLE_FLAGS
-      "-mno-avx2;-mno-sse4.1;-mno-sse2;;-mno-dspr2;;-mno-msa;-mno-vsx")
 endif()
 
 set(WEBP_SIMD_FILES_TO_INCLUDE)
@@ -148,41 +145,6 @@ foreach(I_SIMD RANGE ${WEBP_SIMD_FLAGS_RANGE})
     foreach(FILE ${SIMD_FILES})
       list(APPEND WEBP_SIMD_FILES_NOT_TO_INCLUDE ${FILE})
     endforeach()
-    # Explicitly disable SIMD.
-    if(SIMD_DISABLE_FLAGS)
-      list(GET SIMD_DISABLE_FLAGS ${I_SIMD} SIMD_COMPILE_FLAG)
-      include(CheckCCompilerFlag)
-      if(SIMD_COMPILE_FLAG)
-        # Between 3.17.0 and 3.18.2 check_cxx_compiler_flag() sets a normal
-        # variable at parent scope while check_cxx_source_compiles() continues
-        # to set an internal cache variable, so we unset both to avoid the
-        # failure / success state persisting between checks. See
-        # https://gitlab.kitware.com/cmake/cmake/-/issues/21207.
-        unset(HAS_COMPILE_FLAG)
-        unset(HAS_COMPILE_FLAG CACHE)
-        check_c_compiler_flag(${SIMD_COMPILE_FLAG} HAS_COMPILE_FLAG)
-        if(HAS_COMPILE_FLAG)
-          # Do one more check for Clang to circumvent CMake issue 13194.
-          if(COMMAND check_compiler_flag_common_patterns)
-            # Only in CMake 3.0 and above.
-            check_compiler_flag_common_patterns(COMMON_PATTERNS)
-          else()
-            set(COMMON_PATTERNS)
-          endif()
-          set(CMAKE_REQUIRED_DEFINITIONS ${SIMD_COMPILE_FLAG})
-          check_c_source_compiles(
-            "int main(void) {return 0;}" FLAG_${SIMD_COMPILE_FLAG} FAIL_REGEX
-            "warning: argument unused during compilation:" ${COMMON_PATTERNS})
-          if(NOT FLAG_${SIMD_COMPILE_FLAG})
-            unset(HAS_COMPILE_FLAG)
-            unset(HAS_COMPILE_FLAG CACHE)
-          endif()
-        endif()
-        if(HAS_COMPILE_FLAG)
-          set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${SIMD_COMPILE_FLAG}")
-        endif()
-      endif()
-    endif()
   endif()
   cmake_pop_check_state()
 endforeach()
