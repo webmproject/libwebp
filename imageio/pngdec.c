@@ -283,15 +283,23 @@ static int ReadPNGInternal(const uint8_t* const data, size_t data_size,
   context.data = data;
   context.data_size = data_size;
 
-  png = png_create_read_struct_2(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL, NULL,
-                                 MallocFunc, FreeFunc);
+  {
+    png_error_ptr error_function_to_use, warning_function_to_use;
+    if (pic == NULL) {
+      error_function_to_use = error_function_silent;
+      warning_function_to_use = warning_function_silent;
+    } else {
+      error_function_to_use = error_function;
+      warning_function_to_use = NULL;
+    }
+    png = png_create_read_struct_2(PNG_LIBPNG_VER_STRING, NULL,
+                                   error_function_to_use,
+                                   warning_function_to_use, NULL, MallocFunc,
+                                   FreeFunc);
+  }
+
   if (png == NULL) goto End;
 
-  if (pic == NULL) {
-    png_set_error_fn(png, 0, error_function_silent, warning_function_silent);
-  } else {
-    png_set_error_fn(png, 0, error_function, NULL);
-  }
   if (setjmp(png_jmpbuf(png))) {
   Error:
     MetadataFree(metadata);
