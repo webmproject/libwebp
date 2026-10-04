@@ -453,10 +453,11 @@ WEBP_NODISCARD static int PaletteMinLARefineColors(
   cooccurrence =
       (uint32_t*)WebPSafeCalloc(num_colors * num_colors, sizeof(*cooccurrence));
   if (cooccurrence == NULL) return 0;
-  if (!CoOccurrenceBuild(pic, palette_in, num_colors,
-                         WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(
-                             uint32_t*, cooccurrence,
-                             num_colors* num_colors * sizeof(*cooccurrence)))) {
+  if (!CoOccurrenceBuild(
+          pic, palette_in, num_colors,
+          WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(
+              uint32_t*, cooccurrence,
+              num_colors * num_colors * sizeof(*cooccurrence)))) {
     WebPSafeFree(cooccurrence);
     return 0;
   }
@@ -489,10 +490,11 @@ WEBP_NODISCARD static int PaletteSortModifiedZeng(
   if (cooccurrence == NULL) {
     return 0;
   }
-  if (!CoOccurrenceBuild(pic, palette_in, num_colors,
-                         WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(
-                             uint32_t*, cooccurrence,
-                             num_colors* num_colors * sizeof(*cooccurrence)))) {
+  if (!CoOccurrenceBuild(
+          pic, palette_in, num_colors,
+          WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(
+              uint32_t*, cooccurrence,
+              num_colors * num_colors * sizeof(*cooccurrence)))) {
     WebPSafeFree(cooccurrence);
     return 0;
   }
@@ -500,7 +502,7 @@ WEBP_NODISCARD static int PaletteSortModifiedZeng(
   // Initialize the mapping list with the two best indices.
   CoOccurrenceFindMax(WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(
                           const uint32_t*, cooccurrence,
-                          num_colors* num_colors * sizeof(*cooccurrence)),
+                          num_colors * num_colors * sizeof(*cooccurrence)),
                       num_colors, &remapping[0], &remapping[1]);
 
   // We need to append and prepend to the list of remapping. To this end, we

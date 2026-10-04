@@ -867,7 +867,7 @@ static void CorrectDCValues(const VP8EncIterator* WEBP_RESTRICT const it,
   for (ch = 0; ch <= 1; ++ch) {
     const int8_t* const top = it->top_derr[it->x][ch];
     const int8_t* const left = it->left_derr[ch];
-    int16_t(*const c)[16] = &tmp[ch * 4];
+    int16_t (*const c)[16] = &tmp[ch * 4];
     int err0, err1, err2, err3;
     c[0][0] += (C1 * top[0] + C2 * left[0]) >> (DSHIFT - DSCALE);
     err0 = QuantizeSingle(&c[0][0], mtx);
