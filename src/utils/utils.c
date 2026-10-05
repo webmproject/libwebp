@@ -255,7 +255,8 @@ void WebPFree(void* WEBP_SINGLE ptr) { WebPSafeFree(ptr); }
 void WebPCopyPlane(const uint8_t* src, int src_stride, uint8_t* dst,
                    int dst_stride, int width, int height) {
   assert(src != NULL && dst != NULL);
-  assert(abs(src_stride) >= width && abs(dst_stride) >= width);
+  assert(CheckStride(src_stride, 1, width) &&
+         CheckStride(dst_stride, 1, width));
   while (height-- > 0) {
     WEBP_UNSAFE_MEMCPY(dst, src, width);
     src += src_stride;

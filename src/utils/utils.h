@@ -186,6 +186,14 @@ static WEBP_INLINE int BitsCtz(uint32_t n) {
 
 struct WebPPicture;
 
+// Returns 1 if |stride| >= step * width, 0 otherwise.
+WEBP_NODISCARD static WEBP_INLINE int CheckStride(int stride, int step,
+                                                  int width) {
+  const int64_t min_stride = (int64_t)step * width;
+  // Do not use abs(stride) as abs(INT_MIN) is undefined behavior.
+  return (stride >= min_stride || stride <= -min_stride);
+}
+
 // Copy width x height pixels from 'src' to 'dst' honoring the strides.
 WEBP_EXTERN void WebPCopyPlane(const uint8_t* src, int src_stride, uint8_t* dst,
                                int dst_stride, int width, int height);

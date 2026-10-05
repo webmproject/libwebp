@@ -40,8 +40,10 @@ int IsValidColorspace(int webp_csp_mode) {
 
 // strictly speaking, the very last (or first, if flipped) row
 // doesn't require padding.
-#define MIN_BUFFER_SIZE(WIDTH, HEIGHT, STRIDE) \
-  ((uint64_t)(STRIDE) * ((HEIGHT) - 1) + (WIDTH))
+#define MIN_BUFFER_SIZE(WIDTH, HEIGHT, STRIDE)                          \
+  ((uint64_t)((STRIDE) >= 0 ? (int64_t)(STRIDE) : -(int64_t)(STRIDE)) * \
+       ((HEIGHT) - 1) +                                                 \
+   (WIDTH))
 
 static VP8StatusCode CheckDecBuffer(const WebPDecBuffer* const buffer) {
   int ok = 1;
@@ -54,35 +56,30 @@ static VP8StatusCode CheckDecBuffer(const WebPDecBuffer* const buffer) {
     const WebPYUVABuffer* const buf = &buffer->u.YUVA;
     const int uv_width = (width + 1) / 2;
     const int uv_height = (height + 1) / 2;
-    const int y_stride = abs(buf->y_stride);
-    const int u_stride = abs(buf->u_stride);
-    const int v_stride = abs(buf->v_stride);
-    const int a_stride = abs(buf->a_stride);
-    const uint64_t y_size = MIN_BUFFER_SIZE(width, height, y_stride);
-    const uint64_t u_size = MIN_BUFFER_SIZE(uv_width, uv_height, u_stride);
-    const uint64_t v_size = MIN_BUFFER_SIZE(uv_width, uv_height, v_stride);
-    const uint64_t a_size = MIN_BUFFER_SIZE(width, height, a_stride);
+    const uint64_t y_size = MIN_BUFFER_SIZE(width, height, buf->y_stride);
+    const uint64_t u_size = MIN_BUFFER_SIZE(uv_width, uv_height, buf->u_stride);
+    const uint64_t v_size = MIN_BUFFER_SIZE(uv_width, uv_height, buf->v_stride);
+    const uint64_t a_size = MIN_BUFFER_SIZE(width, height, buf->a_stride);
     ok &= (y_size <= buf->y_size);
     ok &= (u_size <= buf->u_size);
     ok &= (v_size <= buf->v_size);
-    ok &= (y_stride >= width);
-    ok &= (u_stride >= uv_width);
-    ok &= (v_stride >= uv_width);
+    ok &= CheckStride(buf->y_stride, 1, width);
+    ok &= CheckStride(buf->u_stride, 1, uv_width);
+    ok &= CheckStride(buf->v_stride, 1, uv_width);
     ok &= (buf->y != NULL);
     ok &= (buf->u != NULL);
     ok &= (buf->v != NULL);
     if (mode == MODE_YUVA) {
-      ok &= (a_stride >= width);
+      ok &= CheckStride(buf->a_stride, 1, width);
       ok &= (a_size <= buf->a_size);
       ok &= (buf->a != NULL);
     }
   } else {  // RGB checks
     const WebPRGBABuffer* const buf = &buffer->u.RGBA;
-    const int stride = abs(buf->stride);
     const uint64_t size =
-        MIN_BUFFER_SIZE((uint64_t)width * kModeBpp[mode], height, stride);
+        MIN_BUFFER_SIZE((uint64_t)width * kModeBpp[mode], height, buf->stride);
     ok &= (size <= buf->size);
-    ok &= (stride >= width * kModeBpp[mode]);
+    ok &= CheckStride(buf->stride, kModeBpp[mode], width);
     ok &= (buf->rgba != NULL);
   }
   return ok ? VP8_STATUS_OK : VP8_STATUS_INVALID_PARAM;

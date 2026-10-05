@@ -381,7 +381,8 @@ WEBP_NODISCARD static int Import(WebPPicture* const picture, const uint8_t* rgb,
   const int width = picture->width;
   const int height = picture->height;
 
-  if (abs(rgb_stride) < (import_alpha ? 4 : 3) * width) return 0;
+  if (!WebPValidatePicture(picture)) return 0;
+  if (!CheckStride(rgb_stride, step, width)) return 0;
 
   if (!picture->use_argb) {
     const uint8_t* a_ptr = import_alpha ? rgb + 3 : NULL;
