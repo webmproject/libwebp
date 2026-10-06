@@ -362,7 +362,7 @@ int WebPWriteBMP(FILE* fout, const WebPDecBuffer* const buffer) {
 
   // write pixel array, bottom to top
   for (y = 0; y < height; ++y) {
-    const uint8_t* const src = &rgba[(uint64_t)(height - 1 - y) * stride];
+    const uint8_t* const src = &rgba[(ptrdiff_t)(height - 1 - y) * stride];
     if (fwrite(src, line_size, 1, fout) != 1) {
       return 0;
     }
