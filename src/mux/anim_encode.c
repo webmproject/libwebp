@@ -1683,7 +1683,6 @@ WEBP_NODISCARD static int FrameToFullCanvas(WebPAnimEncoder* const enc,
 
   if (!DecodeFrameOntoCanvas(frame, canvas_buf)) goto Err;
   if (!EncodeFrame(&enc->last_config, canvas_buf, &mem1)) goto Err;
-  GetEncodedData(&mem1, full_image);
 
   if (enc->options.allow_mixed) {
     if (!EncodeFrame(&enc->last_config_reversed, canvas_buf, &mem2)) goto Err;
@@ -1691,12 +1690,16 @@ WEBP_NODISCARD static int FrameToFullCanvas(WebPAnimEncoder* const enc,
       GetEncodedData(&mem2, full_image);
       WebPMemoryWriterClear(&mem1);
     } else {
+      GetEncodedData(&mem1, full_image);
       WebPMemoryWriterClear(&mem2);
     }
+  } else {
+    GetEncodedData(&mem1, full_image);
   }
   return 1;
 
 Err:
+  WebPDataInit(full_image);
   WebPMemoryWriterClear(&mem1);
   WebPMemoryWriterClear(&mem2);
   return 0;
