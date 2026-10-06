@@ -14,11 +14,15 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <algorithm>
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
+#include <memory>
 #include <string>
 #include <string_view>
+#include <vector>
 
 #include "./fuzz_utils.h"
 #include "gtest/gtest.h"
@@ -114,4 +118,106 @@ TEST(SimpleApi, Buganizer498966511) {
                   "iF\000FjRsa\232vP\"EO\"K\217OM;rOect\275n\"Wsection_JUNQ="
                   "\"JUNQ\"\250YO,_I\362\021\"ANIM\"",
                   150));
+}
+
+// More than 200 prefix code groups are remapped to a dense numbering by the
+// decoder. Group ids are numbered in order of first use, which differs from the
+// numeric order of the ids here, so the codes read from the bitstream must be
+// stored through the mapping.
+TEST(SimpleApi, ManyHuffmanGroupsUsedOutOfOrder) {
+  constexpr int kSize = 64;  // 16x16 blocks of 4x4 pixels.
+  constexpr int kBlocksPerRow = 16;
+  constexpr int kNumGroups = 201;
+
+  std::vector<uint8_t> bits;  // LSB-first bit packing, as in VP8L.
+  size_t num_bits = 0;
+  auto put = [&](uint32_t value, int num) {
+    for (int i = 0; i < num; ++i, ++num_bits) {
+      if (num_bits % 8 == 0) bits.push_back(0);
+      bits.back() |= ((value >> i) & 1) << (num_bits % 8);
+    }
+  };
+  // Prefix code with a single symbol: its pixels cost no bit.
+  auto single_symbol_code = [&](uint32_t symbol, bool is_8_bits) {
+    put(1, 1);  // simple code
+    put(0, 1);  // one symbol
+    put(is_8_bits, 1);
+    put(symbol, is_8_bits ? 8 : 1);
+  };
+  auto color = [](int group) {  // RGBA
+    return std::array<uint8_t, 4>{static_cast<uint8_t>(group),
+                                  static_cast<uint8_t>(255 - group),
+                                  static_cast<uint8_t>(group * 7), 255};
+  };
+
+  // Meta image: groups 1 and 0 are used first, then 2, 3, ..., 200.
+  std::vector<int> meta(kBlocksPerRow * kBlocksPerRow, 0);
+  meta[0] = 1;
+  meta[1] = 0;
+  for (int g = 2; g < kNumGroups; ++g) meta[g] = g;
+
+  put(0x2f, 8);  // VP8L signature
+  put(kSize - 1, 14);
+  put(kSize - 1, 14);
+  put(1, 1);  // alpha is used
+  put(0, 3);  // version
+  put(0, 1);  // no transform
+  put(0, 1);  // no color cache
+  put(1, 1);  // meta prefix codes
+  put(0, 3);  // 4x4 blocks
+  // Entropy-coded meta image.
+  put(0, 1);  // no color cache
+  // Green: 256 literals, all with a code length of 8.
+  put(0, 1);
+  put(12 - 4, 4);
+  for (int i = 0; i < 12; ++i) put(i == 11 ? 1 : 0, 3);  // only length 8 used
+  put(1, 1);
+  put(3, 3);
+  put(254, 8);  // 256 code lengths follow (all 8, in zero bits).
+  for (int i = 0; i < 4; ++i) single_symbol_code(0, false);  // R, B, A, dist
+  for (const int group : meta) {
+    uint32_t reversed = 0;  // Codes are stored bit-reversed.
+    for (int i = 0; i < 8; ++i) reversed |= ((group >> i) & 1) << (7 - i);
+    put(reversed, 8);
+  }
+  // One constant color per group.
+  for (int g = 0; g < kNumGroups; ++g) {
+    const std::array<uint8_t, 4> c = color(g);
+    single_symbol_code(c[1], true);  // green
+    single_symbol_code(c[0], true);  // red
+    single_symbol_code(c[2], true);  // blue
+    single_symbol_code(c[3], true);  // alpha
+    single_symbol_code(0, false);    // distance
+  }
+  bits.resize(bits.size() + 8, 0);
+  if (bits.size() & 1) bits.push_back(0);
+
+  std::vector<uint8_t> webp = {'R', 'I', 'F', 'F', 0,   0,   0,   0,
+                               'W', 'E', 'B', 'P', 'V', 'P', '8', 'L'};
+  auto put_le32 = [&webp](size_t pos, uint32_t v) {
+    for (int i = 0; i < 4; ++i) webp[pos + i] = (v >> (8 * i)) & 0xff;
+  };
+  webp.resize(webp.size() + 4);
+  put_le32(16, static_cast<uint32_t>(bits.size()));
+  webp.insert(webp.end(), bits.begin(), bits.end());
+  put_le32(4, static_cast<uint32_t>(webp.size() - 8));
+
+  int width, height;
+  const std::unique_ptr<uint8_t, decltype(&WebPFree)> rgba(
+      WebPDecodeRGBA(webp.data(), webp.size(), &width, &height), WebPFree);
+  ASSERT_NE(rgba.get(), nullptr);
+  ASSERT_EQ(width, kSize);
+  ASSERT_EQ(height, kSize);
+  int num_wrong_pixels = 0;
+  for (int y = 0; y < kSize; ++y) {
+    for (int x = 0; x < kSize; ++x) {
+      const std::array<uint8_t, 4> expected =
+          color(meta[(y / 4) * kBlocksPerRow + (x / 4)]);
+      const uint8_t* const pixel = rgba.get() + 4 * (y * kSize + x);
+      if (!std::equal(expected.begin(), expected.end(), pixel)) {
+        ++num_wrong_pixels;
+      }
+    }
+  }
+  EXPECT_EQ(num_wrong_pixels, 0);
 }
