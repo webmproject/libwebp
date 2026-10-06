@@ -21,6 +21,7 @@
 #ifndef PNG_USER_MEM_SUPPORTED
 #define PNG_USER_MEM_SUPPORTED  // for png_create_read_struct_2
 #endif
+#include <assert.h>
 #include <png.h>
 #include <setjmp.h>  // note: this must be included *after* png.h
 #include <stdlib.h>
@@ -99,6 +100,7 @@ static int ProcessRawProfile(const char* profile, size_t profile_len,
   const char* src = profile;
   char* end;
   int expected_length;
+  size_t name_and_length_size, payload_size;
 
   if (profile == NULL || profile_len == 0) return 0;
 
@@ -113,6 +115,8 @@ static int ProcessRawProfile(const char* profile, size_t profile_len,
   // skip the profile name and extract the length.
   while (*src != '\0' && *src++ != '\n') {
   }
+  // libpng guarantees 'profile' ends with '\0' so the loop above and strtol()
+  // below cannot read outside of the buffer.
   expected_length = (int)strtol(src, &end, 10);
   if (*end != '\n') {
     fprintf(stderr, "Malformed raw profile, expected '\\n' got '\\x%.2X'\n",
@@ -120,8 +124,22 @@ static int ProcessRawProfile(const char* profile, size_t profile_len,
     return 0;
   }
   ++end;
+  if (expected_length <= 0) {
+    fprintf(stderr, "Malformed raw profile, invalid length %d\n",
+            expected_length);
+    return 0;
+  }
 
   // 'end' now points to the profile payload.
+  name_and_length_size = (size_t)(end - profile);
+  assert(name_and_length_size <= profile_len);
+  payload_size = profile_len - name_and_length_size;
+  if ((size_t)expected_length * 2 - 1 > payload_size) {
+    fprintf(stderr,
+            "Truncated raw profile, expected at least %zu hex chars, got %zu\n",
+            (size_t)expected_length * 2 - 1, payload_size);
+    return 0;
+  }
   payload->bytes = HexStringToBytes(end, expected_length);
   if (payload->bytes == NULL) return 0;
   payload->size = expected_length;
@@ -170,7 +188,11 @@ static int ExtractMetadataFromPNG(png_structp png, png_infop const head_info,
       png_uint_32 len;
 
       if (png_get_eXIf_1(png, info, &len, &exif) == PNG_INFO_eXIf) {
-        if (!MetadataCopy((const char*)exif, len, &metadata->exif)) return 0;
+        if (metadata->exif.bytes != NULL) {
+          fprintf(stderr, "Ignoring additional eXIf\n");
+        } else if (!MetadataCopy((const char*)exif, len, &metadata->exif)) {
+          return 0;
+        }
       }
     }
 #endif  // PNG_eXIf_SUPPORTED
@@ -222,7 +244,11 @@ static int ExtractMetadataFromPNG(png_structp png, png_infop const head_info,
 
       if (png_get_iCCP(png, info, &name, &comp_type, &profile, &len) ==
           PNG_INFO_iCCP) {
-        if (!MetadataCopy((const char*)profile, len, &metadata->iccp)) return 0;
+        if (metadata->iccp.bytes != NULL) {
+          fprintf(stderr, "Ignoring additional iCCP\n");
+        } else if (!MetadataCopy((const char*)profile, len, &metadata->iccp)) {
+          return 0;
+        }
       }
     }
 #endif  // PNG_iCCP_SUPPORTED
