@@ -66,6 +66,9 @@ int WebPPictureCopy(const WebPPicture* src, WebPPicture* dst) {
   if (src == dst) return 1;
 
   PictureGrabSpecs(src, dst);
+  if (!src->use_argb && src->a == NULL) {
+    dst->colorspace = (WebPEncCSP)(dst->colorspace & ~WEBP_CSP_ALPHA_BIT);
+  }
   if (!WebPPictureAlloc(dst)) return 0;
 
   if (!src->use_argb) {
@@ -137,6 +140,9 @@ int WebPPictureCrop(WebPPicture* pic, int left, int top, int width,
   if (!AdjustAndCheckRectangle(pic, &left, &top, width, height)) return 0;
 
   PictureGrabSpecs(pic, &tmp);
+  if (!pic->use_argb && pic->a == NULL) {
+    tmp.colorspace = (WebPEncCSP)(tmp.colorspace & ~WEBP_CSP_ALPHA_BIT);
+  }
   tmp.width = width;
   tmp.height = height;
   if (!WebPPictureAlloc(&tmp)) {
@@ -220,6 +226,9 @@ int WebPPictureRescale(WebPPicture* picture, int width, int height) {
   }
 
   PictureGrabSpecs(picture, &tmp);
+  if (!picture->use_argb && picture->a == NULL) {
+    tmp.colorspace = (WebPEncCSP)(tmp.colorspace & ~WEBP_CSP_ALPHA_BIT);
+  }
   tmp.width = width;
   tmp.height = height;
   if (!WebPPictureAlloc(&tmp)) {
@@ -233,7 +242,7 @@ int WebPPictureRescale(WebPPicture* picture, int width, int height) {
       goto Cleanup;
     }
     // If present, we need to rescale alpha first (for AlphaMultiplyY).
-    if (picture->a != NULL) {
+    if (tmp.a != NULL) {
       WebPInitAlphaProcessing();
       if (!RescalePlane(picture->a, prev_width, prev_height, picture->a_stride,
                         tmp.a, width, height, tmp.a_stride, work, 1)) {
@@ -244,7 +253,7 @@ int WebPPictureRescale(WebPPicture* picture, int width, int height) {
 
     // We take transparency into account on the luma plane only. That's not
     // totally exact blending, but still is a good approximation.
-    AlphaMultiplyY(picture, 0);
+    if (tmp.a != NULL) AlphaMultiplyY(picture, 0);
     if (!RescalePlane(picture->y, prev_width, prev_height, picture->y_stride,
                       tmp.y, width, height, tmp.y_stride, work, 1) ||
         !RescalePlane(picture->u, HALVE(prev_width), HALVE(prev_height),
