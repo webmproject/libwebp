@@ -368,7 +368,7 @@ WebPMuxError WebPMuxSetCanvasSize(WebPMux* mux, int width, int height) {
   if (width * (uint64_t)height >= MAX_IMAGE_AREA) {
     return WEBP_MUX_INVALID_ARGUMENT;
   }
-  if ((width * height) == 0 && (width | height) != 0) {
+  if ((width * (uint64_t)height) == 0 && (width | height) != 0) {
     // one of width / height is zero, but not both -> invalid!
     return WEBP_MUX_INVALID_ARGUMENT;
   }
