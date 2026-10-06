@@ -395,14 +395,14 @@ static int DoEstimateRisk(const uint8_t* r_ptr, const uint8_t* g_ptr,
     j = band * kBandHeight;
     last_row = (j + 1 + kBandHeight < height) ? j + 1 + kBandHeight : height;
     SharpYuvRowToYuvSharpnessIndex(
-        r_ptr + (size_t)j * rgb_stride, g_ptr + (size_t)j * rgb_stride,
-        b_ptr + (size_t)j * rgb_stride, rgb_step, rgb_bit_depth, width, row1,
+        r_ptr + (ptrdiff_t)j * rgb_stride, g_ptr + (ptrdiff_t)j * rgb_stride,
+        b_ptr + (ptrdiff_t)j * rgb_stride, rgb_step, rgb_bit_depth, width, row1,
         options->yuv_matrix, precomputed_scores_table_sampling);
     for (++j; j < last_row; ++j) {
       SharpYuvRowToYuvSharpnessIndex(
-          r_ptr + (size_t)j * rgb_stride, g_ptr + (size_t)j * rgb_stride,
-          b_ptr + (size_t)j * rgb_stride, rgb_step, rgb_bit_depth, width, row2,
-          options->yuv_matrix, precomputed_scores_table_sampling);
+          r_ptr + (ptrdiff_t)j * rgb_stride, g_ptr + (ptrdiff_t)j * rgb_stride,
+          b_ptr + (ptrdiff_t)j * rgb_stride, rgb_step, rgb_bit_depth, width,
+          row2, options->yuv_matrix, precomputed_scores_table_sampling);
       ScoreRowPair(row1, row2, width, precomputed_scores_table, sampling3, &sum,
                    &count);
       tmp = row1;
