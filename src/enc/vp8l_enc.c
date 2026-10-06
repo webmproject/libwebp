@@ -100,12 +100,18 @@ static WEBP_INLINE uint8_t HashPix(uint32_t pix) {
   return ((((uint64_t)pix + (pix >> 19)) * 0x39c5fba7ull) & 0xffffffffu) >> 24;
 }
 
-WEBP_NODISCARD static int AnalyzeEntropy(const uint32_t* argb, int width,
-                                         int height, int argb_stride,
-                                         int use_palette, int palette_size,
-                                         int transform_bits,
-                                         EntropyIx* const min_entropy_ix,
-                                         int* const red_and_blue_always_zero) {
+// Sets *red_and_blue_always_zero to 1 if the red and blue components are always
+// zero in the input image.
+// Sets *red_and_blue_transformed_always_zero to 1 if the red and blue
+// components are always zero after applying the best transform
+// (*min_entropy_ix).
+WEBP_NODISCARD static int AnalyzeEntropy(
+    const uint32_t* argb, int width, int height, int argb_stride,
+    int use_palette, int palette_size, const uint32_t* const palette_sorted,
+    int transform_bits, EntropyIx* const min_entropy_ix,
+    int* const red_and_blue_always_zero,
+    int* const red_and_blue_transformed_always_zero) {
+  int i;
   Histograms* histo;
 
   if (use_palette && palette_size <= 16) {
@@ -113,12 +119,20 @@ WEBP_NODISCARD static int AnalyzeEntropy(const uint32_t* argb, int width,
     // practice, small palettes are better than any other transform.
     *min_entropy_ix = kPalette;
     *red_and_blue_always_zero = 1;
+    for (i = 0; i < palette_size; ++i) {
+      if ((palette_sorted[i] & 0x00ff00ffu) != 0) {
+        *red_and_blue_always_zero = 0;
+        break;
+      }
+    }
+    *red_and_blue_transformed_always_zero = 1;
     return 1;
   }
 
   histo = (Histograms*)WebPSafeCalloc(1, sizeof(*histo));
-  if (histo != NULL) {
-    int i, x, y;
+  if (histo == NULL) return 0;
+  {
+    int x, y;
     const uint32_t* prev_row = NULL;
     const uint32_t* curr_row = argb;
     uint32_t pix_prev = argb[0];  // Skip the first pixel.
@@ -149,90 +163,96 @@ WEBP_NODISCARD static int AnalyzeEntropy(const uint32_t* argb, int width,
       prev_row = curr_row;
       curr_row += argb_stride;
     }
-    {
-      uint64_t entropy_comp[kHistoTotal];
-      uint64_t entropy[kNumEntropyIx];
-      int k;
-      int last_mode_to_analyze = use_palette ? kPalette : kSpatialSubGreen;
-      int j;
-      // Let's add one zero to the predicted histograms. The zeros are removed
-      // too efficiently by the pix_diff == 0 comparison, at least one of the
-      // zeros is likely to exist.
-      ++histo->category[kHistoRedPredSubGreen][0];
-      ++histo->category[kHistoBluePredSubGreen][0];
-      ++histo->category[kHistoRedPred][0];
-      ++histo->category[kHistoGreenPred][0];
-      ++histo->category[kHistoBluePred][0];
-      ++histo->category[kHistoAlphaPred][0];
+  }
+  {
+    uint64_t entropy_comp[kHistoTotal];
+    uint64_t entropy[kNumEntropyIx];
+    int last_mode_to_analyze = use_palette ? kPalette : kSpatialSubGreen;
+    // Let's add one zero to the predicted histograms. The zeros are removed
+    // too efficiently by the pix_diff == 0 comparison, at least one of the
+    // zeros is likely to exist.
+    ++histo->category[kHistoRedPredSubGreen][0];
+    ++histo->category[kHistoBluePredSubGreen][0];
+    ++histo->category[kHistoRedPred][0];
+    ++histo->category[kHistoGreenPred][0];
+    ++histo->category[kHistoBluePred][0];
+    ++histo->category[kHistoAlphaPred][0];
 
-      for (j = 0; j < kHistoTotal; ++j) {
-        entropy_comp[j] = VP8LBitsEntropy(histo->category[j], NUM_BUCKETS);
-      }
-      entropy[kDirect] = entropy_comp[kHistoAlpha] + entropy_comp[kHistoRed] +
-                         entropy_comp[kHistoGreen] + entropy_comp[kHistoBlue];
-      entropy[kSpatial] =
-          entropy_comp[kHistoAlphaPred] + entropy_comp[kHistoRedPred] +
-          entropy_comp[kHistoGreenPred] + entropy_comp[kHistoBluePred];
-      entropy[kSubGreen] =
-          entropy_comp[kHistoAlpha] + entropy_comp[kHistoRedSubGreen] +
-          entropy_comp[kHistoGreen] + entropy_comp[kHistoBlueSubGreen];
-      entropy[kSpatialSubGreen] =
-          entropy_comp[kHistoAlphaPred] + entropy_comp[kHistoRedPredSubGreen] +
-          entropy_comp[kHistoGreenPred] + entropy_comp[kHistoBluePredSubGreen];
-      entropy[kPalette] = entropy_comp[kHistoPalette];
+    for (i = 0; i < kHistoTotal; ++i) {
+      entropy_comp[i] = VP8LBitsEntropy(histo->category[i], NUM_BUCKETS);
+    }
+    entropy[kDirect] = entropy_comp[kHistoAlpha] + entropy_comp[kHistoRed] +
+                       entropy_comp[kHistoGreen] + entropy_comp[kHistoBlue];
+    entropy[kSpatial] =
+        entropy_comp[kHistoAlphaPred] + entropy_comp[kHistoRedPred] +
+        entropy_comp[kHistoGreenPred] + entropy_comp[kHistoBluePred];
+    entropy[kSubGreen] =
+        entropy_comp[kHistoAlpha] + entropy_comp[kHistoRedSubGreen] +
+        entropy_comp[kHistoGreen] + entropy_comp[kHistoBlueSubGreen];
+    entropy[kSpatialSubGreen] =
+        entropy_comp[kHistoAlphaPred] + entropy_comp[kHistoRedPredSubGreen] +
+        entropy_comp[kHistoGreenPred] + entropy_comp[kHistoBluePredSubGreen];
+    entropy[kPalette] = entropy_comp[kHistoPalette];
 
-      // When including transforms, there is an overhead in bits from
-      // storing them. This overhead is small but matters for small images.
-      // For spatial, there are 14 transformations.
-      entropy[kSpatial] += (uint64_t)VP8LSubSampleSize(width, transform_bits) *
-                           VP8LSubSampleSize(height, transform_bits) *
-                           VP8LFastLog2(14);
-      // For color transforms: 24 as only 3 channels are considered in a
-      // ColorTransformElement.
-      entropy[kSpatialSubGreen] +=
-          (uint64_t)VP8LSubSampleSize(width, transform_bits) *
-          VP8LSubSampleSize(height, transform_bits) * VP8LFastLog2(24);
-      // For palettes, add the cost of storing the palette.
-      // We empirically estimate the cost of a compressed entry as 8 bits.
-      // The palette is differential-coded when compressed hence a much
-      // lower cost than sizeof(uint32_t)*8.
-      entropy[kPalette] += (palette_size * 8ull) << LOG_2_PRECISION_BITS;
+    // When including transforms, there is an overhead in bits from
+    // storing them. This overhead is small but matters for small images.
+    // For spatial, there are 14 transformations.
+    entropy[kSpatial] += (uint64_t)VP8LSubSampleSize(width, transform_bits) *
+                         VP8LSubSampleSize(height, transform_bits) *
+                         VP8LFastLog2(14);
+    // For color transforms: 24 as only 3 channels are considered in a
+    // ColorTransformElement.
+    entropy[kSpatialSubGreen] +=
+        (uint64_t)VP8LSubSampleSize(width, transform_bits) *
+        VP8LSubSampleSize(height, transform_bits) * VP8LFastLog2(24);
+    // For palettes, add the cost of storing the palette.
+    // We empirically estimate the cost of a compressed entry as 8 bits.
+    // The palette is differential-coded when compressed hence a much
+    // lower cost than sizeof(uint32_t)*8.
+    entropy[kPalette] += (palette_size * 8ull) << LOG_2_PRECISION_BITS;
 
-      *min_entropy_ix = kDirect;
-      for (k = kDirect + 1; k <= last_mode_to_analyze; ++k) {
-        if (entropy[*min_entropy_ix] > entropy[k]) {
-          *min_entropy_ix = (EntropyIx)k;
-        }
-      }
-      assert((int)*min_entropy_ix <= last_mode_to_analyze);
-      *red_and_blue_always_zero = 1;
-      // Let's check if the histogram of the chosen entropy mode has
-      // non-zero red and blue values. If all are zero, we can later skip
-      // the cross color optimization.
-      {
-        static const uint8_t kHistoPairs[5][2] = {
-            {kHistoRed, kHistoBlue},
-            {kHistoRedPred, kHistoBluePred},
-            {kHistoRedSubGreen, kHistoBlueSubGreen},
-            {kHistoRedPredSubGreen, kHistoBluePredSubGreen},
-            {kHistoRed, kHistoBlue}};
-        const HistogramBuckets* const red_histo =
-            &histo->category[kHistoPairs[*min_entropy_ix][0]];
-        const HistogramBuckets* const blue_histo =
-            &histo->category[kHistoPairs[*min_entropy_ix][1]];
-        for (i = 1; i < NUM_BUCKETS; ++i) {
-          if (((*red_histo)[i] | (*blue_histo)[i]) != 0) {
-            *red_and_blue_always_zero = 0;
-            break;
-          }
-        }
+    *min_entropy_ix = kDirect;
+    for (i = kDirect + 1; i <= last_mode_to_analyze; ++i) {
+      if (entropy[*min_entropy_ix] > entropy[i]) {
+        *min_entropy_ix = (EntropyIx)i;
       }
     }
-    WebPSafeFree(histo);
-    return 1;
-  } else {
-    return 0;
+    assert((int)*min_entropy_ix <= last_mode_to_analyze);
   }
+  // Every skipped pixel above equals an earlier pixel (pix_prev or
+  // prev_row[x]), so argb[0] together with kHistoRed and kHistoBlue cover
+  // all distinct colors in the image.
+  *red_and_blue_always_zero = ((argb[0] & 0x00ff00ffu) == 0);
+  for (i = 1; *red_and_blue_always_zero && i < NUM_BUCKETS; ++i) {
+    if ((histo->category[kHistoRed][i] | histo->category[kHistoBlue][i]) != 0) {
+      *red_and_blue_always_zero = 0;
+      break;
+    }
+  }
+  // Let's check if the histogram of the chosen entropy mode has
+  // non-zero red and blue values. If all are zero, we can later skip
+  // the cross color optimization.
+  {
+    static const uint8_t kHistoPairs[5][2] = {
+        {kHistoRed, kHistoBlue},
+        {kHistoRedPred, kHistoBluePred},
+        {kHistoRedSubGreen, kHistoBlueSubGreen},
+        {kHistoRedPredSubGreen, kHistoBluePredSubGreen},
+        {kHistoRed, kHistoBlue}};
+    const HistogramBuckets* const red_histo =
+        &histo->category[kHistoPairs[*min_entropy_ix][0]];
+    const HistogramBuckets* const blue_histo =
+        &histo->category[kHistoPairs[*min_entropy_ix][1]];
+    *red_and_blue_transformed_always_zero = 1;
+    for (i = 1; i < NUM_BUCKETS; ++i) {
+      if (((*red_histo)[i] | (*blue_histo)[i]) != 0) {
+        *red_and_blue_transformed_always_zero = 0;
+        break;
+      }
+    }
+  }
+  WebPSafeFree(histo);
+  return 1;
 }
 
 // Clamp histogram and transform bits.
@@ -329,7 +349,8 @@ static void AddPaletteSortingConfigs(
 
 WEBP_NODISCARD static int EncoderAnalyze(
     VP8LEncoder* const enc, CrunchConfig crunch_configs[CRUNCH_CONFIGS_MAX],
-    int* const crunch_configs_size, int* const red_and_blue_always_zero) {
+    int* const crunch_configs_size,
+    int* const red_and_blue_transformed_always_zero) {
   const WebPPicture* const pic = enc->pic;
   const int width = pic->width;
   const int height = pic->height;
@@ -366,11 +387,13 @@ WEBP_NODISCARD static int EncoderAnalyze(
     *crunch_configs_size = 1;
   } else {
     EntropyIx min_entropy_ix;
+    int red_and_blue_always_zero;
     // Try out multiple LZ77 on images with few colors.
     n_lz77s = (enc->palette_size > 0 && enc->palette_size <= 16) ? 2 : 1;
     if (!AnalyzeEntropy(pic->argb, width, height, pic->argb_stride, use_palette,
-                        enc->palette_size, transform_bits, &min_entropy_ix,
-                        red_and_blue_always_zero)) {
+                        enc->palette_size, enc->palette_sorted, transform_bits,
+                        &min_entropy_ix, &red_and_blue_always_zero,
+                        red_and_blue_transformed_always_zero)) {
       return 0;
     }
     if (method == 6 && config->quality == 100) {
@@ -378,6 +401,12 @@ WEBP_NODISCARD static int EncoderAnalyze(
       // Go brute force on all transforms.
       *crunch_configs_size = 0;
       for (i = 0; i < kNumEntropyIx; ++i) {
+        // Subtracting green when red and blue are already always 0 only
+        // duplicates the negated green channel into red and blue.
+        if ((i == kSubGreen || i == kSpatialSubGreen) &&
+            red_and_blue_always_zero) {
+          continue;
+        }
         // We can only apply kPalette or kPaletteAndSpatial if we can indeed use
         // a palette.
         if ((i != kPalette && i != kPaletteAndSpatial) || use_palette) {
@@ -1510,7 +1539,7 @@ typedef struct {
   VP8LEncoder* enc;
   CrunchConfig crunch_configs[CRUNCH_CONFIGS_MAX];
   int num_crunch_configs;
-  int red_and_blue_always_zero;
+  int red_and_blue_transformed_always_zero;
   WebPAuxStats* stats;
 } StreamEncodeContext;
 
@@ -1522,7 +1551,8 @@ WEBP_NODISCARD static int EncodeStreamHook(void* input, void* data2) {
   VP8LEncoder* const enc = params->enc;
   const CrunchConfig* const crunch_configs = params->crunch_configs;
   const int num_crunch_configs = params->num_crunch_configs;
-  const int red_and_blue_always_zero = params->red_and_blue_always_zero;
+  const int red_and_blue_transformed_always_zero =
+      params->red_and_blue_transformed_always_zero;
 #if !defined(WEBP_DISABLE_STATS)
   WebPAuxStats* const stats = params->stats;
 #endif
@@ -1565,7 +1595,8 @@ WEBP_NODISCARD static int EncodeStreamHook(void* input, void* data2) {
     if (low_effort || enc->use_palette) {
       enc->use_cross_color = 0;
     } else {
-      enc->use_cross_color = red_and_blue_always_zero ? 0 : enc->use_predict;
+      enc->use_cross_color =
+          red_and_blue_transformed_always_zero ? 0 : enc->use_predict;
     }
     // Reset any parameter in the encoder that is set in the previous iteration.
     enc->cache_bits = 0;
@@ -1699,7 +1730,7 @@ int VP8LEncodeStream(const WebPConfig* const config,
   CrunchConfig crunch_configs[CRUNCH_CONFIGS_MAX];
   int num_crunch_configs_main, num_crunch_configs_side = 0;
   int idx;
-  int red_and_blue_always_zero = 0;
+  int red_and_blue_transformed_always_zero = 0;
   WebPWorker worker_main, worker_side;
   StreamEncodeContext params_main, params_side;
   // The main thread uses picture->stats, the side thread uses stats_side.
@@ -1721,7 +1752,7 @@ int VP8LEncodeStream(const WebPConfig* const config,
 
   // Analyze image (entropy, num_palettes etc)
   if (!EncoderAnalyze(enc_main, crunch_configs, &num_crunch_configs_main,
-                      &red_and_blue_always_zero) ||
+                      &red_and_blue_transformed_always_zero) ||
       !EncoderInit(enc_main)) {
     WebPEncodingSetError(picture, VP8_ENC_ERROR_OUT_OF_MEMORY);
     goto Error;
@@ -1752,7 +1783,8 @@ int VP8LEncodeStream(const WebPConfig* const config,
       StreamEncodeContext* const param =
           (idx == 0) ? &params_main : &params_side;
       param->config = config;
-      param->red_and_blue_always_zero = red_and_blue_always_zero;
+      param->red_and_blue_transformed_always_zero =
+          red_and_blue_transformed_always_zero;
       if (idx == 0) {
         param->picture = picture;
         param->stats = picture->stats;
