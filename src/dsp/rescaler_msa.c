@@ -226,10 +226,10 @@ static WEBP_INLINE void ExportRowExpand_1(
       CALC_MULT_FIX2_4(frow0, irow0, AB, scale, shift, val0_m);
       CALC_MULT_FIX2_4(frow1, irow1, AB, scale, shift, val1_m);
       SW2(val0_m, val1_m, dst, 4);
-      frow += 4;
-      irow += 4;
-      dst += 4;
-      length -= 4;
+      frow += 8;
+      irow += 8;
+      dst += 8;
+      length -= 8;
     } else if (length >= 4) {
       uint32_t val0_m;
       const v4u32 frow0 = LD_UW(frow + 0);

@@ -591,7 +591,7 @@ static void YuvToRgb565Line(const uint8_t* WEBP_RESTRICT y,
     SUB2(t0, t2, t1, t3, diag1, diag2);        \
     AVER_UB2_UB(a, diag1, b, diag2, t0, t1);   \
     ILVRL_B2_UB(t1, t0, a, b);                 \
-    if (pbot_y != NULL) {                      \
+    if (bot_y != NULL) {                       \
       AVER_UB2_UB(c, diag2, d, diag1, t0, t1); \
       ILVRL_B2_UB(t1, t0, c, d);               \
     }                                          \
@@ -612,8 +612,8 @@ static void YuvToRgb565Line(const uint8_t* WEBP_RESTRICT y,
     const uint32_t uv0 = (3 * tl_uv + l_uv + 0x00020002u) >> 2;               \
     const uint8_t* ptop_y = &top_y[1];                                        \
     uint8_t* ptop_dst = top_dst + XSTEP;                                      \
-    const uint8_t* pbot_y = &bot_y[1];                                        \
-    uint8_t* pbot_dst = bot_dst + XSTEP;                                      \
+    const uint8_t* pbot_y = (bot_y != NULL) ? &bot_y[1] : NULL;               \
+    uint8_t* pbot_dst = (bot_dst != NULL) ? bot_dst + XSTEP : NULL;           \
                                                                               \
     FUNC(top_y[0], uv0 & 0xff, (uv0 >> 16), top_dst);                         \
     if (bot_y != NULL) {                                                      \
@@ -633,11 +633,11 @@ static void YuvToRgb565Line(const uint8_t* WEBP_RESTRICT y,
       FUNC##Line(ptop_y, &temp_u[0], &temp_v[0], ptop_dst, 32);               \
       if (bot_y != NULL) {                                                    \
         FUNC##Line(pbot_y, &temp_u[32], &temp_v[32], pbot_dst, 32);           \
+        pbot_y += 32;                                                         \
+        pbot_dst += XSTEP * 32;                                               \
       }                                                                       \
       ptop_y += 32;                                                           \
-      pbot_y += 32;                                                           \
       ptop_dst += XSTEP * 32;                                                 \
-      pbot_dst += XSTEP * 32;                                                 \
       top_u += 16;                                                            \
       top_v += 16;                                                            \
       cur_u += 16;                                                            \
@@ -646,10 +646,10 @@ static void YuvToRgb565Line(const uint8_t* WEBP_RESTRICT y,
     }                                                                         \
     if (size > 0) {                                                           \
       v16u8 tu0, tu1, tv0, tv1, cu0, cu1, cv0, cv1;                           \
-      memcpy(&temp_u[0], top_u, 17 * sizeof(uint8_t));                        \
-      memcpy(&temp_u[32], cur_u, 17 * sizeof(uint8_t));                       \
-      memcpy(&temp_v[0], top_v, 17 * sizeof(uint8_t));                        \
-      memcpy(&temp_v[32], cur_v, 17 * sizeof(uint8_t));                       \
+      memcpy(&temp_u[0], top_u, (size + 1) * sizeof(uint8_t));                \
+      memcpy(&temp_u[32], cur_u, (size + 1) * sizeof(uint8_t));               \
+      memcpy(&temp_v[0], top_v, (size + 1) * sizeof(uint8_t));                \
+      memcpy(&temp_v[32], cur_v, (size + 1) * sizeof(uint8_t));               \
       LD_UB2(&temp_u[0], 1, tu0, tu1);                                        \
       LD_UB2(&temp_u[32], 1, cu0, cu1);                                       \
       LD_UB2(&temp_v[0], 1, tv0, tv1);                                        \

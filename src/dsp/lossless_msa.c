@@ -286,7 +286,8 @@ static void AddGreenToBlueAndRed_MSA(const uint32_t* const src, int num_pixels,
       out[0] = (b + g) & 0xff;
       out[1] = g;
       out[2] = (r + g) & 0xff;
-      out[4] = in[4];
+      out[3] = in[3];
+      in += 4;
       out += 4;
     }
   }
