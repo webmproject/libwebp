@@ -180,7 +180,9 @@ static void SanitizeEncoderOptions(WebPAnimEncoderOptions* const enc_options) {
     }
   }
   // Limit the max number of frames that are allocated.
-  if (enc_options->kmax - enc_options->kmin > MAX_CACHED_FRAMES) {
+  // Note: kmax >= 2 here, so 'kmax - MAX_CACHED_FRAMES' cannot overflow (unlike
+  // 'kmax - kmin' for a very negative user-provided kmin).
+  if (enc_options->kmin < enc_options->kmax - MAX_CACHED_FRAMES) {
     enc_options->kmin = enc_options->kmax - MAX_CACHED_FRAMES;
     if (print_warning) {
       fprintf(stderr,

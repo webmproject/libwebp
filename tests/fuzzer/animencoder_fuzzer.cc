@@ -14,9 +14,11 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <climits>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
+#include <memory>
 #include <utility>
 #include <vector>
 
@@ -243,4 +245,44 @@ TEST(AnimIndexEncoder, Buganizer498967191) {
                    fuzz_utils::CropOrScaleParams{true, true, 6, 8, 2, 1},
                    GetWebPPicture(0, true)}},
       1);
+}
+
+// 'kmax - kmin' used to overflow when kmax == 2 and kmin was close to INT_MIN,
+// and WebPAnimEncoderNew() could then fail.
+TEST(AnimIndexEncoder, ExtremeNegativeKmin) {
+  constexpr int kSize = 16;
+  constexpr int kNumFrames = 3;
+  for (const int kmin : {INT_MIN, INT_MIN + 1, INT_MIN + 2, -100, 0}) {
+    WebPAnimEncoderOptions options;
+    ASSERT_TRUE(WebPAnimEncoderOptionsInit(&options));
+    options.kmax = 2;
+    options.kmin = kmin;
+    const std::unique_ptr<WebPAnimEncoder, decltype(&WebPAnimEncoderDelete)>
+        enc(WebPAnimEncoderNew(kSize, kSize, &options), WebPAnimEncoderDelete);
+    ASSERT_NE(enc.get(), nullptr) << "kmin=" << kmin;
+    WebPConfig config;
+    ASSERT_TRUE(WebPConfigInit(&config));
+    config.lossless = 1;
+    config.method = 0;
+    for (int i = 0; i < kNumFrames; ++i) {
+      WebPPicture pic;
+      ASSERT_TRUE(WebPPictureInit(&pic));
+      pic.use_argb = 1;
+      pic.width = kSize;
+      pic.height = kSize;
+      ASSERT_TRUE(WebPPictureAlloc(&pic));
+      for (int p = 0; p < kSize * kSize; ++p) {
+        pic.argb[(p / kSize) * pic.argb_stride + (p % kSize)] =
+            0xff000000u | ((p * 2654435761u + i * 40503u) & 0xffffffu);
+      }
+      EXPECT_TRUE(WebPAnimEncoderAdd(enc.get(), &pic, i * 40, &config));
+      WebPPictureFree(&pic);
+    }
+    EXPECT_TRUE(
+        WebPAnimEncoderAdd(enc.get(), nullptr, kNumFrames * 40, nullptr));
+    WebPData data;
+    WebPDataInit(&data);
+    EXPECT_TRUE(WebPAnimEncoderAssemble(enc.get(), &data));
+    WebPDataClear(&data);
+  }
 }
