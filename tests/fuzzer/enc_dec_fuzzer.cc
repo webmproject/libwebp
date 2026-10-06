@@ -20,6 +20,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <memory>
+#include <vector>
 
 #include "./fuzz_utils.h"
 #include "gtest/gtest.h"
@@ -311,3 +312,46 @@ FUZZ_TEST(EncArbitraryDec, EncDecTest)
                  fuzz_utils::ArbitraryCropOrScaleParams(),
                  /*colorspace=*/fuzztest::Arbitrary<int>(),
                  fuzz_utils::ArbitraryWebPDecoderOptions());
+
+// WebPPictureImportRGBA() documents no alignment requirement for 'rgba' or
+// 'rgba_stride', so the input must not be read through a uint32_t*.
+TEST(Enc, ImportRGBAUnalignedInput) {
+  constexpr int kWidth = 37;  // More than 16 pixels, to also hit SIMD loops.
+  constexpr int kHeight = 4;
+  for (int offset = 0; offset < 4; ++offset) {
+    for (int pad = 0; pad < 4; ++pad) {
+      const int stride = 4 * kWidth + pad;
+      // Exactly-sized buffer, so that out-of-bounds reads are detected.
+      std::vector<uint8_t> buf(offset + stride * (kHeight - 1) + 4 * kWidth);
+      for (size_t i = 0; i < buf.size(); ++i) {
+        buf[i] = static_cast<uint8_t>(i * 37 + 11);
+      }
+      const uint8_t* const rgba = buf.data() + offset;
+      WebPPicture pic;
+      ASSERT_TRUE(WebPPictureInit(&pic));
+      pic.use_argb = 1;
+      pic.width = kWidth;
+      pic.height = kHeight;
+      // On failure pic.argb is left null: free the picture and skip the
+      // pixel comparison below.
+      const bool imported = WebPPictureImportRGBA(&pic, rgba, stride);
+      EXPECT_TRUE(imported);
+      if (!imported) {
+        WebPPictureFree(&pic);
+        continue;
+      }
+      for (int y = 0; y < kHeight; ++y) {
+        for (int x = 0; x < kWidth; ++x) {
+          const uint8_t* const p = rgba + y * stride + 4 * x;
+          const uint32_t expected = (uint32_t{p[3]} << 24) |
+                                    (uint32_t{p[0]} << 16) |
+                                    (uint32_t{p[1]} << 8) | uint32_t{p[2]};
+          EXPECT_EQ(pic.argb[y * pic.argb_stride + x], expected)
+              << "offset=" << offset << " pad=" << pad << " x=" << x
+              << " y=" << y;
+        }
+      }
+      WebPPictureFree(&pic);
+    }
+  }
+}
