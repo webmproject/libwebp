@@ -22,8 +22,10 @@
 #include <memory>
 
 #include "./fuzz_utils.h"
+#include "gtest/gtest.h"
 #include "src/dsp/cpu.h"
 #include "src/utils/rescaler_utils.h"
+#include "src/utils/utils.h"
 #include "webp/decode.h"
 #include "webp/encode.h"
 
@@ -214,6 +216,54 @@ void EncDecTest(bool use_argb, fuzz_utils::WebPPictureCpp pic_cpp,
     fprintf(stderr, "WebPDecode failed. status: %d.\n", status);
     abort();
   }
+}
+
+TEST(EncIndexDec, Buganizer498966814) {
+  const bool use_argb = false;
+  WebPPicture pic = fuzz_utils::GetSourcePicture(/*index=*/2, use_argb);
+  EncDecTest(false,
+             fuzz_utils::WebPPictureCpp{
+                 use_argb, pic.colorspace, pic.width, pic.height, pic.y, pic.u,
+                 pic.v, pic.y_stride, pic.uv_stride, pic.a, pic.a_stride,
+                 pic.argb, pic.argb_stride, pic.memory_, pic.memory_argb_},
+             WebPConfig{1,  78.f, 6,  static_cast<WebPImageHint>(3),
+                        0,  0.f,  3,  93,
+                        34, 3,    0,  1,
+                        0,  0,    79, 3,
+                        1,  0,    0,  30,
+                        1,  0,    1,  80,
+                        0,  0,    1,  0,
+                        100},
+             1, fuzz_utils::CropOrScaleParams{true, true, 2, 1, 6, 3}, 9,
+             fuzz_utils::WebPDecoderOptionsCpp{1044690037,
+                                               -814076429,
+                                               0,
+                                               503925603,
+                                               -129135778,
+                                               1416295626,
+                                               0,
+                                               488395839,
+                                               524288,
+                                               1,
+                                               1573917569,
+                                               487414467,
+                                               1639447831,
+                                               1696032481,
+                                               {0, 0, 0, 0, 0}});
+}
+
+TEST(RescalerUtils, Needs64BitExtremeDownscale) {
+  // 16383x16383 -> 1x1: a huge number of source rows (16383) accumulate into
+  // a single output row, each contributing up to 255 * src_width. Overflows
+  // a 32-bit accumulator; see WebPRescalerNeeds64Bit().
+  EXPECT_TRUE(WebPRescalerNeeds64Bit(16383, 16383, 1, 1));
+}
+
+TEST(RescalerUtils, Needs64BitExtremeUpscale) {
+  // 64x128 -> 524288x1: horizontal upscale makes each row contribute up to
+  // 255 * (dst_width - 1), and 128 rows accumulate into the single output
+  // row (dst_height == 1). Also overflows a 32-bit accumulator.
+  EXPECT_TRUE(WebPRescalerNeeds64Bit(64, 128, 524288, 1));
 }
 
 }  // namespace

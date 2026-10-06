@@ -214,7 +214,8 @@ static void AlphaMultiplyY(WebPPicture* const pic, int inverse) {
 int WebPPictureRescale(WebPPicture* picture, int width, int height) {
   WebPPicture tmp;
   int prev_width, prev_height;
-  rescaler_t* work;
+  rescaler_t* work = NULL;
+  void* work_mem = NULL;
   int status = VP8_ENC_OK;
 
   if (picture == NULL) return 0;
@@ -236,11 +237,15 @@ int WebPPictureRescale(WebPPicture* picture, int width, int height) {
   }
 
   if (!picture->use_argb) {
-    work = (rescaler_t*)WebPSafeMalloc(2ULL * width, sizeof(*work));
-    if (work == NULL) {
+    const uint64_t work_size_bytes =
+        WebPRescalerWorkSize(prev_width, prev_height, width, height, 1);
+    work_mem =
+        WebPSafeMalloc(work_size_bytes + WEBP_ALIGN_CST, sizeof(uint8_t));
+    if (work_mem == NULL) {
       status = VP8_ENC_ERROR_OUT_OF_MEMORY;
       goto Cleanup;
     }
+    work = (rescaler_t*)WEBP_ALIGN(work_mem);
     // If present, we need to rescale alpha first (for AlphaMultiplyY).
     if (tmp.a != NULL) {
       WebPInitAlphaProcessing();
@@ -267,11 +272,15 @@ int WebPPictureRescale(WebPPicture* picture, int width, int height) {
     }
     AlphaMultiplyY(&tmp, 1);
   } else {
-    work = (rescaler_t*)WebPSafeMalloc(2ULL * width * 4, sizeof(*work));
-    if (work == NULL) {
+    const uint64_t work_size_bytes =
+        WebPRescalerWorkSize(prev_width, prev_height, width, height, 4);
+    work_mem =
+        WebPSafeMalloc(work_size_bytes + WEBP_ALIGN_CST, sizeof(uint8_t));
+    if (work_mem == NULL) {
       status = VP8_ENC_ERROR_OUT_OF_MEMORY;
       goto Cleanup;
     }
+    work = (rescaler_t*)WEBP_ALIGN(work_mem);
     // In order to correctly interpolate colors, we need to apply the alpha
     // weighting first (black-matting), scale the RGB values, and remove
     // the premultiplication afterward (while preserving the alpha channel).
@@ -287,7 +296,7 @@ int WebPPictureRescale(WebPPicture* picture, int width, int height) {
   }
 
 Cleanup:
-  WebPSafeFree(work);
+  WebPSafeFree(work_mem);
   if (status != VP8_ENC_OK) {
     WebPPictureFree(&tmp);
     return WebPEncodingSetError(picture, status);
