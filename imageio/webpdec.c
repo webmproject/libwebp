@@ -127,6 +127,7 @@ static int ExtractMetadata(const uint8_t* const data, size_t data_size,
   WebPDemuxer* const demux = WebPDemux(&webp_data);
   WebPChunkIterator chunk_iter;
   uint32_t flags;
+  int ok = 1;
 
   if (demux == NULL) return 0;
   assert(metadata != NULL);
@@ -134,22 +135,22 @@ static int ExtractMetadata(const uint8_t* const data, size_t data_size,
   flags = WebPDemuxGetI(demux, WEBP_FF_FORMAT_FLAGS);
 
   if ((flags & ICCP_FLAG) && WebPDemuxGetChunk(demux, "ICCP", 1, &chunk_iter)) {
-    MetadataCopy((const char*)chunk_iter.chunk.bytes, chunk_iter.chunk.size,
-                 &metadata->iccp);
+    ok = ok && MetadataCopy((const char*)chunk_iter.chunk.bytes,
+                            chunk_iter.chunk.size, &metadata->iccp);
     WebPDemuxReleaseChunkIterator(&chunk_iter);
   }
   if ((flags & EXIF_FLAG) && WebPDemuxGetChunk(demux, "EXIF", 1, &chunk_iter)) {
-    MetadataCopy((const char*)chunk_iter.chunk.bytes, chunk_iter.chunk.size,
-                 &metadata->exif);
+    ok = ok && MetadataCopy((const char*)chunk_iter.chunk.bytes,
+                            chunk_iter.chunk.size, &metadata->exif);
     WebPDemuxReleaseChunkIterator(&chunk_iter);
   }
   if ((flags & XMP_FLAG) && WebPDemuxGetChunk(demux, "XMP ", 1, &chunk_iter)) {
-    MetadataCopy((const char*)chunk_iter.chunk.bytes, chunk_iter.chunk.size,
-                 &metadata->xmp);
+    ok = ok && MetadataCopy((const char*)chunk_iter.chunk.bytes,
+                            chunk_iter.chunk.size, &metadata->xmp);
     WebPDemuxReleaseChunkIterator(&chunk_iter);
   }
   WebPDemuxDelete(demux);
-  return 1;
+  return ok;
 }
 
 // -----------------------------------------------------------------------------

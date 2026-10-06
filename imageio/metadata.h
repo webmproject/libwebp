@@ -39,8 +39,8 @@ void MetadataPayloadDelete(MetadataPayload* const payload);
 void MetadataFree(Metadata* const metadata);
 
 // Stores 'metadata' to 'payload->bytes', returns false on allocation error.
-int MetadataCopy(const char* metadata, size_t metadata_len,
-                 MetadataPayload* const payload);
+WEBP_NODISCARD int MetadataCopy(const char* metadata, size_t metadata_len,
+                                MetadataPayload* const payload);
 
 #ifdef __cplusplus
 }  // extern "C"
