@@ -59,17 +59,19 @@ static int64_t PredictionCostBias(const uint32_t counts[256], uint64_t weight_0,
 
 static int64_t PredictionCostSpatialHistogram(
     const uint32_t accumulated[HISTO_SIZE], const uint32_t tile[HISTO_SIZE],
-    int mode, int left_mode, int above_mode) {
+    int mode, int left_mode, int above_mode, uint32_t diff_mask) {
   int i;
   int64_t retval = 0;
   for (i = 0; i < 4; ++i) {
-    const uint64_t kExpValue = 94;
-    retval += PredictionCostBias(&tile[i * 256], 1, kExpValue);
-    // Compute the new cost if 'tile' is added to 'accumulate' but also add the
-    // cost of the current histogram to guide the spatial predictor selection.
-    // Basically, favor low entropy, locally and globally.
-    retval += (int64_t)VP8LCombinedShannonEntropy(&tile[i * 256],
-                                                  &accumulated[i * 256]);
+    if ((diff_mask >> i) & 1) {
+      const uint64_t kExpValue = 94;
+      retval += PredictionCostBias(&tile[i * 256], 1, kExpValue);
+      // Compute the new cost if 'tile' is added to 'accumulate' but also add
+      // the cost of the current histogram to guide the spatial predictor
+      // selection. Basically, favor low entropy, locally and globally.
+      retval += (int64_t)VP8LCombinedShannonEntropy(&tile[i * 256],
+                                                    &accumulated[i * 256]);
+    }
   }
   // Favor keeping the areas locally similar.
   if (mode == left_mode) retval -= kSpatialPredictorBias;
@@ -78,40 +80,73 @@ static int64_t PredictionCostSpatialHistogram(
 }
 
 static WEBP_INLINE void UpdateHisto(uint32_t histo_argb[HISTO_SIZE],
-                                    uint32_t argb) {
-  ++histo_argb[0 * 256 + ((argb >> 24) & 0xff)];
-  ++histo_argb[1 * 256 + ((argb >> 16) & 0xff)];
-  ++histo_argb[2 * 256 + ((argb >> 8) & 0xff)];
-  ++histo_argb[3 * 256 + ((argb >> 0) & 0xff)];
+                                    const uint32_t* const residuals, int max_x,
+                                    uint32_t diff_mask) {
+  int plane, x;
+  for (plane = 0; plane < 4; ++plane) {
+    if ((diff_mask >> plane) & 1) {
+      uint32_t* const histo = &histo_argb[plane * 256];
+      const int shift = (3 - plane) * 8;
+      for (x = 0; x < max_x; ++x) {
+        ++histo[(residuals[x] >> shift) & 0xff];
+      }
+    }
+  }
 }
 
-// Selectively collect histograms to avoid gathering, similar to UpdateHisto()
-static WEBP_INLINE void UpdateHistoMasked(uint32_t histo_argb[HISTO_SIZE],
-                                          uint32_t argb, uint32_t mask) {
-  if (mask & 1) ++histo_argb[0 * 256 + ((argb >> 24) & 0xff)];
-  if (mask & 2) ++histo_argb[1 * 256 + ((argb >> 16) & 0xff)];
-  if (mask & 4) ++histo_argb[2 * 256 + ((argb >> 8) & 0xff)];
-  if (mask & 8) ++histo_argb[3 * 256 + ((argb >> 0) & 0xff)];
-}
-
-// Bit i set means channel i is not constant; plane_value[] holds its value.
+// Returns a 4-bit mask (bit 0 = Alpha, 1 = Red, 2 = Green, 3 = Blue) where bit
+// i is set if plane i is non-constant and must be included in residual
+// histograms and entropy calculations.
+// Sets *min_mode to 1 if predictor mode 0 (ARGB_BLACK) must be skipped, or 0
+// otherwise.
 // TODO(skal): could be SIMD'd
 static uint32_t GetPlaneDiffMask(const uint32_t* const argb, int width,
-                                 int height, uint8_t plane_value[4]) {
+                                 int height, int max_quantization, int exact,
+                                 int* const min_mode) {
   const int n = width * height;
   const uint32_t first = argb[0];
   uint32_t has_diff = 0u;
   uint32_t diff_mask = 0u;
   int i;
+  *min_mode = 0;
+  // In near-lossless mode, GetResidual() modifies pixels in-place based on
+  // local smoothness, so an initially constant plane may not remain constant.
+  if (max_quantization > 1) return 0xfu;
   for (i = 1; i < n; ++i) has_diff |= argb[i] ^ first;
-  if (has_diff & 0xff000000) diff_mask |= 1;
-  if (has_diff & 0x00ff0000) diff_mask |= 2;
-  if (has_diff & 0x0000ff00) diff_mask |= 4;
-  if (has_diff & 0x000000ff) diff_mask |= 8;
-  plane_value[0] = (uint8_t)((first >> 24) & 0xff);
-  plane_value[1] = (uint8_t)((first >> 16) & 0xff);
-  plane_value[2] = (uint8_t)((first >> 8) & 0xff);
-  plane_value[3] = (uint8_t)((first >> 0) & 0xff);
+  if (!exact) {
+    // When !exact, GetResidual() zeroes RGB residuals on transparent pixels
+    // (alpha == 0) and overwrites their RGB values with the prediction.
+    if ((has_diff & 0xff000000u) == 0) {
+      if ((first & 0xff000000u) == 0) {
+        // Alpha is constantly 0: all RGB residuals are forced to 0 and alpha
+        // is constant. Skip mode 0 (which predicts alpha = 0xff) and all
+        // planes.
+        *min_mode = 1;
+        return 0u;
+      }
+    } else {
+      // Alpha varies, so some pixels have alpha == 0 and others have
+      // alpha != 0. A constant RGB channel remains constant after transparent
+      // pixel cleanup only if its constant value is 0 (and mode 0 is also
+      // fine since ARGB_BLACK has RGB == 0).
+      has_diff |= first & 0x00ffffffu;
+    }
+  }
+  if (has_diff & 0xff000000u) diff_mask |= 1;
+  if (has_diff & 0x00ff0000u) diff_mask |= 2;
+  if (has_diff & 0x0000ff00u) diff_mask |= 4;
+  if (has_diff & 0x000000ffu) diff_mask |= 8;
+  // For a constant plane i, predictors 1..13 predict from neighboring pixels
+  // and yield 0 residuals everywhere (except at (0, 0)), whereas mode 0
+  // predicts ARGB_BLACK on interior pixels (x > 0, y > 0). If the constant
+  // plane value differs from ARGB_BLACK, skip mode 0 so it cannot be selected
+  // and pollute the constant plane with non-zero residuals.
+  for (i = 0; i < 4; ++i) {
+    if (((diff_mask >> i) & 1) == 0) {
+      const uint32_t mask = 0xff000000u >> (8 * i);
+      if ((first & mask) != (ARGB_BLACK & mask)) *min_mode = 1;
+    }
+  }
   return diff_mask;
 }
 
@@ -366,7 +401,8 @@ static void GetBestPredictorForTile(const uint32_t* const all_argb,
                                     int tile_y, int tiles_per_row,
                                     uint32_t* all_accumulated_argb,
                                     uint32_t** const all_modes,
-                                    uint32_t* const all_pred_histos) {
+                                    uint32_t* const all_pred_histos,
+                                    int min_mode, uint32_t diff_mask) {
   uint32_t* const accumulated_argb =
       GetAccumulatedHisto(all_accumulated_argb, subsampling_index);
   uint32_t* const modes = all_modes[subsampling_index];
@@ -379,16 +415,16 @@ static void GetBestPredictorForTile(const uint32_t* const all_argb,
   const int above_mode =
       (tile_y > 0) ? (modes[(tile_y - 1) * tiles_per_row + tile_x] >> 8) & 0xff
                    : 0xff;
-  int mode;
+  int mode, plane;
   int64_t best_diff = WEBP_INT64_MAX;
-  uint32_t best_mode = 0;
+  uint32_t best_mode = min_mode;
   const uint32_t* best_histo =
       GetHistoArgbConst(all_argb, /*subsampling_index=*/0, best_mode);
-  for (mode = 0; mode < kNumPredModes; ++mode) {
+  for (mode = min_mode; mode < kNumPredModes; ++mode) {
     const uint32_t* const histo_argb =
         GetHistoArgbConst(all_argb, subsampling_index, mode);
     const int64_t cur_diff = PredictionCostSpatialHistogram(
-        accumulated_argb, histo_argb, mode, left_mode, above_mode);
+        accumulated_argb, histo_argb, mode, left_mode, above_mode, diff_mask);
 
     if (cur_diff < best_diff) {
       best_histo = histo_argb;
@@ -397,7 +433,12 @@ static void GetBestPredictorForTile(const uint32_t* const all_argb,
     }
   }
   // Update the accumulated histogram.
-  VP8LAddVectorEq(best_histo, accumulated_argb, HISTO_SIZE);
+  for (plane = 0; plane < 4; ++plane) {
+    if ((diff_mask >> plane) & 1) {
+      VP8LAddVectorEq(&best_histo[plane * 256], &accumulated_argb[plane * 256],
+                      256);
+    }
+  }
   modes[tile_y * tiles_per_row + tile_x] = ARGB_BLACK | (best_mode << 8);
   ++pred_histos[best_mode];
 }
@@ -411,8 +452,8 @@ static void ComputeResidualsForTile(
     int width, int height, int tile_x, int tile_y, int min_bits,
     uint32_t update_up_to_index, uint32_t* const all_argb,
     uint32_t* const argb_scratch, const uint32_t* const argb,
-    int max_quantization, int exact, int used_subtract_green,
-    uint32_t diff_mask, const uint8_t plane_value[4]) {
+    int max_quantization, int exact, int used_subtract_green, int min_mode,
+    uint32_t diff_mask) {
   const int start_x = tile_x << min_bits;
   const int start_y = tile_y << min_bits;
   const int tile_size = 1 << min_bits;
@@ -420,11 +461,6 @@ static void ComputeResidualsForTile(
   const int max_x = GetMin(tile_size, width - start_x);
   // Whether there exist columns just outside the tile.
   const int have_left = (start_x > 0);
-  // Excludes the first tile row and column (their pixels predict from
-  // ARGB_BLACK or from the row/column above/left, not a same-plane neighbor)
-  // and quantization (can perturb an otherwise-0 residual).
-  uint32_t effective_mask =
-      (start_x > 0 && start_y > 0 && max_quantization == 1) ? diff_mask : 0xfu;
   // Position and size of the strip covering the tile and adjacent columns if
   // they exist.
   const int context_start_x = start_x - have_left;
@@ -441,12 +477,7 @@ static void ComputeResidualsForTile(
   // Need pointers to be able to swap arrays.
   uint32_t residuals[1 << MAX_TRANSFORM_BITS];
   assert(max_x <= (1 << MAX_TRANSFORM_BITS));
-  if (!exact && (diff_mask & 1)) {
-    // GetResidual() zeroes RGB only where alpha == 0. If alpha varies, RGB
-    // isn't uniformly 0 either, so scan it instead of assuming it is.
-    effective_mask |= 0x0eu;
-  }
-  for (mode = 0; mode < kNumPredModes; ++mode) {
+  for (mode = min_mode; mode < kNumPredModes; ++mode) {
     int relative_y;
     uint32_t* const histo_argb =
         GetHistoArgb(all_argb, /*subsampling_index=*/0, mode);
@@ -461,7 +492,6 @@ static void ComputeResidualsForTile(
     }
     for (relative_y = 0; relative_y < max_y; ++relative_y) {
       const int y = start_y + relative_y;
-      int relative_x;
       uint32_t* tmp = upper_row;
       upper_row = current_row;
       current_row = tmp;
@@ -481,58 +511,14 @@ static void ComputeResidualsForTile(
       GetResidual(width, height, upper_row, current_row, max_diffs, mode,
                   start_x, start_x + max_x, y, max_quantization, exact,
                   used_subtract_green, residuals);
-      if (effective_mask == 0xf) {
-        for (relative_x = 0; relative_x < max_x; ++relative_x) {
-          UpdateHisto(histo_argb, residuals[relative_x]);
-        }
-      } else {
-        for (relative_x = 0; relative_x < max_x; ++relative_x) {
-          UpdateHistoMasked(histo_argb, residuals[relative_x], effective_mask);
-        }
-      }
+      UpdateHisto(histo_argb, residuals, max_x, diff_mask);
       if (update_up_to_index > 0) {
         uint32_t subsampling_index;
         for (subsampling_index = 1; subsampling_index <= update_up_to_index;
              ++subsampling_index) {
           uint32_t* const super_histo =
               GetHistoArgb(all_argb, subsampling_index, mode);
-          if (effective_mask == 0xf) {
-            for (relative_x = 0; relative_x < max_x; ++relative_x) {
-              UpdateHisto(super_histo, residuals[relative_x]);
-            }
-          } else {
-            for (relative_x = 0; relative_x < max_x; ++relative_x) {
-              UpdateHistoMasked(super_histo, residuals[relative_x],
-                                effective_mask);
-            }
-          }
-        }
-      }
-    }
-    if (effective_mask != 0xf) {
-      // plane 0 is omitted below because GetResidual()'s alpha == 0 cleanup
-      // (above) can zero RGB but never touches alpha.
-      // TODO(skal): extract per-plane bin_mode0[4] from the mode loop. It's
-      // re-computed in the loop, but only varies on mode==0 or not.
-      const uint32_t tile_num_pixels = (uint32_t)max_x * (uint32_t)max_y;
-      const int bin_is_mode0 = (mode == 0);
-      const int alpha_always_nonzero =
-          ((diff_mask & 1) == 0) && (plane_value[0] != 0);
-      int plane;
-      for (plane = 0; plane < 4; ++plane) {
-        uint32_t subsampling_index;
-        const int shift = (3 - plane) * 8;
-        const int bin =
-            (bin_is_mode0 && (plane == 0 || exact || alpha_always_nonzero))
-                ? (uint8_t)(plane_value[plane] - (uint8_t)(ARGB_BLACK >> shift))
-                : 0;
-        if ((effective_mask >> plane) & 1) continue;  // Not skipped.
-        histo_argb[plane * 256 + bin] += tile_num_pixels;
-        for (subsampling_index = 1; subsampling_index <= update_up_to_index;
-             ++subsampling_index) {
-          uint32_t* const super_histo =
-              GetHistoArgb(all_argb, subsampling_index, mode);
-          super_histo[plane * 256 + bin] += tile_num_pixels;
+          UpdateHisto(super_histo, residuals, max_x, diff_mask);
         }
       }
     }
@@ -695,10 +681,10 @@ void VP8LOptimizeSampling(uint32_t* const image, int full_width,
 static void GetBestPredictorsAndSubSampling(
     int width, int height, const int min_bits, const int max_bits,
     uint32_t* const argb_scratch, const uint32_t* const argb,
-    int max_quantization, int exact, int used_subtract_green,
-    uint32_t diff_mask, const uint8_t plane_value[4],
-    const WebPPicture* const pic, int percent_range, int* const percent,
-    uint32_t** const all_modes, int* best_bits, uint32_t** best_mode) {
+    int max_quantization, int exact, int used_subtract_green, int min_mode,
+    uint32_t diff_mask, const WebPPicture* const pic, int percent_range,
+    int* const percent, uint32_t** const all_modes, int* best_bits,
+    uint32_t** best_mode) {
   const uint32_t tiles_per_row = VP8LSubSampleSize(width, min_bits);
   const uint32_t tiles_per_col = VP8LSubSampleSize(height, min_bits);
   int64_t best_cost;
@@ -740,10 +726,12 @@ static void GetBestPredictorsAndSubSampling(
   }
 
   while (tile_y < tiles_per_col) {
+    uint32_t s;
+    int mode, plane;
     ComputeResidualsForTile(width, height, tile_x, tile_y, min_bits,
                             update_up_to_index, all_argb, argb_scratch, argb,
                             max_quantization, exact, used_subtract_green,
-                            diff_mask, plane_value);
+                            min_mode, diff_mask);
 
     // Update all the super-tiles that are complete.
     subsampling_index = 0;
@@ -754,7 +742,8 @@ static void GetBestPredictorsAndSubSampling(
           VP8LSubSampleSize(width, min_bits + subsampling_index);
       GetBestPredictorForTile(all_argb, subsampling_index, super_tile_x,
                               super_tile_y, super_tiles_per_row,
-                              all_accumulated_argb, all_modes, all_pred_histos);
+                              all_accumulated_argb, all_modes, all_pred_histos,
+                              min_mode, diff_mask);
       if (subsampling_index == max_subsampling_index) break;
 
       // Update the following super-tile histogram if it has not been updated
@@ -762,10 +751,16 @@ static void GetBestPredictorsAndSubSampling(
       ++subsampling_index;
       if (subsampling_index > update_up_to_index &&
           subsampling_index <= max_subsampling_index) {
-        VP8LAddVectorEq(
-            GetHistoArgbConst(all_argb, subsampling_index - 1, /*mode=*/0),
-            GetHistoArgb(all_argb, subsampling_index, /*mode=*/0),
-            HISTO_SIZE * kNumPredModes);
+        for (mode = min_mode; mode < kNumPredModes; ++mode) {
+          const uint32_t* const src =
+              GetHistoArgbConst(all_argb, subsampling_index - 1, mode);
+          uint32_t* const dst = GetHistoArgb(all_argb, subsampling_index, mode);
+          for (plane = 0; plane < 4; ++plane) {
+            if ((diff_mask >> plane) & 1) {
+              VP8LAddVectorEq(&src[plane * 256], &dst[plane * 256], 256);
+            }
+          }
+        }
       }
       // Check whether the super-tile is not complete (if the smallest tile
       // is not at the end of a line/column or at the beginning of a super-tile
@@ -780,9 +775,23 @@ static void GetBestPredictorsAndSubSampling(
       }
     }
     // Reset all the histograms belonging to finished tiles.
-    memset(all_argb, 0,
-           HISTO_SIZE * kNumPredModes * (subsampling_index + 1) *
-               sizeof(*all_argb));
+    if (diff_mask == 0xf) {
+      // If all planes are used, we can just zero the whole buffer.
+      memset(all_argb, 0,
+             HISTO_SIZE * kNumPredModes * (subsampling_index + 1) *
+                 sizeof(*all_argb));
+    } else {
+      for (s = 0; s <= subsampling_index; ++s) {
+        for (mode = min_mode; mode < kNumPredModes; ++mode) {
+          uint32_t* const histo = GetHistoArgb(all_argb, s, mode);
+          for (plane = 0; plane < 4; ++plane) {
+            if ((diff_mask >> plane) & 1) {
+              memset(&histo[plane * 256], 0, 256 * sizeof(*histo));
+            }
+          }
+        }
+      }
+    }
 
     if (subsampling_index == max_subsampling_index) {
       // If a new max-tile is started.
@@ -834,7 +843,9 @@ static void GetBestPredictorsAndSubSampling(
     int64_t cost = VP8LShannonEntropy(
         &all_pred_histos[subsampling_index * kNumPredModes], kNumPredModes);
     for (plane = 0; plane < 4; ++plane) {
-      cost += VP8LShannonEntropy(&accumulated[plane * 256], 256);
+      if ((diff_mask >> plane) & 1) {
+        cost += VP8LShannonEntropy(&accumulated[plane * 256], 256);
+      }
     }
     if (cost < best_cost) {
       best_cost = cost;
@@ -872,14 +883,13 @@ int VP8LResidualImage(int width, int height, int min_bits, int max_bits,
     *best_bits = max_bits;
   } else {
     // Allocate data to try all samplings from min_bits to max_bits.
-    int bits;
+    int bits, min_mode;
     uint32_t sum_num_pixels = 0u;
     uint32_t *modes_raw, *best_mode;
     uint32_t* modes[MAX_TRANSFORM_BITS + 1];
     uint32_t num_pixels[MAX_TRANSFORM_BITS + 1];
-    uint8_t plane_value[4];
-    const uint32_t diff_mask =
-        GetPlaneDiffMask(argb, width, height, plane_value);
+    const uint32_t diff_mask = GetPlaneDiffMask(
+        argb, width, height, max_quantization, exact, &min_mode);
     for (bits = min_bits; bits <= max_bits; ++bits) {
       const int tiles_per_row = VP8LSubSampleSize(width, bits);
       const int tiles_per_col = VP8LSubSampleSize(height, bits);
@@ -898,7 +908,7 @@ int VP8LResidualImage(int width, int height, int min_bits, int max_bits,
     // Find the best sampling.
     GetBestPredictorsAndSubSampling(
         width, height, min_bits, max_bits, argb_scratch, argb, max_quantization,
-        exact, used_subtract_green, diff_mask, plane_value, pic, percent_range,
+        exact, used_subtract_green, min_mode, diff_mask, pic, percent_range,
         percent, &modes[min_bits], best_bits, &best_mode);
     if (*best_bits == 0) {
       WebPSafeFree(modes_raw);
