@@ -399,7 +399,7 @@ int WebPEncode(const WebPConfig* config, WebPPicture* pic) {
     ok &= DeleteVP8Encoder(enc);  // must always be called, even if !ok
   } else {
     // Make sure we have ARGB samples.
-    if (pic->argb == NULL && !WebPPictureYUVAToARGB(pic)) {
+    if ((!pic->use_argb || pic->argb == NULL) && !WebPPictureYUVAToARGB(pic)) {
       return 0;
     }
 
