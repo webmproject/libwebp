@@ -18,10 +18,12 @@
 #include <cstdint>
 #include <cstdlib>
 #include <iostream>
+#include <limits>
 #include <memory>
 #include <string>
 #include <string_view>
 
+#include "gtest/gtest.h"
 #include "imageio/image_dec.h"
 #include "src/dsp/cpu.h"
 #include "tests/fuzzer/fuzz_utils.h"
@@ -147,3 +149,37 @@ FUZZ_TEST(Enc, EncArbitraryTest)
                  /*use_argb=*/fuzztest::Arbitrary<bool>(),
                  fuzz_utils::ArbitraryWebPConfig(),
                  fuzz_utils::ArbitraryCropOrScaleParams());
+
+// NaN compares false with everything, so it used to pass the range checks of
+// WebPValidateConfig() and reach float to int casts.
+TEST(Enc, ValidateConfigRejectsNaN) {
+  const float kNaN = std::numeric_limits<float>::quiet_NaN();
+  WebPConfig config;
+  ASSERT_TRUE(WebPConfigInit(&config));
+  EXPECT_TRUE(WebPValidateConfig(&config));
+  config.quality = kNaN;
+  EXPECT_FALSE(WebPValidateConfig(&config));
+  ASSERT_TRUE(WebPConfigInit(&config));
+  config.target_PSNR = kNaN;
+  EXPECT_FALSE(WebPValidateConfig(&config));
+
+  for (const int lossless : {0, 1}) {
+    ASSERT_TRUE(WebPConfigInit(&config));
+    config.lossless = lossless;
+    config.quality = kNaN;
+    WebPPicture pic;
+    ASSERT_TRUE(WebPPictureInit(&pic));
+    pic.use_argb = lossless;
+    pic.width = 32;
+    pic.height = 32;
+    ASSERT_TRUE(WebPPictureAlloc(&pic));
+    WebPMemoryWriter writer;
+    WebPMemoryWriterInit(&writer);
+    pic.writer = WebPMemoryWrite;
+    pic.custom_ptr = &writer;
+    EXPECT_FALSE(WebPEncode(&config, &pic));
+    EXPECT_EQ(pic.error_code, VP8_ENC_ERROR_INVALID_CONFIGURATION);
+    WebPMemoryWriterClear(&writer);
+    WebPPictureFree(&pic);
+  }
+}

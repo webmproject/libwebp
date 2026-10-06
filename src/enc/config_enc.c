@@ -99,9 +99,10 @@ int WebPConfigInitInternal(WebPConfig* config, WebPPreset preset, float quality,
 
 int WebPValidateConfig(const WebPConfig* config) {
   if (config == NULL) return 0;
-  if (config->quality < 0 || config->quality > 100) return 0;
+  // Written as negated conditions so that NaN is rejected too.
+  if (!(config->quality >= 0 && config->quality <= 100)) return 0;
   if (config->target_size < 0) return 0;
-  if (config->target_PSNR < 0) return 0;
+  if (!(config->target_PSNR >= 0)) return 0;
   if (config->method < 0 || config->method > 6) return 0;
   if (config->segments < 1 || config->segments > 4) return 0;
   if (config->sns_strength < 0 || config->sns_strength > 100) return 0;
