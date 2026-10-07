@@ -20,6 +20,7 @@
 #include <string_view>
 
 #include "./fuzz_utils.h"
+#include "gtest/gtest.h"
 #include "webp/demux.h"
 #include "webp/mux.h"
 #include "webp/mux_types.h"
@@ -143,3 +144,17 @@ FUZZ_TEST(MuxDemuxApi, MuxDemuxApiTest)
         fuzztest::String().WithMaxSize(fuzz_utils::kMaxWebPFileSize + 1),
         /*mux=*/fuzztest::Arbitrary<bool>(),
         /*chunk_flags=*/fuzztest::ArrayOf<10>(fuzztest::InRange(0, 2)));
+
+// WebPMuxSetCanvasSize() multiplied 'width * height' as ints, which overflows
+// for valid canvases whose area is in [2^31, 2^32).
+TEST(MuxDemuxApi, SetCanvasSizeLargeArea) {
+  WebPMux* const mux = WebPMuxNew();
+  ASSERT_NE(mux, nullptr);
+  EXPECT_EQ(WebPMuxSetCanvasSize(mux, 50000, 50000), WEBP_MUX_OK);
+  EXPECT_EQ(WebPMuxSetCanvasSize(mux, 65535, 65537), WEBP_MUX_OK);
+  EXPECT_EQ(WebPMuxSetCanvasSize(mux, 65536, 65536), WEBP_MUX_INVALID_ARGUMENT);
+  EXPECT_EQ(WebPMuxSetCanvasSize(mux, 0, 5), WEBP_MUX_INVALID_ARGUMENT);
+  EXPECT_EQ(WebPMuxSetCanvasSize(mux, 5, 0), WEBP_MUX_INVALID_ARGUMENT);
+  EXPECT_EQ(WebPMuxSetCanvasSize(mux, 0, 0), WEBP_MUX_OK);
+  WebPMuxDelete(mux);
+}
