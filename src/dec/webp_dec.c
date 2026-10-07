@@ -814,17 +814,22 @@ int WebPValidateDecoderConfig(const WebPDecoderConfig* config) {
 
   // In case the WebPBitstreamFeatures has been filled in, check further.
   if (config->input.width > 0 || config->input.height > 0) {
+    int width = config->input.width;
+    int height = config->input.height;
     int scaled_width = options->scaled_width;
     int scaled_height = options->scaled_height;
-    if (options->use_cropping &&
-        !WebPCheckCropDimensions(config->input.width, config->input.height,
-                                 options->crop_left, options->crop_top,
-                                 options->crop_width, options->crop_height)) {
-      return 0;
+    if (options->use_cropping) {
+      if (!WebPCheckCropDimensions(width, height, options->crop_left,
+                                   options->crop_top, options->crop_width,
+                                   options->crop_height)) {
+        return 0;
+      }
+      width = options->crop_width;
+      height = options->crop_height;
     }
-    if (options->use_scaling && !WebPRescalerGetScaledDimensions(
-                                    config->input.width, config->input.height,
-                                    &scaled_width, &scaled_height)) {
+    if (options->use_scaling &&
+        !WebPRescalerGetScaledDimensions(width, height, &scaled_width,
+                                         &scaled_height)) {
       return 0;
     }
   }
