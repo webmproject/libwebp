@@ -382,29 +382,26 @@ void VP8LBitsEntropyUnrefined(const uint32_t* WEBP_RESTRICT const array, int n,
 }
 
 static WEBP_INLINE void GetEntropyUnrefinedHelper(
-    uint32_t val, int i, uint32_t* WEBP_RESTRICT const val_prev,
-    int* WEBP_RESTRICT const i_prev,
+    uint32_t val_prev, int i, int i_prev,
     VP8LBitEntropy* WEBP_RESTRICT const bit_entropy,
     VP8LStreaks* WEBP_RESTRICT const stats) {
-  const int streak = i - *i_prev;
+  const int streak = i - i_prev;
 
-  // Gather info for the bit entropy.
-  if (*val_prev != 0) {
-    bit_entropy->sum += (*val_prev) * streak;
+  // Gather info for the bit entropy and Huffman cost.
+  if (val_prev != 0) {
+    bit_entropy->sum += val_prev * streak;
     bit_entropy->nonzeros += streak;
-    bit_entropy->nonzero_code = *i_prev;
-    bit_entropy->entropy += VP8LFastSLog2(*val_prev) * streak;
-    if (bit_entropy->max_val < *val_prev) {
-      bit_entropy->max_val = *val_prev;
+    bit_entropy->nonzero_code = i_prev;
+    bit_entropy->entropy += VP8LFastSLog2(val_prev) * streak;
+    if (bit_entropy->max_val < val_prev) {
+      bit_entropy->max_val = val_prev;
     }
+    stats->counts[1] += (streak > 3);
+    stats->streaks[1][(streak > 3)] += streak;
+  } else {
+    stats->counts[0] += (streak > 3);
+    stats->streaks[0][(streak > 3)] += streak;
   }
-
-  // Gather info for the Huffman cost.
-  stats->counts[*val_prev != 0] += (streak > 3);
-  stats->streaks[*val_prev != 0][(streak > 3)] += streak;
-
-  *val_prev = val;
-  *i_prev = i;
 }
 
 static void GetEntropyUnrefined_C(
@@ -421,10 +418,12 @@ static void GetEntropyUnrefined_C(
   for (i = 1; i < length; ++i) {
     const uint32_t x = X[i];
     if (x != x_prev) {
-      GetEntropyUnrefinedHelper(x, i, &x_prev, &i_prev, bit_entropy, stats);
+      GetEntropyUnrefinedHelper(x_prev, i, i_prev, bit_entropy, stats);
+      x_prev = x;
+      i_prev = i;
     }
   }
-  GetEntropyUnrefinedHelper(0, i, &x_prev, &i_prev, bit_entropy, stats);
+  GetEntropyUnrefinedHelper(x_prev, i, i_prev, bit_entropy, stats);
 
   bit_entropy->entropy = VP8LFastSLog2(bit_entropy->sum) - bit_entropy->entropy;
 }
@@ -443,10 +442,12 @@ static void GetCombinedEntropyUnrefined_C(
   for (i = 1; i < length; ++i) {
     const uint32_t xy = X[i] + Y[i];
     if (xy != xy_prev) {
-      GetEntropyUnrefinedHelper(xy, i, &xy_prev, &i_prev, bit_entropy, stats);
+      GetEntropyUnrefinedHelper(xy_prev, i, i_prev, bit_entropy, stats);
+      xy_prev = xy;
+      i_prev = i;
     }
   }
-  GetEntropyUnrefinedHelper(0, i, &xy_prev, &i_prev, bit_entropy, stats);
+  GetEntropyUnrefinedHelper(xy_prev, i, i_prev, bit_entropy, stats);
 
   bit_entropy->entropy = VP8LFastSLog2(bit_entropy->sum) - bit_entropy->entropy;
 }
