@@ -1036,26 +1036,24 @@ static void AlphaApplyFilter(ALPHDecoder* const alph_dec, int first_row,
 }
 
 static void ExtractPalettedAlphaRows(VP8LDecoder* const dec, int last_row) {
-  // For vertical and gradient filtering, we need to decode the part above the
-  // crop_top row, in order to have the correct spatial predictors.
+  // For horizontal, vertical and gradient filtering, we need to decode the part
+  // above the crop_top row, in order to have the correct spatial predictors.
   ALPHDecoder* const alph_dec = (ALPHDecoder*)dec->io->opaque;
-  const int top_row = (alph_dec->filter == WEBP_FILTER_NONE ||
-                       alph_dec->filter == WEBP_FILTER_HORIZONTAL)
-                          ? dec->io->crop_top
-                          : dec->last_row;
+  const int top_row = (alph_dec->filter == WEBP_FILTER_NONE) ? dec->io->crop_top
+                                                             : dec->last_row;
   const int first_row = (dec->last_row < top_row) ? top_row : dec->last_row;
   assert(last_row <= dec->io->crop_bottom);
+  WebPShiftAlphaWindow(alph_dec, dec->last_out_row, last_row);
   if (last_row > first_row) {
     // Special method for paletted alpha data. We only process the cropped area.
     const int width = dec->io->width;
-    uint8_t* out;
+    uint8_t* const out =
+        alph_dec->output + GetAlphaWindowRowOffset(alph_dec, first_row);
     const uint8_t* const in =
         (uint8_t*)dec->pixels + GetWindowRowOffset(dec, first_row);
     VP8LTransform* const transform = &dec->transforms[0];
     assert(dec->next_transform == 1);
     assert(transform->type == COLOR_INDEXING_TRANSFORM);
-    WebPShiftAlphaWindow(alph_dec, dec->last_out_row, last_row);
-    out = alph_dec->output + GetAlphaWindowRowOffset(alph_dec, first_row);
     VP8LColorIndexInverseTransformAlpha(transform, first_row, last_row, in,
                                         out);
     AlphaApplyFilter(alph_dec, first_row, last_row, out, width);

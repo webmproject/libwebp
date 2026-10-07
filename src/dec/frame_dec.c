@@ -483,11 +483,13 @@ WEBP_NODISCARD static int FinishRow(void* arg1, void* arg2) {
       const int delta_y = io->crop_top - y_start;
       y_start = io->crop_top;
       assert(!(delta_y & 1));
-      io->y += dec->cache_y_stride * delta_y;
-      io->u += dec->cache_uv_stride * (delta_y >> 1);
-      io->v += dec->cache_uv_stride * (delta_y >> 1);
-      if (io->a != NULL) {
-        io->a += io->width * delta_y;
+      if (y_start < y_end) {
+        io->y += dec->cache_y_stride * delta_y;
+        io->u += dec->cache_uv_stride * (delta_y >> 1);
+        io->v += dec->cache_uv_stride * (delta_y >> 1);
+        if (io->a != NULL) {
+          io->a += (ptrdiff_t)io->width * delta_y;
+        }
       }
     }
     if (y_start < y_end) {
