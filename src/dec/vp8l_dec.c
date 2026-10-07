@@ -439,12 +439,6 @@ WEBP_NODISCARD static int ReadHuffmanCodes(VP8LDecoder* const dec, int xsize,
         if (*mapped_group == -1) *mapped_group = num_htree_groups++;
         huffman_image[i] = *mapped_group;
       }
-      if (num_htree_groups == num_htree_groups_max) {
-        // No remapping is needed.
-        WebPSafeFree(mapping);
-        mapping = NULL;
-        num_htree_groups = num_htree_groups_max;
-      }
     } else {
       num_htree_groups = num_htree_groups_max;
     }
