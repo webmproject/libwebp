@@ -416,7 +416,18 @@ WEBP_NODISCARD static int Import(WebPPicture* const picture, const uint8_t* rgb,
         b_ptr += rgb_stride;
 #else
         // RGBA input order. Need to swap R and B.
-        VP8LConvertBGRAToRGBA((const uint32_t*)rgb, width, (uint8_t*)dst);
+        if (((uintptr_t)rgb & 3) == 0) {
+          VP8LConvertBGRAToRGBA((const uint32_t*)rgb, width, (uint8_t*)dst);
+        } else {
+          // 'rgb' (or 'rgb_stride') is not 4-byte aligned: reading it through
+          // a uint32_t* would be undefined behavior, so go through bytes.
+          int x;
+          for (x = 0; x < width; ++x) {
+            const uint8_t* const p = rgb + 4 * x;
+            dst[x] = ((uint32_t)p[3] << 24) | ((uint32_t)p[0] << 16) |
+                     ((uint32_t)p[1] << 8) | (uint32_t)p[2];
+          }
+        }
 #endif
         rgb += rgb_stride;
         dst += picture->argb_stride;
