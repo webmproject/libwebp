@@ -260,7 +260,7 @@ static void CoOccurrenceFindMax(
 // Builds the cooccurrence matrix
 WEBP_NODISCARD static int CoOccurrenceBuild(
     const WebPPicture* const pic,
-    const uint32_t* const WEBP_COUNTED_BY(num_colors) palette,
+    const uint32_t* const WEBP_COUNTED_BY(num_colors) palette_sorted,
     uint32_t num_colors,
     uint32_t* WEBP_COUNTED_BY(num_colors* num_colors) cooccurrence) {
   uint32_t *lines, *line_top, *line_current, *line_tmp;
@@ -268,20 +268,17 @@ WEBP_NODISCARD static int CoOccurrenceBuild(
   const uint32_t* src = pic->argb;
   uint32_t prev_pix = ~src[0];
   uint32_t prev_idx = 0u;
-  uint32_t idx_map[MAX_PALETTE_SIZE] = {0};
-  uint32_t palette_sorted[MAX_PALETTE_SIZE];
   lines = (uint32_t*)WebPSafeMalloc(2 * pic->width, sizeof(*lines));
   if (lines == NULL) {
     return 0;
   }
   line_top = &lines[0];
   line_current = &lines[pic->width];
-  PrepareMapToPalette(palette, num_colors, palette_sorted, idx_map);
   for (y = 0; y < pic->height; ++y) {
     for (x = 0; x < pic->width; ++x) {
       const uint32_t pix = src[x];
       if (pix != prev_pix) {
-        prev_idx = idx_map[SearchColorNoIdx(palette_sorted, pix, num_colors)];
+        prev_idx = SearchColorNoIdx(palette_sorted, pix, num_colors);
         prev_pix = pix;
       }
       line_current[x] = prev_idx;
@@ -475,9 +472,11 @@ WEBP_NODISCARD static int PaletteMinLARefineColors(
 WEBP_NODISCARD static int PaletteSortModifiedZeng(
     const WebPPicture* const pic,
     const uint32_t* const WEBP_COUNTED_BY(num_colors) palette_in,
-    uint32_t num_colors, uint32_t* const WEBP_COUNTED_BY(num_colors) palette) {
+    uint32_t num_colors, int do_min_la,
+    uint32_t* const WEBP_COUNTED_BY(num_colors) palette) {
   uint32_t i, ind;
   uint8_t remapping[MAX_PALETTE_SIZE];
+  uint8_t order[MAX_PALETTE_SIZE];
   uint32_t* cooccurrence;
   struct Sum sums[MAX_PALETTE_SIZE];
   uint32_t first, last;
@@ -554,11 +553,17 @@ WEBP_NODISCARD static int PaletteSortModifiedZeng(
     }
   }
   assert((last + 1) % num_colors == first);
+  for (i = 0; i < num_colors; ++i) {
+    order[i] = remapping[(first + i) % num_colors];
+  }
+  if (do_min_la) {
+    PaletteMinLARefine(cooccurrence, num_colors, order);
+  }
   WebPSafeFree(cooccurrence);
 
   // Re-map the palette.
   for (i = 0; i < num_colors; ++i) {
-    palette[i] = palette_in[remapping[(first + i) % num_colors]];
+    palette[i] = palette_in[order[i]];
   }
   return 1;
 }
@@ -588,12 +593,10 @@ int PaletteSort(PaletteSorting method, const struct WebPPicture* const pic,
       PaletteSortMinimizeDeltas(palette_sorted, num_colors, palette);
       return 1;
     case kModifiedZeng:
-      return PaletteSortModifiedZeng(pic, palette_sorted, num_colors, palette);
     case kMinLAFromZeng:
-      if (!PaletteSortModifiedZeng(pic, palette_sorted, num_colors, palette)) {
-        return 0;
-      }
-      return PaletteMinLARefineColors(pic, palette_sorted, num_colors, palette);
+      return PaletteSortModifiedZeng(pic, palette_sorted, num_colors,
+                                     /*do_min_la=*/(method == kMinLAFromZeng),
+                                     palette);
     case kMinLAFromDelta:
       PaletteSortMinimizeDeltas(palette_sorted, num_colors, palette);
       return PaletteMinLARefineColors(pic, palette_sorted, num_colors, palette);

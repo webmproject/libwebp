@@ -1572,6 +1572,8 @@ WEBP_NODISCARD static int EncodeStreamHook(void* input, void* data2) {
   int idx;
   size_t best_size = ~(size_t)0;
   VP8LBitWriter bw_init = *bw, bw_best;
+  uint32_t tested_palettes[kPaletteSortingNum][MAX_PALETTE_SIZE];
+  int num_tested_palettes = 0;
   (void)data2;
 
   if (!VP8LBitWriterInit(&bw_best, 0) ||
@@ -1624,11 +1626,33 @@ WEBP_NODISCARD static int EncodeStreamHook(void* input, void* data2) {
 
     // Encode palette
     if (enc->use_palette) {
+      int p, is_duplicate = 0;
+      const size_t palette_bytes = enc->palette_size * sizeof(*enc->palette);
       if (!PaletteSort(crunch_configs[idx].palette_sorting_type, enc->pic,
                        enc->palette_sorted, enc->palette_size, enc->palette)) {
         WebPEncodingSetError(enc->pic, VP8_ENC_ERROR_OUT_OF_MEMORY);
         goto Error;
       }
+      if (idx == 0 || crunch_configs[idx].entropy_idx !=
+                          crunch_configs[idx - 1].entropy_idx) {
+        num_tested_palettes = 0;
+      }
+      for (p = 0; p < num_tested_palettes; ++p) {
+        if (memcmp(tested_palettes[p], enc->palette, palette_bytes) == 0) {
+          is_duplicate = 1;
+          break;
+        }
+      }
+      if (is_duplicate) {
+        if (!WebPReportProgress(picture, percent + remaining_percent,
+                                &percent)) {
+          goto Error;
+        }
+        continue;
+      }
+      assert(num_tested_palettes < kPaletteSortingNum);
+      memcpy(tested_palettes[num_tested_palettes], enc->palette, palette_bytes);
+      ++num_tested_palettes;
       percent_range = remaining_percent / 4;
       if (!EncodePalette(bw, low_effort, enc, percent_range, &percent)) {
         goto Error;
