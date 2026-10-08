@@ -654,6 +654,7 @@ static int Export(WebPRescaler* const rescaler, WEBP_CSP_MODE colorspace,
   uint8_t* dst = rgba;
   const int dst_width = rescaler->dst_width;
   int num_lines_out = 0;
+  assert(WEBP_IS_ALIGNED(src, uint32_t));
   while (WebPRescalerHasPendingOutput(rescaler)) {
     WebPRescalerExportRow(rescaler);
     WebPMultARGBRow(src, dst_width, 1);
@@ -698,6 +699,7 @@ static int EmitRows(WEBP_CSP_MODE colorspace, const uint8_t* row_in,
   int lines = mb_h;
   uint8_t* row_out = out;
   while (lines-- > 0) {
+    assert(WEBP_IS_ALIGNED(row_in, uint32_t));
     VP8LConvertFromBGRA((const uint32_t*)row_in, mb_w, colorspace, row_out);
     row_in += in_stride;
     row_out += out_stride;
@@ -739,6 +741,7 @@ static int ExportYUVA(const VP8LDecoder* const dec, int y_pos) {
   uint32_t* const src = (uint32_t*)rescaler->dst;
   const int dst_width = rescaler->dst_width;
   int num_lines_out = 0;
+  assert(WEBP_IS_ALIGNED(src, uint32_t));
   while (WebPRescalerHasPendingOutput(rescaler)) {
     WebPRescalerExportRow(rescaler);
     WebPMultARGBRow(src, dst_width, 1);
@@ -1079,7 +1082,7 @@ static WEBP_INLINE void CopySmallPattern8b(const uint8_t* src, uint8_t* dst,
                                            int length, uint32_t pattern) {
   int i;
   // align 'dst' to 4-bytes boundary. Adjust the pattern along the way.
-  while ((uintptr_t)dst & 3) {
+  while (!WEBP_IS_ALIGNED(dst, uint32_t)) {
     *dst++ = *src++;
     pattern = Rotate8b(pattern);
     --length;
@@ -1147,12 +1150,12 @@ Copy:
 static WEBP_INLINE void CopySmallPattern32b(const uint32_t* src, uint32_t* dst,
                                             int length, uint64_t pattern) {
   int i;
-  if ((uintptr_t)dst & 4) {  // Align 'dst' to 8-bytes boundary.
+  if (!WEBP_IS_ALIGNED(dst, uint64_t)) {  // Align 'dst' to 8-bytes boundary.
     *dst++ = *src++;
     pattern = (pattern >> 32) | (pattern << 32);
     --length;
   }
-  assert(0 == ((uintptr_t)dst & 7));
+  assert(WEBP_IS_ALIGNED(dst, uint64_t));
   for (i = 0; i < (length >> 1); ++i) {
     ((uint64_t*)dst)[i] = pattern;  // Copy the pattern 8 bytes at a time.
   }
@@ -1164,7 +1167,7 @@ static WEBP_INLINE void CopySmallPattern32b(const uint32_t* src, uint32_t* dst,
 static WEBP_INLINE void CopyBlock32b(uint32_t* const dst, int dist,
                                      int length) {
   const uint32_t* const src = dst - dist;
-  if (dist <= 2 && length >= 4 && ((uintptr_t)dst & 3) == 0) {
+  if (dist <= 2 && length >= 4 && WEBP_IS_ALIGNED(dst, uint32_t)) {
     uint64_t pattern;
     if (dist == 1) {
       pattern = (uint64_t)src[0];

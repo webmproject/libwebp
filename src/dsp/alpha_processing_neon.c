@@ -44,20 +44,19 @@ static void ApplyAlphaMultiply_NEON(uint8_t* rgba, int alpha_first, int w,
                                     int h, int stride) {
   const uint16x8_t kOne = vdupq_n_u16(1u);
   while (h-- > 0) {
-    uint32_t* const rgbx = (uint32_t*)rgba;
     int i = 0;
     if (alpha_first) {
       for (; i + 8 <= w; i += 8) {
         // load aaaa...|rrrr...|gggg...|bbbb...
-        uint8x8x4_t RGBX = vld4_u8((const uint8_t*)(rgbx + i));
+        uint8x8x4_t RGBX = vld4_u8(rgba + 4 * i);
         MULTIPLY_BY_ALPHA(RGBX, 0, 3);
-        vst4_u8((uint8_t*)(rgbx + i), RGBX);
+        vst4_u8(rgba + 4 * i, RGBX);
       }
     } else {
       for (; i + 8 <= w; i += 8) {
-        uint8x8x4_t RGBX = vld4_u8((const uint8_t*)(rgbx + i));
+        uint8x8x4_t RGBX = vld4_u8(rgba + 4 * i);
         MULTIPLY_BY_ALPHA(RGBX, 3, 0);
-        vst4_u8((uint8_t*)(rgbx + i), RGBX);
+        vst4_u8(rgba + 4 * i, RGBX);
       }
     }
     // Finish with left-overs.

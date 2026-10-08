@@ -233,15 +233,14 @@ static void ApplyAlphaMultiply_SSE2(uint8_t* rgba, int alpha_first, int w,
   const __m128i kMask = _mm_set_epi16(0, 0xff, 0xff, 0, 0, 0xff, 0xff, 0);
   const int kSpan = 4;
   while (h-- > 0) {
-    uint32_t* const rgbx = (uint32_t*)rgba;
     int i;
     if (!alpha_first) {
       for (i = 0; i + kSpan <= w; i += kSpan) {
-        APPLY_ALPHA(rgbx[i], _MM_SHUFFLE(2, 3, 3, 3));
+        APPLY_ALPHA(rgba[4 * i], _MM_SHUFFLE(2, 3, 3, 3));
       }
     } else {
       for (i = 0; i + kSpan <= w; i += kSpan) {
-        APPLY_ALPHA(rgbx[i], _MM_SHUFFLE(0, 0, 0, 1));
+        APPLY_ALPHA(rgba[4 * i], _MM_SHUFFLE(0, 0, 0, 1));
       }
     }
     // Finish with left-overs.

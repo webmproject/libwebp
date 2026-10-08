@@ -56,33 +56,31 @@ static void TransformColorInverse_SSE41(const VP8LMultipliers* const m,
 
 //------------------------------------------------------------------------------
 
-#define ARGB_TO_RGB_SSE41                               \
-  do {                                                  \
-    while (num_pixels >= 16) {                          \
-      const __m128i in0 = _mm_loadu_si128(in + 0);      \
-      const __m128i in1 = _mm_loadu_si128(in + 1);      \
-      const __m128i in2 = _mm_loadu_si128(in + 2);      \
-      const __m128i in3 = _mm_loadu_si128(in + 3);      \
-      const __m128i a0 = _mm_shuffle_epi8(in0, perm0);  \
-      const __m128i a1 = _mm_shuffle_epi8(in1, perm1);  \
-      const __m128i a2 = _mm_shuffle_epi8(in2, perm2);  \
-      const __m128i a3 = _mm_shuffle_epi8(in3, perm3);  \
-      const __m128i b0 = _mm_blend_epi16(a0, a1, 0xc0); \
-      const __m128i b1 = _mm_blend_epi16(a1, a2, 0xf0); \
-      const __m128i b2 = _mm_blend_epi16(a2, a3, 0xfc); \
-      _mm_storeu_si128(out + 0, b0);                    \
-      _mm_storeu_si128(out + 1, b1);                    \
-      _mm_storeu_si128(out + 2, b2);                    \
-      in += 4;                                          \
-      out += 3;                                         \
-      num_pixels -= 16;                                 \
-    }                                                   \
+#define ARGB_TO_RGB_SSE41                                              \
+  do {                                                                 \
+    while (num_pixels >= 16) {                                         \
+      const __m128i in0 = _mm_loadu_si128((const __m128i*)(src + 0));  \
+      const __m128i in1 = _mm_loadu_si128((const __m128i*)(src + 4));  \
+      const __m128i in2 = _mm_loadu_si128((const __m128i*)(src + 8));  \
+      const __m128i in3 = _mm_loadu_si128((const __m128i*)(src + 12)); \
+      const __m128i a0 = _mm_shuffle_epi8(in0, perm0);                 \
+      const __m128i a1 = _mm_shuffle_epi8(in1, perm1);                 \
+      const __m128i a2 = _mm_shuffle_epi8(in2, perm2);                 \
+      const __m128i a3 = _mm_shuffle_epi8(in3, perm3);                 \
+      const __m128i b0 = _mm_blend_epi16(a0, a1, 0xc0);                \
+      const __m128i b1 = _mm_blend_epi16(a1, a2, 0xf0);                \
+      const __m128i b2 = _mm_blend_epi16(a2, a3, 0xfc);                \
+      _mm_storeu_si128((__m128i*)(dst + 0), b0);                       \
+      _mm_storeu_si128((__m128i*)(dst + 16), b1);                      \
+      _mm_storeu_si128((__m128i*)(dst + 32), b2);                      \
+      src += 16;                                                       \
+      dst += 48;                                                       \
+      num_pixels -= 16;                                                \
+    }                                                                  \
   } while (0)
 
 static void ConvertBGRAToRGB_SSE41(const uint32_t* WEBP_RESTRICT src,
                                    int num_pixels, uint8_t* WEBP_RESTRICT dst) {
-  const __m128i* in = (const __m128i*)src;
-  __m128i* out = (__m128i*)dst;
   const __m128i perm0 =
       _mm_setr_epi8(2, 1, 0, 6, 5, 4, 10, 9, 8, 14, 13, 12, -1, -1, -1, -1);
   const __m128i perm1 = _mm_shuffle_epi32(perm0, 0x39);
@@ -93,14 +91,12 @@ static void ConvertBGRAToRGB_SSE41(const uint32_t* WEBP_RESTRICT src,
 
   // left-overs
   if (num_pixels > 0) {
-    VP8LConvertBGRAToRGB_C((const uint32_t*)in, num_pixels, (uint8_t*)out);
+    VP8LConvertBGRAToRGB_C(src, num_pixels, dst);
   }
 }
 
 static void ConvertBGRAToBGR_SSE41(const uint32_t* WEBP_RESTRICT src,
                                    int num_pixels, uint8_t* WEBP_RESTRICT dst) {
-  const __m128i* in = (const __m128i*)src;
-  __m128i* out = (__m128i*)dst;
   const __m128i perm0 =
       _mm_setr_epi8(0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14, -1, -1, -1, -1);
   const __m128i perm1 = _mm_shuffle_epi32(perm0, 0x39);
@@ -111,7 +107,7 @@ static void ConvertBGRAToBGR_SSE41(const uint32_t* WEBP_RESTRICT src,
 
   // left-overs
   if (num_pixels > 0) {
-    VP8LConvertBGRAToBGR_C((const uint32_t*)in, num_pixels, (uint8_t*)out);
+    VP8LConvertBGRAToBGR_C(src, num_pixels, dst);
   }
 }
 

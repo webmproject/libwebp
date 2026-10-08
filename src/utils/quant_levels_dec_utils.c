@@ -16,6 +16,7 @@
 
 #include "src/utils/quant_levels_dec_utils.h"
 
+#include <assert.h>
 #include <string.h>  // for memset
 
 #include "src/utils/bounds_safety.h"
@@ -239,6 +240,7 @@ WEBP_NODISCARD static int InitParams(
   if (mem == NULL) return 0;
   p->mem = (void*)mem;
 
+  assert(WEBP_IS_ALIGNED(mem, uint16_t));
   p->start = (uint16_t*)mem;
   p->cur = p->start;
   p->end = p->start + R * width;
@@ -246,6 +248,7 @@ WEBP_NODISCARD static int InitParams(
   WEBP_UNSAFE_MEMSET(p->top, 0, width * sizeof(*p->top));
   mem += size_scratch_m;
 
+  assert(WEBP_IS_ALIGNED(mem, uint16_t));
   p->width = width;
   p->average = (uint16_t*)mem;
   mem += size_m;
@@ -263,6 +266,7 @@ WEBP_NODISCARD static int InitParams(
 
   // correction table. p->correction is WEBP_COUNTED_BY(CORRECTION_LUT_SIZE).
   // It points to the start of the buffer.
+  assert(WEBP_IS_ALIGNED(mem, int16_t));
   p->correction = ((int16_t*)mem);
   InitCorrectionLUT(p->correction, p->min_level_dist);
 

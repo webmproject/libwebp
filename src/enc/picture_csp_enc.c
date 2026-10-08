@@ -416,7 +416,7 @@ WEBP_NODISCARD static int Import(WebPPicture* const picture, const uint8_t* rgb,
         b_ptr += rgb_stride;
 #else
         // RGBA input order. Need to swap R and B.
-        if (((uintptr_t)rgb & 3) == 0) {
+        if (WEBP_IS_ALIGNED(rgb, uint32_t)) {
           VP8LConvertBGRAToRGBA((const uint32_t*)rgb, width, (uint8_t*)dst);
         } else {
           // 'rgb' (or 'rgb_stride') is not 4-byte aligned: reading it through

@@ -86,7 +86,7 @@ int WebPRescalerInit(WebPRescaler* const rescaler, int src_width,
     rescaler->dst_stride = dst_stride;
     rescaler->dst_height = dst_height;
     if (rescaler->use_64bit) {
-      assert(((uintptr_t)work & (sizeof(rescaler_accum_t) - 1)) == 0);
+      assert(WEBP_IS_ALIGNED(work, rescaler_accum_t));
       rescaler->dst_width = dst_width;
       rescaler->num_channels = num_channels;
       rescaler->irow = NULL;
@@ -99,7 +99,7 @@ int WebPRescalerInit(WebPRescaler* const rescaler, int src_width,
           rescaler_accum_t*, work,
           (size_t)num_channels * dst_width * sizeof(rescaler_accum_t));
     } else {
-      assert(((uintptr_t)work & (sizeof(rescaler_t) - 1)) == 0);
+      assert(WEBP_IS_ALIGNED(work, rescaler_t));
       rescaler->dst_width = dst_width;
       rescaler->num_channels = num_channels;
       rescaler->irow = WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(

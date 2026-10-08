@@ -16,6 +16,7 @@
 
 #include "src/dsp/cpu.h"
 #include "src/dsp/dsp.h"
+#include "src/utils/utils.h"
 #include "src/webp/types.h"
 
 // Tables can be faster on some platform but incur some extra binary size (~2k).
@@ -192,6 +193,7 @@ void WebPMultARGBRows(uint8_t* ptr, int stride, int width, int num_rows,
                       int inverse) {
   int n;
   for (n = 0; n < num_rows; ++n) {
+    assert(WEBP_IS_ALIGNED(ptr, uint32_t));
     WebPMultARGBRow((uint32_t*)ptr, width, inverse);
     ptr += stride;
   }
