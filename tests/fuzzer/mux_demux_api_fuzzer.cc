@@ -17,7 +17,9 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <string_view>
+#include <utility>
 
 #include "./fuzz_utils.h"
 #include "gtest/gtest.h"
@@ -137,13 +139,119 @@ void MuxDemuxApiTest(std::string_view data_in, bool use_mux_api,
   }
 }
 
+// Tests building and modifying a WebPMux object from scratch (canvas size,
+// animation params, image/frame insertion, chunk setting/deletion, frame
+// deletion, and final assembly).
+void MuxEditApiTest(std::string_view data_in,
+                    const std::array<int, 10>& chunk_flags,
+                    std::pair<int, int> canvas_size, uint32_t bgcolor,
+                    int loop_count, int x_offset, int y_offset, int duration,
+                    bool dispose_bg, bool no_blend, bool use_set_image,
+                    bool copy_data, uint32_t delete_frame_nth) {
+  const std::unique_ptr<WebPMux, fuzz_utils::UniquePtrDeleter> mux(
+      WebPMuxNew());
+  if (!mux) return;
+
+  // Set canvas size and animation parameters.
+  if (WebPMuxSetCanvasSize(mux.get(), canvas_size.first, canvas_size.second) !=
+      WEBP_MUX_OK) {
+    return;
+  }
+
+  const WebPMuxAnimParams params = {bgcolor, loop_count};
+  if (WebPMuxSetAnimationParams(mux.get(), &params) != WEBP_MUX_OK) return;
+
+  const size_t size = data_in.size();
+  WebPData webp_data;
+  WebPDataInit(&webp_data);
+  webp_data.size = size;
+  webp_data.bytes = reinterpret_cast<const uint8_t*>(data_in.data());
+
+  // Set a single image or push an animation frame.
+  if (use_set_image) {
+    if (WebPMuxSetImage(mux.get(), &webp_data, copy_data) != WEBP_MUX_OK) {
+      return;
+    }
+  } else {
+    WebPMuxFrameInfo frame_info = {};
+    frame_info.bitstream = webp_data;
+    frame_info.x_offset = x_offset;
+    frame_info.y_offset = y_offset;
+    frame_info.duration = duration;
+    frame_info.id = WEBP_CHUNK_ANMF;
+    frame_info.dispose_method =
+        dispose_bg ? WEBP_MUX_DISPOSE_BACKGROUND : WEBP_MUX_DISPOSE_NONE;
+    frame_info.blend_method = no_blend ? WEBP_MUX_NO_BLEND : WEBP_MUX_BLEND;
+    if (WebPMuxPushFrame(mux.get(), &frame_info, copy_data) != WEBP_MUX_OK) {
+      return;
+    }
+  }
+
+  // Try setting or deleting chunks of various known and unknown types.
+  if (size > 20) {
+    WebPData custom_chunk;
+    custom_chunk.bytes = reinterpret_cast<const uint8_t*>(data_in.data()) + 4;
+    custom_chunk.size = size - 4;
+    int chunk_idx = 0;
+    for (std::string_view fourcc : {"VP8X", "ICCP", "ANIM", "EXIF", "XMP ",
+                                    "ANMF", "ALPH", "VP8 ", "VP8L", "FUZZ"}) {
+      if (chunk_flags[chunk_idx] == 1) {
+        if (WebPMuxSetChunk(mux.get(), fourcc.data(), &custom_chunk,
+                            copy_data) != WEBP_MUX_OK) {
+          return;
+        }
+      } else if (chunk_flags[chunk_idx] == 2) {
+        if (WebPMuxDeleteChunk(mux.get(), fourcc.data()) != WEBP_MUX_OK) return;
+      }
+      chunk_idx++;
+    }
+  }
+
+  // Optionally delete a frame (1-based index).
+  if (delete_frame_nth > 0) {
+    if (WebPMuxDeleteFrame(mux.get(), delete_frame_nth) != WEBP_MUX_OK) return;
+  }
+
+  // Try assembling the mux.
+  WebPData assembled;
+  WebPDataInit(&assembled);
+  if (WebPMuxAssemble(mux.get(), &assembled) != WEBP_MUX_OK) return;
+  WebPDataClear(&assembled);
+}
+
+auto ArbitraryWebPString() {
+  return fuzztest::String().WithMaxSize(fuzz_utils::kMaxWebPFileSize + 1);
+}
+
 }  // namespace
 
 FUZZ_TEST(MuxDemuxApi, MuxDemuxApiTest)
     .WithDomains(
-        fuzztest::String().WithMaxSize(fuzz_utils::kMaxWebPFileSize + 1),
-        /*mux=*/fuzztest::Arbitrary<bool>(),
+        ArbitraryWebPString(),
+        /*use_mux_api=*/fuzztest::Arbitrary<bool>(),
         /*chunk_flags=*/fuzztest::ArrayOf<10>(fuzztest::InRange(0, 2)));
+
+FUZZ_TEST(MuxDemuxApi, MuxEditApiTest)
+    .WithDomains(
+        ArbitraryWebPString(),
+        /*chunk_flags=*/fuzztest::ArrayOf<10>(fuzztest::InRange(0, 2)),
+        /*canvas_size=*/
+        fuzztest::PairOf(fuzztest::OneOf(fuzztest::Arbitrary<int>(),
+                                         fuzztest::InRange(0, (1 << 16) - 1),
+                                         fuzztest::InRange(0, 1 << 24)),
+                         fuzztest::OneOf(fuzztest::Arbitrary<int>(),
+                                         fuzztest::InRange(0, (1 << 16) - 1),
+                                         fuzztest::InRange(0, 1 << 24))),
+        /*bgcolor=*/fuzztest::Arbitrary<uint32_t>(),
+        /*loop_count=*/fuzztest::Arbitrary<int>(),
+        /*x_offset=*/fuzztest::Arbitrary<int>(),
+        /*y_offset=*/fuzztest::Arbitrary<int>(),
+        /*duration=*/fuzztest::Arbitrary<int>(),
+        /*dispose_bg=*/fuzztest::Arbitrary<bool>(),
+        /*no_blend=*/fuzztest::Arbitrary<bool>(),
+        /*use_set_image=*/fuzztest::Arbitrary<bool>(),
+        /*copy_data=*/fuzztest::Arbitrary<bool>(),
+        /*delete_frame_nth=*/fuzztest::InRange<uint32_t>(0, 2));
 
 // WebPMuxSetCanvasSize() multiplied 'width * height' as ints, which overflows
 // for valid canvases whose area is in [2^31, 2^32).

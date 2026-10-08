@@ -38,6 +38,7 @@
 #include "src/webp/decode.h"
 #include "src/webp/demux.h"
 #include "src/webp/encode.h"
+#include "src/webp/mux.h"
 #include "src/webp/types.h"
 
 namespace fuzz_utils {
@@ -96,6 +97,7 @@ struct UniquePtrDeleter {
   }
   void operator()(WebPDemuxer* demux) const { WebPDemuxDelete(demux); }
   void operator()(WebPIterator* iter) const { WebPDemuxReleaseIterator(iter); }
+  void operator()(WebPMux* mux) const { WebPMuxDelete(mux); }
 };
 
 // Like WebPPicture but with no C array.
@@ -131,17 +133,76 @@ struct WebPPictureCpp {
   std::shared_ptr<WebPPicture> pic;
 };
 
+static inline WebPPictureCpp CreateTiledWebPPicture(
+    int width, int height, const std::vector<uint8_t>& data) {
+  WebPPicture pic;
+  if (!WebPPictureInit(&pic)) assert(false);
+  pic.use_argb = 1;
+  pic.colorspace = WEBP_YUV420;
+  pic.width = width;
+  pic.height = height;
+  if (!WebPPictureAlloc(&pic)) assert(false);
+  // Fill each 16x16 tile with the 4^4 = 256 Cartesian product combinations of
+  // 4 byte values per channel (A, R, G, B) via an invertible linear map over
+  // Z_4^4. Each channel uses 4 symbols per tile (low per-tile channel entropy,
+  // preventing tiles from merging when > 200 groups are formed), while all 256
+  // ARGB pixels within a tile are distinct (preventing LZ77 backward references
+  // from collapsing the tile). Tiles 1..16 can reuse tile 0's palette so
+  // histogram combining merges them and swaps the last tiles into slots 1..16,
+  // producing > 200 used Huffman groups in non-identity order.
+  const int tiles_x = (width + 15) / 16;
+  for (int y = 0; y < height; ++y) {
+    for (int x = 0; x < width; ++x) {
+      int tile = (y / 16) * tiles_x + (x / 16);
+      if (tile >= 1 && tile <= 16 && (data[tile * 16] & 3) == 0) {
+        tile = 0;
+      }
+      const int a0 = x & 3, a1 = (x >> 2) & 3;
+      const int b0 = y & 3, b1 = (y >> 2) & 3;
+      const int d[4] = {(a0 + b0 + a1) & 3, (a0 + 2 * b0 + b1) & 3,
+                        (a0 + b0 + 2 * a1 + b1) & 3,
+                        (a0 + 2 * b0 + a1 + 3 * b1) & 3};
+      auto sym = [&](int ch, int idx) -> uint8_t {
+        uint32_t h = static_cast<uint32_t>(tile * 16 + ch * 4 + idx + 1);
+        h = ((h >> 16) ^ h) * 0x45d9f3bu;
+        h = ((h >> 16) ^ h) * 0x45d9f3bu;
+        return static_cast<uint8_t>(
+            ((h ^ (h >> 16)) ^ data[tile * 16 + ch * 4 + idx]) | 1u);
+      };
+      const uint8_t r = sym(0, d[0]);
+      const uint8_t g = sym(1, d[1]);
+      const uint8_t b = sym(2, d[2]);
+      const uint8_t a = sym(3, d[3]);
+      pic.argb[y * pic.argb_stride + x] =
+          (static_cast<uint32_t>(a) << 24) | (static_cast<uint32_t>(r) << 16) |
+          (static_cast<uint32_t>(g) << 8) | static_cast<uint32_t>(b);
+    }
+  }
+  return WebPPictureCpp(pic.use_argb, pic.colorspace, pic.width, pic.height,
+                        pic.y, pic.u, pic.v, pic.y_stride, pic.uv_stride, pic.a,
+                        pic.a_stride, pic.argb, pic.argb_stride, pic.memory_,
+                        pic.memory_argb_);
+}
+
 static inline auto ArbitraryWebPPicture() {
   return fuzztest::FlatMap(
-      // colorspace of 0 is use_argb, 1 is YUV420, 2 is YUV420A.
+      // colorspace of 0 is use_argb, 1 is YUV420, 2 is YUV420A,
+      // 3 is tiled use_argb (up to 256x256, 4 symbols/channel per 16x16 tile).
       [](int colorspace, int width, int height) {
+        if (colorspace == 3) {
+          width = 256 - (width & 7);
+          height = 256 - (height & 7);
+        }
         const int uv_width = (int)(((int64_t)width + 1) >> 1);
         const int uv_height = (int)(((int64_t)height + 1) >> 1);
-        // Create a domain for the vector that strictly obeys w * h * 4.
+        const int tiles_x = (width + 15) / 16;
+        const int tiles_y = (height + 15) / 16;
+        // Create a domain for the vector that strictly obeys the required size.
         size_t size = width * height;
         if (colorspace == 0) size *= 4;
         if (colorspace == 1) size += 2 * uv_width * uv_height;
         if (colorspace == 2) size += 2 * uv_width * uv_height + size;
+        if (colorspace == 3) size = 16 * tiles_x * tiles_y;
         auto DataDomain =
             fuzztest::VectorOf(fuzztest::Arbitrary<uint8_t>()).WithSize(size);
 
@@ -149,6 +210,9 @@ static inline auto ArbitraryWebPPicture() {
         return fuzztest::Map(
             [colorspace, width,
              height](const std::vector<uint8_t>& data) -> WebPPictureCpp {
+              if (colorspace == 3) {
+                return CreateTiledWebPPicture(width, height, data);
+              }
               WebPPicture pic;
               if (!WebPPictureInit(&pic)) assert(false);
               pic.use_argb = colorspace == 0 ? 1 : 0;
@@ -159,8 +223,8 @@ static inline auto ArbitraryWebPPicture() {
               if (!WebPPictureAlloc(&pic)) assert(false);
               size_t size = width * height;
               if (pic.use_argb) {
-                std::copy(data.begin(), data.begin() + size,
-                          (uint32_t*)pic.argb);
+                std::copy(data.begin(), data.begin() + 4 * size,
+                          (uint8_t*)pic.argb);
               } else {
                 // Y.
                 auto iter = data.begin();
@@ -187,7 +251,7 @@ static inline auto ArbitraryWebPPicture() {
             },
             DataDomain);
       },
-      /*colorspace=*/fuzztest::InRange<int>(0, 2),
+      /*colorspace=*/fuzztest::InRange<int>(0, 3),
       /*width=*/fuzztest::InRange<int>(1, 128),
       /*height=*/fuzztest::InRange<int>(1, 128));
 }

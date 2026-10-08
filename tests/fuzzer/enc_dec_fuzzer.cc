@@ -77,6 +77,8 @@ void Enc(const fuzz_utils::CropOrScaleParams& crop_or_scale_params,
   }
 }
 
+// Encodes a picture and decodes it using valid colorspace and decoder options,
+// verifying that decoding succeeds and produces consistent output.
 void EncDecValidTest(bool use_argb, fuzz_utils::WebPPictureCpp pic_cpp,
                      WebPConfig config, int optimization_index,
                      const fuzz_utils::CropOrScaleParams& crop_or_scale_params,
@@ -94,7 +96,7 @@ void EncDecValidTest(bool use_argb, fuzz_utils::WebPPictureCpp pic_cpp,
 
   Enc(crop_or_scale_params, config, pic, memory_writer);
 
-  // Try decoding the result.
+  // Try decoding the result without options into BGRA first.
   const uint8_t* const out_data = memory_writer.mem;
   const size_t out_size = memory_writer.size;
   WebPDecoderConfig dec_config;
@@ -142,7 +144,8 @@ void EncDecValidTest(bool use_argb, fuzz_utils::WebPPictureCpp pic_cpp,
     }
   }
 
-  // Use given decoding options.
+  // Use given decoding options. Skip if the crop rectangle exceeds the image
+  // dimensions (which would validly fail with VP8_STATUS_INVALID_PARAM).
   if (static_cast<int64_t>(decoder_options.crop_left) +
               decoder_options.crop_width >
           static_cast<int64_t>(pic.width) ||
@@ -151,19 +154,87 @@ void EncDecValidTest(bool use_argb, fuzz_utils::WebPPictureCpp pic_cpp,
           static_cast<int64_t>(pic.height)) {
     return;
   }
-  WebPFreeDecBuffer(&dec_config.output);
-  if (!WebPInitDecoderConfig(&dec_config)) {
+  // Decode into a separate config so the uncropped BGRA output in dec_config
+  // remains available for comparison below.
+  WebPDecoderConfig cropped_dec_config;
+  std::unique_ptr<WebPDecoderConfig, fuzz_utils::UniquePtrDeleter>
+      cropped_dec_config_owner(&cropped_dec_config);
+  if (!WebPInitDecoderConfig(&cropped_dec_config)) {
     fprintf(stderr, "WebPInitDecoderConfig failed.\n");
     abort();
   }
 
-  dec_config.output.colorspace = static_cast<WEBP_CSP_MODE>(colorspace);
-  std::memcpy(&dec_config.options, &decoder_options, sizeof(decoder_options));
-  status = WebPDecode(out_data, out_size, &dec_config);
-  if (status != VP8_STATUS_OK && status != VP8_STATUS_OUT_OF_MEMORY &&
-      status != VP8_STATUS_USER_ABORT) {
-    fprintf(stderr, "WebPDecode failed. status: %d.\n", status);
+  cropped_dec_config.output.colorspace = static_cast<WEBP_CSP_MODE>(colorspace);
+  std::memcpy(&cropped_dec_config.options, &decoder_options,
+              sizeof(decoder_options));
+  const VP8StatusCode cropped_status =
+      WebPDecode(out_data, out_size, &cropped_dec_config);
+  if (cropped_status != VP8_STATUS_OK &&
+      cropped_status != VP8_STATUS_OUT_OF_MEMORY &&
+      cropped_status != VP8_STATUS_USER_ABORT) {
+    fprintf(stderr, "WebPDecode failed. status: %d.\n", cropped_status);
     abort();
+  }
+
+  // Verify that for all 8-bit alpha colorspaces, decoding with decoder_options
+  // produces the exact same alpha values as the corresponding cropped (and
+  // optionally flipped) sub-rect of the uncropped decode when scaling and alpha
+  // dithering are disabled. RGB/YUV values are not compared because on lossy
+  // images they can be affected by decoder_options (e.g. bypass_filtering,
+  // no_fancy_upsampling, dithering_strength, or fancy YUV upsampling at crop
+  // boundaries) and by premultiplication.
+  if (status == VP8_STATUS_OK && cropped_status == VP8_STATUS_OK &&
+      !decoder_options.use_scaling &&
+      decoder_options.alpha_dithering_strength == 0 &&
+      (colorspace == MODE_RGBA || colorspace == MODE_BGRA ||
+       colorspace == MODE_ARGB || colorspace == MODE_rgbA ||
+       colorspace == MODE_bgrA || colorspace == MODE_Argb ||
+       colorspace == MODE_YUVA)) {
+    // Lossy decoding snaps crop_left and crop_top to even coordinates.
+    const int crop_left =
+        decoder_options.use_cropping
+            ? (config.lossless ? decoder_options.crop_left
+                               : (decoder_options.crop_left & ~1))
+            : 0;
+    const int crop_top =
+        decoder_options.use_cropping
+            ? (config.lossless ? decoder_options.crop_top
+                               : (decoder_options.crop_top & ~1))
+            : 0;
+    const int cw = cropped_dec_config.output.width;
+    const int ch = cropped_dec_config.output.height;
+    const uint8_t* const uncropped_bgra = dec_config.output.u.RGBA.rgba;
+    const int uncropped_stride = dec_config.output.u.RGBA.stride;
+    for (int y = 0; y < ch; ++y) {
+      const int src_y = crop_top + (decoder_options.flip ? (ch - 1 - y) : y);
+      const uint8_t* const src_row =
+          uncropped_bgra + static_cast<ptrdiff_t>(src_y) * uncropped_stride;
+      for (int x = 0; x < cw; ++x) {
+        const uint8_t expected_a = src_row[4 * (crop_left + x) + 3];
+        uint8_t actual_a = 0;
+        if (colorspace == MODE_YUVA) {
+          actual_a = cropped_dec_config.output.u.YUVA
+                         .a[static_cast<ptrdiff_t>(y) *
+                                cropped_dec_config.output.u.YUVA.a_stride +
+                            x];
+        } else {
+          // Alpha is at byte offset 0 for MODE_ARGB/MODE_Argb and 3 for
+          // MODE_RGBA/MODE_rgbA/MODE_BGRA/MODE_bgrA.
+          const int alpha_offset =
+              (colorspace == MODE_ARGB || colorspace == MODE_Argb) ? 0 : 3;
+          actual_a = cropped_dec_config.output.u.RGBA
+                         .rgba[static_cast<ptrdiff_t>(y) *
+                                   cropped_dec_config.output.u.RGBA.stride +
+                               4 * x + alpha_offset];
+        }
+        if (actual_a != expected_a) {
+          fprintf(stderr,
+                  "Cropped alpha mismatch at (%d, %d): got %u, expected %u.\n",
+                  x, y, actual_a, expected_a);
+          std::abort();
+        }
+      }
+    }
   }
 }
 
