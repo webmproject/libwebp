@@ -228,10 +228,10 @@ WEBP_NODISCARD static int ImportYUVAFromRGBA(
         ConvertRowsToUV(tmp_rgb, dst_u, dst_v, uv_width, rg);
         dst_u += picture->uv_stride;
         dst_v += picture->uv_stride;
-        r_ptr += 2 * rgb_stride;
-        b_ptr += 2 * rgb_stride;
-        g_ptr += 2 * rgb_stride;
-        if (has_alpha) a_ptr += 2 * rgb_stride;
+        r_ptr += 2 * (ptrdiff_t)rgb_stride;
+        b_ptr += 2 * (ptrdiff_t)rgb_stride;
+        g_ptr += 2 * (ptrdiff_t)rgb_stride;
+        if (has_alpha) a_ptr += 2 * (ptrdiff_t)rgb_stride;
       }
       if (height & 1) {  // extra last row
         int row_has_alpha = has_alpha;
@@ -269,7 +269,7 @@ WEBP_NODISCARD static int PictureARGBToYUVA(WebPPicture* picture,
                                             WebPEncCSP colorspace,
                                             float dithering,
                                             int use_iterative_conversion) {
-  if (picture == NULL) return 0;
+  if (!WebPValidatePicture(picture)) return 0;
   if (picture->argb == NULL) {
     return WebPEncodingSetError(picture, VP8_ENC_ERROR_NULL_PARAMETER);
   } else if ((colorspace & WEBP_CSP_UV_MASK) != WEBP_YUV420) {
@@ -308,7 +308,7 @@ int WebPPictureSmartARGBToYUVA(WebPPicture* picture) {
 // call for YUVA -> ARGB conversion
 
 int WebPPictureYUVAToARGB(WebPPicture* picture) {
-  if (picture == NULL) return 0;
+  if (!WebPValidatePicture(picture)) return 0;
   if (picture->y == NULL || picture->u == NULL || picture->v == NULL) {
     return WebPEncodingSetError(picture, VP8_ENC_ERROR_NULL_PARAMETER);
   }
@@ -378,10 +378,16 @@ WEBP_NODISCARD static int Import(WebPPicture* const picture, const uint8_t* rgb,
   const uint8_t* r_ptr = rgb + (swap_rb ? 2 : 0);
   const uint8_t* g_ptr = rgb + 1;
   const uint8_t* b_ptr = rgb + (swap_rb ? 0 : 2);
-  const int width = picture->width;
-  const int height = picture->height;
+  int width, height;
+
+  if (picture == NULL) return 0;
+
+  WebPPictureFree(picture);
 
   if (!WebPValidatePicture(picture)) return 0;
+
+  width = picture->width;
+  height = picture->height;
   if (!CheckStride(rgb_stride, step, width)) return 0;
 
   if (!picture->use_argb) {

@@ -199,16 +199,16 @@ double VP8SSIMFromStats(const VP8DistoStats* const stats);
 double VP8SSIMFromStatsClipped(const VP8DistoStats* const stats);
 
 #define VP8_SSIM_KERNEL 3  // total size of the kernel: 2 * VP8_SSIM_KERNEL + 1
-typedef double (*VP8SSIMGetClippedFunc)(const uint8_t* src1, int stride1,
-                                        const uint8_t* src2, int stride2,
+typedef double (*VP8SSIMGetClippedFunc)(const uint8_t* src1, ptrdiff_t stride1,
+                                        const uint8_t* src2, ptrdiff_t stride2,
                                         int xo, int yo,  // center position
                                         int W, int H);   // plane dimension
 
 #if !defined(WEBP_REDUCE_SIZE)
 // This version is called with the guarantee that you can load 8 bytes and
 // 8 rows at offset src1 and src2
-typedef double (*VP8SSIMGetFunc)(const uint8_t* src1, int stride1,
-                                 const uint8_t* src2, int stride2);
+typedef double (*VP8SSIMGetFunc)(const uint8_t* src1, ptrdiff_t stride1,
+                                 const uint8_t* src2, ptrdiff_t stride2);
 
 extern VP8SSIMGetFunc VP8SSIMGet;                // unclipped / unchecked
 extern VP8SSIMGetClippedFunc VP8SSIMGetClipped;  // with clipping

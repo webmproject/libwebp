@@ -866,7 +866,7 @@ WEBP_NODISCARD static int SetCropWindow(VP8Io* const io, int y_start, int y_end,
   }
   if (y_start >= y_end) return 0;  // Crop window is empty.
 
-  *in_data += io->crop_left * sizeof(uint32_t);
+  *in_data += (ptrdiff_t)io->crop_left * sizeof(uint32_t);
 
   io->mb_y = y_start - io->crop_top;
   io->mb_w = io->crop_right - io->crop_left;

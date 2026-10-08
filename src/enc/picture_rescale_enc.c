@@ -112,17 +112,17 @@ int WebPPictureView(const WebPPicture* src, int left, int top, int width,
   dst->width = width;
   dst->height = height;
   if (!src->use_argb) {
-    dst->y = src->y + top * src->y_stride + left;
-    dst->u = src->u + (top >> 1) * src->uv_stride + (left >> 1);
-    dst->v = src->v + (top >> 1) * src->uv_stride + (left >> 1);
+    dst->y = src->y + (ptrdiff_t)top * src->y_stride + left;
+    dst->u = src->u + (ptrdiff_t)(top >> 1) * src->uv_stride + (left >> 1);
+    dst->v = src->v + (ptrdiff_t)(top >> 1) * src->uv_stride + (left >> 1);
     dst->y_stride = src->y_stride;
     dst->uv_stride = src->uv_stride;
     if (src->a != NULL) {
-      dst->a = src->a + top * src->a_stride + left;
+      dst->a = src->a + (ptrdiff_t)top * src->a_stride + left;
       dst->a_stride = src->a_stride;
     }
   } else {
-    dst->argb = src->argb + top * src->argb_stride + left;
+    dst->argb = src->argb + (ptrdiff_t)top * src->argb_stride + left;
     dst->argb_stride = src->argb_stride;
   }
   return 1;
@@ -150,8 +150,9 @@ int WebPPictureCrop(WebPPicture* pic, int left, int top, int width,
   }
 
   if (!pic->use_argb) {
-    const int y_offset = top * pic->y_stride + left;
-    const int uv_offset = (top / 2) * pic->uv_stride + left / 2;
+    const ptrdiff_t y_offset = (ptrdiff_t)top * pic->y_stride + left;
+    const ptrdiff_t uv_offset =
+        (ptrdiff_t)(top / 2) * pic->uv_stride + left / 2;
     WebPCopyPlane(pic->y + y_offset, pic->y_stride, tmp.y, tmp.y_stride, width,
                   height);
     WebPCopyPlane(pic->u + uv_offset, pic->uv_stride, tmp.u, tmp.uv_stride,
@@ -160,13 +161,13 @@ int WebPPictureCrop(WebPPicture* pic, int left, int top, int width,
                   HALVE(width), HALVE(height));
 
     if (tmp.a != NULL) {
-      const int a_offset = top * pic->a_stride + left;
+      const ptrdiff_t a_offset = (ptrdiff_t)top * pic->a_stride + left;
       WebPCopyPlane(pic->a + a_offset, pic->a_stride, tmp.a, tmp.a_stride,
                     width, height);
     }
   } else {
     const uint8_t* const src =
-        (const uint8_t*)(pic->argb + top * pic->argb_stride + left);
+        (const uint8_t*)(pic->argb + (ptrdiff_t)top * pic->argb_stride + left);
     WebPCopyPlane(src, pic->argb_stride * 4, (uint8_t*)tmp.argb,
                   tmp.argb_stride * 4, width * 4, height);
   }
@@ -218,7 +219,7 @@ int WebPPictureRescale(WebPPicture* picture, int width, int height) {
   void* work_mem = NULL;
   int status = VP8_ENC_OK;
 
-  if (picture == NULL) return 0;
+  if (!WebPValidatePicture(picture)) return 0;
   prev_width = picture->width;
   prev_height = picture->height;
   if (!WebPRescalerGetScaledDimensions(prev_width, prev_height, &width,

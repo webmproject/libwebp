@@ -198,9 +198,12 @@ struct WebPPicture;
 // Returns 1 if |stride| >= step * width, 0 otherwise.
 WEBP_NODISCARD static WEBP_INLINE int CheckStride(int stride, int step,
                                                   int width) {
-  const int64_t min_stride = (int64_t)step * width;
+  uint64_t min_stride, abs_stride;
+  if (width <= 0 || step <= 0) return 0;
+  min_stride = (uint64_t)step * (uint64_t)width;
   // Do not use abs(stride) as abs(INT_MIN) is undefined behavior.
-  return (stride >= min_stride || stride <= -min_stride);
+  abs_stride = (stride < 0) ? (uint64_t)-(int64_t)stride : (uint64_t)stride;
+  return (abs_stride >= min_stride);
 }
 
 // Copy width x height pixels from 'src' to 'dst' honoring the strides.
