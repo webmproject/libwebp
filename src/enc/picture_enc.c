@@ -55,9 +55,9 @@ int WebPPictureInitInternal(WebPPicture* picture, int version) {
 #define UINTPTR_MAX ((uintptr_t)-1)
 #endif
 
-// Returns 1 if [ptr, ptr + (height - 1) * stride + width] (or for negative
-// stride, [ptr - (height - 1) * (-stride), ptr + width]) fits in addressable
-// memory without wrapping around the address space, 0 otherwise.
+// Returns 1 if [ptr, ptr + (height - 1) * stride + width*step] (or for negative
+// stride, [ptr - (height - 1) * (-stride), ptr + width*step]) fits in
+// addressable memory without wrapping around the address space, 0 otherwise.
 static int CheckMemoryBounds(const void* ptr, int stride, int step, int width,
                              int height) {
   const uint64_t abs_stride =
@@ -119,20 +119,20 @@ int WebPValidatePicture(const WebPPicture* const picture) {
       if (!CheckStride(picture->y_stride, 1, picture->width) ||
           !CheckStride(picture->uv_stride, 1, uv_width) ||
           (picture->y != NULL &&
-           !CheckMemoryBounds(picture->y, picture->y_stride, 1, picture->width,
-                              picture->height)) ||
+           !CheckMemoryBounds(picture->y, picture->y_stride, /*step=*/1,
+                              picture->width, picture->height)) ||
           (picture->u != NULL &&
-           !CheckMemoryBounds(picture->u, picture->uv_stride, 1, uv_width,
-                              uv_height)) ||
+           !CheckMemoryBounds(picture->u, picture->uv_stride, /*step=*/1,
+                              uv_width, uv_height)) ||
           (picture->v != NULL &&
-           !CheckMemoryBounds(picture->v, picture->uv_stride, 1, uv_width,
-                              uv_height))) {
+           !CheckMemoryBounds(picture->v, picture->uv_stride, /*step=*/1,
+                              uv_width, uv_height))) {
         return WebPEncodingSetError(picture, VP8_ENC_ERROR_BAD_DIMENSION);
       }
       if (picture->a != NULL &&
           (!CheckStride(picture->a_stride, 1, picture->width) ||
-           !CheckMemoryBounds(picture->a, picture->a_stride, 1, picture->width,
-                              picture->height))) {
+           !CheckMemoryBounds(picture->a, picture->a_stride, /*step=*/1,
+                              picture->width, picture->height))) {
         return WebPEncodingSetError(picture, VP8_ENC_ERROR_BAD_DIMENSION);
       }
     }
