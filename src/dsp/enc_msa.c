@@ -104,7 +104,7 @@ static void FTransform_MSA(const uint8_t* WEBP_RESTRICT src,
   HSUB_UB2_SH(srcl0, srcl1, t0, t1);
   VSHF_H2_SH(t0, t1, t0, t1, mask0, mask1, t2, t3);
   ADDSUB2(t2, t3, t0, t1);
-  t0 = SRLI_H(t0, 3);
+  t0 = SLLI_H(t0, 3);
   VSHF_H2_SH(t0, t0, t1, t1, mask2, mask3, t3, t2);
   tmp0 = __msa_hadd_s_w(t3, t3);
   tmp2 = __msa_hsub_s_w(t3, t3);

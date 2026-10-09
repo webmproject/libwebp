@@ -88,7 +88,7 @@
       "addu      %[temp3],    %[temp1],     %[temp2]    \n\t"                  \
     ".else                                              \n\t"                  \
       "lbu       %[temp1],    -1(%[src])                \n\t"                  \
-      "subu      %[temp3],    %[temp1],     %[temp2]    \n\t"                  \
+      "subu      %[temp3],    %[temp2],     %[temp1]    \n\t"                  \
     ".endif                                             \n\t"                  \
       "addiu     %[src],      %[src],       1           \n\t"                  \
       "sb        %[temp3],    0(%[dst])                 \n\t"                  \
