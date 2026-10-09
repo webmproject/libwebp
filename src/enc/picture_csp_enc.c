@@ -39,7 +39,7 @@
 
 // Returns true if alpha[] has non-0xff values.
 static int CheckNonOpaque(const uint8_t* alpha, int width, int height,
-                          int x_step, int y_step) {
+                          int x_step, ptrdiff_t y_step) {
   if (alpha == NULL) return 0;
   WebPInitAlphaProcessing();
   if (x_step == 1) {
@@ -59,9 +59,10 @@ int WebPPictureHasTransparency(const WebPPicture* picture) {
   if (picture == NULL) return 0;
   if (picture->use_argb) {
     if (picture->argb != NULL) {
-      return CheckNonOpaque((const uint8_t*)picture->argb + ALPHA_OFFSET,
-                            picture->width, picture->height, 4,
-                            picture->argb_stride * sizeof(*picture->argb));
+      return CheckNonOpaque(
+          (const uint8_t*)picture->argb + ALPHA_OFFSET, picture->width,
+          picture->height, 4,
+          (ptrdiff_t)picture->argb_stride * sizeof(*picture->argb));
     }
     return 0;
   }
@@ -210,11 +211,11 @@ WEBP_NODISCARD static int ImportYUVAFromRGBA(
         ConvertRowToY(r_ptr + rgb_stride, g_ptr + rgb_stride,
                       b_ptr + rgb_stride, step, dst_y + picture->y_stride,
                       width, rg);
-        dst_y += 2 * picture->y_stride;
+        dst_y += 2 * (ptrdiff_t)picture->y_stride;
         if (has_alpha) {
           rows_have_alpha &= !WebPExtractAlpha(a_ptr, rgb_stride, width, 2,
                                                dst_a, picture->a_stride);
-          dst_a += 2 * picture->a_stride;
+          dst_a += 2 * (ptrdiff_t)picture->a_stride;
         }
         // Collect averaged R/G/B(/A)
         if (!rows_have_alpha) {
@@ -327,7 +328,7 @@ int WebPPictureYUVAToARGB(WebPPicture* picture) {
     int y;
     const int width = picture->width;
     const int height = picture->height;
-    const int argb_stride = 4 * picture->argb_stride;
+    const ptrdiff_t argb_stride = 4 * (ptrdiff_t)picture->argb_stride;
     uint8_t* dst = (uint8_t*)picture->argb;
     const uint8_t *cur_u = picture->u, *cur_v = picture->v, *cur_y = picture->y;
     WebPUpsampleLinePairFunc upsample =
@@ -345,7 +346,7 @@ int WebPPictureYUVAToARGB(WebPPicture* picture) {
       cur_v += picture->uv_stride;
       upsample(cur_y, cur_y + picture->y_stride, top_u, top_v, cur_u, cur_v,
                dst, dst + argb_stride, width);
-      cur_y += 2 * picture->y_stride;
+      cur_y += 2 * (ptrdiff_t)picture->y_stride;
       dst += 2 * argb_stride;
     }
     // Last row (if needed), with replicated bottom samples.
@@ -355,8 +356,10 @@ int WebPPictureYUVAToARGB(WebPPicture* picture) {
     // Insert alpha values if needed, in replacement for the default 0xff ones.
     if (picture->colorspace & WEBP_CSP_ALPHA_BIT) {
       for (y = 0; y < height; ++y) {
-        uint32_t* const argb_dst = picture->argb + y * picture->argb_stride;
-        const uint8_t* const src = picture->a + y * picture->a_stride;
+        uint32_t* const argb_dst =
+            picture->argb + (ptrdiff_t)y * picture->argb_stride;
+        const uint8_t* const src =
+            picture->a + (ptrdiff_t)y * picture->a_stride;
         int x;
         for (x = 0; x < width; ++x) {
           argb_dst[x] = (argb_dst[x] & 0x00ffffffu) | ((uint32_t)src[x] << 24);

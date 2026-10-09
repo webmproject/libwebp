@@ -118,7 +118,7 @@ WEBP_NODISCARD static int EncodeAlphaInternal(
   const uint8_t* alpha_src;
   WebPFilterFunc filter_func;
   uint8_t header;
-  const size_t data_size = width * height;
+  const size_t data_size = (size_t)width * height;
   const uint8_t* output = NULL;
   size_t output_size = 0;
   VP8LBitWriter tmp_bw;
@@ -193,7 +193,7 @@ static int GetNumColors(const uint8_t* data, int width, int height,
 
   for (j = 0; j < height; ++j) {
     int i;
-    const uint8_t* const p = data + j * stride;
+    const uint8_t* const p = data + (ptrdiff_t)j * stride;
     for (i = 0; i < width; ++i) {
       color[p[i]] = 1;
     }
@@ -305,7 +305,7 @@ WEBP_NODISCARD static int EncodeAlpha(VP8Encoder* const enc, int quality,
   const int height = pic->height;
 
   uint8_t* quant_alpha = NULL;
-  const size_t data_size = width * height;
+  const size_t data_size = (size_t)width * height;
   uint64_t sse = 0;
   int ok = 1;
   const int reduce_levels = (quality < 100);

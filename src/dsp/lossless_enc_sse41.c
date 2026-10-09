@@ -89,7 +89,7 @@ static void CollectColorBlueTransforms_SSE41(const uint32_t* WEBP_RESTRICT argb,
   if (tile_width >= 4) {
     int y;
     for (y = 0; y < tile_height; ++y) {
-      const uint32_t* const src = argb + y * stride;
+      const uint32_t* const src = argb + (ptrdiff_t)y * stride;
       const __m128i A1 = _mm_loadu_si128((const __m128i*)src);
       const __m128i B1 = _mm_shuffle_epi8(A1, perm);
       const __m128i C1 = _mm_mulhi_epi16(B1, mult);
@@ -133,7 +133,7 @@ static void CollectColorRedTransforms_SSE41(const uint32_t* WEBP_RESTRICT argb,
   if (tile_width >= 4) {
     int y;
     for (y = 0; y < tile_height; ++y) {
-      const uint32_t* const src = argb + y * stride;
+      const uint32_t* const src = argb + (ptrdiff_t)y * stride;
       const __m128i A1 = _mm_loadu_si128((const __m128i*)src);
       const __m128i B1 = _mm_and_si128(A1, mask_g);
       const __m128i C1 = _mm_madd_epi16(B1, mult);

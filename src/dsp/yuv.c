@@ -544,11 +544,11 @@ static void ImportYUVAFromRGBA_C(const uint8_t* r_ptr, const uint8_t* g_ptr,
       WebPConvertBGRToY(b_ptr, dst_y, width, step);
       WebPConvertBGRToY(b_ptr + rgb_stride, dst_y + y_stride, width, step);
     }
-    dst_y += 2 * y_stride;
+    dst_y += 2 * (ptrdiff_t)y_stride;
     if (has_alpha) {
       rows_have_alpha &=
           !WebPExtractAlpha(a_ptr, rgb_stride, width, 2, dst_a, a_stride);
-      dst_a += 2 * a_stride;
+      dst_a += 2 * (ptrdiff_t)a_stride;
     } else if (dst_a != NULL) {
       int i;
       for (i = 0; i < 2; ++i, dst_a += a_stride) {
@@ -567,10 +567,10 @@ static void ImportYUVAFromRGBA_C(const uint8_t* r_ptr, const uint8_t* g_ptr,
     WebPConvertRGBA32ToUV(tmp_rgb, dst_u, dst_v, uv_width);
     dst_u += u_stride;
     dst_v += v_stride;
-    r_ptr += 2 * rgb_stride;
-    b_ptr += 2 * rgb_stride;
-    g_ptr += 2 * rgb_stride;
-    if (has_alpha) a_ptr += 2 * rgb_stride;
+    r_ptr += 2 * (ptrdiff_t)rgb_stride;
+    b_ptr += 2 * (ptrdiff_t)rgb_stride;
+    g_ptr += 2 * (ptrdiff_t)rgb_stride;
+    if (has_alpha) a_ptr += 2 * (ptrdiff_t)rgb_stride;
   }
 }
 

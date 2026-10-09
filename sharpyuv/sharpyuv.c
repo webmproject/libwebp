@@ -150,14 +150,14 @@ static void ImportOneRow(const uint8_t* const r_ptr, const uint8_t* const g_ptr,
 
   if (rgb_bit_depth == 8) {
     do {
-      const int off = i * step;
+      const ptrdiff_t off = (ptrdiff_t)i * step;
       dst[i + 0 * w] = Shift(r_ptr[off], shift);
       dst[i + 1 * w] = Shift(g_ptr[off], shift);
       dst[i + 2 * w] = Shift(b_ptr[off], shift);
     } while (++i < pic_width);
   } else if (rgb_bit_depth < 16) {
     do {
-      const int off = i * step;
+      const ptrdiff_t off = (ptrdiff_t)i * step;
       int r = ((const uint16_t*)r_ptr)[off];
       int g = ((const uint16_t*)g_ptr)[off];
       int b = ((const uint16_t*)b_ptr)[off];
@@ -167,7 +167,7 @@ static void ImportOneRow(const uint8_t* const r_ptr, const uint8_t* const g_ptr,
     } while (++i < pic_width);
   } else {  // rgb_bit_depth == 16
     do {
-      const int off = i * step;
+      const ptrdiff_t off = (ptrdiff_t)i * step;
       int r = ((const uint16_t*)r_ptr)[off];
       int g = ((const uint16_t*)g_ptr)[off];
       int b = ((const uint16_t*)b_ptr)[off];

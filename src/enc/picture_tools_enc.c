@@ -113,7 +113,7 @@ void WebPCleanupTransparentArea(WebPPicture* pic) {
     for (y = 0; y < h; ++y) {
       int need_reset = 1;
       for (x = 0; x < w; ++x) {
-        const int off = (y * pic->argb_stride + x) * SIZE;
+        const ptrdiff_t off = ((ptrdiff_t)y * pic->argb_stride + x) * SIZE;
         if (IsTransparentARGBArea(pic->argb + off, pic->argb_stride, SIZE)) {
           if (need_reset) {
             argb_value = pic->argb[off];
@@ -161,10 +161,10 @@ void WebPCleanupTransparentArea(WebPPicture* pic) {
         SmoothenBlock(a_ptr + x, a_stride, y_ptr + x, y_stride, width - x,
                       SIZE);
       }
-      a_ptr += SIZE * a_stride;
-      y_ptr += SIZE * y_stride;
-      u_ptr += SIZE2 * uv_stride;
-      v_ptr += SIZE2 * uv_stride;
+      a_ptr += (ptrdiff_t)SIZE * a_stride;
+      y_ptr += (ptrdiff_t)SIZE * y_stride;
+      u_ptr += (ptrdiff_t)SIZE2 * uv_stride;
+      v_ptr += (ptrdiff_t)SIZE2 * uv_stride;
     }
     if (y < height) {
       const int sub_height = height - y;

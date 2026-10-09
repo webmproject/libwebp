@@ -100,7 +100,7 @@ static void CollectColorBlueTransforms_AVX2(const uint32_t* WEBP_RESTRICT argb,
     int y, i;
     for (y = 0; y < tile_height; ++y) {
       uint8_t values[32];
-      const uint32_t* const src = argb + y * stride;
+      const uint32_t* const src = argb + (ptrdiff_t)y * stride;
       const __m256i A1 = _mm256_loadu_si256((const __m256i*)src);
       const __m256i B1 = _mm256_shuffle_epi8(A1, perm);
       const __m256i C1 = _mm256_mulhi_epi16(B1, mult);
@@ -141,7 +141,7 @@ static void CollectColorRedTransforms_AVX2(const uint32_t* WEBP_RESTRICT argb,
     int y, i;
     for (y = 0; y < tile_height; ++y) {
       uint8_t values[32];
-      const uint32_t* const src = argb + y * stride;
+      const uint32_t* const src = argb + (ptrdiff_t)y * stride;
       const __m256i A1 = _mm256_loadu_si256((const __m256i*)src);
       const __m256i B1 = _mm256_and_si256(A1, mask_g);
       const __m256i C1 = _mm256_madd_epi16(B1, mult);

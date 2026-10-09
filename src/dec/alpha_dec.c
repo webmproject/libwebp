@@ -107,7 +107,7 @@ WEBP_NODISCARD static VP8StatusCode ALPHInit(ALPHDecoder* const dec,
   {
     const size_t alpha_data_size = data_size - ALPHA_HEADER_LEN;
     if (dec->method == ALPHA_NO_COMPRESSION) {
-      const size_t alpha_decoded_size = dec->width * dec->height;
+      const size_t alpha_decoded_size = (size_t)dec->width * dec->height;
       status = (alpha_data_size >= alpha_decoded_size)
                    ? VP8_STATUS_OK
                    : VP8_STATUS_BITSTREAM_ERROR;
@@ -186,7 +186,8 @@ WEBP_NODISCARD static int ALPHDecode(VP8Decoder* const dec, int row,
   if (alph_dec->method == ALPHA_NO_COMPRESSION) {
     int y;
     const uint8_t* prev_line;
-    const uint8_t* deltas = dec->alpha_data + ALPHA_HEADER_LEN + row * width;
+    const uint8_t* deltas =
+        dec->alpha_data + ALPHA_HEADER_LEN + (ptrdiff_t)row * width;
     uint8_t* dst;
     WebPShiftAlphaWindow(alph_dec, row, row + num_rows);
     prev_line = alph_dec->prev_line;
@@ -276,7 +277,7 @@ WEBP_NODISCARD const uint8_t* VP8DecompressAlphaRows(VP8Decoder* const dec,
       dec->alph_dec = NULL;
       if (dec->alpha_dithering > 0) {
         uint8_t* const alpha =
-            dec->alpha_plane + io->crop_top * width + io->crop_left;
+            dec->alpha_plane + (ptrdiff_t)io->crop_top * width + io->crop_left;
         uint8_t* WEBP_BIDI_INDEXABLE const bounded_alpha =
             WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(
                 uint8_t*, alpha,

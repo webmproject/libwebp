@@ -136,9 +136,9 @@ void VP8IteratorImport(VP8EncIterator* const it, uint8_t* const tmp_32) {
   const VP8Encoder* const enc = it->enc;
   const int x = it->x, y = it->y;
   const WebPPicture* const pic = enc->pic;
-  const uint8_t* const ysrc = pic->y + (y * pic->y_stride + x) * 16;
-  const uint8_t* const usrc = pic->u + (y * pic->uv_stride + x) * 8;
-  const uint8_t* const vsrc = pic->v + (y * pic->uv_stride + x) * 8;
+  const uint8_t* const ysrc = pic->y + ((ptrdiff_t)y * pic->y_stride + x) * 16;
+  const uint8_t* const usrc = pic->u + ((ptrdiff_t)y * pic->uv_stride + x) * 8;
+  const uint8_t* const vsrc = pic->v + ((ptrdiff_t)y * pic->uv_stride + x) * 8;
   const int w = MinSize(pic->width - x * 16, 16);
   const int h = MinSize(pic->height - y * 16, 16);
   const int uv_w = (w + 1) >> 1;
@@ -197,9 +197,9 @@ void VP8IteratorExport(const VP8EncIterator* const it) {
     const uint8_t* const usrc = it->yuv_out + U_OFF_ENC;
     const uint8_t* const vsrc = it->yuv_out + V_OFF_ENC;
     const WebPPicture* const pic = enc->pic;
-    uint8_t* const ydst = pic->y + (y * pic->y_stride + x) * 16;
-    uint8_t* const udst = pic->u + (y * pic->uv_stride + x) * 8;
-    uint8_t* const vdst = pic->v + (y * pic->uv_stride + x) * 8;
+    uint8_t* const ydst = pic->y + ((ptrdiff_t)y * pic->y_stride + x) * 16;
+    uint8_t* const udst = pic->u + ((ptrdiff_t)y * pic->uv_stride + x) * 8;
+    uint8_t* const vdst = pic->v + ((ptrdiff_t)y * pic->uv_stride + x) * 8;
     int w = (pic->width - x * 16);
     int h = (pic->height - y * 16);
 

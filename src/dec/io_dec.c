@@ -93,8 +93,8 @@ static int EmitFancyRGB(const VP8Io* const io, WebPDecParams* const p) {
     top_v = cur_v;
     cur_u += io->uv_stride;
     cur_v += io->uv_stride;
-    dst += 2 * buf->stride;
-    cur_y += 2 * io->y_stride;
+    dst += 2 * (ptrdiff_t)buf->stride;
+    cur_y += 2 * (ptrdiff_t)io->y_stride;
     upsample(cur_y - io->y_stride, cur_y, top_u, top_v, cur_u, cur_v,
              dst - buf->stride, dst, mb_w);
   }
@@ -257,7 +257,7 @@ static int Rescale(const uint8_t* src, int src_stride, int new_lines,
   wrk->dst_stride = dst_stride;
   while (new_lines > 0) {  // import new contributions of source rows.
     const int lines_in = WebPRescalerImport(wrk, new_lines, src, src_stride);
-    src += lines_in * src_stride;
+    src += (ptrdiff_t)lines_in * src_stride;
     new_lines -= lines_in;
     num_lines_out += WebPRescalerExport(wrk);  // emit output row(s)
   }

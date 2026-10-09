@@ -95,7 +95,7 @@ static void CollectColorBlueTransforms_SSE2(const uint32_t* WEBP_RESTRICT argb,
   const __m128i mask_b = _mm_set1_epi32(0x0000ff);  // blue mask
   int y;
   for (y = 0; y < tile_height; ++y) {
-    const uint32_t* const src = argb + y * stride;
+    const uint32_t* const src = argb + (ptrdiff_t)y * stride;
     int i, x;
     for (x = 0; x + SPAN <= tile_width; x += SPAN) {
       uint16_t values[SPAN];
@@ -142,7 +142,7 @@ static void CollectColorRedTransforms_SSE2(const uint32_t* WEBP_RESTRICT argb,
 
   int y;
   for (y = 0; y < tile_height; ++y) {
-    const uint32_t* const src = argb + y * stride;
+    const uint32_t* const src = argb + (ptrdiff_t)y * stride;
     int i, x;
     for (x = 0; x + SPAN <= tile_width; x += SPAN) {
       uint16_t values[SPAN];

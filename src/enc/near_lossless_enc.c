@@ -125,7 +125,8 @@ int VP8ApplyNearLossless(const WebPPicture* const picture, int quality,
        ysize < MIN_DIM_FOR_NEAR_LOSSLESS) ||
       ysize < 3) {
     for (i = 0; i < ysize; ++i) {
-      memcpy(argb_dst + i * xsize, picture->argb + i * picture->argb_stride,
+      memcpy(argb_dst + (ptrdiff_t)i * xsize,
+             picture->argb + (ptrdiff_t)i * picture->argb_stride,
              xsize * sizeof(*argb_dst));
     }
     return 1;
