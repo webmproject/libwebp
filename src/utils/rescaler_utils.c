@@ -31,17 +31,21 @@ int WebPRescalerNeeds64Bit(int src_width, int src_height, int dst_width,
                            int dst_height) {
   if (src_height >= dst_height && dst_height > 0) {
     // In horizontal downscaling (src_width >= dst_width), each input row
-    // contributes at most 255 * src_width to frow. In horizontal upscaling
-    // (src_width < dst_width), bilinear expansion scales contributions by
-    // x_add = dst_width - 1, giving at most 255 * (dst_width - 1) per row.
-    // During vertical downscaling, up to ceil(src_height / dst_height) rows
-    // accumulate in irow before an export cycle.
-    const uint64_t max_row_contrib = (src_width >= dst_width)
-                                         ? (uint64_t)src_width
-                                         : (uint64_t)(dst_width - 1);
+    // contributes at most 255 * src_width + dst_width / 2 to frow (due to
+    // MULT_FIX rounding). In horizontal upscaling (src_width < dst_width),
+    // bilinear expansion scales contributions by x_add = dst_width - 1, giving
+    // at most 255 * (dst_width - 1) per row.
+    // During vertical downscaling, EXPORT_ROW_SHRINK initializes irow with the
+    // fractional carry-over 'frac' (< frow) from the previous export cycle, and
+    // WebPRescalerImport then adds up to ceil(src_height / dst_height) full
+    // frow rows to irow before the next export subtracts the new frac.
+    const uint64_t max_row_contrib =
+        (src_width >= dst_width)
+            ? (uint64_t)255 * src_width + (uint64_t)dst_width / 2
+            : (uint64_t)255 * (dst_width - 1);
     const uint64_t num_rows =
-        ((uint64_t)src_height + dst_height - 1) / dst_height;
-    const uint64_t max_accum = (uint64_t)255 * max_row_contrib * num_rows;
+        ((uint64_t)src_height + dst_height - 1) / dst_height + 1;
+    const uint64_t max_accum = max_row_contrib * num_rows;
     return max_accum > UINT_MAX;
   }
   return 0;
