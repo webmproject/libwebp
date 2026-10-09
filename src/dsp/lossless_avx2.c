@@ -304,11 +304,10 @@ static void PredictorAdd12_AVX2(const uint32_t* in, const uint32_t* upper,
     DO_PRED12(diff_lo, 0);
     DO_PRED12_SHIFT(diff_lo, 0);
     DO_PRED12(diff_lo, 1);
-    DO_PRED12_SHIFT(diff_lo, 0);
+    DO_PRED12_SHIFT(diff_lo, 1);
     DO_PRED12(diff_hi, 2);
     DO_PRED12_SHIFT(diff_hi, 0);
     DO_PRED12(diff_hi, 3);
-    DO_PRED12_SHIFT(diff_hi, 0);
 
     // Process the upper lane.
     diff_lo = _mm256_permute2x128_si256(diff_lo_bak, diff_lo_bak, 1);
