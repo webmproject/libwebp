@@ -715,7 +715,7 @@ int VP8Decode(VP8Decoder* const dec, VP8Io* const io) {
   ok = (VP8EnterCritical(dec, io) == VP8_STATUS_OK);
   if (ok) {  // good to go.
     // Will allocate memory and prepare everything.
-    if (ok) ok = VP8InitFrame(dec, io);
+    ok = VP8InitFrame(dec, io);
 
     // Main decoding loop
     if (ok) ok = ParseFrame(dec, io);

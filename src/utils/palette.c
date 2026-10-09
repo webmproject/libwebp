@@ -575,7 +575,8 @@ int PaletteSort(PaletteSorting method, const struct WebPPicture* const pic,
                     palette_sorted,
                 uint32_t num_colors,
                 uint32_t* const WEBP_COUNTED_BY(num_colors) palette) {
-  if (num_colors <= 1) {
+  assert(num_colors > 0);
+  if (num_colors == 1) {
     palette[0] = palette_sorted[0];
     return 1;
   }

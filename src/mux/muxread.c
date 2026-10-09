@@ -524,7 +524,7 @@ WebPMuxError WebPMuxGetAnimationParams(const WebPMux* mux,
 
   err = MuxGet(mux, IDX_ANIM, 1, &anim);
   if (err != WEBP_MUX_OK) return err;
-  if (anim.size < kChunks[WEBP_CHUNK_ANIM].size) return WEBP_MUX_BAD_DATA;
+  if (anim.size < kChunks[IDX_ANIM].size) return WEBP_MUX_BAD_DATA;
   params->bgcolor = GetLE32(anim.bytes);
   params->loop_count = GetLE16(anim.bytes + 4);
 
