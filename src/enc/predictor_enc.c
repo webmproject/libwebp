@@ -419,7 +419,7 @@ static void GetBestPredictorForTile(const uint32_t* const all_argb,
   int64_t best_diff = WEBP_INT64_MAX;
   uint32_t best_mode = min_mode;
   const uint32_t* best_histo =
-      GetHistoArgbConst(all_argb, /*subsampling_index=*/0, best_mode);
+      GetHistoArgbConst(all_argb, subsampling_index, best_mode);
   for (mode = min_mode; mode < kNumPredModes; ++mode) {
     const uint32_t* const histo_argb =
         GetHistoArgbConst(all_argb, subsampling_index, mode);
