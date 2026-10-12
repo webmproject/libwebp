@@ -383,7 +383,7 @@ WEBP_NODISCARD static int Import(WebPPicture* const picture, const uint8_t* rgb,
   const uint8_t* b_ptr = rgb + (swap_rb ? 0 : 2);
   int width, height;
 
-  if (picture == NULL) return 0;
+  assert(picture != NULL);
 
   WebPPictureFree(picture);
 
