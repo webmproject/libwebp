@@ -41,6 +41,7 @@ int WebPImportGray(const uint8_t* gray_data, WebPPicture* pic) {
   int y, width, uv_width;
   if (pic == NULL || gray_data == NULL) return 0;
   pic->colorspace = WEBP_YUV420;
+  pic->use_argb = 0;
   if (!WebPPictureAlloc(pic)) return 0;
   width = pic->width;
   uv_width = (width + 1) >> 1;

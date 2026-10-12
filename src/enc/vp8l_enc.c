@@ -1380,8 +1380,8 @@ static WEBP_INLINE uint32_t ApplyPaletteHash2(uint32_t color) {
 // using 'row' as a temporary buffer of size 'width'.
 // We assume that all src[] values have a corresponding entry in the palette.
 // Note: src[] can be the same as dst[]
-WEBP_NODISCARD static int ApplyPalette(const uint32_t* src, uint32_t src_stride,
-                                       uint32_t* dst, uint32_t dst_stride,
+WEBP_NODISCARD static int ApplyPalette(const uint32_t* src, int src_stride,
+                                       uint32_t* dst, int dst_stride,
                                        const uint32_t* palette,
                                        int palette_size, int width, int height,
                                        int xbits,

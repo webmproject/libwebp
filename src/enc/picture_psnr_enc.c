@@ -141,8 +141,9 @@ int WebPPlaneDistortion(const uint8_t* src, size_t src_stride,
                                 : (type == 1) ? AccumulateSSIM
                                               : AccumulateLSIM;
   if (src == NULL || ref == NULL || width <= 0 || height <= 0 || x_step == 0 ||
-      src_stride < x_step * width || ref_stride < x_step * width ||
-      result == NULL || distortion == NULL) {
+      src_stride / (size_t)width < x_step ||
+      ref_stride / (size_t)width < x_step || result == NULL ||
+      distortion == NULL) {
     return 0;
   }
 
@@ -158,8 +159,8 @@ int WebPPlaneDistortion(const uint8_t* src, size_t src_stride,
     tmp2 = tmp1 + (size_t)width * height;
     for (y = 0; y < height; ++y) {
       for (x = 0; x < width; ++x) {
-        tmp1[x + y * width] = src[x * x_step + y * src_stride];
-        tmp2[x + y * width] = ref[x * x_step + y * ref_stride];
+        tmp1[x + (size_t)y * width] = src[x * x_step + y * src_stride];
+        tmp2[x + (size_t)y * width] = ref[x * x_step + y * ref_stride];
       }
     }
     src = tmp1;
@@ -203,6 +204,10 @@ int WebPPictureDistortion(const WebPPicture* src, const WebPPicture* ref,
   // We always measure distortion in ARGB space.
   if (p0.use_argb == 0 && !WebPPictureYUVAToARGB(&p0)) goto Error;
   if (p1.use_argb == 0 && !WebPPictureYUVAToARGB(&p1)) goto Error;
+  if (p0.argb == NULL || p1.argb == NULL || p0.argb_stride < w ||
+      p1.argb_stride < w) {
+    goto Error;
+  }
   for (c = 0; c < 4; ++c) {
     float distortion;
     const size_t stride0 = 4 * (size_t)p0.argb_stride;

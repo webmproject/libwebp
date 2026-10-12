@@ -89,7 +89,7 @@ static int SmoothenBlock(const uint8_t* a_ptr, int a_stride, uint8_t* y_ptr,
 }
 
 void WebPReplaceTransparentPixels(WebPPicture* const pic, uint32_t color) {
-  if (pic != NULL && pic->use_argb) {
+  if (pic != NULL && pic->use_argb && pic->argb != NULL) {
     int y = pic->height;
     uint32_t* argb = pic->argb;
     color &= 0xffffffu;  // force alpha=0
@@ -110,6 +110,7 @@ void WebPCleanupTransparentArea(WebPPicture* pic) {
   // note: we ignore the left-overs on right/bottom, except for SmoothenBlock().
   if (pic->use_argb) {
     uint32_t argb_value = 0;
+    if (pic->argb == NULL) return;
     for (y = 0; y < h; ++y) {
       int need_reset = 1;
       for (x = 0; x < w; ++x) {
@@ -200,7 +201,7 @@ void WebPBlendAlpha(WebPPicture* picture, uint32_t background_rgb) {
   const int green = (background_rgb >> 8) & 0xff;
   const int blue = (background_rgb >> 0) & 0xff;
   int x, y;
-  if (picture == NULL) return;
+  if (!WebPValidateAllocatedPicture(picture)) return;
   if (!picture->use_argb) {
     // omit last pixel during u/v loop
     const int uv_width = (picture->width >> 1);

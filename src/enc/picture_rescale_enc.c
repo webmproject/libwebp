@@ -64,11 +64,9 @@ WEBP_NODISCARD static int AdjustAndCheckRectangle(const WebPPicture* const pic,
 int WebPPictureCopy(const WebPPicture* src, WebPPicture* dst) {
   if (src == NULL || dst == NULL) return 0;
   if (src == dst) return 1;
+  if (!WebPValidateAllocatedPicture(src)) return 0;
 
   PictureGrabSpecs(src, dst);
-  if (!src->use_argb && src->a == NULL) {
-    dst->colorspace = (WebPEncCSP)(dst->colorspace & ~WEBP_CSP_ALPHA_BIT);
-  }
   if (!WebPPictureAlloc(dst)) return 0;
 
   if (!src->use_argb) {
@@ -102,6 +100,7 @@ int WebPPictureIsView(const WebPPicture* picture) {
 int WebPPictureView(const WebPPicture* src, int left, int top, int width,
                     int height, WebPPicture* dst) {
   if (src == NULL || dst == NULL) return 0;
+  if (!WebPValidateAllocatedPicture(src)) return 0;
 
   // verify rectangle position.
   if (!AdjustAndCheckRectangle(src, &left, &top, width, height)) return 0;
@@ -136,13 +135,9 @@ int WebPPictureCrop(WebPPicture* pic, int left, int top, int width,
                     int height) {
   WebPPicture tmp;
 
-  if (pic == NULL) return 0;
+  if (!WebPValidateAllocatedPicture(pic)) return 0;
   if (!AdjustAndCheckRectangle(pic, &left, &top, width, height)) return 0;
-
   PictureGrabSpecs(pic, &tmp);
-  if (!pic->use_argb && pic->a == NULL) {
-    tmp.colorspace = (WebPEncCSP)(tmp.colorspace & ~WEBP_CSP_ALPHA_BIT);
-  }
   tmp.width = width;
   tmp.height = height;
   if (!WebPPictureAlloc(&tmp)) {
@@ -219,7 +214,7 @@ int WebPPictureRescale(WebPPicture* picture, int width, int height) {
   void* work_mem = NULL;
   int status = VP8_ENC_OK;
 
-  if (!WebPValidatePicture(picture)) return 0;
+  if (!WebPValidateAllocatedPicture(picture)) return 0;
   prev_width = picture->width;
   prev_height = picture->height;
   if (!WebPRescalerGetScaledDimensions(prev_width, prev_height, &width,
@@ -228,9 +223,6 @@ int WebPPictureRescale(WebPPicture* picture, int width, int height) {
   }
 
   PictureGrabSpecs(picture, &tmp);
-  if (!picture->use_argb && picture->a == NULL) {
-    tmp.colorspace = (WebPEncCSP)(tmp.colorspace & ~WEBP_CSP_ALPHA_BIT);
-  }
   tmp.width = width;
   tmp.height = height;
   if (!WebPPictureAlloc(&tmp)) {

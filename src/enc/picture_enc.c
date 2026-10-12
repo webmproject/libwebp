@@ -140,6 +140,23 @@ int WebPValidatePicture(const WebPPicture* const picture) {
   return 1;
 }
 
+int WebPValidateAllocatedPicture(const WebPPicture* const picture) {
+  if (!WebPValidatePicture(picture)) return 0;
+  if (picture->use_argb) {
+    if (picture->argb == NULL) {
+      return WebPEncodingSetError(picture, VP8_ENC_ERROR_NULL_PARAMETER);
+    }
+  } else {
+    if (picture->y == NULL || picture->u == NULL || picture->v == NULL) {
+      return WebPEncodingSetError(picture, VP8_ENC_ERROR_NULL_PARAMETER);
+    }
+    if ((picture->colorspace & WEBP_CSP_ALPHA_BIT) && picture->a == NULL) {
+      return WebPEncodingSetError(picture, VP8_ENC_ERROR_NULL_PARAMETER);
+    }
+  }
+  return 1;
+}
+
 static void WebPPictureResetBufferARGB(WebPPicture* const picture) {
   picture->memory_argb_ = NULL;
   picture->argb = NULL;
