@@ -34,13 +34,13 @@ namespace {
 
 const VP8CPUInfo default_VP8GetCPUInfo = fuzz_utils::VP8GetCPUInfo;
 
-void Enc(const fuzz_utils::CropOrScaleParams& crop_or_scale_params,
+bool Enc(const fuzz_utils::CropOrScaleParams& crop_or_scale_params,
          WebPConfig& config, WebPPicture& pic,
          WebPMemoryWriter& memory_writer) {
   // Crop and scale.
   if (!fuzz_utils::CropOrScale(&pic, crop_or_scale_params)) {
     const WebPEncodingError error_code = pic.error_code;
-    if (error_code == VP8_ENC_ERROR_OUT_OF_MEMORY) return;
+    if (error_code == VP8_ENC_ERROR_OUT_OF_MEMORY) return false;
     fprintf(stderr, "ExtractAndCropOrScale failed. Error code: %d\n",
             error_code);
     std::abort();
@@ -70,11 +70,12 @@ void Enc(const fuzz_utils::CropOrScaleParams& crop_or_scale_params,
     const WebPEncodingError error_code = pic.error_code;
     if (error_code == VP8_ENC_ERROR_OUT_OF_MEMORY ||
         error_code == VP8_ENC_ERROR_BAD_WRITE) {
-      return;
+      return false;
     }
     fprintf(stderr, "WebPEncode failed. Error code: %d\n", error_code);
     std::abort();
   }
+  return true;
 }
 
 // Encodes a picture and decodes it using valid colorspace and decoder options,
@@ -94,7 +95,7 @@ void EncDecValidTest(bool use_argb, fuzz_utils::WebPPictureCpp pic_cpp,
   std::unique_ptr<WebPMemoryWriter, fuzz_utils::UniquePtrDeleter>
       memory_writer_owner(&memory_writer);
 
-  Enc(crop_or_scale_params, config, pic, memory_writer);
+  if (!Enc(crop_or_scale_params, config, pic, memory_writer)) return;
 
   // Try decoding the result without options into BGRA first.
   const uint8_t* const out_data = memory_writer.mem;
@@ -254,7 +255,7 @@ void EncDecTest(bool use_argb, fuzz_utils::WebPPictureCpp pic_cpp,
   std::unique_ptr<WebPMemoryWriter, fuzz_utils::UniquePtrDeleter>
       memory_writer_owner(&memory_writer);
 
-  Enc(crop_or_scale_params, config, pic, memory_writer);
+  if (!Enc(crop_or_scale_params, config, pic, memory_writer)) return;
 
   // Try decoding the result.
   const uint8_t* const out_data = memory_writer.mem;

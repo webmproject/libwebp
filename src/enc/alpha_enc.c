@@ -353,14 +353,14 @@ WEBP_NODISCARD static int EncodeAlpha(VP8Encoder* const enc, int quality,
     ok = ApplyFiltersAndEncode(quant_alpha, width, height, data_size, method,
                                filter, reduce_levels, effort_level, output,
                                output_size, pic->stats);
-    if (!ok) {
-      WebPEncodingSetError(pic, VP8_ENC_ERROR_OUT_OF_MEMORY);  // imprecise
-    }
 #if !defined(WEBP_DISABLE_STATS)
     if (pic->stats != NULL) {  // need stats?
       enc->sse[3] = sse;
     }
 #endif
+  }
+  if (!ok) {
+    WebPEncodingSetError(pic, VP8_ENC_ERROR_OUT_OF_MEMORY);  // imprecise
   }
 
   WebPSafeFree(quant_alpha);

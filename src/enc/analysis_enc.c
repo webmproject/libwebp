@@ -359,7 +359,7 @@ static void DefaultMBInfo(VP8MBInfo* const mb) {
 // and decide intra4/intra16, but that's usually almost always a bad choice at
 // this stage.
 
-static void ResetAllMBInfo(VP8Encoder* const enc) {
+WEBP_NODISCARD static int ResetAllMBInfo(VP8Encoder* const enc) {
   int n;
   for (n = 0; n < enc->mb_w * enc->mb_h; ++n) {
     DefaultMBInfo(&enc->mb_info[n]);
@@ -370,7 +370,7 @@ static void ResetAllMBInfo(VP8Encoder* const enc) {
   // Note: we can't compute this 'alpha' / 'uv_alpha' -> set to default value.
   enc->alpha = 0;
   enc->uv_alpha = 0;
-  WebPReportProgress(enc->pic, enc->percent + 20, &enc->percent);
+  return WebPReportProgress(enc->pic, enc->percent + 20, &enc->percent);
 }
 
 // struct used to collect job result
@@ -481,11 +481,13 @@ int VP8EncAnalyze(VP8Encoder* const enc) {
       AssignSegments(enc, main_job.alphas);
     }
   } else {  // Use only one default segment.
-    ResetAllMBInfo(enc);
+    ok = ResetAllMBInfo(enc);
   }
   if (!ok) {
-    return WebPEncodingSetError(enc->pic,
-                                VP8_ENC_ERROR_OUT_OF_MEMORY);  // imprecise
+    return enc->pic->error_code != VP8_ENC_OK
+               ? 0
+               : WebPEncodingSetError(
+                     enc->pic, VP8_ENC_ERROR_OUT_OF_MEMORY);  // imprecise
   }
   return ok;
 }

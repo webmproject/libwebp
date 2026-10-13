@@ -285,7 +285,7 @@ static void FinalizePSNR(const VP8Encoder* const enc) {
 }
 #endif  // !defined(WEBP_DISABLE_STATS)
 
-static void StoreStats(VP8Encoder* const enc) {
+WEBP_NODISCARD static int StoreStats(VP8Encoder* const enc) {
 #if !defined(WEBP_DISABLE_STATS)
   WebPAuxStats* const stats = enc->pic->stats;
   if (stats != NULL) {
@@ -304,7 +304,7 @@ static void StoreStats(VP8Encoder* const enc) {
     }
   }
 #endif  // !defined(WEBP_DISABLE_STATS)
-  WebPReportProgress(enc->pic, 100, &enc->percent);  // done!
+  return WebPReportProgress(enc->pic, 100, &enc->percent);  // done!
 }
 
 int WebPEncodingSetError(const WebPPicture* const pic,
@@ -392,7 +392,7 @@ int WebPEncode(const WebPConfig* config, WebPPicture* pic) {
     ok = ok && VP8EncFinishAlpha(enc);
 
     ok = ok && VP8EncWrite(enc);
-    StoreStats(enc);
+    ok = ok && StoreStats(enc);
     if (!ok) {
       VP8EncFreeBitWriters(enc);
     }

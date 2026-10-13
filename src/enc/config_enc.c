@@ -123,7 +123,9 @@ int WebPValidateConfig(const WebPConfig* config) {
   if (config->alpha_quality < 0 || config->alpha_quality > 100) return 0;
   if (config->lossless < 0 || config->lossless > 1) return 0;
   if (config->near_lossless < 0 || config->near_lossless > 100) return 0;
-  if (config->image_hint >= WEBP_HINT_LAST) return 0;
+  if ((int)config->image_hint < 0 || config->image_hint >= WEBP_HINT_LAST) {
+    return 0;
+  }
   if (config->emulate_jpeg_size < 0 || config->emulate_jpeg_size > 1) return 0;
   if (config->thread_level < 0 || config->thread_level > 1) return 0;
   if (config->low_memory < 0 || config->low_memory > 1) return 0;
