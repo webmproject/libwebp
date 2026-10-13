@@ -490,7 +490,8 @@ int SharpYuvConvertWithOptions(const void* r_ptr, const void* g_ptr,
   if (width < 1 || height < 1 || width == INT_MAX || height == INT_MAX ||
       r_ptr == NULL || g_ptr == NULL || b_ptr == NULL || y_ptr == NULL ||
       u_ptr == NULL || v_ptr == NULL || options == NULL ||
-      options->yuv_matrix == NULL || (int)options->transfer_type < 0 ||
+      options->yuv_matrix == NULL || (int)options->transfer_type <= 0 ||
+      (int)options->transfer_type == 2 || (int)options->transfer_type == 3 ||
       options->transfer_type >= kSharpYuvTransferFunctionNum) {
     return 0;
   }

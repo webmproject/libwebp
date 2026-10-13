@@ -331,8 +331,10 @@ void VP8LHuffmanTablesDeallocate(HuffmanTables* const huffman_tables) {
   next = current->next;
   WebPSafeFree(current->start);
   current->start = NULL;
+  current->curr_table = NULL;
   current->size = 0;
   current->next = NULL;
+  huffman_tables->curr_segment = NULL;
   current = next;
   // Free the following nodes.
   while (current != NULL) {

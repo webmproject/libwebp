@@ -630,6 +630,8 @@ WEBP_NODISCARD static int CustomSetup(VP8Io* io) {
 #if !defined(WEBP_REDUCE_SIZE)
     const int ok = is_rgb ? InitRGBRescaler(io, p) : InitYUVRescaler(io, p);
     if (!ok) {
+      WebPSafeFree(p->memory);
+      p->memory = NULL;
       p->status = VP8_STATUS_OUT_OF_MEMORY;
       return 0;  // memory error
     }

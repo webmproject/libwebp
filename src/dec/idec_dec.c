@@ -274,24 +274,33 @@ WEBP_NODISCARD static int CheckMemBufferMode(MemBuffer* const mem,
   return 1;
 }
 
+static VP8StatusCode IDecError(WebPIDecoder* const idec, VP8StatusCode error) {
+  if (idec->state == STATE_VP8_DATA) {
+    // Synchronize the thread, clean-up and check for errors.
+    (void)VP8ExitCritical((VP8Decoder*)idec->dec, &idec->io);
+  }
+  idec->state = STATE_ERROR;
+  return error;
+}
+
 // To be called last.
 WEBP_NODISCARD static VP8StatusCode FinishDecoding(WebPIDecoder* const idec) {
   const WebPDecoderOptions* const options = idec->params.options;
   WebPDecBuffer* const output = idec->params.output;
 
-  idec->state = STATE_DONE;
   if (options != NULL && options->flip) {
     const VP8StatusCode status = WebPFlipBuffer(output);
-    if (status != VP8_STATUS_OK) return status;
+    if (status != VP8_STATUS_OK) return IDecError(idec, status);
   }
   if (idec->final_output != NULL) {
     const VP8StatusCode status = WebPCopyDecBufferPixels(
         output, idec->final_output);  // do the slow-copy
     WebPFreeDecBuffer(&idec->output);
-    if (status != VP8_STATUS_OK) return status;
+    if (status != VP8_STATUS_OK) return IDecError(idec, status);
     *output = *idec->final_output;
     idec->final_output = NULL;
   }
+  idec->state = STATE_DONE;
   return VP8_STATUS_OK;
 }
 
@@ -313,15 +322,6 @@ static void RestoreContext(const MBContext* context, VP8Decoder* const dec,
 }
 
 //------------------------------------------------------------------------------
-
-static VP8StatusCode IDecError(WebPIDecoder* const idec, VP8StatusCode error) {
-  if (idec->state == STATE_VP8_DATA) {
-    // Synchronize the thread, clean-up and check for errors.
-    (void)VP8ExitCritical((VP8Decoder*)idec->dec, &idec->io);
-  }
-  idec->state = STATE_ERROR;
-  return error;
-}
 
 static void ChangeState(WebPIDecoder* const idec, DecState new_state,
                         size_t consumed_bytes) {
@@ -511,9 +511,12 @@ static VP8StatusCode DecodeRemaining(WebPIDecoder* const idec) {
       MBContext context;
       SaveContext(dec, token_br, &context);
       if (!VP8DecodeMB(dec, token_br)) {
-        // We shouldn't fail when MAX_MB data was available
-        if (dec->num_parts_minus_one == 0 &&
-            MemDataSize(&idec->mem) > MAX_MB_SIZE) {
+        // We shouldn't fail when MAX_MB data was available, or when a
+        // non-last partition (whose full size is already in memory) runs out.
+        if ((dec->mb_y & dec->num_parts_minus_one) !=
+                dec->num_parts_minus_one ||
+            (dec->num_parts_minus_one == 0 &&
+             MemDataSize(&idec->mem) > MAX_MB_SIZE)) {
           return IDecError(idec, VP8_STATUS_BITSTREAM_ERROR);
         }
         // Synchronize the threads.
@@ -883,7 +886,8 @@ WEBP_NODISCARD static const WebPDecBuffer* GetOutputBuffer(
   if (idec == NULL || idec->dec == NULL) {
     return NULL;
   }
-  if (idec->state <= STATE_VP8_PARTS0) {
+  if (idec->state <= STATE_VP8_PARTS0 || idec->state == STATE_VP8L_HEADER ||
+      idec->state == STATE_ERROR) {
     return NULL;
   }
   if (idec->final_output != NULL) {

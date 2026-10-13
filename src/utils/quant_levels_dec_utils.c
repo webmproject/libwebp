@@ -160,7 +160,9 @@ static void ApplyFilter(SmoothParams* const p) {
 #endif
     }
   }
-  p->dst += p->stride;  // advance output pointer
+  if (p->row < p->height - 1) {
+    p->dst += p->stride;  // advance output pointer
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -206,7 +208,7 @@ static void CountLevels(SmoothParams* const p) {
       if (v > p->max) p->max = v;
       used_levels[v] = 1;
     }
-    data += p->stride;
+    if (j < p->height - 1) data += p->stride;
   }
   // Compute the mininum distance between two non-zero levels.
   p->min_level_dist = p->max - p->min;
@@ -231,7 +233,7 @@ WEBP_NODISCARD static int InitParams(
     int height, int stride, int radius, SmoothParams* const p) {
   const int R = 2 * radius + 1;  // total size of the kernel
 
-  const size_t size_scratch_m = (R + 1) * width * sizeof(*p->start);
+  const size_t size_scratch_m = (size_t)(R + 1) * width * sizeof(*p->start);
   const size_t size_m = width * sizeof(*p->average);
   const size_t size_lut = CORRECTION_LUT_SIZE * sizeof(*p->correction);
   const size_t total_size = size_scratch_m + size_m + size_lut;
@@ -281,7 +283,9 @@ int WebPDequantizeLevels(uint8_t* WEBP_SIZED_BY((size_t)stride* height)
   int radius = 4 * strength / 100;
 
   if (strength < 0 || strength > 100) return 0;
-  if (data == NULL || width <= 0 || height <= 0) return 0;  // bad params
+  if (data == NULL || width <= 0 || height <= 0 || stride < width) {
+    return 0;  // bad params
+  }
 
   // limit the filter size to not exceed the image dimensions
   if (2 * radius + 1 > width) radius = (width - 1) >> 1;

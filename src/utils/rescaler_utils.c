@@ -208,7 +208,7 @@ int WebPRescalerImport(WebPRescaler* const rescaler, int num_lines,
       rescaler->irow = rescaler->frow;
       rescaler->frow = WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(
           rescaler_t*, tmp,
-          rescaler->num_channels * rescaler->dst_width * sizeof(*tmp));
+          (size_t)rescaler->num_channels * rescaler->dst_width * sizeof(*tmp));
       WEBP_SELF_ASSIGN(rescaler->dst_width);
       WEBP_SELF_ASSIGN(rescaler->num_channels);
       WEBP_SELF_ASSIGN(rescaler->irow64);
