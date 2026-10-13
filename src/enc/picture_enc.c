@@ -55,19 +55,22 @@ int WebPPictureInitInternal(WebPPicture* picture, int version) {
 #define UINTPTR_MAX ((uintptr_t)-1)
 #endif
 
-// Returns 1 if [ptr, ptr + (height - 1) * stride + width*step] (or for negative
-// stride, [ptr - (height - 1) * (-stride), ptr + width*step]) fits in
-// addressable memory without wrapping around the address space, 0 otherwise.
+// Returns 1 if 'ptr' is NULL, or if its stride and memory bounds are valid for
+// a plane of size width x height with 'step' bytes per pixel, 0 otherwise.
 static int CheckMemoryBounds(const void* ptr, int stride, int step, int width,
                              int height) {
-  const uint64_t abs_stride =
-      (stride < 0) ? (uint64_t)-(int64_t)stride : (uint64_t)stride;
-  const uint64_t row_span = (uint64_t)(height - 1) * abs_stride;
-  const uint64_t width_bytes = (uint64_t)width * (uint64_t)step;
-  uint64_t total_bytes;
+  uint64_t abs_stride, row_span, width_bytes, total_bytes;
   uintptr_t addr;
 
-  if (ptr == NULL || width <= 0 || height <= 0 || step <= 0) return 0;
+  if (ptr == NULL) return 1;
+  if (width <= 0 || height <= 0 || step <= 0) return 0;
+  if (stride > INT_MAX / step || stride < -INT_MAX / step) return 0;
+  stride *= step;
+  if (!CheckStride(stride, step, width)) return 0;
+
+  abs_stride = (stride < 0) ? (uint64_t)-(int64_t)stride : (uint64_t)stride;
+  row_span = (uint64_t)(height - 1) * abs_stride;
+  width_bytes = (uint64_t)width * (uint64_t)step;
 
   // Check that the total plane size fits in addressable limits (PTRDIFF_MAX).
   if (row_span > (uint64_t)PTRDIFF_MAX - width_bytes) return 0;
@@ -96,45 +99,26 @@ int WebPValidatePicture(const WebPPicture* const picture) {
   }
   // If buffers are provided, validate their strides and memory bounds.
   if (picture->use_argb) {
-    if (picture->argb != NULL) {
-      // Validate that argb_stride scaled to bytes does not overflow 'int',
-      // satisfies the buffer dimension constraints, and fits in memory.
-      const int argb_bpp = (int)sizeof(*picture->argb);
-      if (picture->argb_stride > INT_MAX / argb_bpp ||
-          picture->argb_stride < -INT_MAX / argb_bpp ||
-          !CheckStride(argb_bpp * picture->argb_stride, argb_bpp,
-                       picture->width) ||
-          !CheckMemoryBounds(picture->argb, argb_bpp * picture->argb_stride,
-                             argb_bpp, picture->width, picture->height)) {
-        return WebPEncodingSetError(picture, VP8_ENC_ERROR_BAD_DIMENSION);
-      }
+    if (!CheckMemoryBounds(picture->argb, picture->argb_stride,
+                           (int)sizeof(*picture->argb), picture->width,
+                           picture->height)) {
+      return WebPEncodingSetError(picture, VP8_ENC_ERROR_BAD_DIMENSION);
     }
   } else {
-    // If YUV planes are provided, validate Y and U/V strides (U/V planes are
-    // subsampled by 2 in each dimension for YUV420), as well as alpha stride
-    // if an alpha plane is present, and check that each plane fits in memory.
-    if (picture->y != NULL || picture->u != NULL || picture->v != NULL) {
-      const int uv_width = (int)(((int64_t)picture->width + 1) >> 1);
-      const int uv_height = (int)(((int64_t)picture->height + 1) >> 1);
-      if (!CheckStride(picture->y_stride, 1, picture->width) ||
-          !CheckStride(picture->uv_stride, 1, uv_width) ||
-          (picture->y != NULL &&
-           !CheckMemoryBounds(picture->y, picture->y_stride, /*step=*/1,
-                              picture->width, picture->height)) ||
-          (picture->u != NULL &&
-           !CheckMemoryBounds(picture->u, picture->uv_stride, /*step=*/1,
-                              uv_width, uv_height)) ||
-          (picture->v != NULL &&
-           !CheckMemoryBounds(picture->v, picture->uv_stride, /*step=*/1,
-                              uv_width, uv_height))) {
-        return WebPEncodingSetError(picture, VP8_ENC_ERROR_BAD_DIMENSION);
-      }
-      if (picture->a != NULL &&
-          (!CheckStride(picture->a_stride, 1, picture->width) ||
-           !CheckMemoryBounds(picture->a, picture->a_stride, /*step=*/1,
-                              picture->width, picture->height))) {
-        return WebPEncodingSetError(picture, VP8_ENC_ERROR_BAD_DIMENSION);
-      }
+    // If YUV planes are provided, validate Y, U/V (subsampled by 2 in each
+    // dimension for YUV420), and alpha strides and check that each plane fits
+    // in memory.
+    const int uv_width = (int)(((int64_t)picture->width + 1) >> 1);
+    const int uv_height = (int)(((int64_t)picture->height + 1) >> 1);
+    if (!CheckMemoryBounds(picture->y, picture->y_stride, /*step=*/1,
+                           picture->width, picture->height) ||
+        !CheckMemoryBounds(picture->u, picture->uv_stride, /*step=*/1, uv_width,
+                           uv_height) ||
+        !CheckMemoryBounds(picture->v, picture->uv_stride, /*step=*/1, uv_width,
+                           uv_height) ||
+        !CheckMemoryBounds(picture->a, picture->a_stride, /*step=*/1,
+                           picture->width, picture->height)) {
+      return WebPEncodingSetError(picture, VP8_ENC_ERROR_BAD_DIMENSION);
     }
   }
   return 1;
@@ -180,10 +164,12 @@ int WebPPictureAllocARGB(WebPPicture* const picture) {
   int width, height;
   uint64_t argb_size;
 
-  if (!WebPValidatePicture(picture)) return 0;
+  assert(picture != NULL);
 
   WebPSafeFree(picture->memory_argb_);
   WebPPictureResetBufferARGB(picture);
+
+  if (!WebPValidatePicture(picture)) return 0;
 
   width = picture->width;
   height = picture->height;
@@ -206,10 +192,12 @@ int WebPPictureAllocYUVA(WebPPicture* const picture) {
   uint64_t y_size, uv_size, a_size, total_size;
   uint8_t* mem;
 
-  if (!WebPValidatePicture(picture)) return 0;
+  assert(picture != NULL);
 
   WebPSafeFree(picture->memory_);
   WebPPictureResetBufferYUVA(picture);
+
+  if (!WebPValidatePicture(picture)) return 0;
 
   has_alpha = (int)picture->colorspace & WEBP_CSP_ALPHA_BIT;
   width = picture->width;

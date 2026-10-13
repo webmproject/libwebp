@@ -99,7 +99,7 @@ int WebPPictureIsView(const WebPPicture* picture) {
 
 int WebPPictureView(const WebPPicture* src, int left, int top, int width,
                     int height, WebPPicture* dst) {
-  if (src == NULL || dst == NULL) return 0;
+  if (dst == NULL) return 0;
   if (!WebPValidateAllocatedPicture(src)) return 0;
 
   // verify rectangle position.
