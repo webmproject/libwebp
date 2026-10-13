@@ -457,6 +457,7 @@ static void MinimizeChangeRectangle(const WebPPicture* const src,
   assert(src->width == dst->width && src->height == dst->height);
   assert(rect->x_offset + rect->width <= dst->width);
   assert(rect->y_offset + rect->height <= dst->height);
+  if (IsEmptyRect(rect)) goto NoChange;
 
   // Left boundary.
   for (i = rect->x_offset; i < rect->x_offset + rect->width; ++i) {
@@ -621,8 +622,8 @@ WEBP_NODISCARD static int GetSubRects(const WebPPicture* const prev_canvas,
                     &params->sub_frame_lossy);
 }
 
-static WEBP_INLINE int clip(int v, int min_v, int max_v) {
-  return (v < min_v) ? min_v : (v > max_v) ? max_v : v;
+static WEBP_INLINE int clip(int64_t v, int min_v, int max_v) {
+  return (v < min_v) ? min_v : (v > max_v) ? max_v : (int)v;
 }
 
 int WebPAnimEncoderRefineRect(const WebPPicture* const prev_canvas,
@@ -632,16 +633,20 @@ int WebPAnimEncoderRefineRect(const WebPPicture* const prev_canvas,
                               int* const width, int* const height) {
   FrameRectangle rect;
   int right, left, bottom, top;
-  if (prev_canvas == NULL || curr_canvas == NULL ||
+  if (prev_canvas == NULL || curr_canvas == NULL || x_offset == NULL ||
+      y_offset == NULL || width == NULL || height == NULL ||
       prev_canvas->width != curr_canvas->width ||
-      prev_canvas->height != curr_canvas->height || !prev_canvas->use_argb ||
-      !curr_canvas->use_argb || !(quality >= 0.f && quality <= 100.f)) {
+      prev_canvas->height != curr_canvas->height || curr_canvas->width <= 0 ||
+      curr_canvas->height <= 0 || *width <= 0 || *height <= 0 ||
+      !prev_canvas->use_argb || !curr_canvas->use_argb ||
+      prev_canvas->argb == NULL || curr_canvas->argb == NULL ||
+      !(quality >= 0.f && quality <= 100.f)) {
     return 0;
   }
-  right = clip(*x_offset + *width, 0, curr_canvas->width);
-  left = clip(*x_offset, 0, curr_canvas->width - 1);
-  bottom = clip(*y_offset + *height, 0, curr_canvas->height);
-  top = clip(*y_offset, 0, curr_canvas->height - 1);
+  right = clip((int64_t)*x_offset + *width, 0, curr_canvas->width);
+  left = clip(*x_offset, 0, curr_canvas->width);
+  bottom = clip((int64_t)*y_offset + *height, 0, curr_canvas->height);
+  top = clip(*y_offset, 0, curr_canvas->height);
   rect.x_offset = left;
   rect.y_offset = top;
   rect.width = clip(right - left, 0, curr_canvas->width - rect.x_offset);
@@ -1137,6 +1142,12 @@ WEBP_NODISCARD static int IncreasePreviousDuration(WebPAnimEncoder* const enc,
     }
     ++enc->count;
     ++enc->count_since_key_frame;
+    if (enc->keyframe != KEYFRAME_NONE) {
+      // Freeze the already chosen keyframe before flushing all previous frames.
+      enc->count_since_key_frame = (int)enc->count - 1 - enc->keyframe;
+      enc->best_delta = DELTA_INFINITY;
+      enc->keyframe = KEYFRAME_NONE;
+    }
     enc->flush_count = enc->count - 1;
     enc->prev_candidate_undecided = 0;
     enc->prev_rect = rect;
@@ -1210,7 +1221,7 @@ static WebPEncodingError SetFrame(WebPAnimEncoder* const enc,
   const WebPPicture* const canvas_carryover = &enc->canvas_carryover;
   // canvas_carryover with the area corresponding to the previous frame disposed
   // to background color.
-  WebPPicture* canvas_carryover_disposed = NULL;
+  WebPPicture canvas_carryover_disposed;
   Candidate candidates[CANDIDATE_COUNT];
   Candidate* best_candidate = NULL;
   const int is_lossless = config->lossless;
@@ -1248,6 +1259,9 @@ static WebPEncodingError SetFrame(WebPAnimEncoder* const enc,
   enc->last_config_reversed = config->lossless ? config_lossy : config_ll;
   *frame_skipped = 0;
 
+  if (!WebPPictureInit(&canvas_carryover_disposed)) {
+    return VP8_ENC_ERROR_INVALID_CONFIGURATION;
+  }
   if (!SubFrameParamsInit(&dispose_none_params, 1, empty_rect_allowed_none) ||
       !SubFrameParamsInit(&dispose_bg_params, 0, empty_rect_allowed_bg)) {
     return VP8_ENC_ERROR_INVALID_CONFIGURATION;
@@ -1272,16 +1286,15 @@ static WebPEncodingError SetFrame(WebPAnimEncoder* const enc,
   }
 
   if (dispose_bg_possible) {
-    // For memory optimization, canvas_carryover_disposed reuses the buffer from
-    // enc->prev_canvas. This is safe because prev_canvas is not read again
-    // before its contents are updated at the end of the CacheFrame() function.
-    canvas_carryover_disposed = &enc->prev_canvas;
     // Change-rectangle assuming previous frame was DISPOSE_BACKGROUND.
-    WebPCopyPixels(canvas_carryover, canvas_carryover_disposed);
+    if (!WebPPictureCopy(canvas_carryover, &canvas_carryover_disposed)) {
+      error_code = VP8_ENC_ERROR_OUT_OF_MEMORY;
+      goto Err;
+    }
     DisposeFrameRectangle(WEBP_MUX_DISPOSE_BACKGROUND, &enc->prev_rect,
-                          canvas_carryover_disposed);
+                          &canvas_carryover_disposed);
 
-    if (!GetSubRects(canvas_carryover_disposed, curr_canvas, is_key_frame,
+    if (!GetSubRects(&canvas_carryover_disposed, curr_canvas, is_key_frame,
                      is_first_frame, config_lossy.quality,
                      &dispose_bg_params)) {
       error_code = VP8_ENC_ERROR_INVALID_CONFIGURATION;
@@ -1315,10 +1328,11 @@ static WebPEncodingError SetFrame(WebPAnimEncoder* const enc,
   if (dispose_bg_params.should_try) {
     assert(!enc->is_first_frame);
     assert(dispose_bg_possible);
-    error_code = GenerateCandidates(
-        enc, candidates, WEBP_MUX_DISPOSE_BACKGROUND, canvas_carryover_disposed,
-        is_lossless, is_key_frame, &dispose_bg_params, &config_ll,
-        &config_lossy, &best_candidate, encoded_frame);
+    error_code =
+        GenerateCandidates(enc, candidates, WEBP_MUX_DISPOSE_BACKGROUND,
+                           &canvas_carryover_disposed, is_lossless,
+                           is_key_frame, &dispose_bg_params, &config_ll,
+                           &config_lossy, &best_candidate, encoded_frame);
     if (error_code != VP8_ENC_OK) goto Err;
   }
 
@@ -1328,6 +1342,7 @@ static WebPEncodingError SetFrame(WebPAnimEncoder* const enc,
 
 Err:
 End:
+  WebPPictureFree(&canvas_carryover_disposed);
   SubFrameParamsFree(&dispose_none_params);
   SubFrameParamsFree(&dispose_bg_params);
   return error_code;
@@ -1349,8 +1364,14 @@ WEBP_NODISCARD static int CacheFrame(WebPAnimEncoder* const enc,
   EncodedFrame* const encoded_frame = GetFrame(enc, position);
   FrameRectangle best_key_candidate_rect, best_sub_candidate_rect;
   int candidate_undecided;
+  const WebPConfig orig_last_config = enc->last_config;
+  const WebPConfig orig_last_config_reversed = enc->last_config_reversed;
+  WebPMuxAnimDispose orig_prev_dispose = WEBP_MUX_DISPOSE_NONE;
 
   ++enc->count;
+  if (!enc->is_first_frame) {
+    orig_prev_dispose = GetPreviousDisposeMethod(enc);
+  }
 
   if (enc->is_first_frame) {  // Add this as a keyframe.
     error_code = SetFrame(enc, config, 1, &best_key_candidate_rect,
@@ -1504,12 +1525,17 @@ Skip:
 End:
   if (!ok || frame_skipped) {
     FrameRelease(encoded_frame);
+    if (!ok) {
+      enc->last_config = orig_last_config;
+      enc->last_config_reversed = orig_last_config_reversed;
+      if (!enc->is_first_frame) {
+        SetPreviousDisposeMethod(enc, orig_prev_dispose);
+      }
+      MarkError2(enc, "ERROR adding frame. WebPEncodingError", error_code);
+    }
     // We reset some counters, as the frame addition failed/was skipped.
     --enc->count;
     if (!enc->is_first_frame) --enc->count_since_key_frame;
-    if (!ok) {
-      MarkError2(enc, "ERROR adding frame. WebPEncodingError", error_code);
-    }
   }
   enc->curr_canvas->error_code = error_code;  // report error_code
   assert(ok || error_code != VP8_ENC_OK);
@@ -1541,13 +1567,18 @@ WEBP_NODISCARD static int FlushFrames(WebPAnimEncoder* const enc) {
     if (enc->keyframe != KEYFRAME_NONE) --enc->keyframe;
   }
 
-  if (enc->count == 1 && enc->start != 0) {
-    // Move enc->start to index 0.
-    const int enc_start_tmp = (int)enc->start;
-    EncodedFrame temp = enc->encoded_frames[0];
-    enc->encoded_frames[0] = enc->encoded_frames[enc_start_tmp];
-    enc->encoded_frames[enc_start_tmp] = temp;
-    FrameRelease(&enc->encoded_frames[enc_start_tmp]);
+  if (enc->count > 0 && enc->start != 0) {
+    // Move remaining frames starting at enc->start to index 0.
+    size_t i;
+    for (i = 0; i < enc->count; ++i) {
+      const size_t old_idx = enc->start + i;
+      const EncodedFrame temp = enc->encoded_frames[i];
+      enc->encoded_frames[i] = enc->encoded_frames[old_idx];
+      enc->encoded_frames[old_idx] = temp;
+      FrameRelease(&enc->encoded_frames[old_idx]);
+    }
+    enc->start = 0;
+  } else if (enc->count == 0) {
     enc->start = 0;
   }
   return 1;
@@ -1560,6 +1591,9 @@ int WebPAnimEncoderAdd(WebPAnimEncoder* enc, WebPPicture* frame, int timestamp,
                        const WebPConfig* encoder_config) {
   WebPConfig config;
   int ok;
+  uint32_t prev_frame_duration = 0;
+  int prev_duration = 0;
+  int will_split = 0;
 
   if (enc == NULL) {
     return 0;
@@ -1568,8 +1602,7 @@ int WebPAnimEncoderAdd(WebPAnimEncoder* enc, WebPPicture* frame, int timestamp,
 
   if (!enc->is_first_frame) {
     // Make sure timestamps are non-decreasing (integer wrap-around is OK).
-    const uint32_t prev_frame_duration =
-        (uint32_t)timestamp - enc->prev_timestamp;
+    prev_frame_duration = (uint32_t)timestamp - enc->prev_timestamp;
     if (prev_frame_duration >= MAX_DURATION) {
       if (frame != NULL) {
         frame->error_code = VP8_ENC_ERROR_INVALID_CONFIGURATION;
@@ -1577,13 +1610,64 @@ int WebPAnimEncoderAdd(WebPAnimEncoder* enc, WebPPicture* frame, int timestamp,
       MarkError(enc, "ERROR adding frame: timestamps must be non-decreasing");
       return 0;
     }
+  }
+
+  if (frame != NULL) {
+    if (frame->width != enc->canvas_width ||
+        frame->height != enc->canvas_height) {
+      frame->error_code = VP8_ENC_ERROR_INVALID_CONFIGURATION;
+      MarkError(enc, "ERROR adding frame: Invalid frame dimensions");
+      return 0;
+    }
+
+    if (!frame->use_argb) {  // Convert frame from YUV(A) to ARGB.
+      if (enc->options.verbose) {
+        fprintf(stderr,
+                "WARNING: Converting frame from YUV(A) to ARGB format; "
+                "this incurs a small loss.\n");
+      }
+      if (!WebPPictureYUVAToARGB(frame)) {
+        MarkError(enc, "ERROR converting frame from YUV(A) to ARGB");
+        return 0;
+      }
+    }
+
+    if (encoder_config != NULL) {
+      if (!WebPValidateConfig(encoder_config)) {
+        frame->error_code = VP8_ENC_ERROR_INVALID_CONFIGURATION;
+        MarkError(enc, "ERROR adding frame: Invalid WebPConfig");
+        return 0;
+      }
+      config = *encoder_config;
+    } else {
+      if (!WebPConfigInit(&config)) {
+        frame->error_code = VP8_ENC_ERROR_INVALID_CONFIGURATION;
+        MarkError(enc, "Cannot Init config");
+        return 0;
+      }
+      config.lossless = 1;
+    }
+  }
+
+  if (!enc->is_first_frame) {
+    EncodedFrame* const prev_enc_frame = GetFrame(enc, enc->count - 1);
+    prev_duration = prev_enc_frame->sub_frame.duration;
+    will_split = (prev_duration + (int)prev_frame_duration >= MAX_DURATION);
     if (!IncreasePreviousDuration(enc, (int)prev_frame_duration)) {
+      if (frame != NULL) {
+        frame->error_code = VP8_ENC_ERROR_OUT_OF_MEMORY;
+      }
+      MarkError(enc, "ERROR adding frame: Out of memory");
       return 0;
     }
     // IncreasePreviousDuration() may add a frame to avoid exceeding
     // MAX_DURATION which could cause CacheFrame() to over read 'encoded_frames'
     // before the next flush.
-    if (enc->count == enc->size && !FlushFrames(enc)) {
+    if ((enc->flush_count > 0 || enc->count == enc->size) &&
+        !FlushFrames(enc)) {
+      if (frame != NULL) {
+        frame->error_code = VP8_ENC_ERROR_OUT_OF_MEMORY;
+      }
       return 0;
     }
   } else {
@@ -1596,49 +1680,31 @@ int WebPAnimEncoderAdd(WebPAnimEncoder* enc, WebPPicture* frame, int timestamp,
     return 1;
   }
 
-  if (frame->width != enc->canvas_width ||
-      frame->height != enc->canvas_height) {
-    frame->error_code = VP8_ENC_ERROR_INVALID_CONFIGURATION;
-    MarkError(enc, "ERROR adding frame: Invalid frame dimensions");
-    return 0;
-  }
-
-  if (!frame->use_argb) {  // Convert frame from YUV(A) to ARGB.
-    if (enc->options.verbose) {
-      fprintf(stderr,
-              "WARNING: Converting frame from YUV(A) to ARGB format; "
-              "this incurs a small loss.\n");
-    }
-    if (!WebPPictureYUVAToARGB(frame)) {
-      MarkError(enc, "ERROR converting frame from YUV(A) to ARGB");
-      return 0;
-    }
-  }
-
-  if (encoder_config != NULL) {
-    if (!WebPValidateConfig(encoder_config)) {
-      MarkError(enc, "ERROR adding frame: Invalid WebPConfig");
-      return 0;
-    }
-    config = *encoder_config;
-  } else {
-    if (!WebPConfigInit(&config)) {
-      MarkError(enc, "Cannot Init config");
-      return 0;
-    }
-    config.lossless = 1;
-  }
   assert(enc->curr_canvas == NULL);
   enc->curr_canvas = frame;  // Store reference.
   assert(enc->curr_canvas_copy_modified == 1);
   CopyCurrentCanvas(enc);
 
   ok = CacheFrame(enc, &config) && FlushFrames(enc);
+  if (!ok && frame->error_code == VP8_ENC_OK) {
+    frame->error_code = VP8_ENC_ERROR_OUT_OF_MEMORY;
+  }
 
   enc->curr_canvas = NULL;
+  enc->curr_canvas_copy.progress_hook = NULL;
+  enc->curr_canvas_copy.user_data = NULL;
+  enc->curr_canvas_copy.use_argb = 1;
   enc->curr_canvas_copy_modified = 1;
   if (ok) {
     enc->prev_timestamp = timestamp;
+  } else if (!enc->is_first_frame) {
+    if (will_split) {
+      enc->prev_timestamp = timestamp;
+    } else {
+      EncodedFrame* const prev_enc_frame = GetFrame(enc, enc->count - 1);
+      prev_enc_frame->sub_frame.duration = prev_duration;
+      prev_enc_frame->key_frame.duration = prev_duration;
+    }
   }
   return ok;
 }
@@ -1664,10 +1730,15 @@ WEBP_NODISCARD static int DecodeFrameOntoCanvas(
     return 0;
   }
   config.output.is_external_memory = 1;
+#ifdef WORDS_BIGENDIAN
+  config.output.colorspace = MODE_ARGB;
+#else
   config.output.colorspace = MODE_BGRA;
+#endif
   config.output.u.RGBA.rgba = (uint8_t*)sub_image.argb;
   config.output.u.RGBA.stride = sub_image.argb_stride * 4;
-  config.output.u.RGBA.size = config.output.u.RGBA.stride * sub_image.height;
+  config.output.u.RGBA.size =
+      (size_t)config.output.u.RGBA.stride * sub_image.height;
 
   if (WebPDecode(image->bytes, image->size, &config) != VP8_STATUS_OK) {
     return 0;
@@ -1698,9 +1769,11 @@ WEBP_NODISCARD static int FrameToFullCanvas(WebPAnimEncoder* const enc,
   } else {
     GetEncodedData(&mem1, full_image);
   }
+  canvas_buf->use_argb = 1;
   return 1;
 
 Err:
+  canvas_buf->use_argb = 1;
   WebPDataInit(full_image);
   WebPMemoryWriterClear(&mem1);
   WebPMemoryWriterClear(&mem2);
@@ -1765,6 +1838,7 @@ int WebPAnimEncoderAssemble(WebPAnimEncoder* enc, WebPData* webp_data) {
     MarkError(enc, "ERROR assembling: NULL input");
     return 0;
   }
+  WebPDataInit(webp_data);
 
   if (enc->in_frame_count == 0) {
     MarkError(enc, "ERROR: No frames to assemble");
@@ -1777,6 +1851,7 @@ int WebPAnimEncoderAssemble(WebPAnimEncoder* enc, WebPData* webp_data) {
         (uint32_t)enc->prev_timestamp - enc->first_timestamp;
     const int average_duration = (int)(delta_time / (enc->in_frame_count - 1));
     if (!IncreasePreviousDuration(enc, average_duration)) {
+      MarkError(enc, "ERROR assembling: Out of memory");
       return 0;
     }
   }
@@ -1806,6 +1881,7 @@ int WebPAnimEncoderAssemble(WebPAnimEncoder* enc, WebPData* webp_data) {
   return 1;
 
 Err:
+  WebPDataClear(webp_data);
   MarkError2(enc, "ERROR assembling WebP", err);
   return 0;
 }
