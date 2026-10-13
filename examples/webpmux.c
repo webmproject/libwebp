@@ -891,9 +891,13 @@ static int InitializeConfig(int argc, const char* argv[], Config* const config,
   }
 
   config->arg_count = num_feature_args;
-  config->args = (FeatureArg*)calloc(num_feature_args, sizeof(*config->args));
-  if (config->args == NULL) {
-    ERROR_GOTO1("ERROR: Memory allocation error.\n", Err1);
+  if (num_feature_args > 0) {
+    config->args = (FeatureArg*)calloc(num_feature_args, sizeof(*config->args));
+    if (config->args == NULL) {
+      ERROR_GOTO1("ERROR: Memory allocation error.\n", Err1);
+    }
+  } else {
+    config->args = NULL;
   }
 
   // Parse command-line.
@@ -1198,16 +1202,18 @@ static int Process(const Config* config) {
         // Apply non-negative durations to their destination frames.
         for (i = 1; i <= num_frames; ++i) {
           WebPMuxFrameInfo frame;
+          WebPDataInit(&frame.bitstream);
           err = WebPMuxGetFrame(mux, i, &frame);
           if (err != WEBP_MUX_OK || frame.id != WEBP_CHUNK_ANMF) {
+            WebPDataClear(&frame.bitstream);
             ERROR_GOTO2("ERROR: can not retrieve frame #%d.\n", i, Err3);
           }
           if (durations[i - 1] >= 0) frame.duration = durations[i - 1];
           err = WebPMuxPushFrame(new_mux, &frame, 1);
+          WebPDataClear(&frame.bitstream);
           if (err != WEBP_MUX_OK) {
             ERROR_GOTO2("ERROR: error push frame data #%d\n", i, Err3);
           }
-          WebPDataClear(&frame.bitstream);
         }
         WebPMuxDelete(mux);
         ok = WriteWebP(new_mux, config->output);

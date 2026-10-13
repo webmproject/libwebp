@@ -216,7 +216,7 @@ int main(int argc, const char* argv[]) {
         verbose = 1;
       } else if (!strcmp(argv[c], "-h") || !strcmp(argv[c], "-help")) {
         Help();
-        FREE_WARGV_AND_RETURN(EXIT_SUCCESS);
+        goto End;
       } else if (!strcmp(argv[c], "-version")) {
         const int enc_version = WebPGetEncoderVersion();
         const int mux_version = WebPGetMuxVersion();
@@ -226,7 +226,7 @@ int main(int argc, const char* argv[]) {
                enc_version & 0xff, (mux_version >> 16) & 0xff,
                (mux_version >> 8) & 0xff, mux_version & 0xff);
         printf("libsharpyuv: %d.%d.%d\n", (sharpyuv_version >> 24) & 0xff,
-               (sharpyuv_version >> 16) & 0xffff, sharpyuv_version & 0xff);
+               (sharpyuv_version >> 16) & 0xff, sharpyuv_version & 0xffff);
         goto End;
       } else {
         continue;
@@ -346,10 +346,6 @@ int main(int argc, const char* argv[]) {
     fprintf(stderr, "Error during final animation assembly.\n");
   }
 
-End:
-  // free resources
-  WebPAnimEncoderDelete(enc);
-
   if (ok && loop_count > 0) {  // Re-mux to add loop count.
     ok = SetLoopCount(loop_count, &webp_data);
   }
@@ -367,6 +363,10 @@ End:
     fprintf(stderr, "[%d frames, %u bytes].\n", pic_num,
             (unsigned int)webp_data.size);
   }
+
+End:
+  // free resources
+  WebPAnimEncoderDelete(enc);
   WebPDataClear(&webp_data);
   ExUtilDeleteCommandLineArguments(&cmd_args);
   FREE_WARGV_AND_RETURN(ok ? EXIT_SUCCESS : EXIT_FAILURE);

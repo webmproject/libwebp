@@ -242,7 +242,9 @@ static boolean ContextFill(j_decompress_ptr cinfo) {
 
 static void ContextSkip(j_decompress_ptr cinfo, long jump_size) {
   JPEGReadContext* const ctx = (JPEGReadContext*)cinfo->src;
-  size_t jump = (size_t)jump_size;
+  size_t jump;
+  if (jump_size <= 0) return;
+  jump = (size_t)jump_size;
   if (jump > ctx->pub.bytes_in_buffer) {  // Don't overflow the buffer.
     jump = ctx->pub.bytes_in_buffer;
   }
@@ -298,6 +300,7 @@ static int ReadJPEGInternal(const uint8_t* const data, size_t data_size,
 
   if (setjmp(jerr.setjmp_buffer)) {
   Error:
+    ok = 0;
     MetadataFree(metadata);
     jpeg_destroy_decompress((j_decompress_ptr)&dinfo);
     goto End;

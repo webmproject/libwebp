@@ -251,6 +251,7 @@ int ReadWebP(const uint8_t* const data, size_t data_size,
     ok = ExtractMetadata(data, data_size, metadata);
     if (!ok) {
       PrintWebPError("metadata", VP8_STATUS_BITSTREAM_ERROR);
+      MetadataFree(metadata);
     }
   }
   if (!ok) WebPPictureFree(pic);

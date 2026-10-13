@@ -597,7 +597,9 @@ int WebPSaveImage(const WebPDecBuffer* const buffer,
   if (buffer == NULL || out_file_name == NULL) return 0;
 
 #ifdef HAVE_WINCODEC_H
-  needs_open_file = (format != PNG);
+  needs_open_file =
+      (format != PNG && format != RGBA && format != BGRA && format != ARGB &&
+       format != rgbA && format != bgrA && format != Argb);
 #endif
 
   if (needs_open_file) {

@@ -93,7 +93,9 @@ static HRESULT OpenInputStream(const char* filename, IStream** stream) {
           memcpy(image_mem, data, data_size);
           GlobalUnlock(image);
           IFS(CreateStreamOnHGlobal(image, TRUE, stream));
+          if (FAILED(hr)) GlobalFree(image);
         } else {
+          GlobalFree(image);
           hr = E_FAIL;
         }
       } else {
@@ -360,6 +362,7 @@ int ReadPictureWithWIC(const char* const filename, WebPPicture* const pic,
       hr = ExtractMetadata(factory, frame, metadata);
       if (FAILED(hr)) {
         fprintf(stderr, "Error extracting image metadata using WIC!\n");
+        WebPPictureFree(pic);
       }
     }
   }

@@ -635,7 +635,7 @@ int WebPAnimEncoderRefineRect(const WebPPicture* const prev_canvas,
   if (prev_canvas == NULL || curr_canvas == NULL ||
       prev_canvas->width != curr_canvas->width ||
       prev_canvas->height != curr_canvas->height || !prev_canvas->use_argb ||
-      !curr_canvas->use_argb) {
+      !curr_canvas->use_argb || !(quality >= 0.f && quality <= 100.f)) {
     return 0;
   }
   right = clip(*x_offset + *width, 0, curr_canvas->width);

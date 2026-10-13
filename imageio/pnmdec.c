@@ -60,9 +60,14 @@ redo:
     out[i] = data[off++];
     if (out[i] == '\n') break;
   }
-  if (off < data_size) {
-    if (i == 0) goto redo;         // empty line
-    if (out[0] == '#') goto redo;  // skip comment
+  if (i > 0 && out[0] == '#') {
+    while (off < data_size && data[off - 1] != '\n') ++off;
+    if (off < data_size) goto redo;  // skip comment
+    return 0;
+  }
+  if (i == 0) {
+    if (off < data_size) goto redo;  // empty line
+    return 0;
   }
   out[i] = 0;  // safety sentinel
   *out_size = i;

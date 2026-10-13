@@ -11,6 +11,8 @@
 
 #include "./pngdec.h"
 
+#include <limits.h>
+
 #ifdef HAVE_CONFIG_H
 #include "webp/config.h"
 #endif
@@ -99,7 +101,7 @@ static int ProcessRawProfile(const char* profile, size_t profile_len,
                              MetadataPayload* const payload) {
   const char* src = profile;
   char* end;
-  int expected_length;
+  long expected_length;
   size_t name_and_length_size, payload_size;
 
   if (profile == NULL || profile_len == 0) return 0;
@@ -117,15 +119,16 @@ static int ProcessRawProfile(const char* profile, size_t profile_len,
   }
   // libpng guarantees 'profile' ends with '\0' so the loop above and strtol()
   // below cannot read outside of the buffer.
-  expected_length = (int)strtol(src, &end, 10);
+  expected_length = strtol(src, &end, 10);
   if (*end != '\n') {
     fprintf(stderr, "Malformed raw profile, expected '\\n' got '\\x%.2X'\n",
             *end);
     return 0;
   }
   ++end;
-  if (expected_length <= 0) {
-    fprintf(stderr, "Malformed raw profile, invalid length %d\n",
+  if (expected_length <= 0 || expected_length > INT_MAX ||
+      (size_t)expected_length > profile_len / 2) {
+    fprintf(stderr, "Malformed raw profile, invalid length %ld\n",
             expected_length);
     return 0;
   }

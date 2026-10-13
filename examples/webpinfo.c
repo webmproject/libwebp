@@ -648,7 +648,8 @@ static WebPInfoStatus ParseChunk(const WebPInfo* const webp_info,
         return WEBP_INFO_PARSE_ERROR;
       }
       // There are sub-chunks to be parsed in an ANMF chunk.
-      Skip(mem, ANMF_CHUNK_SIZE);
+      Skip(mem, (payload_size >= ANMF_CHUNK_SIZE) ? ANMF_CHUNK_SIZE
+                                                  : payload_size_padded);
     } else {
       Skip(mem, payload_size_padded);
     }
@@ -970,6 +971,7 @@ static WebPInfoStatus ProcessChunk(const ChunkData* const chunk_data,
     default:
       break;
   }
+  if (status != WEBP_INFO_OK) return status;
   if (webp_info->is_processing_anim_frame && id != CHUNK_ANMF) {
     if (webp_info->anim_frame_data_size == chunk_data->size) {
       if (!webp_info->seen_image_subchunk) {

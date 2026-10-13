@@ -248,7 +248,7 @@ int main(int argc, const char* argv[]) {
              enc_version & 0xff, (mux_version >> 16) & 0xff,
              (mux_version >> 8) & 0xff, mux_version & 0xff);
       printf("libsharpyuv: %d.%d.%d\n", (sharpyuv_version >> 24) & 0xff,
-             (sharpyuv_version >> 16) & 0xffff, sharpyuv_version & 0xff);
+             (sharpyuv_version >> 16) & 0xff, sharpyuv_version & 0xffff);
       FREE_WARGV_AND_RETURN(EXIT_SUCCESS);
     } else if (!strcmp(argv[c], "-quiet")) {
       quiet = 1;
@@ -482,6 +482,7 @@ int main(int argc, const char* argv[]) {
   if (!WebPAnimEncoderAdd(enc, NULL, frame_timestamp, NULL)) {
     fprintf(stderr, "Error flushing WebP muxer.\n");
     fprintf(stderr, "%s\n", WebPAnimEncoderGetError(enc));
+    goto End;
   }
 
   if (!WebPAnimEncoderAssemble(enc, &webp_data)) {
