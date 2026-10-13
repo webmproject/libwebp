@@ -772,11 +772,12 @@ static int EmitRescaledRowsYUVA(const VP8LDecoder* const dec, uint8_t* in,
 }
 
 // Returns true if alpha[] has non-0xff values.
+// alpha is assumed to be stored as 32-bit RGBA.
 static int CheckNonOpaque(const uint8_t* alpha, int width, int height,
                           int y_step) {
   WebPInitAlphaProcessing();
   for (; height-- > 0; alpha += y_step) {
-    if (WebPHasAlpha8b(alpha, width)) return 1;
+    if (WebPHasAlpha32b(alpha, width)) return 1;
   }
   return 0;
 }

@@ -28,6 +28,11 @@ namespace {
 
 void DecodeWebP(std::string_view arbitrary_bytes,
                 const fuzz_utils::WebPDecoderOptionsCpp& decoder_options) {
+  if (fuzz_utils::IsImageTooBig(
+          reinterpret_cast<const uint8_t*>(arbitrary_bytes.data()),
+          arbitrary_bytes.size())) {
+    return;
+  }
   WebPDecoderConfig decoder_config;
   if (!WebPInitDecoderConfig(&decoder_config)) {
     fprintf(stderr, "WebPInitDecoderConfig failed.\n");

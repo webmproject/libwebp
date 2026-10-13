@@ -36,7 +36,7 @@ namespace {
 const VP8CPUInfo default_VP8GetCPUInfo = fuzz_utils::VP8GetCPUInfo;
 
 void EncTestImpl(WebPPicture& pic, uint32_t optimization_index, bool use_argb,
-                 WebPConfig config,
+                 const WebPConfig& config,
                  const fuzz_utils::CropOrScaleParams& crop_or_scale_params) {
   fuzz_utils::SetOptimization(default_VP8GetCPUInfo, optimization_index);
 
@@ -48,10 +48,15 @@ void EncTestImpl(WebPPicture& pic, uint32_t optimization_index, bool use_argb,
     std::abort();
   }
 
-  // Skip the cruncher except on small images, it's likely to timeout.
-  if (config.lossless && config.quality == 100. && config.method == 6 &&
-      pic.width * pic.height >= 10000) {
-    config.lossless = 0;
+  // Skip slow settings on big images, it's likely to timeout.
+  if (pic.width * pic.height > 32 * 32) {
+    if (config.quality > 99.0f &&
+        ((config.lossless && config.method >= 5) || config.method == 6)) {
+      return;
+    }
+    if (config.alpha_quality == 100 && config.method == 6) {
+      return;
+    }
   }
 
   // Encode.
@@ -132,7 +137,7 @@ void EncTestImpl(WebPPicture& pic, uint32_t optimization_index, bool use_argb,
 
 void EncArbitraryTest(
     fuzz_utils::WebPPictureCpp pic_cpp, uint32_t optimization_index,
-    bool use_argb, WebPConfig config,
+    bool use_argb, const WebPConfig& config,
     const fuzz_utils::CropOrScaleParams& crop_or_scale_params) {
   WebPPicture& pic = pic_cpp.ref();
 
