@@ -200,7 +200,9 @@ static uint8_t* ChunkEmit(const WebPChunk* const chunk, uint8_t* dst) {
   PutLE32(dst + 0, chunk->tag);
   PutLE32(dst + TAG_SIZE, (uint32_t)chunk_size);
   assert(chunk_size == (uint32_t)chunk_size);
-  memcpy(dst + CHUNK_HEADER_SIZE, chunk->data.bytes, chunk_size);
+  if (chunk_size > 0) {
+    memcpy(dst + CHUNK_HEADER_SIZE, chunk->data.bytes, chunk_size);
+  }
   if (chunk_size & 1) dst[CHUNK_HEADER_SIZE + chunk_size] = 0;  // Add padding.
   return dst + ChunkDiskSize(chunk);
 }

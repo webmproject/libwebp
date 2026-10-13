@@ -14,6 +14,7 @@
 
 #include <assert.h>
 #include <stddef.h>
+#include <string.h>
 
 #include "src/dec/vp8_dec.h"
 #include "src/mux/muxi.h"
@@ -289,7 +290,7 @@ WebPMux* WebPMuxCreateInternal(const WebPData* bitstream, int copy_data,
         }
         if (ChunkAppend(&chunk, &chunk_list_ends[id]) != WEBP_MUX_OK) goto Err;
         if (id == WEBP_CHUNK_VP8X) {  // grab global specs
-          if (data_size < CHUNK_HEADER_SIZE + VP8X_CHUNK_SIZE) goto Err;
+          if (chunk.data.size < VP8X_CHUNK_SIZE) goto Err;
           mux->canvas_width = GetLE24(data + 12) + 1;
           mux->canvas_height = GetLE24(data + 15) + 1;
         }
@@ -443,6 +444,7 @@ WebPMuxError WebPMuxGetChunk(const WebPMux* mux, const char fourcc[4],
   if (mux == NULL || fourcc == NULL || chunk_data == NULL) {
     return WEBP_MUX_INVALID_ARGUMENT;
   }
+  WebPDataInit(chunk_data);
   idx = ChunkGetIndexFromFourCC(fourcc);
   assert(idx != IDX_LAST_CHUNK);
   if (IsWPI(kChunks[idx].id)) {  // An image chunk.
@@ -502,6 +504,7 @@ WebPMuxError WebPMuxGetFrame(const WebPMux* mux, uint32_t nth,
   if (mux == NULL || frame == NULL) {
     return WEBP_MUX_INVALID_ARGUMENT;
   }
+  memset(frame, 0, sizeof(*frame));
 
   // Get the nth WebPMuxImage.
   err = MuxImageGetNth((const WebPMuxImage**)&mux->images, nth, &wpi);

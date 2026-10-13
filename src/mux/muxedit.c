@@ -72,13 +72,37 @@ void WebPMuxDelete(WebPMux* mux) {
 //------------------------------------------------------------------------------
 // Helper method(s).
 
+static WebPMuxError DeleteChunks(WebPChunk** chunk_list, uint32_t tag) {
+  WebPMuxError err = WEBP_MUX_NOT_FOUND;
+  assert(chunk_list);
+  while (*chunk_list) {
+    WebPChunk* const chunk = *chunk_list;
+    if (chunk->tag == tag) {
+      *chunk_list = ChunkDelete(chunk);
+      err = WEBP_MUX_OK;
+    } else {
+      chunk_list = &chunk->next;
+    }
+  }
+  return err;
+}
+
+static WebPMuxError MuxDeleteAllNamedData(WebPMux* const mux, uint32_t tag) {
+  const WebPChunkId id = ChunkGetIdFromTag(tag);
+  assert(mux != NULL);
+  if (IsWPI(id)) return WEBP_MUX_INVALID_ARGUMENT;
+  return DeleteChunks(MuxGetChunkListFromId(mux, id), tag);
+}
+
 // Handy MACRO, makes MuxSet() very symmetric to MuxGet().
 #define SWITCH_ID_LIST(INDEX, LIST)                        \
   do {                                                     \
     if (idx == (INDEX)) {                                  \
       err = ChunkAssignData(&chunk, data, copy_data, tag); \
       if (err == WEBP_MUX_OK) {                            \
-        err = ChunkSetHead(&chunk, (LIST));                \
+        WebPChunk** plist = (LIST);                        \
+        (void)DeleteChunks(plist, tag);                    \
+        err = ChunkAppend(&chunk, &plist);                 \
         if (err != WEBP_MUX_OK) ChunkRelease(&chunk);      \
       }                                                    \
       return err;                                          \
@@ -161,46 +185,19 @@ static WebPMuxError GetImageData(const WebPData* const bitstream,
   return WEBP_MUX_OK;
 }
 
-static WebPMuxError DeleteChunks(WebPChunk** chunk_list, uint32_t tag) {
-  WebPMuxError err = WEBP_MUX_NOT_FOUND;
-  assert(chunk_list);
-  while (*chunk_list) {
-    WebPChunk* const chunk = *chunk_list;
-    if (chunk->tag == tag) {
-      *chunk_list = ChunkDelete(chunk);
-      err = WEBP_MUX_OK;
-    } else {
-      chunk_list = &chunk->next;
-    }
-  }
-  return err;
-}
-
-static WebPMuxError MuxDeleteAllNamedData(WebPMux* const mux, uint32_t tag) {
-  const WebPChunkId id = ChunkGetIdFromTag(tag);
-  assert(mux != NULL);
-  if (IsWPI(id)) return WEBP_MUX_INVALID_ARGUMENT;
-  return DeleteChunks(MuxGetChunkListFromId(mux, id), tag);
-}
-
 //------------------------------------------------------------------------------
 // Set API(s).
 
 WebPMuxError WebPMuxSetChunk(WebPMux* mux, const char fourcc[4],
                              const WebPData* chunk_data, int copy_data) {
   uint32_t tag;
-  WebPMuxError err;
   if (mux == NULL || fourcc == NULL || chunk_data == NULL ||
       chunk_data->bytes == NULL || chunk_data->size > MAX_CHUNK_PAYLOAD) {
     return WEBP_MUX_INVALID_ARGUMENT;
   }
   tag = ChunkGetTagFromFourCC(fourcc);
 
-  // Delete existing chunk(s) with the same 'fourcc'.
-  err = MuxDeleteAllNamedData(mux, tag);
-  if (err != WEBP_MUX_OK && err != WEBP_MUX_NOT_FOUND) return err;
-
-  // Add the given chunk.
+  // Add the given chunk (replacing any existing chunk(s) with the same fourcc).
   return MuxSet(mux, tag, chunk_data, copy_data);
 }
 
@@ -252,14 +249,14 @@ WebPMuxError WebPMuxSetImage(WebPMux* mux, const WebPData* bitstream,
     return WEBP_MUX_INVALID_ARGUMENT;
   }
 
+  MuxImageInit(&wpi);
+  err = SetAlphaAndImageChunks(bitstream, copy_data, &wpi);
+  if (err != WEBP_MUX_OK) goto Err;
+
   if (mux->images != NULL) {
     // Only one 'simple image' can be added in mux. So, remove present images.
     DeleteAllImages(&mux->images);
   }
-
-  MuxImageInit(&wpi);
-  err = SetAlphaAndImageChunks(bitstream, copy_data, &wpi);
-  if (err != WEBP_MUX_OK) goto Err;
 
   // Add this WebPMuxImage to mux.
   err = MuxImagePush(&wpi, &mux->images);
@@ -337,7 +334,6 @@ Err:  // Something bad happened.
 
 WebPMuxError WebPMuxSetAnimationParams(WebPMux* mux,
                                        const WebPMuxAnimParams* params) {
-  WebPMuxError err;
   uint8_t data[ANIM_CHUNK_SIZE];
   const WebPData anim = {data, ANIM_CHUNK_SIZE};
 
@@ -345,10 +341,6 @@ WebPMuxError WebPMuxSetAnimationParams(WebPMux* mux,
   if (params->loop_count < 0 || params->loop_count >= MAX_LOOP_COUNT) {
     return WEBP_MUX_INVALID_ARGUMENT;
   }
-
-  // Delete any existing ANIM chunk(s).
-  err = MuxDeleteAllNamedData(mux, kChunks[IDX_ANIM].tag);
-  if (err != WEBP_MUX_OK && err != WEBP_MUX_NOT_FOUND) return err;
 
   // Set the animation parameters.
   PutLE32(data, params->bgcolor);
@@ -523,7 +515,8 @@ static WebPMuxError CreateVP8XChunk(WebPMux* const mux) {
   if (width <= 0 || height <= 0) {
     return WEBP_MUX_INVALID_ARGUMENT;
   }
-  if (width > MAX_CANVAS_SIZE || height > MAX_CANVAS_SIZE) {
+  if (width > MAX_CANVAS_SIZE || height > MAX_CANVAS_SIZE ||
+      (uint64_t)width * height >= MAX_IMAGE_AREA) {
     return WEBP_MUX_INVALID_ARGUMENT;
   }
 

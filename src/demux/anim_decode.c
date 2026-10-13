@@ -351,7 +351,7 @@ int WebPAnimDecoderGetNext(WebPAnimDecoder* dec, uint8_t** buf_ptr,
   if (!WebPDemuxGetFrame(dec->demux, dec->next_frame, &iter)) {
     return 0;
   }
-  timestamp = dec->prev_frame_timestamp + iter.duration;
+  timestamp = (int)((uint32_t)dec->prev_frame_timestamp + iter.duration);
 
   // Initialize.
   is_key_frame = IsKeyFrame(&iter, &dec->prev_iter,

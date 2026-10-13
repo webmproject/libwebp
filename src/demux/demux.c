@@ -295,7 +295,7 @@ static ParseStatus StoreFrame(int frame_num, uint32_t min_size,
     }
   } while (!done && status == PARSE_OK);
 
-  return status;
+  return (status == PARSE_OK && image_chunks == 0) ? PARSE_ERROR : status;
 }
 
 // Creates a new Frame if 'actual_size' is within bounds and 'mem' contains
@@ -423,7 +423,7 @@ static ParseStatus ParseSingleImage(WebPDemuxer* const dmux) {
   // For the single image case we allow parsing of a partial frame, so no
   // minimum size is imposed here.
   status = StoreFrame(1, 0, &dmux->mem, frame);
-  if (status != PARSE_ERROR) {
+  if (status != PARSE_ERROR && frame->frame_num > 0) {
     const int has_alpha = !!(dmux->feature_flags & ALPHA_FLAG);
     // Clear any alpha when the alpha flag is missing.
     if (!has_alpha && frame->img_components[1].size > 0) {
