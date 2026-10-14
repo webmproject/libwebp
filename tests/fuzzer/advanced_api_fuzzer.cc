@@ -32,6 +32,31 @@
 
 namespace {
 
+void CompareDecBuffers(const WebPDecBuffer& a, const WebPDecBuffer& b) {
+  ASSERT_EQ(a.colorspace, b.colorspace);
+  ASSERT_EQ(a.width, b.width);
+  ASSERT_EQ(a.height, b.height);
+  if (WebPIsRGBMode(a.colorspace)) {
+    ASSERT_EQ(a.u.RGBA.size, b.u.RGBA.size);
+    ASSERT_NE(a.u.RGBA.rgba, nullptr);
+    ASSERT_EQ(a.u.RGBA.rgba != nullptr, b.u.RGBA.rgba != nullptr);
+    EXPECT_EQ(std::memcmp(a.u.RGBA.rgba, b.u.RGBA.rgba, a.u.RGBA.size), 0);
+  } else {
+    ASSERT_EQ(a.u.YUVA.y_size, b.u.YUVA.y_size);
+    ASSERT_EQ(a.u.YUVA.u_size, b.u.YUVA.u_size);
+    ASSERT_EQ(a.u.YUVA.v_size, b.u.YUVA.v_size);
+    EXPECT_EQ(std::memcmp(a.u.YUVA.y, b.u.YUVA.y, a.u.YUVA.y_size), 0);
+    EXPECT_EQ(std::memcmp(a.u.YUVA.u, b.u.YUVA.u, a.u.YUVA.u_size), 0);
+    EXPECT_EQ(std::memcmp(a.u.YUVA.v, b.u.YUVA.v, a.u.YUVA.v_size), 0);
+    if (a.u.YUVA.a != nullptr || b.u.YUVA.a != nullptr) {
+      ASSERT_NE(a.u.YUVA.a, nullptr);
+      ASSERT_NE(b.u.YUVA.a, nullptr);
+      ASSERT_EQ(a.u.YUVA.a_size, b.u.YUVA.a_size);
+      EXPECT_EQ(std::memcmp(a.u.YUVA.a, b.u.YUVA.a, a.u.YUVA.a_size), 0);
+    }
+  }
+}
+
 void AdvancedApiTest(std::string_view blob, uint8_t factor_u8, int colorspace,
                      bool incremental,
                      const fuzz_utils::WebPDecoderOptionsCpp& decoder_options) {
@@ -53,10 +78,16 @@ void AdvancedApiTest(std::string_view blob, uint8_t factor_u8, int colorspace,
 
   std::memcpy(&config.options, &decoder_options, sizeof(decoder_options));
   if (config.options.use_cropping) {
-    config.options.crop_width = (int)(config.input.width * (1 - factor));
-    config.options.crop_height = (int)(config.input.height * (1 - factor));
-    config.options.crop_left = config.input.width - config.options.crop_width;
-    config.options.crop_top = config.input.height - config.options.crop_height;
+    config.options.crop_width =
+        std::max(1, (int)(config.input.width * (1 - factor)));
+    config.options.crop_height =
+        std::max(1, (int)(config.input.height * (1 - factor)));
+    config.options.crop_left =
+        decoder_options.crop_left %
+        (config.input.width - config.options.crop_width + 1);
+    config.options.crop_top =
+        decoder_options.crop_top %
+        (config.input.height - config.options.crop_height + 1);
   }
   if (config.options.use_scaling) {
     config.options.scaled_width = (int)(config.input.width * factor * 2);
@@ -143,6 +174,20 @@ void AdvancedApiTest(std::string_view blob, uint8_t factor_u8, int colorspace,
         }
       }
       WebPIDelete(idec);
+      // Verify that incremental decoding produces the same output as one-shot
+      // WebPDecode() when both succeed.
+      if (status == VP8_STATUS_OK) {
+        WebPDecoderConfig ref_config;
+        if (WebPInitDecoderConfig(&ref_config)) {
+          ref_config.options = config.options;
+          ref_config.output.colorspace = config.output.colorspace;
+          const VP8StatusCode ref_status = WebPDecode(data, size, &ref_config);
+          if (ref_status == VP8_STATUS_OK) {
+            CompareDecBuffers(config.output, ref_config.output);
+          }
+          WebPFreeDecBuffer(&ref_config.output);
+        }
+      }
     } else {
       (void)WebPDecode(data, size, &config);
     }
