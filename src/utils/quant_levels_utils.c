@@ -36,10 +36,10 @@ int QuantizeLevels(uint8_t* const WEBP_COUNTED_BY((size_t)width* height) data,
   int q_level[NUM_SYMBOLS] = {0};
   double inv_q_level[NUM_SYMBOLS] = {0};
   int min_s = 255, max_s = 0;
-  const size_t data_size = height * width;
+  size_t data_size;
   int i, num_levels_in, iter;
   double last_err = 1.e38, err = 0.;
-  const double err_threshold = ERROR_THRESHOLD * data_size;
+  double err_threshold;
 
   if (data == NULL) {
     return 0;
@@ -52,6 +52,9 @@ int QuantizeLevels(uint8_t* const WEBP_COUNTED_BY((size_t)width* height) data,
   if (num_levels < 2 || num_levels > 256) {
     return 0;
   }
+
+  data_size = (size_t)height * width;
+  err_threshold = ERROR_THRESHOLD * data_size;
 
   {
     size_t n;
