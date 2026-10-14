@@ -434,10 +434,8 @@ static WebPMuxError GetAdjustedCanvasSize(const WebPMux* const mux,
   assert(wpi != NULL);
   assert(wpi->img != NULL);
 
-  if (wpi->next != NULL) {
+  if (wpi->header != NULL) {
     int max_x = 0, max_y = 0;
-    // if we have a chain of wpi's, header is necessarily set
-    assert(wpi->header != NULL);
     // Aggregate the bounding box for animation frames.
     for (; wpi != NULL; wpi = wpi->next) {
       int x_offset = 0, y_offset = 0, duration = 0, w = 0, h = 0;
