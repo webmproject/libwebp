@@ -493,7 +493,8 @@ WEBP_NODISCARD static WEBP_INLINE WebPAnimEncoder* WebPAnimEncoderNew(
 // WebPAnimEncoder object.
 // The last call to 'WebPAnimEncoderAdd' should be with frame = NULL, which
 // indicates that no more frames are to be added. This call is also used to
-// determine the duration of the last frame.
+// determine the duration of the last frame. Frames can no longer be added once
+// 'WebPAnimEncoderAssemble' has been called.
 // Parameters:
 //   enc - (in/out) object to which the frame is to be added.
 //   frame - (in/out) frame data in ARGB or YUV(A) format. If it is in YUV(A)

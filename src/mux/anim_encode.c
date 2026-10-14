@@ -1600,6 +1600,15 @@ int WebPAnimEncoderAdd(WebPAnimEncoder* enc, WebPPicture* frame, int timestamp,
   }
   MarkNoError(enc);
 
+  if (!enc->is_first_frame && enc->count == 0) {
+    // WebPAnimEncoderAssemble() flushed all frames, including the previous one.
+    if (frame != NULL) {
+      frame->error_code = VP8_ENC_ERROR_INVALID_CONFIGURATION;
+    }
+    MarkError(enc, "ERROR adding frame: animation already assembled");
+    return 0;
+  }
+
   if (!enc->is_first_frame) {
     // Make sure timestamps are non-decreasing (integer wrap-around is OK).
     prev_frame_duration = (uint32_t)timestamp - enc->prev_timestamp;
