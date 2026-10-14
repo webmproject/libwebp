@@ -64,7 +64,7 @@ typedef struct {
   uint16_t* WEBP_INDEXABLE cur;
   uint16_t* WEBP_BIDI_INDEXABLE end;
   uint16_t* WEBP_INDEXABLE top;
-  uint16_t* WEBP_COUNTED_BY(width) average;
+  uint16_t* WEBP_COUNTED_BY_OR_NULL(width) average;
 
   // input levels distribution
   int num_levels;      // number of quantized levels
@@ -237,8 +237,23 @@ WEBP_NODISCARD static int InitParams(
   const size_t size_m = width * sizeof(*p->average);
   const size_t size_lut = CORRECTION_LUT_SIZE * sizeof(*p->correction);
   const size_t total_size = size_scratch_m + size_m + size_lut;
-  uint8_t* WEBP_BIDI_INDEXABLE mem = (uint8_t*)WebPSafeMalloc(1U, total_size);
+  uint8_t* WEBP_BIDI_INDEXABLE mem;
 
+  p->width = width;
+  WEBP_SELF_ASSIGN(p->average);
+  p->height = height;
+  p->stride = stride;
+  p->src = data;
+  p->dst = data;
+  p->radius = radius;
+  p->scale = (1 << (FIX + LFIX)) / (R * R);  // normalization constant
+  p->row = -radius;
+
+  // analyze the input distribution so we can best-fit the threshold
+  CountLevels(p);
+  if (p->num_levels <= 2) return 1;
+
+  mem = (uint8_t*)WebPSafeMalloc(1U, total_size);
   if (mem == NULL) return 0;
   p->mem = (void*)mem;
 
@@ -251,20 +266,9 @@ WEBP_NODISCARD static int InitParams(
   mem += size_scratch_m;
 
   assert(WEBP_IS_ALIGNED(mem, uint16_t));
-  p->width = width;
   p->average = (uint16_t*)mem;
+  WEBP_SELF_ASSIGN(p->width);
   mem += size_m;
-
-  p->height = height;
-  p->stride = stride;
-  p->src = data;
-  p->dst = data;
-  p->radius = radius;
-  p->scale = (1 << (FIX + LFIX)) / (R * R);  // normalization constant
-  p->row = -radius;
-
-  // analyze the input distribution so we can best-fit the threshold
-  CountLevels(p);
 
   // correction table. p->correction is WEBP_COUNTED_BY(CORRECTION_LUT_SIZE).
   // It points to the start of the buffer.
