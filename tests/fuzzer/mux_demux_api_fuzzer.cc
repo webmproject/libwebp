@@ -212,10 +212,13 @@ void MuxEditApiTest(std::string_view data_in,
     if (WebPMuxDeleteFrame(mux.get(), delete_frame_nth) != WEBP_MUX_OK) return;
   }
 
-  // Try assembling the mux.
+  // Try assembling the mux and verify that the result can be demuxed.
   WebPData assembled;
   WebPDataInit(&assembled);
   if (WebPMuxAssemble(mux.get(), &assembled) != WEBP_MUX_OK) return;
+  const std::unique_ptr<WebPDemuxer, fuzz_utils::UniquePtrDeleter> demux(
+      WebPDemux(&assembled));
+  EXPECT_NE(demux, nullptr);
   WebPDataClear(&assembled);
 }
 
