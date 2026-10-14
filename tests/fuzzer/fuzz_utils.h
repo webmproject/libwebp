@@ -193,8 +193,8 @@ static inline auto ArbitraryWebPPicture() {
           width = 256 - (width & 7);
           height = 256 - (height & 7);
         }
-        const int uv_width = (int)(((int64_t)width + 1) >> 1);
-        const int uv_height = (int)(((int64_t)height + 1) >> 1);
+        const int uv_width = (width + 1) >> 1;
+        const int uv_height = (height + 1) >> 1;
         const int tiles_x = (width + 15) / 16;
         const int tiles_y = (height + 15) / 16;
         // Create a domain for the vector that strictly obeys the required size.
@@ -231,13 +231,13 @@ static inline auto ArbitraryWebPPicture() {
                 std::copy(iter, iter + size, (uint8_t*)pic.y);
                 iter += size;
                 // A.
-                if ((int)pic.colorspace & WEBP_CSP_ALPHA_BIT) {
+                if (pic.colorspace & WEBP_CSP_ALPHA_BIT) {
                   std::copy(iter, iter + size, (uint8_t*)pic.a);
                   iter += size;
                 }
                 // U and V.
-                const int uv_width = (int)(((int64_t)width + 1) >> 1);
-                const int uv_height = (int)(((int64_t)height + 1) >> 1);
+                const int uv_width = (width + 1) >> 1;
+                const int uv_height = (height + 1) >> 1;
                 size = uv_width * uv_height;
                 std::copy(iter, iter + size, (uint8_t*)pic.u);
                 iter += size;

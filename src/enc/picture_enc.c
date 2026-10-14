@@ -108,8 +108,8 @@ int WebPValidatePicture(const WebPPicture* const picture) {
     // If YUV planes are provided, validate Y, U/V (subsampled by 2 in each
     // dimension for YUV420), and alpha strides and check that each plane fits
     // in memory.
-    const int uv_width = (int)(((int64_t)picture->width + 1) >> 1);
-    const int uv_height = (int)(((int64_t)picture->height + 1) >> 1);
+    const int uv_width = (picture->width + 1) >> 1;
+    const int uv_height = (picture->height + 1) >> 1;
     if (!CheckMemoryBounds(picture->y, picture->y_stride, /*step=*/1,
                            picture->width, picture->height) ||
         !CheckMemoryBounds(picture->u, picture->uv_stride, /*step=*/1, uv_width,
@@ -203,8 +203,8 @@ int WebPPictureAllocYUVA(WebPPicture* const picture) {
   width = picture->width;
   height = picture->height;
   y_stride = width;
-  uv_width = (int)(((int64_t)width + 1) >> 1);
-  uv_height = (int)(((int64_t)height + 1) >> 1);
+  uv_width = (width + 1) >> 1;
+  uv_height = (height + 1) >> 1;
   uv_stride = uv_width;
   // alpha
   a_width = has_alpha ? width : 0;
