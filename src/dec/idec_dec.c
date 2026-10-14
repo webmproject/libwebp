@@ -495,7 +495,9 @@ static VP8StatusCode DecodeRemaining(WebPIDecoder* const idec) {
   if (!dec->ready) {
     return IDecError(idec, VP8_STATUS_BITSTREAM_ERROR);
   }
-  for (; dec->mb_y < dec->mb_h; ++dec->mb_y) {
+  // Like ParseFrame() in vp8_dec.c, stop at the last macroblock row needed by
+  // the crop window: the rows below are never emitted.
+  for (; dec->mb_y < dec->br_mb_y; ++dec->mb_y) {
     if (idec->last_mb_y != dec->mb_y) {
       if (!VP8ParseIntraModeRow(&dec->br, dec)) {
         // note: normally, error shouldn't occur since we already have the whole

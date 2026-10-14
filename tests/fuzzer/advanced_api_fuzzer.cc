@@ -319,6 +319,71 @@ TEST(AdvancedApi, IncrementalExternalYUVABufferReplacementWithScaling) {
   WebPFree(encoded);
 }
 
+// Incremental lossy decoding must stop at the last macroblock row needed by
+// the crop window, like WebPDecode() does. It used to decode (and loop-filter)
+// all the rows below it, reading never-written filter cache rows.
+TEST(AdvancedApi, IncrementalCropStopsAtCropBottom) {
+  constexpr int kWidth = 64;
+  constexpr int kHeight = 256;
+  constexpr int kCropHeight = 8;  // Only the first macroblock row is needed.
+
+  std::vector<uint8_t> rgb(kWidth * kHeight * 3);
+  for (int y = 0; y < kHeight; ++y) {
+    for (int x = 0; x < kWidth; ++x) {
+      const size_t i = 3u * (y * kWidth + x);
+      rgb[i + 0] = static_cast<uint8_t>(x * 13 + y * 7 + (x ^ y));
+      rgb[i + 1] = static_cast<uint8_t>(x * 3 + y * 17);
+      rgb[i + 2] = static_cast<uint8_t>((x ^ (y * 5)) + x * 11);
+    }
+  }
+  uint8_t* encoded = nullptr;
+  const size_t encoded_size =
+      WebPEncodeRGB(rgb.data(), kWidth, kHeight, kWidth * 3, 75.f, &encoded);
+  ASSERT_NE(encoded, nullptr);
+  ASSERT_GT(encoded_size, 0u);
+
+  WebPDecoderConfig ref_config, config;
+  ASSERT_TRUE(WebPInitDecoderConfig(&ref_config));
+  ref_config.output.colorspace = MODE_RGBA;
+  ref_config.options.use_cropping = 1;
+  ref_config.options.crop_left = 0;
+  ref_config.options.crop_top = 0;
+  ref_config.options.crop_width = kWidth;
+  ref_config.options.crop_height = kCropHeight;
+  config = ref_config;
+  ASSERT_EQ(WebPDecode(encoded, encoded_size, &ref_config), VP8_STATUS_OK);
+
+  WebPIDecoder* const idec = WebPIDecode(nullptr, 0, &config);
+  ASSERT_NE(idec, nullptr);
+  size_t offset = 0;
+  VP8StatusCode status = VP8_STATUS_SUSPENDED;
+  while (offset < encoded_size && status == VP8_STATUS_SUSPENDED) {
+    const size_t chunk = std::min<size_t>(64, encoded_size - offset);
+    status = WebPIAppend(idec, encoded + offset, chunk);
+    offset += chunk;
+  }
+  ASSERT_EQ(status, VP8_STATUS_OK);
+  // The rows below the crop window come last in the bitstream and must not be
+  // waited for.
+  EXPECT_LT(offset, encoded_size / 2);
+
+  ASSERT_EQ(config.output.width, kWidth);
+  ASSERT_EQ(config.output.height, kCropHeight);
+  for (int y = 0; y < kCropHeight; ++y) {
+    EXPECT_EQ(
+        std::memcmp(
+            config.output.u.RGBA.rgba + y * config.output.u.RGBA.stride,
+            ref_config.output.u.RGBA.rgba + y * ref_config.output.u.RGBA.stride,
+            kWidth * 4),
+        0);
+  }
+
+  WebPIDelete(idec);
+  WebPFreeDecBuffer(&config.output);
+  WebPFreeDecBuffer(&ref_config.output);
+  WebPFree(encoded);
+}
+
 TEST(AdvancedApi, Buganizer498966235) {
   AdvancedApiTest(
       std::string(
