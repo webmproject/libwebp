@@ -241,7 +241,7 @@
   do {                                             \
     CALC_RGB##N(y, u, v, R, G, B);                 \
     tmp0 = ANDI_B(R, 0xf0);                        \
-    tmp1 = SRAI_B(G, 4);                           \
+    tmp1 = SRLI_B(G, 4);                           \
     RG = tmp0 | tmp1;                              \
     tmp0 = ANDI_B(B, 0xf0);                        \
     BA = ORI_B(tmp0, 0x0f);                        \
@@ -252,11 +252,11 @@
   do {                                           \
     CALC_RGB##N(y, u, v, R, G, B);               \
     tmp0 = ANDI_B(R, 0xf8);                      \
-    tmp1 = SRAI_B(G, 5);                         \
+    tmp1 = SRLI_B(G, 5);                         \
     RG = tmp0 | tmp1;                            \
     tmp0 = SLLI_B(G, 3);                         \
     tmp1 = ANDI_B(tmp0, 0xe0);                   \
-    tmp0 = SRAI_B(B, 3);                         \
+    tmp0 = SRLI_B(B, 3);                         \
     GB = tmp0 | tmp1;                            \
     STORE2_##N(out0, out1, dst);                 \
   } while (0)
@@ -646,6 +646,8 @@ static void YuvToRgb565Line(const uint8_t* WEBP_RESTRICT y,
     }                                                                         \
     if (size > 0) {                                                           \
       v16u8 tu0, tu1, tv0, tv1, cu0, cu1, cv0, cv1;                           \
+      memset(temp_u, 0, sizeof(temp_u));                                      \
+      memset(temp_v, 0, sizeof(temp_v));                                      \
       memcpy(&temp_u[0], top_u, (size + 1) * sizeof(uint8_t));                \
       memcpy(&temp_u[32], cur_u, (size + 1) * sizeof(uint8_t));               \
       memcpy(&temp_v[0], top_v, (size + 1) * sizeof(uint8_t));                \
