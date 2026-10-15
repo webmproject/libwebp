@@ -1033,15 +1033,11 @@ int VP8LGetBackwardReferences(
     int* const cache_bits_best, const WebPPicture* const pic, int percent_range,
     int* const percent) {
   if (low_effort) {
-    VP8LBackwardRefs* refs_best;
     *cache_bits_best = cache_bits_max;
-    refs_best = GetBackwardReferencesLowEffort(
-        width, height, argb, cache_bits_best, hash_chain, refs);
-    if (refs_best == NULL) {
+    if (GetBackwardReferencesLowEffort(width, height, argb, cache_bits_best,
+                                       hash_chain, &refs[0]) == NULL) {
       return WebPEncodingSetError(pic, VP8_ENC_ERROR_OUT_OF_MEMORY);
     }
-    // Set it in first position.
-    BackwardRefsSwap(refs_best, &refs[0]);
   } else {
     if (!GetBackwardReferences(width, height, argb, quality, lz77_types_to_try,
                                cache_bits_max, do_no_cache, hash_chain, refs,

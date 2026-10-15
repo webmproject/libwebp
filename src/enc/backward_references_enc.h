@@ -30,7 +30,7 @@ extern "C" {
 // -----------------------------------------------------------------------------
 // PixOrCopy
 
-enum Mode { kLiteral, kCacheIdx, kCopy, kNone };
+enum Mode { kLiteral, kCacheIdx, kCopy };
 
 typedef struct {
   // mode as uint8_t to make the memory layout to be exactly 8 bytes.

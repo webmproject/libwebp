@@ -200,7 +200,7 @@ typedef struct {
   int min_disto;  // minimum distortion required to trigger filtering record
   // reactivities
   int lambda_i16, lambda_i4, lambda_uv;
-  int lambda_mode, lambda_trellis, tlambda;
+  int lambda_mode, tlambda;
   int lambda_trellis_i16, lambda_trellis_i4, lambda_trellis_uv;
 
   // lambda values for distortion-based evaluation
