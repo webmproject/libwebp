@@ -246,6 +246,7 @@ int VP8LBitWriterClone(const VP8LBitWriter* const src,
                        VP8LBitWriter* const dst) {
   const size_t current_size = src->cur - src->buf;
   assert(src->cur >= src->buf && src->cur <= src->end);
+  dst->cur = dst->buf;
   if (!VP8LBitWriterResize(dst, current_size)) return 0;
   WEBP_UNSAFE_MEMCPY(dst->buf, src->buf, current_size);
   dst->bits = src->bits;
