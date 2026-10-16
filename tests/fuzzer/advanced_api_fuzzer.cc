@@ -173,6 +173,12 @@ void AdvancedApiTest(std::string_view blob, uint8_t factor_u8, int colorspace,
           new_size *= 2;
         }
       }
+      int left, top, width, height, last_y, stride, uv_stride, a_stride;
+      uint8_t *u, *v, *a;
+      (void)WebPIDecodedArea(idec, &left, &top, &width, &height);
+      (void)WebPIDecGetRGB(idec, &last_y, &width, &height, &stride);
+      (void)WebPIDecGetYUVA(idec, &last_y, &u, &v, &a, &width, &height, &stride,
+                            &uv_stride, &a_stride);
       WebPIDelete(idec);
       // Verify that incremental decoding produces the same output as one-shot
       // WebPDecode() when both succeed.
