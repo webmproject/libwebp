@@ -83,6 +83,7 @@ Options:
                          green=0xe0 and blue=0xd0
 -noalpha ............... discard any transparency information
 -lossless .............. encode image losslessly, default=off
+                         (see -exact for transparent pixels)
 -near_lossless <int> ... use near-lossless image preprocessing
                          (0..100=off), default=100
 -hint <string> ......... specify image characteristics hint,
