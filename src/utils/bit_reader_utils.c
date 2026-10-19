@@ -41,9 +41,9 @@ void VP8BitReaderSetBuffer(VP8BitReader* const br,
       (size >= sizeof(lbit_t)) ? start + size - sizeof(lbit_t) + 1 : start;
 }
 
-void VP8InitBitReader(VP8BitReader* const br,
-                      const uint8_t* const WEBP_COUNTED_BY(size) start,
-                      size_t size) {
+int VP8InitBitReader(VP8BitReader* const br,
+                     const uint8_t* const WEBP_COUNTED_BY(size) start,
+                     size_t size) {
   assert(br != NULL);
   assert(start != NULL);
   assert(size < (1u << 31));  // limit ensured by format and upstream checks
@@ -53,6 +53,14 @@ void VP8InitBitReader(VP8BitReader* const br,
   br->eof = 0;
   VP8BitReaderSetBuffer(br, start, size);
   VP8LoadNewBytes(br);
+  // RFC 6386 Section 7.2:
+  // https://datatracker.ietf.org/doc/html/rfc6386#section-7.2
+  // "the condition Value < Range is maintained at all times by the decoder.
+  // In particular, the bits shifted out of value as it is doubled are always
+  // zero."
+  // Here br->range stores Range - 1 (initially 254), so the initial 8-bit
+  // value must be <= br->range (i.e. start[0] != 0xff).
+  return (br->value >> br->bits) <= br->range;
 }
 
 void VP8RemapBitReader(VP8BitReader* const br, ptrdiff_t offset) {

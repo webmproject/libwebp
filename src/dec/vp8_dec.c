@@ -242,12 +242,16 @@ static VP8StatusCode ParsePartitions(VP8Decoder* const dec,
   for (p = 0; p < last_part; ++p) {
     size_t psize = sz[0] | (sz[1] << 8) | (sz[2] << 16);
     if (psize > size_left) psize = size_left;
-    VP8InitBitReader(dec->parts + p, part_start, psize);
+    if (!VP8InitBitReader(dec->parts + p, part_start, psize)) {
+      return VP8_STATUS_BITSTREAM_ERROR;
+    }
     part_start += psize;
     size_left -= psize;
     sz += 3;
   }
-  VP8InitBitReader(dec->parts + last_part, part_start, size_left);
+  if (!VP8InitBitReader(dec->parts + last_part, part_start, size_left)) {
+    return VP8_STATUS_BITSTREAM_ERROR;
+  }
   if (part_start < buf_end) return VP8_STATUS_OK;
   return dec->incremental
              ? VP8_STATUS_SUSPENDED  // Init is ok, but there's not enough data
@@ -374,7 +378,10 @@ int VP8GetHeaders(VP8Decoder* const dec, VP8Io* const io) {
   }
 
   br = &dec->br;
-  VP8InitBitReader(br, buf, frm_hdr->partition_length);
+  if (!VP8InitBitReader(br, buf, frm_hdr->partition_length)) {
+    return VP8SetError(dec, VP8_STATUS_BITSTREAM_ERROR,
+                       "cannot initialize bitreader");
+  }
   buf += frm_hdr->partition_length;
   buf_size -= frm_hdr->partition_length;
 

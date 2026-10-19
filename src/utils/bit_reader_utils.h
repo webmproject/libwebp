@@ -111,9 +111,11 @@ struct VP8BitReader {
 };
 
 // Initialize the bit reader and the boolean decoder.
-void VP8InitBitReader(VP8BitReader* const br,
-                      const uint8_t* const WEBP_COUNTED_BY(size) start,
-                      size_t size);
+// Returns 0 in case of error.
+WEBP_NODISCARD int VP8InitBitReader(VP8BitReader* const br,
+                                    const uint8_t* const WEBP_COUNTED_BY(size)
+                                        start,
+                                    size_t size);
 // Sets the working read buffer.
 void VP8BitReaderSetBuffer(VP8BitReader* const br,
                            const uint8_t* const WEBP_COUNTED_BY(size) start,
