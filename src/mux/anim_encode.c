@@ -1744,13 +1744,16 @@ int WebPAnimEncoderAdd(WebPAnimEncoder* enc, WebPPicture* frame, int timestamp,
 WEBP_NODISCARD static int DecodeFrameOntoCanvas(
     const WebPMuxFrameInfo* const frame, WebPPicture* const canvas) {
   const WebPData* const image = &frame->bitstream;
+  const uint8_t* WEBP_BIDI_INDEXABLE const bounded_bytes =
+      WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(const uint8_t*, image->bytes,
+                                       image->size);
   WebPPicture sub_image;
   WebPDecoderConfig config;
   if (!WebPInitDecoderConfig(&config)) {
     return 0;
   }
   WebPUtilClearPic(canvas, NULL);
-  if (WebPGetFeatures(image->bytes, image->size, &config.input) !=
+  if (WebPGetFeatures(bounded_bytes, image->size, &config.input) !=
       VP8_STATUS_OK) {
     return 0;
   }
@@ -1769,7 +1772,7 @@ WEBP_NODISCARD static int DecodeFrameOntoCanvas(
   config.output.u.RGBA.size =
       (size_t)config.output.u.RGBA.stride * sub_image.height;
 
-  if (WebPDecode(image->bytes, image->size, &config) != VP8_STATUS_OK) {
+  if (WebPDecode(bounded_bytes, image->size, &config) != VP8_STATUS_OK) {
     return 0;
   }
   return 1;
