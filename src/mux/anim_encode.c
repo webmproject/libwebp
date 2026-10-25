@@ -222,7 +222,7 @@ static void ClearRectangle(WebPPicture* const picture, int left, int top,
                            int width, int height) {
   int j;
   for (j = top; j < top + height; ++j) {
-    uint32_t* const dst = picture->argb + j * picture->argb_stride;
+    uint32_t* const dst = picture->argb + (ptrdiff_t)j * picture->argb_stride;
     int i;
     for (i = left; i < left + width; ++i) {
       dst[i] = TRANSPARENT_COLOR;
@@ -462,9 +462,9 @@ static void MinimizeChangeRectangle(const WebPPicture* const src,
   // Left boundary.
   for (i = rect->x_offset; i < rect->x_offset + rect->width; ++i) {
     const uint32_t* const src_argb =
-        &src->argb[rect->y_offset * src->argb_stride + i];
+        &src->argb[(ptrdiff_t)rect->y_offset * src->argb_stride + i];
     const uint32_t* const dst_argb =
-        &dst->argb[rect->y_offset * dst->argb_stride + i];
+        &dst->argb[(ptrdiff_t)rect->y_offset * dst->argb_stride + i];
     if (compare_pixels(src_argb, src->argb_stride, dst_argb, dst->argb_stride,
                        rect->height, max_allowed_diff)) {
       --rect->width;  // Redundant column.
@@ -478,9 +478,9 @@ static void MinimizeChangeRectangle(const WebPPicture* const src,
   // Right boundary.
   for (i = rect->x_offset + rect->width - 1; i >= rect->x_offset; --i) {
     const uint32_t* const src_argb =
-        &src->argb[rect->y_offset * src->argb_stride + i];
+        &src->argb[(ptrdiff_t)rect->y_offset * src->argb_stride + i];
     const uint32_t* const dst_argb =
-        &dst->argb[rect->y_offset * dst->argb_stride + i];
+        &dst->argb[(ptrdiff_t)rect->y_offset * dst->argb_stride + i];
     if (compare_pixels(src_argb, src->argb_stride, dst_argb, dst->argb_stride,
                        rect->height, max_allowed_diff)) {
       --rect->width;  // Redundant column.
@@ -493,9 +493,9 @@ static void MinimizeChangeRectangle(const WebPPicture* const src,
   // Top boundary.
   for (j = rect->y_offset; j < rect->y_offset + rect->height; ++j) {
     const uint32_t* const src_argb =
-        &src->argb[j * src->argb_stride + rect->x_offset];
+        &src->argb[(ptrdiff_t)j * src->argb_stride + rect->x_offset];
     const uint32_t* const dst_argb =
-        &dst->argb[j * dst->argb_stride + rect->x_offset];
+        &dst->argb[(ptrdiff_t)j * dst->argb_stride + rect->x_offset];
     if (compare_pixels(src_argb, 1, dst_argb, 1, rect->width,
                        max_allowed_diff)) {
       --rect->height;  // Redundant row.
@@ -509,9 +509,9 @@ static void MinimizeChangeRectangle(const WebPPicture* const src,
   // Bottom boundary.
   for (j = rect->y_offset + rect->height - 1; j >= rect->y_offset; --j) {
     const uint32_t* const src_argb =
-        &src->argb[j * src->argb_stride + rect->x_offset];
+        &src->argb[(ptrdiff_t)j * src->argb_stride + rect->x_offset];
     const uint32_t* const dst_argb =
-        &dst->argb[j * dst->argb_stride + rect->x_offset];
+        &dst->argb[(ptrdiff_t)j * dst->argb_stride + rect->x_offset];
     if (compare_pixels(src_argb, 1, dst_argb, 1, rect->width,
                        max_allowed_diff)) {
       --rect->height;  // Redundant row.
@@ -683,8 +683,8 @@ WEBP_NODISCARD static int IsLosslessBlendingPossible(
   assert(rect->y_offset + rect->height <= dst->height);
   for (j = rect->y_offset; j < rect->y_offset + rect->height; ++j) {
     for (i = rect->x_offset; i < rect->x_offset + rect->width; ++i) {
-      const uint32_t src_pixel = src->argb[j * src->argb_stride + i];
-      const uint32_t dst_pixel = dst->argb[j * dst->argb_stride + i];
+      const uint32_t src_pixel = src->argb[(ptrdiff_t)j * src->argb_stride + i];
+      const uint32_t dst_pixel = dst->argb[(ptrdiff_t)j * dst->argb_stride + i];
       const uint32_t dst_alpha = dst_pixel >> 24;
       if (dst_alpha != 0xff && src_pixel != dst_pixel) {
         // In this case, if we use blending, we can't attain the desired
@@ -706,8 +706,8 @@ WEBP_NODISCARD static int IsLossyBlendingPossible(
   assert(rect->y_offset + rect->height <= dst->height);
   for (j = rect->y_offset; j < rect->y_offset + rect->height; ++j) {
     for (i = rect->x_offset; i < rect->x_offset + rect->width; ++i) {
-      const uint32_t src_pixel = src->argb[j * src->argb_stride + i];
-      const uint32_t dst_pixel = dst->argb[j * dst->argb_stride + i];
+      const uint32_t src_pixel = src->argb[(ptrdiff_t)j * src->argb_stride + i];
+      const uint32_t dst_pixel = dst->argb[(ptrdiff_t)j * dst->argb_stride + i];
       const uint32_t dst_alpha = dst_pixel >> 24;
       if (dst_alpha != 0xff &&
           !PixelsAreSimilar(src_pixel, dst_pixel, max_allowed_diff_lossy)) {
@@ -735,8 +735,8 @@ WEBP_NODISCARD static int IncreaseTransparency(const WebPPicture* const src,
   assert(src != NULL && dst != NULL && rect != NULL);
   assert(src->width == dst->width && src->height == dst->height);
   for (j = rect->y_offset; j < rect->y_offset + rect->height; ++j) {
-    const uint32_t* const psrc = src->argb + j * src->argb_stride;
-    uint32_t* const pdst = dst->argb + j * dst->argb_stride;
+    const uint32_t* const psrc = src->argb + (ptrdiff_t)j * src->argb_stride;
+    uint32_t* const pdst = dst->argb + (ptrdiff_t)j * dst->argb_stride;
     for (i = rect->x_offset; i < rect->x_offset + rect->width; ++i) {
       if (psrc[i] == pdst[i] && pdst[i] != TRANSPARENT_COLOR) {
         pdst[i] = TRANSPARENT_COLOR;
@@ -770,9 +770,9 @@ WEBP_NODISCARD static int FlattenSimilarBlocks(const WebPPicture* const src,
   const int x_start = (rect->x_offset + block_size) & ~(block_size - 1);
   const int x_end = (rect->x_offset + rect->width) & ~(block_size - 1);
   // carryover_mask spans over the rect part of the canvas.
-  uint8_t* carryover_mask_row = carryover_mask +
-                                (y_start - rect->y_offset) * rect->width +
-                                (x_start - rect->x_offset);
+  uint8_t* carryover_mask_row =
+      carryover_mask + (ptrdiff_t)(y_start - rect->y_offset) * rect->width +
+      (x_start - rect->x_offset);
   assert(src != NULL && dst != NULL && rect != NULL);
   assert(src->width == dst->width && src->height == dst->height);
   assert((block_size & (block_size - 1)) == 0);  // must be a power of 2
@@ -783,14 +783,16 @@ WEBP_NODISCARD static int FlattenSimilarBlocks(const WebPPicture* const src,
       int cnt = 0;
       int avg_r = 0, avg_g = 0, avg_b = 0;
       int x, y;
-      const uint32_t* const psrc = src->argb + j * src->argb_stride + i;
-      uint32_t* const pdst = dst->argb + j * dst->argb_stride + i;
+      const uint32_t* const psrc =
+          src->argb + (ptrdiff_t)j * src->argb_stride + i;
+      uint32_t* const pdst = dst->argb + (ptrdiff_t)j * dst->argb_stride + i;
       for (y = 0; y < block_size; ++y) {
         for (x = 0; x < block_size; ++x) {
-          const uint32_t src_pixel = psrc[x + y * src->argb_stride];
+          const uint32_t src_pixel = psrc[x + (ptrdiff_t)y * src->argb_stride];
           const int alpha = src_pixel >> 24;
           if (alpha == 0xff &&
-              PixelsAreSimilar(src_pixel, pdst[x + y * dst->argb_stride],
+              PixelsAreSimilar(src_pixel,
+                               pdst[x + (ptrdiff_t)y * dst->argb_stride],
                                max_allowed_diff_lossy)) {
             ++cnt;
             avg_r += (src_pixel >> 16) & 0xff;
@@ -806,8 +808,8 @@ WEBP_NODISCARD static int FlattenSimilarBlocks(const WebPPicture* const src,
                                ((avg_g / cnt) << 8) | ((avg_b / cnt) << 0);
         for (y = 0; y < block_size; ++y) {
           for (x = 0; x < block_size; ++x) {
-            pdst[x + y * dst->argb_stride] = color;
-            carryover_mask_block[y * rect->width + x] = 1;
+            pdst[x + (ptrdiff_t)y * dst->argb_stride] = color;
+            carryover_mask_block[(ptrdiff_t)y * rect->width + x] = 1;
           }
         }
         modified = 1;
