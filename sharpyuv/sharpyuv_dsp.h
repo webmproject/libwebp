@@ -69,15 +69,15 @@ extern void (*SharpYuvConvertRowUV)(const int16_t* best_uv, int uv_w,
                                     int yuv_bit_depth, void* u_out,
                                     void* v_out);
 
-// Fast paths for the (default, most common) kSharpYuvTransferFunctionSrgb
-// transfer function, used by UpdateW/UpdateChroma in sharpyuv.c. The caller
-// is responsible for checking transfer_type and falling back to the
-// (unchanged) generic per-pixel path for any other transfer function.
-extern void (*SharpYuvUpdateWSrgb)(const uint16_t* src, uint16_t* dst, int w,
-                                   int bit_depth);
-extern void (*SharpYuvUpdateChromaSrgb)(const uint16_t* src1,
-                                        const uint16_t* src2, int16_t* dst,
-                                        int uv_w, int bit_depth);
+// Fast paths for transfer functions using the 709 gamma<->linear table
+// (BT.709, BT.601, BT.2020-10, BT.2020-12), used by UpdateW/UpdateChroma in
+// sharpyuv.c. The caller is responsible for checking transfer_type and falling
+// back to the generic per-pixel path for any other transfer function.
+extern void (*SharpYuvUpdateW709)(const uint16_t* src, uint16_t* dst, int w,
+                                  int bit_depth);
+extern void (*SharpYuvUpdateChroma709)(const uint16_t* src1,
+                                       const uint16_t* src2, int16_t* dst,
+                                       int uv_w, int bit_depth);
 
 void SharpYuvInitDsp(void);
 

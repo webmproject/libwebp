@@ -71,8 +71,11 @@ static WEBP_INLINE void UpdateW(const fixed_y_t* src, fixed_y_t* dst, int w,
                                 int bit_depth,
                                 SharpYuvTransferFunctionType transfer_type) {
   int i = 0;
-  if (transfer_type == kSharpYuvTransferFunctionSrgb) {
-    SharpYuvUpdateWSrgb(src, dst, w, bit_depth);
+  if (transfer_type == kSharpYuvTransferFunctionBt709 ||
+      transfer_type == kSharpYuvTransferFunctionBt601 ||
+      transfer_type == kSharpYuvTransferFunctionBt2020_10Bit ||
+      transfer_type == kSharpYuvTransferFunctionBt2020_12Bit) {
+    SharpYuvUpdateW709(src, dst, w, bit_depth);
     return;
   }
   do {
@@ -91,8 +94,11 @@ static void UpdateChroma(const fixed_y_t* src1, const fixed_y_t* src2,
                          fixed_t* dst, int uv_w, int bit_depth,
                          SharpYuvTransferFunctionType transfer_type) {
   int i = 0;
-  if (transfer_type == kSharpYuvTransferFunctionSrgb) {
-    SharpYuvUpdateChromaSrgb(src1, src2, dst, uv_w, bit_depth);
+  if (transfer_type == kSharpYuvTransferFunctionBt709 ||
+      transfer_type == kSharpYuvTransferFunctionBt601 ||
+      transfer_type == kSharpYuvTransferFunctionBt2020_10Bit ||
+      transfer_type == kSharpYuvTransferFunctionBt2020_12Bit) {
+    SharpYuvUpdateChroma709(src1, src2, dst, uv_w, bit_depth);
     return;
   }
   do {
@@ -452,7 +458,7 @@ int SharpYuvConvert(const void* r_ptr, const void* g_ptr, const void* b_ptr,
                     int height, const SharpYuvConversionMatrix* yuv_matrix) {
   SharpYuvOptions options;
   options.yuv_matrix = yuv_matrix;
-  options.transfer_type = kSharpYuvTransferFunctionSrgb;
+  options.transfer_type = kSharpYuvTransferFunctionBt709;
   return SharpYuvConvertWithOptions(
       r_ptr, g_ptr, b_ptr, rgb_step, rgb_stride, rgb_bit_depth, y_ptr, y_stride,
       u_ptr, u_stride, v_ptr, v_stride, yuv_bit_depth, width, height, &options);
@@ -469,7 +475,7 @@ int SharpYuvOptionsInitInternal(const SharpYuvConversionMatrix* yuv_matrix,
     return 0;
   }
   options->yuv_matrix = yuv_matrix;
-  options->transfer_type = kSharpYuvTransferFunctionSrgb;
+  options->transfer_type = kSharpYuvTransferFunctionBt709;
   return 1;
 }
 

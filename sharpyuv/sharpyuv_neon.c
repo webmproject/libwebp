@@ -303,7 +303,7 @@ static void SharpYuvConvertRowUV_NEON(const int16_t* best_uv, int uv_w,
 }
 
 //------------------------------------------------------------------------------
-// sRGB gamma<->linear fast paths for UpdateW/UpdateChroma (the dominant cost
+// BT.709 gamma<->linear fast paths for UpdateW/UpdateChroma (the dominant cost
 // in the main convergence loop). NEON has no gather instruction, unfortunately.
 
 // Widens 8 gamma samples to 16.16 fixed-point linear values.
@@ -398,8 +398,8 @@ static WEBP_INLINE uint32x4_t SharpYuvRGBToGray4_NEON(uint32x4_t R,
   return vcombine_u32(vmovn_u64(lo), vmovn_u64(hi));
 }
 
-static void SharpYuvUpdateWSrgb_NEON(const uint16_t* src, uint16_t* dst, int w,
-                                     int bit_depth) {
+static void SharpYuvUpdateW709_NEON(const uint16_t* src, uint16_t* dst, int w,
+                                    int bit_depth) {
   const int shift_right = bit_depth - SHARPYUV_GAMMA_TO_LINEAR_TAB_BITS;
   const int out_shift = SHARPYUV_GAMMA_TO_LINEAR_BITS - bit_depth;
   int i = 0;
@@ -414,14 +414,14 @@ static void SharpYuvUpdateWSrgb_NEON(const uint16_t* src, uint16_t* dst, int w,
   }
   for (; i < w; ++i) {
     const uint32_t R = SharpYuvGammaToLinear(src[0 * w + i], bit_depth,
-                                             kSharpYuvTransferFunctionSrgb);
+                                             kSharpYuvTransferFunctionBt709);
     const uint32_t G = SharpYuvGammaToLinear(src[1 * w + i], bit_depth,
-                                             kSharpYuvTransferFunctionSrgb);
+                                             kSharpYuvTransferFunctionBt709);
     const uint32_t B = SharpYuvGammaToLinear(src[2 * w + i], bit_depth,
-                                             kSharpYuvTransferFunctionSrgb);
+                                             kSharpYuvTransferFunctionBt709);
     const int Y = SharpYuvRGBToGray(R, G, B);
     dst[i] = SharpYuvLinearToGamma((uint32_t)Y, bit_depth,
-                                   kSharpYuvTransferFunctionSrgb);
+                                   kSharpYuvTransferFunctionBt709);
   }
 }
 
@@ -448,9 +448,9 @@ static WEBP_INLINE uint16x8_t ScaleDown8_NEON(const uint16_t* p1,
   }
 }
 
-static void SharpYuvUpdateChromaSrgb_NEON(const uint16_t* src1,
-                                          const uint16_t* src2, int16_t* dst,
-                                          int uv_w, int bit_depth) {
+static void SharpYuvUpdateChroma709_NEON(const uint16_t* src1,
+                                         const uint16_t* src2, int16_t* dst,
+                                         int uv_w, int bit_depth) {
   const int shift_right = bit_depth - SHARPYUV_GAMMA_TO_LINEAR_TAB_BITS;
   const int out_shift = SHARPYUV_GAMMA_TO_LINEAR_BITS - bit_depth;
   int i = 0;
@@ -497,15 +497,15 @@ static void SharpYuvUpdateChromaSrgb_NEON(const uint16_t* src1,
       const uint16_t* s1 = src1 + off + 2 * c * uv_w;
       const uint16_t* s2 = src2 + off + 2 * c * uv_w;
       const uint32_t A = SharpYuvGammaToLinear(s1[0], bit_depth,
-                                               kSharpYuvTransferFunctionSrgb);
+                                               kSharpYuvTransferFunctionBt709);
       const uint32_t B = SharpYuvGammaToLinear(s1[1], bit_depth,
-                                               kSharpYuvTransferFunctionSrgb);
+                                               kSharpYuvTransferFunctionBt709);
       const uint32_t C = SharpYuvGammaToLinear(s2[0], bit_depth,
-                                               kSharpYuvTransferFunctionSrgb);
+                                               kSharpYuvTransferFunctionBt709);
       const uint32_t D = SharpYuvGammaToLinear(s2[1], bit_depth,
-                                               kSharpYuvTransferFunctionSrgb);
+                                               kSharpYuvTransferFunctionBt709);
       rgb[c] = SharpYuvLinearToGamma((A + B + C + D + 2) >> 2, bit_depth,
-                                     kSharpYuvTransferFunctionSrgb);
+                                     kSharpYuvTransferFunctionBt709);
     }
     {
       const int W = SharpYuvRGBToGray(rgb[0], rgb[1], rgb[2]);
@@ -524,8 +524,8 @@ WEBP_TSAN_IGNORE_FUNCTION void InitSharpYuvNEON(void) {
   SharpYuvUpdateY = SharpYuvUpdateY_NEON;
   SharpYuvUpdateRGB = SharpYuvUpdateRGB_NEON;
   SharpYuvFilterRow = SharpYuvFilterRow_NEON;
-  SharpYuvUpdateWSrgb = SharpYuvUpdateWSrgb_NEON;
-  SharpYuvUpdateChromaSrgb = SharpYuvUpdateChromaSrgb_NEON;
+  SharpYuvUpdateW709 = SharpYuvUpdateW709_NEON;
+  SharpYuvUpdateChroma709 = SharpYuvUpdateChroma709_NEON;
   SharpYuvConvertRowY = SharpYuvConvertRowY_NEON;
   SharpYuvConvertRowUV = SharpYuvConvertRowUV_NEON;
 }

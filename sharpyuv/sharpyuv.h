@@ -140,7 +140,7 @@ typedef enum SharpYuvTransferFunctionType {
 // yuv_matrix: RGB to YUV conversion matrix. The matrix values typically
 //     depend on the input's rgb_bit_depth.
 // This function calls SharpYuvConvertWithOptions with a default transfer
-// function of kSharpYuvTransferFunctionSrgb.
+// function of kSharpYuvTransferFunctionBt709.
 SHARPYUV_EXTERN int SharpYuvConvert(const void* r_ptr, const void* g_ptr,
                                     const void* b_ptr, int rgb_step,
                                     int rgb_stride, int rgb_bit_depth,

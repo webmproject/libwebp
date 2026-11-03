@@ -14,6 +14,7 @@
 #include <assert.h>
 #include <float.h>
 #include <math.h>
+#include <stdint.h>
 
 #include "./sharpyuv.h"
 #include "webp/types.h"
@@ -100,7 +101,7 @@ static WEBP_INLINE uint32_t FixedPointInterpolation(int v, uint32_t* tab,
   return result;
 }
 
-static uint32_t ToLinearSrgb(uint16_t v, int bit_depth) {
+static uint32_t ToLinear709(uint16_t v, int bit_depth) {
   const int shift = GAMMA_TO_LINEAR_TAB_BITS - bit_depth;
   assert(v <= ((1 << bit_depth) - 1));
   if (shift >= 0) {
@@ -110,12 +111,14 @@ static uint32_t ToLinearSrgb(uint16_t v, int bit_depth) {
   return FixedPointInterpolation(v, kGammaToLinearTabS, -shift, 0);
 }
 
-static uint16_t FromLinearSrgb(uint32_t value, int bit_depth) {
+static uint16_t FromLinear709(uint32_t value, int bit_depth) {
+  const uint32_t max = (1 << bit_depth) - 1;
+  uint32_t v;
   assert(value <= (1 << GAMMA_TO_LINEAR_BITS));
-  return FixedPointInterpolation(
-      value, kLinearToGammaTabS,
-      (GAMMA_TO_LINEAR_BITS - LINEAR_TO_GAMMA_TAB_BITS),
-      bit_depth - GAMMA_TO_LINEAR_BITS);
+  v = FixedPointInterpolation(value, kLinearToGammaTabS,
+                              (GAMMA_TO_LINEAR_BITS - LINEAR_TO_GAMMA_TAB_BITS),
+                              bit_depth - GAMMA_TO_LINEAR_BITS);
+  return (v > max) ? (uint16_t)max : (uint16_t)v;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -139,24 +142,24 @@ static WEBP_INLINE float Powf(float base, float exp) {
 
 static WEBP_INLINE float Log10f(float x) { return (float)log10((double)x); }
 
-static float ToLinear709(float gamma) {
+static float ToLinearSrgb(float gamma) {
   if (gamma < 0.f) {
     return 0.f;
-  } else if (gamma < 4.5f * 0.018053968510807f) {
-    return gamma / 4.5f;
+  } else if (gamma <= 0.04045f) {
+    return gamma / 12.92f;
   } else if (gamma < 1.f) {
-    return Powf((gamma + 0.09929682680944f) / 1.09929682680944f, 1.f / 0.45f);
+    return Powf((gamma + 0.055f) / 1.055f, 2.4f);
   }
   return 1.f;
 }
 
-static float FromLinear709(float linear) {
+static float FromLinearSrgb(float linear) {
   if (linear < 0.f) {
     return 0.f;
-  } else if (linear < 0.018053968510807f) {
-    return linear * 4.5f;
+  } else if (linear <= 0.0031308f) {
+    return linear * 12.92f;
   } else if (linear < 1.f) {
-    return 1.09929682680944f * Powf(linear, 0.45f) - 0.09929682680944f;
+    return 1.055f * Powf(linear, 1.f / 2.4f) - 0.055f;
   }
   return 1.f;
 }
@@ -319,17 +322,14 @@ static float FromLinearHlg(float linear) {
 uint32_t SharpYuvGammaToLinear(uint16_t v, int bit_depth,
                                SharpYuvTransferFunctionType transfer_type) {
   float v_float, linear;
-  if (transfer_type == kSharpYuvTransferFunctionSrgb) {
-    return ToLinearSrgb(v, bit_depth);
+  if (transfer_type == kSharpYuvTransferFunctionBt709 ||
+      transfer_type == kSharpYuvTransferFunctionBt601 ||
+      transfer_type == kSharpYuvTransferFunctionBt2020_10Bit ||
+      transfer_type == kSharpYuvTransferFunctionBt2020_12Bit) {
+    return ToLinear709(v, bit_depth);
   }
   v_float = (float)v / ((1 << bit_depth) - 1);
   switch (transfer_type) {
-    case kSharpYuvTransferFunctionBt709:
-    case kSharpYuvTransferFunctionBt601:
-    case kSharpYuvTransferFunctionBt2020_10Bit:
-    case kSharpYuvTransferFunctionBt2020_12Bit:
-      linear = ToLinear709(v_float);
-      break;
     case kSharpYuvTransferFunctionBt470M:
       linear = ToLinear470M(v_float);
       break;
@@ -353,6 +353,9 @@ uint32_t SharpYuvGammaToLinear(uint16_t v, int bit_depth,
     case kSharpYuvTransferFunctionBt1361:
       linear = ToLinearBt1361(v_float);
       break;
+    case kSharpYuvTransferFunctionSrgb:
+      linear = ToLinearSrgb(v_float);
+      break;
     case kSharpYuvTransferFunctionSmpte2084:
       linear = ToLinearPq(v_float);
       break;
@@ -373,17 +376,14 @@ uint32_t SharpYuvGammaToLinear(uint16_t v, int bit_depth,
 uint16_t SharpYuvLinearToGamma(uint32_t v, int bit_depth,
                                SharpYuvTransferFunctionType transfer_type) {
   float v_float, linear;
-  if (transfer_type == kSharpYuvTransferFunctionSrgb) {
-    return FromLinearSrgb(v, bit_depth);
+  if (transfer_type == kSharpYuvTransferFunctionBt709 ||
+      transfer_type == kSharpYuvTransferFunctionBt601 ||
+      transfer_type == kSharpYuvTransferFunctionBt2020_10Bit ||
+      transfer_type == kSharpYuvTransferFunctionBt2020_12Bit) {
+    return FromLinear709(v, bit_depth);
   }
   v_float = (float)v / ((1 << 16) - 1);
   switch (transfer_type) {
-    case kSharpYuvTransferFunctionBt709:
-    case kSharpYuvTransferFunctionBt601:
-    case kSharpYuvTransferFunctionBt2020_10Bit:
-    case kSharpYuvTransferFunctionBt2020_12Bit:
-      linear = FromLinear709(v_float);
-      break;
     case kSharpYuvTransferFunctionBt470M:
       linear = FromLinear470M(v_float);
       break;
@@ -406,6 +406,9 @@ uint16_t SharpYuvLinearToGamma(uint32_t v, int bit_depth,
       break;
     case kSharpYuvTransferFunctionBt1361:
       linear = FromLinearBt1361(v_float);
+      break;
+    case kSharpYuvTransferFunctionSrgb:
+      linear = FromLinearSrgb(v_float);
       break;
     case kSharpYuvTransferFunctionSmpte2084:
       linear = FromLinearPq(v_float);
