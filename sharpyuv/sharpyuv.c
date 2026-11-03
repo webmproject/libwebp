@@ -78,6 +78,10 @@ static WEBP_INLINE void UpdateW(const fixed_y_t* src, fixed_y_t* dst, int w,
     SharpYuvUpdateW709(src, dst, w, bit_depth);
     return;
   }
+  if (transfer_type == kSharpYuvTransferFunctionSrgb) {
+    SharpYuvUpdateWSrgb(src, dst, w, bit_depth);
+    return;
+  }
   do {
     const uint32_t R =
         SharpYuvGammaToLinear(src[0 * w + i], bit_depth, transfer_type);
@@ -99,6 +103,10 @@ static void UpdateChroma(const fixed_y_t* src1, const fixed_y_t* src2,
       transfer_type == kSharpYuvTransferFunctionBt2020_10Bit ||
       transfer_type == kSharpYuvTransferFunctionBt2020_12Bit) {
     SharpYuvUpdateChroma709(src1, src2, dst, uv_w, bit_depth);
+    return;
+  }
+  if (transfer_type == kSharpYuvTransferFunctionSrgb) {
+    SharpYuvUpdateChromaSrgb(src1, src2, dst, uv_w, bit_depth);
     return;
   }
   do {

@@ -14,6 +14,7 @@
 #include "./sharpyuv_dsp.h"
 
 #include <assert.h>
+#include <stdint.h>
 #include <stdlib.h>
 
 #include "./sharpyuv.h"
@@ -104,52 +105,48 @@ static void SharpYuvConvertRowUV_C(const int16_t* best_uv, int uv_w,
   }
 }
 
-// Fast path for the (default, most common) BT.709 transfer function, used by
+// Fast paths for the BT.709 and sRGB transfer functions, used by
 // UpdateW/UpdateChroma in sharpyuv.c.
-static void SharpYuvUpdateW709_C(const uint16_t* src, uint16_t* dst, int w,
-                                 int bit_depth) {
+static void UpdateW_C(const uint16_t* src, uint16_t* dst, int w, int bit_depth,
+                      SharpYuvTransferFunctionType transfer_type) {
   int i = 0;
   do {
-    const uint32_t R = SharpYuvGammaToLinear(src[0 * w + i], bit_depth,
-                                             kSharpYuvTransferFunctionBt709);
-    const uint32_t G = SharpYuvGammaToLinear(src[1 * w + i], bit_depth,
-                                             kSharpYuvTransferFunctionBt709);
-    const uint32_t B = SharpYuvGammaToLinear(src[2 * w + i], bit_depth,
-                                             kSharpYuvTransferFunctionBt709);
+    const uint32_t R =
+        SharpYuvGammaToLinear(src[0 * w + i], bit_depth, transfer_type);
+    const uint32_t G =
+        SharpYuvGammaToLinear(src[1 * w + i], bit_depth, transfer_type);
+    const uint32_t B =
+        SharpYuvGammaToLinear(src[2 * w + i], bit_depth, transfer_type);
     const int Y = SharpYuvRGBToGray(R, G, B);
-    dst[i] = SharpYuvLinearToGamma((uint32_t)Y, bit_depth,
-                                   kSharpYuvTransferFunctionBt709);
+    dst[i] = SharpYuvLinearToGamma((uint32_t)Y, bit_depth, transfer_type);
   } while (++i < w);
 }
 
-static uint32_t ScaleDown709_C(uint16_t a, uint16_t b, uint16_t c, uint16_t d,
-                               int bit_depth) {
-  const uint32_t A =
-      SharpYuvGammaToLinear(a, bit_depth, kSharpYuvTransferFunctionBt709);
-  const uint32_t B =
-      SharpYuvGammaToLinear(b, bit_depth, kSharpYuvTransferFunctionBt709);
-  const uint32_t C =
-      SharpYuvGammaToLinear(c, bit_depth, kSharpYuvTransferFunctionBt709);
-  const uint32_t D =
-      SharpYuvGammaToLinear(d, bit_depth, kSharpYuvTransferFunctionBt709);
+static uint32_t ScaleDown_C(uint16_t a, uint16_t b, uint16_t c, uint16_t d,
+                            int bit_depth,
+                            SharpYuvTransferFunctionType transfer_type) {
+  const uint32_t A = SharpYuvGammaToLinear(a, bit_depth, transfer_type);
+  const uint32_t B = SharpYuvGammaToLinear(b, bit_depth, transfer_type);
+  const uint32_t C = SharpYuvGammaToLinear(c, bit_depth, transfer_type);
+  const uint32_t D = SharpYuvGammaToLinear(d, bit_depth, transfer_type);
   return SharpYuvLinearToGamma((A + B + C + D + 2) >> 2, bit_depth,
-                               kSharpYuvTransferFunctionBt709);
+                               transfer_type);
 }
 
-static void SharpYuvUpdateChroma709_C(const uint16_t* src1,
-                                      const uint16_t* src2, int16_t* dst,
-                                      int uv_w, int bit_depth) {
+static void UpdateChroma_C(const uint16_t* src1, const uint16_t* src2,
+                           int16_t* dst, int uv_w, int bit_depth,
+                           SharpYuvTransferFunctionType transfer_type) {
   int i = 0;
   do {
-    const int r =
-        (int)ScaleDown709_C(src1[0 * uv_w + 0], src1[0 * uv_w + 1],
-                            src2[0 * uv_w + 0], src2[0 * uv_w + 1], bit_depth);
-    const int g =
-        (int)ScaleDown709_C(src1[2 * uv_w + 0], src1[2 * uv_w + 1],
-                            src2[2 * uv_w + 0], src2[2 * uv_w + 1], bit_depth);
-    const int b =
-        (int)ScaleDown709_C(src1[4 * uv_w + 0], src1[4 * uv_w + 1],
-                            src2[4 * uv_w + 0], src2[4 * uv_w + 1], bit_depth);
+    const int r = (int)ScaleDown_C(src1[0 * uv_w + 0], src1[0 * uv_w + 1],
+                                   src2[0 * uv_w + 0], src2[0 * uv_w + 1],
+                                   bit_depth, transfer_type);
+    const int g = (int)ScaleDown_C(src1[2 * uv_w + 0], src1[2 * uv_w + 1],
+                                   src2[2 * uv_w + 0], src2[2 * uv_w + 1],
+                                   bit_depth, transfer_type);
+    const int b = (int)ScaleDown_C(src1[4 * uv_w + 0], src1[4 * uv_w + 1],
+                                   src2[4 * uv_w + 0], src2[4 * uv_w + 1],
+                                   bit_depth, transfer_type);
     const int W = SharpYuvRGBToGray(r, g, b);
     dst[0 * uv_w] = (int16_t)(r - W);
     dst[1 * uv_w] = (int16_t)(g - W);
@@ -158,6 +155,30 @@ static void SharpYuvUpdateChroma709_C(const uint16_t* src1,
     src1 += 2;
     src2 += 2;
   } while (++i < uv_w);
+}
+
+static void SharpYuvUpdateW709_C(const uint16_t* src, uint16_t* dst, int w,
+                                 int bit_depth) {
+  UpdateW_C(src, dst, w, bit_depth, kSharpYuvTransferFunctionBt709);
+}
+
+static void SharpYuvUpdateChroma709_C(const uint16_t* src1,
+                                      const uint16_t* src2, int16_t* dst,
+                                      int uv_w, int bit_depth) {
+  UpdateChroma_C(src1, src2, dst, uv_w, bit_depth,
+                 kSharpYuvTransferFunctionBt709);
+}
+
+static void SharpYuvUpdateWSrgb_C(const uint16_t* src, uint16_t* dst, int w,
+                                  int bit_depth) {
+  UpdateW_C(src, dst, w, bit_depth, kSharpYuvTransferFunctionSrgb);
+}
+
+static void SharpYuvUpdateChromaSrgb_C(const uint16_t* src1,
+                                       const uint16_t* src2, int16_t* dst,
+                                       int uv_w, int bit_depth) {
+  UpdateChroma_C(src1, src2, dst, uv_w, bit_depth,
+                 kSharpYuvTransferFunctionSrgb);
 }
 #endif  // !WEBP_NEON_OMIT_C_CODE
 
@@ -180,6 +201,10 @@ void (*SharpYuvUpdateW709)(const uint16_t* src, uint16_t* dst, int w,
                            int bit_depth);
 void (*SharpYuvUpdateChroma709)(const uint16_t* src1, const uint16_t* src2,
                                 int16_t* dst, int uv_w, int bit_depth);
+void (*SharpYuvUpdateWSrgb)(const uint16_t* src, uint16_t* dst, int w,
+                            int bit_depth);
+void (*SharpYuvUpdateChromaSrgb)(const uint16_t* src1, const uint16_t* src2,
+                                 int16_t* dst, int uv_w, int bit_depth);
 
 extern VP8CPUInfo SharpYuvGetCPUInfo;
 extern void InitSharpYuvSSE2(void);
@@ -195,6 +220,8 @@ void SharpYuvInitDsp(void) {
   SharpYuvConvertRowUV = SharpYuvConvertRowUV_C;
   SharpYuvUpdateW709 = SharpYuvUpdateW709_C;
   SharpYuvUpdateChroma709 = SharpYuvUpdateChroma709_C;
+  SharpYuvUpdateWSrgb = SharpYuvUpdateWSrgb_C;
+  SharpYuvUpdateChromaSrgb = SharpYuvUpdateChromaSrgb_C;
 #endif
 
   if (SharpYuvGetCPUInfo != NULL) {
@@ -224,4 +251,6 @@ void SharpYuvInitDsp(void) {
   assert(SharpYuvConvertRowUV != NULL);
   assert(SharpYuvUpdateW709 != NULL);
   assert(SharpYuvUpdateChroma709 != NULL);
+  assert(SharpYuvUpdateWSrgb != NULL);
+  assert(SharpYuvUpdateChromaSrgb != NULL);
 }

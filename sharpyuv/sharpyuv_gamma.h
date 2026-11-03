@@ -31,13 +31,15 @@ uint32_t SharpYuvGammaToLinear(uint16_t v, int bit_depth,
 uint16_t SharpYuvLinearToGamma(uint32_t value, int bit_depth,
                                SharpYuvTransferFunctionType transfer_type);
 
-// Exposed for SIMD fast paths of the BT.709 transfer function (most common).
-// Must stay in sync with ToLinear709()/FromLinear709(): table entries are
-// 16.16 fixed-point values, etc.
+// Exposed for SIMD fast paths of the BT.709 and sRGB transfer functions.
+// Must stay in sync with ToLinear()/FromLinear(): table entries are 16.16
+// fixed-point values.
 #define SHARPYUV_GAMMA_TO_LINEAR_TAB_BITS 10
 #define SHARPYUV_GAMMA_TO_LINEAR_BITS 16
-extern uint32_t kSharpYuvGammaToLinearTabS[];  // BT.709 gamma -> linear
-extern uint32_t kSharpYuvLinearToGammaTabS[];  // BT.709 linear -> gamma
+extern uint32_t kSharpYuvGammaToLinearTabS[];     // BT.709 gamma -> linear
+extern uint32_t kSharpYuvLinearToGammaTabS[];     // BT.709 linear -> gamma
+extern uint32_t kSharpYuvGammaToLinearTabSrgb[];  // sRGB gamma -> linear
+extern uint32_t kSharpYuvLinearToGammaTabSrgb[];  // sRGB linear -> gamma
 
 #ifdef __cplusplus
 }  // extern "C"
