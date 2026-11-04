@@ -15,6 +15,10 @@
 #include "./sharpyuv_cpu.h"
 #include "webp/types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // Shared fixed-point building blocks, reused by the C fallback and SIMD tails
 #define SHARPYUV_YUV_FIX 16  // fixed-point precision for RGB->YUV
 
@@ -69,16 +73,26 @@ extern void (*SharpYuvConvertRowUV)(const int16_t* best_uv, int uv_w,
                                     int yuv_bit_depth, void* u_out,
                                     void* v_out);
 
-// Fast paths for transfer functions using the 709 gamma<->linear table
-// (BT.709, BT.601, BT.2020-10, BT.2020-12), used by UpdateW/UpdateChroma in
-// sharpyuv.c. The caller is responsible for checking transfer_type and falling
-// back to the generic per-pixel path for any other transfer function.
+// Fast paths for transfer functions using gamma<->linear tables
+// (BT.709, BT.601, BT.2020-10, BT.2020-12, and sRGB), used by
+// UpdateW/UpdateChroma in sharpyuv.c. The caller is responsible for checking
+// transfer_type and falling back to the generic per-pixel path for any other
+// transfer function.
 extern void (*SharpYuvUpdateW709)(const uint16_t* src, uint16_t* dst, int w,
                                   int bit_depth);
 extern void (*SharpYuvUpdateChroma709)(const uint16_t* src1,
                                        const uint16_t* src2, int16_t* dst,
                                        int uv_w, int bit_depth);
+extern void (*SharpYuvUpdateWSrgb)(const uint16_t* src, uint16_t* dst, int w,
+                                   int bit_depth);
+extern void (*SharpYuvUpdateChromaSrgb)(const uint16_t* src1,
+                                        const uint16_t* src2, int16_t* dst,
+                                        int uv_w, int bit_depth);
 
 void SharpYuvInitDsp(void);
+
+#ifdef __cplusplus
+}  // extern "C"
+#endif
 
 #endif  // WEBP_SHARPYUV_SHARPYUV_DSP_H_

@@ -11,12 +11,13 @@
 //
 // Author: Skal (pascal.massimino@gmail.com)
 
-#include "sharpyuv/sharpyuv_dsp.h"
-#include "sharpyuv/sharpyuv_gamma.h"
+#include "./sharpyuv_dsp.h"
+#include "./sharpyuv_gamma.h"
 
 #if defined(WEBP_USE_NEON)
 #include <arm_neon.h>
 #include <assert.h>
+#include <stdint.h>
 #include <stdlib.h>
 
 static uint64_t SharpYuvUpdateY_NEON(const uint16_t* ref, const uint16_t* src,
@@ -303,11 +304,13 @@ static void SharpYuvConvertRowUV_NEON(const int16_t* best_uv, int uv_w,
 }
 
 //------------------------------------------------------------------------------
-// BT.709 gamma<->linear fast paths for UpdateW/UpdateChroma (the dominant cost
-// in the main convergence loop). NEON has no gather instruction, unfortunately.
+// BT.709 and sRGB gamma<->linear fast paths for UpdateW/UpdateChroma (the
+// dominant cost in the main convergence loop). NEON has no gather instruction,
+// unfortunately.
 
 // Widens 8 gamma samples to 16.16 fixed-point linear values.
 static WEBP_INLINE void GammaToLinear8_NEON(uint16x8_t v16, int shift_right,
+                                            const uint32_t* g2l_tab,
                                             uint32x4_t* out_lo,
                                             uint32x4_t* out_hi) {
   const int32x4_t neg_shift = vdupq_n_s32(-shift_right);
@@ -323,8 +326,8 @@ static WEBP_INLINE void GammaToLinear8_NEON(uint16x8_t v16, int shift_right,
   vst1q_s32(idx + 0, pos_lo);
   vst1q_s32(idx + 4, pos_hi);
   for (lane = 0; lane < 8; ++lane) {
-    v0v[lane] = kSharpYuvGammaToLinearTabS[idx[lane]];
-    v1v[lane] = kSharpYuvGammaToLinearTabS[idx[lane] + 1];
+    v0v[lane] = g2l_tab[idx[lane]];
+    v1v[lane] = g2l_tab[idx[lane] + 1];
   }
   {
     const int32x4_t shift_amt = vdupq_n_s32(shift_right);
@@ -347,7 +350,8 @@ static WEBP_INLINE void GammaToLinear8_NEON(uint16x8_t v16, int shift_right,
 // Reverse direction: 8 16.16 fixed-point linear values -> 8 gamma samples
 static WEBP_INLINE uint16x8_t LinearToGamma8_NEON(uint32x4_t Y_lo,
                                                   uint32x4_t Y_hi,
-                                                  int out_shift) {
+                                                  int out_shift,
+                                                  const uint32_t* l2g_tab) {
   const uint32x4_t tab_pos_lo = vshrq_n_u32(Y_lo, 7);  // constant shift: the
   const uint32x4_t tab_pos_hi = vshrq_n_u32(Y_hi, 7);  // table bits are fixed
   const uint32x4_t x_lo = vsubq_u32(Y_lo, vshlq_n_u32(tab_pos_lo, 7));
@@ -358,8 +362,8 @@ static WEBP_INLINE uint16x8_t LinearToGamma8_NEON(uint32x4_t Y_lo,
   vst1q_u32((uint32_t*)(idx + 0), tab_pos_lo);
   vst1q_u32((uint32_t*)(idx + 4), tab_pos_hi);
   for (lane = 0; lane < 8; ++lane) {
-    v0v[lane] = kSharpYuvLinearToGammaTabS[idx[lane]] >> out_shift;
-    v1v[lane] = kSharpYuvLinearToGammaTabS[idx[lane] + 1] >> out_shift;
+    v0v[lane] = l2g_tab[idx[lane]] >> out_shift;
+    v1v[lane] = l2g_tab[idx[lane] + 1] >> out_shift;
   }
   {
     const int32x4_t v0_lo = vreinterpretq_s32_u32(vld1q_u32(v0v + 0));
@@ -376,7 +380,7 @@ static WEBP_INLINE uint16x8_t LinearToGamma8_NEON(uint32x4_t Y_lo,
     const int32x4_t out_lo = vaddq_s32(v0_lo, vshrq_n_s32(sum_lo, 7));
     const int32x4_t out_hi = vaddq_s32(v0_hi, vshrq_n_s32(sum_hi, 7));
     // Truncating narrow (not saturating): matches the plain uint16_t cast in
-    // FromLinearSrgb().
+    // FromLinear709()/FromLinearSrgb().
     return vreinterpretq_u16_s16(
         vcombine_s16(vmovn_s32(out_lo), vmovn_s32(out_hi)));
   }
@@ -398,45 +402,63 @@ static WEBP_INLINE uint32x4_t SharpYuvRGBToGray4_NEON(uint32x4_t R,
   return vcombine_u32(vmovn_u64(lo), vmovn_u64(hi));
 }
 
-static void SharpYuvUpdateW709_NEON(const uint16_t* src, uint16_t* dst, int w,
-                                    int bit_depth) {
+static void UpdateW_NEON(const uint16_t* src, uint16_t* dst, int w,
+                         int bit_depth,
+                         SharpYuvTransferFunctionType transfer_type,
+                         const uint32_t* g2l_tab, const uint32_t* l2g_tab) {
   const int shift_right = bit_depth - SHARPYUV_GAMMA_TO_LINEAR_TAB_BITS;
   const int out_shift = SHARPYUV_GAMMA_TO_LINEAR_BITS - bit_depth;
   int i = 0;
   for (; i + 8 <= w; i += 8) {
     uint32x4_t R_lo, R_hi, G_lo, G_hi, B_lo, B_hi, Y_lo, Y_hi;
-    GammaToLinear8_NEON(vld1q_u16(src + 0 * w + i), shift_right, &R_lo, &R_hi);
-    GammaToLinear8_NEON(vld1q_u16(src + 1 * w + i), shift_right, &G_lo, &G_hi);
-    GammaToLinear8_NEON(vld1q_u16(src + 2 * w + i), shift_right, &B_lo, &B_hi);
+    GammaToLinear8_NEON(vld1q_u16(src + 0 * w + i), shift_right, g2l_tab, &R_lo,
+                        &R_hi);
+    GammaToLinear8_NEON(vld1q_u16(src + 1 * w + i), shift_right, g2l_tab, &G_lo,
+                        &G_hi);
+    GammaToLinear8_NEON(vld1q_u16(src + 2 * w + i), shift_right, g2l_tab, &B_lo,
+                        &B_hi);
     Y_lo = SharpYuvRGBToGray4_NEON(R_lo, G_lo, B_lo);
     Y_hi = SharpYuvRGBToGray4_NEON(R_hi, G_hi, B_hi);
-    vst1q_u16(dst + i, LinearToGamma8_NEON(Y_lo, Y_hi, out_shift));
+    vst1q_u16(dst + i, LinearToGamma8_NEON(Y_lo, Y_hi, out_shift, l2g_tab));
   }
   for (; i < w; ++i) {
-    const uint32_t R = SharpYuvGammaToLinear(src[0 * w + i], bit_depth,
-                                             kSharpYuvTransferFunctionBt709);
-    const uint32_t G = SharpYuvGammaToLinear(src[1 * w + i], bit_depth,
-                                             kSharpYuvTransferFunctionBt709);
-    const uint32_t B = SharpYuvGammaToLinear(src[2 * w + i], bit_depth,
-                                             kSharpYuvTransferFunctionBt709);
+    const uint32_t R =
+        SharpYuvGammaToLinear(src[0 * w + i], bit_depth, transfer_type);
+    const uint32_t G =
+        SharpYuvGammaToLinear(src[1 * w + i], bit_depth, transfer_type);
+    const uint32_t B =
+        SharpYuvGammaToLinear(src[2 * w + i], bit_depth, transfer_type);
     const int Y = SharpYuvRGBToGray(R, G, B);
-    dst[i] = SharpYuvLinearToGamma((uint32_t)Y, bit_depth,
-                                   kSharpYuvTransferFunctionBt709);
+    dst[i] = SharpYuvLinearToGamma((uint32_t)Y, bit_depth, transfer_type);
   }
+}
+
+static void SharpYuvUpdateW709_NEON(const uint16_t* src, uint16_t* dst, int w,
+                                    int bit_depth) {
+  UpdateW_NEON(src, dst, w, bit_depth, kSharpYuvTransferFunctionBt709,
+               kSharpYuvGammaToLinearTabS, kSharpYuvLinearToGammaTabS);
+}
+
+static void SharpYuvUpdateWSrgb_NEON(const uint16_t* src, uint16_t* dst, int w,
+                                     int bit_depth) {
+  UpdateW_NEON(src, dst, w, bit_depth, kSharpYuvTransferFunctionSrgb,
+               kSharpYuvGammaToLinearTabSrgb, kSharpYuvLinearToGammaTabSrgb);
 }
 
 // Box-downsamples 8 consecutive uv-position 2x2 groups (read from 2 rows,
 // deinterleaved via vld2q). cf. ScaleDown().
 static WEBP_INLINE uint16x8_t ScaleDown8_NEON(const uint16_t* p1,
                                               const uint16_t* p2,
-                                              int shift_right, int out_shift) {
+                                              int shift_right, int out_shift,
+                                              const uint32_t* g2l_tab,
+                                              const uint32_t* l2g_tab) {
   const uint16x8x2_t ab = vld2q_u16(p1);
   const uint16x8x2_t cd = vld2q_u16(p2);
   uint32x4_t A_lo, A_hi, B_lo, B_hi, C_lo, C_hi, D_lo, D_hi;
-  GammaToLinear8_NEON(ab.val[0], shift_right, &A_lo, &A_hi);
-  GammaToLinear8_NEON(ab.val[1], shift_right, &B_lo, &B_hi);
-  GammaToLinear8_NEON(cd.val[0], shift_right, &C_lo, &C_hi);
-  GammaToLinear8_NEON(cd.val[1], shift_right, &D_lo, &D_hi);
+  GammaToLinear8_NEON(ab.val[0], shift_right, g2l_tab, &A_lo, &A_hi);
+  GammaToLinear8_NEON(ab.val[1], shift_right, g2l_tab, &B_lo, &B_hi);
+  GammaToLinear8_NEON(cd.val[0], shift_right, g2l_tab, &C_lo, &C_hi);
+  GammaToLinear8_NEON(cd.val[1], shift_right, g2l_tab, &D_lo, &D_hi);
   {
     const uint32x4_t two = vdupq_n_u32(2);
     const uint32x4_t sum_lo =
@@ -444,24 +466,29 @@ static WEBP_INLINE uint16x8_t ScaleDown8_NEON(const uint16_t* p1,
     const uint32x4_t sum_hi =
         vaddq_u32(vaddq_u32(vaddq_u32(A_hi, B_hi), vaddq_u32(C_hi, D_hi)), two);
     return LinearToGamma8_NEON(vshrq_n_u32(sum_lo, 2), vshrq_n_u32(sum_hi, 2),
-                               out_shift);
+                               out_shift, l2g_tab);
   }
 }
 
-static void SharpYuvUpdateChroma709_NEON(const uint16_t* src1,
-                                         const uint16_t* src2, int16_t* dst,
-                                         int uv_w, int bit_depth) {
+static void UpdateChroma_NEON(const uint16_t* src1, const uint16_t* src2,
+                              int16_t* dst, int uv_w, int bit_depth,
+                              SharpYuvTransferFunctionType transfer_type,
+                              const uint32_t* g2l_tab,
+                              const uint32_t* l2g_tab) {
   const int shift_right = bit_depth - SHARPYUV_GAMMA_TO_LINEAR_TAB_BITS;
   const int out_shift = SHARPYUV_GAMMA_TO_LINEAR_BITS - bit_depth;
   int i = 0;
   for (; i + 8 <= uv_w; i += 8) {
     const int off = 2 * i;
-    const uint16x8_t r16 = ScaleDown8_NEON(
-        src1 + off + 0 * uv_w, src2 + off + 0 * uv_w, shift_right, out_shift);
-    const uint16x8_t g16 = ScaleDown8_NEON(
-        src1 + off + 2 * uv_w, src2 + off + 2 * uv_w, shift_right, out_shift);
-    const uint16x8_t b16 = ScaleDown8_NEON(
-        src1 + off + 4 * uv_w, src2 + off + 4 * uv_w, shift_right, out_shift);
+    const uint16x8_t r16 =
+        ScaleDown8_NEON(src1 + off + 0 * uv_w, src2 + off + 0 * uv_w,
+                        shift_right, out_shift, g2l_tab, l2g_tab);
+    const uint16x8_t g16 =
+        ScaleDown8_NEON(src1 + off + 2 * uv_w, src2 + off + 2 * uv_w,
+                        shift_right, out_shift, g2l_tab, l2g_tab);
+    const uint16x8_t b16 =
+        ScaleDown8_NEON(src1 + off + 4 * uv_w, src2 + off + 4 * uv_w,
+                        shift_right, out_shift, g2l_tab, l2g_tab);
     const uint32x4_t r_lo = vmovl_u16(vget_low_u16(r16));
     const uint32x4_t r_hi = vmovl_u16(vget_high_u16(r16));
     const uint32x4_t g_lo = vmovl_u16(vget_low_u16(g16));
@@ -496,16 +523,12 @@ static void SharpYuvUpdateChroma709_NEON(const uint16_t* src1,
     for (c = 0; c < 3; ++c) {
       const uint16_t* s1 = src1 + off + 2 * c * uv_w;
       const uint16_t* s2 = src2 + off + 2 * c * uv_w;
-      const uint32_t A = SharpYuvGammaToLinear(s1[0], bit_depth,
-                                               kSharpYuvTransferFunctionBt709);
-      const uint32_t B = SharpYuvGammaToLinear(s1[1], bit_depth,
-                                               kSharpYuvTransferFunctionBt709);
-      const uint32_t C = SharpYuvGammaToLinear(s2[0], bit_depth,
-                                               kSharpYuvTransferFunctionBt709);
-      const uint32_t D = SharpYuvGammaToLinear(s2[1], bit_depth,
-                                               kSharpYuvTransferFunctionBt709);
+      const uint32_t A = SharpYuvGammaToLinear(s1[0], bit_depth, transfer_type);
+      const uint32_t B = SharpYuvGammaToLinear(s1[1], bit_depth, transfer_type);
+      const uint32_t C = SharpYuvGammaToLinear(s2[0], bit_depth, transfer_type);
+      const uint32_t D = SharpYuvGammaToLinear(s2[1], bit_depth, transfer_type);
       rgb[c] = SharpYuvLinearToGamma((A + B + C + D + 2) >> 2, bit_depth,
-                                     kSharpYuvTransferFunctionBt709);
+                                     transfer_type);
     }
     {
       const int W = SharpYuvRGBToGray(rgb[0], rgb[1], rgb[2]);
@@ -514,6 +537,22 @@ static void SharpYuvUpdateChroma709_NEON(const uint16_t* src1,
       dst[i + 2 * uv_w] = (int16_t)((int)rgb[2] - W);
     }
   }
+}
+
+static void SharpYuvUpdateChroma709_NEON(const uint16_t* src1,
+                                         const uint16_t* src2, int16_t* dst,
+                                         int uv_w, int bit_depth) {
+  UpdateChroma_NEON(src1, src2, dst, uv_w, bit_depth,
+                    kSharpYuvTransferFunctionBt709, kSharpYuvGammaToLinearTabS,
+                    kSharpYuvLinearToGammaTabS);
+}
+
+static void SharpYuvUpdateChromaSrgb_NEON(const uint16_t* src1,
+                                          const uint16_t* src2, int16_t* dst,
+                                          int uv_w, int bit_depth) {
+  UpdateChroma_NEON(
+      src1, src2, dst, uv_w, bit_depth, kSharpYuvTransferFunctionSrgb,
+      kSharpYuvGammaToLinearTabSrgb, kSharpYuvLinearToGammaTabSrgb);
 }
 
 //------------------------------------------------------------------------------
@@ -526,6 +565,8 @@ WEBP_TSAN_IGNORE_FUNCTION void InitSharpYuvNEON(void) {
   SharpYuvFilterRow = SharpYuvFilterRow_NEON;
   SharpYuvUpdateW709 = SharpYuvUpdateW709_NEON;
   SharpYuvUpdateChroma709 = SharpYuvUpdateChroma709_NEON;
+  SharpYuvUpdateWSrgb = SharpYuvUpdateWSrgb_NEON;
+  SharpYuvUpdateChromaSrgb = SharpYuvUpdateChromaSrgb_NEON;
   SharpYuvConvertRowY = SharpYuvConvertRowY_NEON;
   SharpYuvConvertRowUV = SharpYuvConvertRowUV_NEON;
 }

@@ -25,10 +25,14 @@
 #define GAMMA_TO_LINEAR_TAB_SIZE (1 << GAMMA_TO_LINEAR_TAB_BITS)
 uint32_t kSharpYuvGammaToLinearTabS[GAMMA_TO_LINEAR_TAB_SIZE + 2];
 #define kGammaToLinearTabS kSharpYuvGammaToLinearTabS
+uint32_t kSharpYuvGammaToLinearTabSrgb[GAMMA_TO_LINEAR_TAB_SIZE + 2];
+#define kGammaToLinearTabSrgb kSharpYuvGammaToLinearTabSrgb
 #define LINEAR_TO_GAMMA_TAB_BITS 9
 #define LINEAR_TO_GAMMA_TAB_SIZE (1 << LINEAR_TO_GAMMA_TAB_BITS)
 uint32_t kSharpYuvLinearToGammaTabS[LINEAR_TO_GAMMA_TAB_SIZE + 2];
 #define kLinearToGammaTabS kSharpYuvLinearToGammaTabS
+uint32_t kSharpYuvLinearToGammaTabSrgb[LINEAR_TO_GAMMA_TAB_SIZE + 2];
+#define kLinearToGammaTabSrgb kSharpYuvLinearToGammaTabSrgb
 
 static const double kGammaF = 1. / 0.45;
 #define GAMMA_TO_LINEAR_BITS 16
@@ -41,7 +45,7 @@ void SharpYuvInitGammaTables(void) {
     const double a = 0.09929682680944;
     const double thresh = 0.018053968510807;
     const double final_scale = 1 << GAMMA_TO_LINEAR_BITS;
-    // Precompute gamma to linear table.
+    // Precompute BT.709 gamma to linear table.
     {
       const double norm = 1. / GAMMA_TO_LINEAR_TAB_SIZE;
       const double a_rec = 1. / (1. + a);
@@ -59,7 +63,7 @@ void SharpYuvInitGammaTables(void) {
       kGammaToLinearTabS[GAMMA_TO_LINEAR_TAB_SIZE + 1] =
           kGammaToLinearTabS[GAMMA_TO_LINEAR_TAB_SIZE];
     }
-    // Precompute linear to gamma table.
+    // Precompute BT.709 linear to gamma table.
     {
       const double scale = 1. / LINEAR_TO_GAMMA_TAB_SIZE;
       for (v = 0; v <= LINEAR_TO_GAMMA_TAB_SIZE; ++v) {
@@ -76,6 +80,38 @@ void SharpYuvInitGammaTables(void) {
       kLinearToGammaTabS[LINEAR_TO_GAMMA_TAB_SIZE + 1] =
           kLinearToGammaTabS[LINEAR_TO_GAMMA_TAB_SIZE];
     }
+    // Precompute sRGB gamma to linear table (IEC 61966-2-1).
+    {
+      const double norm = 1. / GAMMA_TO_LINEAR_TAB_SIZE;
+      for (v = 0; v <= GAMMA_TO_LINEAR_TAB_SIZE; ++v) {
+        const double g = norm * v;
+        double value;
+        if (g <= 0.04045) {
+          value = g / 12.92;
+        } else {
+          value = pow((g + 0.055) / 1.055, 2.4);
+        }
+        kGammaToLinearTabSrgb[v] = (uint32_t)(value * final_scale + .5);
+      }
+      kGammaToLinearTabSrgb[GAMMA_TO_LINEAR_TAB_SIZE + 1] =
+          kGammaToLinearTabSrgb[GAMMA_TO_LINEAR_TAB_SIZE];
+    }
+    // Precompute sRGB linear to gamma table (IEC 61966-2-1).
+    {
+      const double scale = 1. / LINEAR_TO_GAMMA_TAB_SIZE;
+      for (v = 0; v <= LINEAR_TO_GAMMA_TAB_SIZE; ++v) {
+        const double g = scale * v;
+        double value;
+        if (g <= 0.0031308) {
+          value = 12.92 * g;
+        } else {
+          value = 1.055 * pow(g, 1. / 2.4) - 0.055;
+        }
+        kLinearToGammaTabSrgb[v] = (uint32_t)(final_scale * value + 0.5);
+      }
+      kLinearToGammaTabSrgb[LINEAR_TO_GAMMA_TAB_SIZE + 1] =
+          kLinearToGammaTabSrgb[LINEAR_TO_GAMMA_TAB_SIZE];
+    }
     kGammaTablesSOk = 1;
   }
 }
@@ -84,7 +120,7 @@ static WEBP_INLINE int Shift(int v, int shift) {
   return (shift >= 0) ? (v << shift) : (v >> -shift);
 }
 
-static WEBP_INLINE uint32_t FixedPointInterpolation(int v, uint32_t* tab,
+static WEBP_INLINE uint32_t FixedPointInterpolation(int v, const uint32_t* tab,
                                                     int tab_pos_shift_right,
                                                     int tab_value_shift) {
   const uint32_t tab_pos = Shift(v, -tab_pos_shift_right);
@@ -101,21 +137,21 @@ static WEBP_INLINE uint32_t FixedPointInterpolation(int v, uint32_t* tab,
   return result;
 }
 
-static uint32_t ToLinear709(uint16_t v, int bit_depth) {
+static uint32_t ToLinear(uint16_t v, int bit_depth, const uint32_t* tab) {
   const int shift = GAMMA_TO_LINEAR_TAB_BITS - bit_depth;
   assert(v <= ((1 << bit_depth) - 1));
   if (shift >= 0) {
     // shift == 0 is a direct lookup, no need for interpolation
-    return kGammaToLinearTabS[v << shift];
+    return tab[v << shift];
   }
-  return FixedPointInterpolation(v, kGammaToLinearTabS, -shift, 0);
+  return FixedPointInterpolation(v, tab, -shift, 0);
 }
 
-static uint16_t FromLinear709(uint32_t value, int bit_depth) {
+static uint16_t FromLinear(uint32_t value, int bit_depth, const uint32_t* tab) {
   const uint32_t max = (1 << bit_depth) - 1;
   uint32_t v;
   assert(value <= (1 << GAMMA_TO_LINEAR_BITS));
-  v = FixedPointInterpolation(value, kLinearToGammaTabS,
+  v = FixedPointInterpolation(value, tab,
                               (GAMMA_TO_LINEAR_BITS - LINEAR_TO_GAMMA_TAB_BITS),
                               bit_depth - GAMMA_TO_LINEAR_BITS);
   return (v > max) ? (uint16_t)max : (uint16_t)v;
@@ -141,28 +177,6 @@ static WEBP_INLINE float Powf(float base, float exp) {
 }
 
 static WEBP_INLINE float Log10f(float x) { return (float)log10((double)x); }
-
-static float ToLinearSrgb(float gamma) {
-  if (gamma < 0.f) {
-    return 0.f;
-  } else if (gamma <= 0.04045f) {
-    return gamma / 12.92f;
-  } else if (gamma < 1.f) {
-    return Powf((gamma + 0.055f) / 1.055f, 2.4f);
-  }
-  return 1.f;
-}
-
-static float FromLinearSrgb(float linear) {
-  if (linear < 0.f) {
-    return 0.f;
-  } else if (linear <= 0.0031308f) {
-    return linear * 12.92f;
-  } else if (linear < 1.f) {
-    return 1.055f * Powf(linear, 1.f / 2.4f) - 0.055f;
-  }
-  return 1.f;
-}
 
 static float ToLinear470M(float gamma) {
   return Powf(CLAMP(gamma, 0.f, 1.f), 2.2f);
@@ -326,7 +340,10 @@ uint32_t SharpYuvGammaToLinear(uint16_t v, int bit_depth,
       transfer_type == kSharpYuvTransferFunctionBt601 ||
       transfer_type == kSharpYuvTransferFunctionBt2020_10Bit ||
       transfer_type == kSharpYuvTransferFunctionBt2020_12Bit) {
-    return ToLinear709(v, bit_depth);
+    return ToLinear(v, bit_depth, kGammaToLinearTabS);
+  }
+  if (transfer_type == kSharpYuvTransferFunctionSrgb) {
+    return ToLinear(v, bit_depth, kGammaToLinearTabSrgb);
   }
   v_float = (float)v / ((1 << bit_depth) - 1);
   switch (transfer_type) {
@@ -353,9 +370,6 @@ uint32_t SharpYuvGammaToLinear(uint16_t v, int bit_depth,
     case kSharpYuvTransferFunctionBt1361:
       linear = ToLinearBt1361(v_float);
       break;
-    case kSharpYuvTransferFunctionSrgb:
-      linear = ToLinearSrgb(v_float);
-      break;
     case kSharpYuvTransferFunctionSmpte2084:
       linear = ToLinearPq(v_float);
       break;
@@ -380,7 +394,10 @@ uint16_t SharpYuvLinearToGamma(uint32_t v, int bit_depth,
       transfer_type == kSharpYuvTransferFunctionBt601 ||
       transfer_type == kSharpYuvTransferFunctionBt2020_10Bit ||
       transfer_type == kSharpYuvTransferFunctionBt2020_12Bit) {
-    return FromLinear709(v, bit_depth);
+    return FromLinear(v, bit_depth, kLinearToGammaTabS);
+  }
+  if (transfer_type == kSharpYuvTransferFunctionSrgb) {
+    return FromLinear(v, bit_depth, kLinearToGammaTabSrgb);
   }
   v_float = (float)v / ((1 << 16) - 1);
   switch (transfer_type) {
@@ -406,9 +423,6 @@ uint16_t SharpYuvLinearToGamma(uint32_t v, int bit_depth,
       break;
     case kSharpYuvTransferFunctionBt1361:
       linear = FromLinearBt1361(v_float);
-      break;
-    case kSharpYuvTransferFunctionSrgb:
-      linear = FromLinearSrgb(v_float);
       break;
     case kSharpYuvTransferFunctionSmpte2084:
       linear = FromLinearPq(v_float);

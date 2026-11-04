@@ -16,6 +16,7 @@
 #if defined(WEBP_USE_AVX2)
 #include <assert.h>
 #include <immintrin.h>
+#include <stdint.h>
 #include <stdlib.h>
 
 #include "src/dsp/cpu.h"
@@ -371,21 +372,20 @@ static void SharpYuvConvertRowUV_AVX2(const int16_t* best_uv, int uv_w,
 }
 
 //------------------------------------------------------------------------------
-// BT.709 gamma<->linear fast paths for UpdateW/UpdateChroma.
+// BT.709 and sRGB gamma<->linear fast paths for UpdateW/UpdateChroma.
 // Leverage vpgatherdd gather instruction!
 
 // Widens 8 samples to 16.16 fixed-point linear values using the
-// BT.709 gamma->linear table (shift_right = bit_depth - table_bits, >= 0).
-static WEBP_INLINE __m256i GammaToLinear8_AVX2(__m128i v16, int shift_right) {
+// gamma->linear table (shift_right = bit_depth - table_bits, >= 0).
+static WEBP_INLINE __m256i GammaToLinear8_AVX2(__m128i v16, int shift_right,
+                                               const uint32_t* g2l_tab) {
   const __m256i v32 = _mm256_cvtepu16_epi32(v16);
   const __m128i cnt = _mm_cvtsi32_si128(shift_right);
   const __m256i pos = _mm256_srl_epi32(v32, cnt);
   const __m256i x = _mm256_sub_epi32(v32, _mm256_sll_epi32(pos, cnt));
-  const __m256i v0 =
-      _mm256_i32gather_epi32((const int*)kSharpYuvGammaToLinearTabS, pos, 4);
-  const __m256i v1 =
-      _mm256_i32gather_epi32((const int*)kSharpYuvGammaToLinearTabS,
-                             _mm256_add_epi32(pos, _mm256_set1_epi32(1)), 4);
+  const __m256i v0 = _mm256_i32gather_epi32((const int*)g2l_tab, pos, 4);
+  const __m256i v1 = _mm256_i32gather_epi32(
+      (const int*)g2l_tab, _mm256_add_epi32(pos, _mm256_set1_epi32(1)), 4);
   // d * x <= 65536 * 2^shift_right: fits in int32
   const __m256i prod = _mm256_mullo_epi32(_mm256_sub_epi32(v1, v0), x);
   const int half = (shift_right > 0) ? (1 << (shift_right - 1)) : 0;
@@ -395,14 +395,13 @@ static WEBP_INLINE __m256i GammaToLinear8_AVX2(__m128i v16, int shift_right) {
 }
 
 // Reverse direction: 8 16.16 fixed-point values -> 8 gamma samples.
-static WEBP_INLINE __m256i LinearToGamma8_AVX2(__m256i v, int out_shift) {
+static WEBP_INLINE __m256i LinearToGamma8_AVX2(__m256i v, int out_shift,
+                                               const uint32_t* l2g_tab) {
   const __m256i pos = _mm256_srli_epi32(v, 7);  // table bits are fixed.
   const __m256i x = _mm256_sub_epi32(v, _mm256_slli_epi32(pos, 7));
-  const __m256i v0_raw =
-      _mm256_i32gather_epi32((const int*)kSharpYuvLinearToGammaTabS, pos, 4);
-  const __m256i v1_raw =
-      _mm256_i32gather_epi32((const int*)kSharpYuvLinearToGammaTabS,
-                             _mm256_add_epi32(pos, _mm256_set1_epi32(1)), 4);
+  const __m256i v0_raw = _mm256_i32gather_epi32((const int*)l2g_tab, pos, 4);
+  const __m256i v1_raw = _mm256_i32gather_epi32(
+      (const int*)l2g_tab, _mm256_add_epi32(pos, _mm256_set1_epi32(1)), 4);
   const __m128i cnt = _mm_cvtsi32_si128(out_shift);
   const __m256i v0 = _mm256_srl_epi32(v0_raw, cnt);
   const __m256i v1 = _mm256_srl_epi32(v1_raw, cnt);
@@ -427,34 +426,47 @@ static WEBP_INLINE __m256i SharpYuvRGBToGray8_AVX2(__m256i R, __m256i G,
   return _mm256_insertf128_si256(_mm256_castsi128_si256(y_lo), y_hi, 1);
 }
 
-static void SharpYuvUpdateW709_AVX2(const uint16_t* src, uint16_t* dst, int w,
-                                    int bit_depth) {
+static void UpdateW_AVX2(const uint16_t* src, uint16_t* dst, int w,
+                         int bit_depth,
+                         SharpYuvTransferFunctionType transfer_type,
+                         const uint32_t* g2l_tab, const uint32_t* l2g_tab) {
   const int shift_right = bit_depth - SHARPYUV_GAMMA_TO_LINEAR_TAB_BITS;
   const int out_shift = SHARPYUV_GAMMA_TO_LINEAR_BITS - bit_depth;
   int i = 0;
   assert(shift_right >= 0);
   for (; i + 8 <= w; i += 8) {
     const __m256i R =
-        GammaToLinear8_AVX2(LOAD_128(src + 0 * w + i), shift_right);
+        GammaToLinear8_AVX2(LOAD_128(src + 0 * w + i), shift_right, g2l_tab);
     const __m256i G =
-        GammaToLinear8_AVX2(LOAD_128(src + 1 * w + i), shift_right);
+        GammaToLinear8_AVX2(LOAD_128(src + 1 * w + i), shift_right, g2l_tab);
     const __m256i B =
-        GammaToLinear8_AVX2(LOAD_128(src + 2 * w + i), shift_right);
+        GammaToLinear8_AVX2(LOAD_128(src + 2 * w + i), shift_right, g2l_tab);
     const __m256i Y = SharpYuvRGBToGray8_AVX2(R, G, B);
-    STORE_128(dst + i,
-              TruncateNarrow32To16_AVX2(LinearToGamma8_AVX2(Y, out_shift)));
+    STORE_128(dst + i, TruncateNarrow32To16_AVX2(
+                           LinearToGamma8_AVX2(Y, out_shift, l2g_tab)));
   }
   for (; i < w; ++i) {
-    const uint32_t R = SharpYuvGammaToLinear(src[0 * w + i], bit_depth,
-                                             kSharpYuvTransferFunctionBt709);
-    const uint32_t G = SharpYuvGammaToLinear(src[1 * w + i], bit_depth,
-                                             kSharpYuvTransferFunctionBt709);
-    const uint32_t B = SharpYuvGammaToLinear(src[2 * w + i], bit_depth,
-                                             kSharpYuvTransferFunctionBt709);
+    const uint32_t R =
+        SharpYuvGammaToLinear(src[0 * w + i], bit_depth, transfer_type);
+    const uint32_t G =
+        SharpYuvGammaToLinear(src[1 * w + i], bit_depth, transfer_type);
+    const uint32_t B =
+        SharpYuvGammaToLinear(src[2 * w + i], bit_depth, transfer_type);
     const int Y = SharpYuvRGBToGray(R, G, B);
-    dst[i] = SharpYuvLinearToGamma((uint32_t)Y, bit_depth,
-                                   kSharpYuvTransferFunctionBt709);
+    dst[i] = SharpYuvLinearToGamma((uint32_t)Y, bit_depth, transfer_type);
   }
+}
+
+static void SharpYuvUpdateW709_AVX2(const uint16_t* src, uint16_t* dst, int w,
+                                    int bit_depth) {
+  UpdateW_AVX2(src, dst, w, bit_depth, kSharpYuvTransferFunctionBt709,
+               kSharpYuvGammaToLinearTabS, kSharpYuvLinearToGammaTabS);
+}
+
+static void SharpYuvUpdateWSrgb_AVX2(const uint16_t* src, uint16_t* dst, int w,
+                                     int bit_depth) {
+  UpdateW_AVX2(src, dst, w, bit_depth, kSharpYuvTransferFunctionSrgb,
+               kSharpYuvGammaToLinearTabSrgb, kSharpYuvLinearToGammaTabSrgb);
 }
 
 // Deinterleaves 8 (a,b) pairs into a=[a0..a7], b=[b0..b7].
@@ -474,38 +486,46 @@ static WEBP_INLINE void Deinterleave8_AVX2(const uint16_t* p, __m128i* a,
 // Box-downsamples 8 consecutive 2x2 uv-groups, matching ScaleDown().
 static WEBP_INLINE __m128i ScaleDown8_AVX2(const uint16_t* p1,
                                            const uint16_t* p2, int shift_right,
-                                           int out_shift) {
+                                           int out_shift,
+                                           const uint32_t* g2l_tab,
+                                           const uint32_t* l2g_tab) {
   __m128i a, b, c, d;
   Deinterleave8_AVX2(p1, &a, &b);
   Deinterleave8_AVX2(p2, &c, &d);
   {
-    const __m256i A = GammaToLinear8_AVX2(a, shift_right);
-    const __m256i B = GammaToLinear8_AVX2(b, shift_right);
-    const __m256i C = GammaToLinear8_AVX2(c, shift_right);
-    const __m256i D = GammaToLinear8_AVX2(d, shift_right);
+    const __m256i A = GammaToLinear8_AVX2(a, shift_right, g2l_tab);
+    const __m256i B = GammaToLinear8_AVX2(b, shift_right, g2l_tab);
+    const __m256i C = GammaToLinear8_AVX2(c, shift_right, g2l_tab);
+    const __m256i D = GammaToLinear8_AVX2(d, shift_right, g2l_tab);
     const __m256i sum =
         _mm256_add_epi32(_mm256_add_epi32(A, B), _mm256_add_epi32(C, D));
     const __m256i avg =
         _mm256_srli_epi32(_mm256_add_epi32(sum, _mm256_set1_epi32(2)), 2);
-    return TruncateNarrow32To16_AVX2(LinearToGamma8_AVX2(avg, out_shift));
+    return TruncateNarrow32To16_AVX2(
+        LinearToGamma8_AVX2(avg, out_shift, l2g_tab));
   }
 }
 
-static void SharpYuvUpdateChroma709_AVX2(const uint16_t* src1,
-                                         const uint16_t* src2, int16_t* dst,
-                                         int uv_w, int bit_depth) {
+static void UpdateChroma_AVX2(const uint16_t* src1, const uint16_t* src2,
+                              int16_t* dst, int uv_w, int bit_depth,
+                              SharpYuvTransferFunctionType transfer_type,
+                              const uint32_t* g2l_tab,
+                              const uint32_t* l2g_tab) {
   const int shift_right = bit_depth - SHARPYUV_GAMMA_TO_LINEAR_TAB_BITS;
   const int out_shift = SHARPYUV_GAMMA_TO_LINEAR_BITS - bit_depth;
   int i = 0;
   assert(shift_right >= 0);
   for (; i + 8 <= uv_w; i += 8) {
     const int off = 2 * i;
-    const __m128i r16 = ScaleDown8_AVX2(
-        src1 + off + 0 * uv_w, src2 + off + 0 * uv_w, shift_right, out_shift);
-    const __m128i g16 = ScaleDown8_AVX2(
-        src1 + off + 2 * uv_w, src2 + off + 2 * uv_w, shift_right, out_shift);
-    const __m128i b16 = ScaleDown8_AVX2(
-        src1 + off + 4 * uv_w, src2 + off + 4 * uv_w, shift_right, out_shift);
+    const __m128i r16 =
+        ScaleDown8_AVX2(src1 + off + 0 * uv_w, src2 + off + 0 * uv_w,
+                        shift_right, out_shift, g2l_tab, l2g_tab);
+    const __m128i g16 =
+        ScaleDown8_AVX2(src1 + off + 2 * uv_w, src2 + off + 2 * uv_w,
+                        shift_right, out_shift, g2l_tab, l2g_tab);
+    const __m128i b16 =
+        ScaleDown8_AVX2(src1 + off + 4 * uv_w, src2 + off + 4 * uv_w,
+                        shift_right, out_shift, g2l_tab, l2g_tab);
     const __m256i r32 = _mm256_cvtepu16_epi32(r16);
     const __m256i g32 = _mm256_cvtepu16_epi32(g16);
     const __m256i b32 = _mm256_cvtepu16_epi32(b16);
@@ -524,16 +544,12 @@ static void SharpYuvUpdateChroma709_AVX2(const uint16_t* src1,
     for (c = 0; c < 3; ++c) {
       const uint16_t* s1 = src1 + off + 2 * c * uv_w;
       const uint16_t* s2 = src2 + off + 2 * c * uv_w;
-      const uint32_t A = SharpYuvGammaToLinear(s1[0], bit_depth,
-                                               kSharpYuvTransferFunctionBt709);
-      const uint32_t B = SharpYuvGammaToLinear(s1[1], bit_depth,
-                                               kSharpYuvTransferFunctionBt709);
-      const uint32_t C = SharpYuvGammaToLinear(s2[0], bit_depth,
-                                               kSharpYuvTransferFunctionBt709);
-      const uint32_t D = SharpYuvGammaToLinear(s2[1], bit_depth,
-                                               kSharpYuvTransferFunctionBt709);
+      const uint32_t A = SharpYuvGammaToLinear(s1[0], bit_depth, transfer_type);
+      const uint32_t B = SharpYuvGammaToLinear(s1[1], bit_depth, transfer_type);
+      const uint32_t C = SharpYuvGammaToLinear(s2[0], bit_depth, transfer_type);
+      const uint32_t D = SharpYuvGammaToLinear(s2[1], bit_depth, transfer_type);
       rgb[c] = SharpYuvLinearToGamma((A + B + C + D + 2) >> 2, bit_depth,
-                                     kSharpYuvTransferFunctionBt709);
+                                     transfer_type);
     }
     {
       const int W = SharpYuvRGBToGray(rgb[0], rgb[1], rgb[2]);
@@ -542,6 +558,22 @@ static void SharpYuvUpdateChroma709_AVX2(const uint16_t* src1,
       dst[i + 2 * uv_w] = (int16_t)((int)rgb[2] - W);
     }
   }
+}
+
+static void SharpYuvUpdateChroma709_AVX2(const uint16_t* src1,
+                                         const uint16_t* src2, int16_t* dst,
+                                         int uv_w, int bit_depth) {
+  UpdateChroma_AVX2(src1, src2, dst, uv_w, bit_depth,
+                    kSharpYuvTransferFunctionBt709, kSharpYuvGammaToLinearTabS,
+                    kSharpYuvLinearToGammaTabS);
+}
+
+static void SharpYuvUpdateChromaSrgb_AVX2(const uint16_t* src1,
+                                          const uint16_t* src2, int16_t* dst,
+                                          int uv_w, int bit_depth) {
+  UpdateChroma_AVX2(
+      src1, src2, dst, uv_w, bit_depth, kSharpYuvTransferFunctionSrgb,
+      kSharpYuvGammaToLinearTabSrgb, kSharpYuvLinearToGammaTabSrgb);
 }
 
 //------------------------------------------------------------------------------
@@ -556,6 +588,8 @@ WEBP_TSAN_IGNORE_FUNCTION void InitSharpYuvAVX2(void) {
   SharpYuvConvertRowUV = SharpYuvConvertRowUV_AVX2;
   SharpYuvUpdateW709 = SharpYuvUpdateW709_AVX2;
   SharpYuvUpdateChroma709 = SharpYuvUpdateChroma709_AVX2;
+  SharpYuvUpdateWSrgb = SharpYuvUpdateWSrgb_AVX2;
+  SharpYuvUpdateChromaSrgb = SharpYuvUpdateChromaSrgb_AVX2;
 }
 
 #else  // !WEBP_USE_AVX2
