@@ -23,6 +23,8 @@
 #endif
 #include "src/dsp/cpu.h"
 #include "src/utils/bounds_safety.h"
+#include "src/utils/endian_inl_utils.h"
+#include "src/utils/utils.h"
 #include "src/webp/types.h"
 
 WEBP_ASSUME_UNSAFE_INDEXABLE_ABI
@@ -147,6 +149,13 @@ int32_t VP8GetSignedValue(VP8BitReader* const br, int num_bits,
 
 #define VP8L_LBITS 64  // Number of bits prefetched (= bit-size of vp8l_val_t).
 #define VP8L_WBITS 32  // Minimum number of bytes ready after VP8LFillBitWindow.
+#define VP8L_LOG8_WBITS 4  // Number of bytes needed to store VP8L_WBITS bits.
+
+#if defined(__arm__) || defined(_M_ARM) || WEBP_AARCH64 ||          \
+    defined(__i386__) || defined(_M_IX86) || defined(__x86_64__) || \
+    defined(_M_X64) || defined(__wasm__)
+#define VP8L_USE_FAST_LOAD
+#endif
 
 typedef uint64_t vp8l_val_t;  // right now, this bit-reader can only use 64bit.
 
@@ -195,10 +204,23 @@ static WEBP_INLINE void VP8LSetBitPos(VP8LBitReader* const br, int val) {
 }
 
 // Advances the read buffer by 4 bytes to make room for reading next 32 bits.
-// Speed critical, but infrequent part of the code can be non-inlined.
+// The common fast path is inlined; the near-end-of-buffer fallback is handled
+// by the non-inlined VP8LDoFillBitWindow.
 extern void VP8LDoFillBitWindow(VP8LBitReader* const br);
 static WEBP_INLINE void VP8LFillBitWindow(VP8LBitReader* const br) {
-  if (br->bit_pos >= VP8L_WBITS) VP8LDoFillBitWindow(br);
+  if (br->bit_pos >= VP8L_WBITS) {
+#if defined(VP8L_USE_FAST_LOAD)
+    if (br->pos + sizeof(br->val) < br->len) {
+      br->val = (br->val >> VP8L_WBITS) |
+                ((vp8l_val_t)HToLE32(WebPMemToUint32(br->buf + br->pos))
+                 << (VP8L_LBITS - VP8L_WBITS));
+      br->bit_pos -= VP8L_WBITS;
+      br->pos += VP8L_LOG8_WBITS;
+      return;
+    }
+#endif
+    VP8LDoFillBitWindow(br);
+  }
 }
 
 #ifdef __cplusplus

@@ -433,7 +433,9 @@ static const uint8_t kZigzag[16] = {0, 1,  4,  8,  5, 2,  3,  6,
                                     9, 12, 13, 10, 7, 11, 14, 15};
 
 // See section 13-2: https://datatracker.ietf.org/doc/html/rfc6386#section-13.2
-static int GetLargeValue(VP8BitReader* const br, const uint8_t* const p) {
+static WEBP_ALWAYS_INLINE int GetLargeValue(
+    VP8BitReader* WEBP_RESTRICT const br,
+    const uint8_t* WEBP_RESTRICT const p) {
   int v;
   if (!VP8GetBit(br, p[3], "coeffs")) {
     if (!VP8GetBit(br, p[4], "coeffs")) {
@@ -465,9 +467,9 @@ static int GetLargeValue(VP8BitReader* const br, const uint8_t* const p) {
 }
 
 // Returns the position of the last non-zero coeff plus one
-static int GetCoeffsFast(VP8BitReader* const br,
+static int GetCoeffsFast(VP8BitReader* WEBP_RESTRICT const br,
                          const VP8BandProbas* const prob[], int ctx,
-                         const quant_t dq, int n, int16_t* out) {
+                         const quant_t dq, int n, int16_t* WEBP_RESTRICT out) {
   const uint8_t* p = prob[n]->probas[ctx];
   for (; n < 16; ++n) {
     if (!VP8GetBit(br, p[0], "coeffs")) {
@@ -495,9 +497,9 @@ static int GetCoeffsFast(VP8BitReader* const br,
 
 // This version of GetCoeffs() uses VP8GetBitAlt() which is an alternate version
 // of VP8GetBitAlt() targeting specific platforms.
-static int GetCoeffsAlt(VP8BitReader* const br,
+static int GetCoeffsAlt(VP8BitReader* WEBP_RESTRICT const br,
                         const VP8BandProbas* const prob[], int ctx,
-                        const quant_t dq, int n, int16_t* out) {
+                        const quant_t dq, int n, int16_t* WEBP_RESTRICT out) {
   const uint8_t* p = prob[n]->probas[ctx];
   for (; n < 16; ++n) {
     if (!VP8GetBitAlt(br, p[0], "coeffs")) {

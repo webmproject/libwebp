@@ -21,8 +21,14 @@
 #if defined(__cplusplus) || !defined(__STRICT_ANSI__) || \
     (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L)
 #define WEBP_INLINE inline
+#if defined(__GNUC__) || defined(__clang__)
+#define WEBP_ALWAYS_INLINE inline __attribute__((always_inline))
+#else
+#define WEBP_ALWAYS_INLINE inline
+#endif /* defined(__GNUC__) || defined(__clang__) */
 #else
 #define WEBP_INLINE
+#define WEBP_ALWAYS_INLINE
 #endif
 #else
 typedef signed char int8_t;
@@ -34,6 +40,7 @@ typedef unsigned int uint32_t;
 typedef unsigned long long int uint64_t;
 typedef long long int int64_t;
 #define WEBP_INLINE __forceinline
+#define WEBP_ALWAYS_INLINE __forceinline
 #endif /* _MSC_VER */
 
 #ifndef WEBP_NODISCARD
