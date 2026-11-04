@@ -177,7 +177,7 @@ static WEBP_INLINE int PlaneCodeToDistance(int xsize, int plane_code) {
 // VP8LFillBitWindow(br) needs to be called at minimum every second call
 // to ReadSymbol, in order to pre-fetch enough bits.
 static WEBP_INLINE int ReadSymbol(const HuffmanCode* table,
-                                  VP8LBitReader* const br) {
+                                  VP8LBitReader* WEBP_RESTRICT const br) {
   int nbits;
   uint32_t val = VP8LPrefetchBits(br);
   table += val & HUFFMAN_TABLE_MASK;
@@ -196,8 +196,8 @@ static WEBP_INLINE int ReadSymbol(const HuffmanCode* table,
 #define BITS_SPECIAL_MARKER 0x100  // something large enough (and a bit-mask)
 #define PACKED_NON_LITERAL_CODE 0  // must be < NUM_LITERAL_CODES
 static WEBP_INLINE int ReadPackedSymbols(const HTreeGroup* group,
-                                         VP8LBitReader* const br,
-                                         uint32_t* const dst) {
+                                         VP8LBitReader* WEBP_RESTRICT const br,
+                                         uint32_t* WEBP_RESTRICT const dst) {
   const uint32_t val = VP8LPrefetchBits(br) & (HUFFMAN_PACKED_TABLE_SIZE - 1);
   HuffmanCode32 code;
   assert(group->packed_table != NULL);
@@ -1421,7 +1421,7 @@ WEBP_NODISCARD static int DecodeImageData(VP8LDecoder* const dec,
                                           ProcessRowsFunc process_func) {
   int row = dec->last_pixel / width;
   int col = dec->last_pixel % width;
-  VP8LBitReader* const br = &dec->br;
+  VP8LBitReader* WEBP_RESTRICT const br = &dec->br;
   VP8LMetadata* const hdr = &dec->hdr;
   const ptrdiff_t window_limit =
       GetWindowLimit(dec, height, process_func != NULL);
