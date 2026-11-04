@@ -176,20 +176,27 @@ static WEBP_INLINE int PlaneCodeToDistance(int xsize, int plane_code) {
 // Decodes the next Huffman code from bit-stream.
 // VP8LFillBitWindow(br) needs to be called at minimum every second call
 // to ReadSymbol, in order to pre-fetch enough bits.
-static WEBP_INLINE int ReadSymbol(const HuffmanCode* table,
-                                  VP8LBitReader* WEBP_RESTRICT const br) {
+static WEBP_ALWAYS_INLINE int ReadSymbol(
+    const HuffmanCode* table, VP8LBitReader* WEBP_RESTRICT const br) {
   int nbits;
+  int sym;
+  // Prefetch 32 bits once (max Huffman code length is 15 bits).
   uint32_t val = VP8LPrefetchBits(br);
   table += val & HUFFMAN_TABLE_MASK;
-  nbits = table->bits - HUFFMAN_TABLE_BITS;
-  if (nbits > 0) {
+  nbits = table->bits;
+  sym = table->value;
+  if (nbits > HUFFMAN_TABLE_BITS) {
+    // 2nd-level subtable lookup for codes > 8 bits: 'sym' is the subtable
+    // offset, and 'nbits - 8' is the subtable's index width. Reuse 'val >> 8'
+    // instead of advancing br->bit_pos and calling VP8LPrefetchBits(br) twice.
     VP8LSetBitPos(br, br->bit_pos + HUFFMAN_TABLE_BITS);
-    val = VP8LPrefetchBits(br);
-    table += table->value;
-    table += val & ((1 << nbits) - 1);
+    table += sym + ((val >> HUFFMAN_TABLE_BITS) &
+                    ((1 << (nbits - HUFFMAN_TABLE_BITS)) - 1));
+    nbits = table->bits;
+    sym = table->value;
   }
-  VP8LSetBitPos(br, br->bit_pos + table->bits);
-  return table->value;
+  VP8LSetBitPos(br, br->bit_pos + nbits);
+  return sym;
 }
 
 // Reads packed symbol depending on GREEN channel
@@ -1415,6 +1422,51 @@ static void RestoreState(VP8LDecoder* const dec) {
 }
 
 #define SYNC_EVERY_N_ROWS 8  // minimum number of rows between check-points
+
+// Decodes the current literal pixel (whose GREEN symbol 'code' <
+// NUM_LITERAL_CODES has already been read) and any subsequent literal pixels in
+// the current tile and row, leaving *src_ptr and *col_ptr at the last decoded
+// literal pixel for AdvanceByOne.
+static WEBP_ALWAYS_INLINE void DecodeLiterals(
+    const HTreeGroup* const htree_group, int code, int width, int mask,
+    const uint32_t* const src_last, VP8LBitReader* WEBP_RESTRICT const br,
+    uint32_t** const src_ptr, int* const col_ptr) {
+  uint32_t* src = *src_ptr;
+  const int col = *col_ptr;
+  // Bound the run to the end of the current Huffman tile or image row so we
+  // don't cross a tile boundary (where htree_group changes) or row boundary.
+  const uint32_t tile_end_col = (uint32_t)(col | mask);
+  const int max_col =
+      (tile_end_col < (uint32_t)(width - 1)) ? (int)tile_end_col : (width - 1);
+  const uint32_t* fast_end = src + (max_col - col);
+  VP8LBitReader lbr = *br;  // Local copy keeps bit-reader state in registers.
+  if (fast_end >= src_last) fast_end = src_last - 1;
+  for (;;) {
+    // 'code' holds the literal's GREEN channel (0..255); read RED, BLUE, ALPHA.
+    const int red = ReadSymbol(htree_group->htrees[RED], &lbr);
+    int blue, alpha, bit_pos;
+    VP8LFillBitWindow(&lbr);
+    blue = ReadSymbol(htree_group->htrees[BLUE], &lbr);
+    alpha = ReadSymbol(htree_group->htrees[ALPHA], &lbr);
+    if (VP8LIsEndOfStream(&lbr)) break;
+    *src = ((uint32_t)alpha << 24) | (red << 16) | (code << 8) | blue;
+    if (src >= fast_end) break;
+    // Peek at the next symbol: if it's another literal (code < 256), stay in
+    // this tight loop; otherwise rewind bit_pos so the outer loop handles it.
+    VP8LFillBitWindow(&lbr);
+    bit_pos = lbr.bit_pos;
+    code = ReadSymbol(htree_group->htrees[GREEN], &lbr);
+    if (code >= NUM_LITERAL_CODES) {
+      lbr.bit_pos = bit_pos;
+      break;
+    }
+    ++src;
+  }
+  *br = lbr;
+  *col_ptr = col + (int)(src - *src_ptr);
+  *src_ptr = src;
+}
+
 WEBP_NODISCARD static int DecodeImageData(VP8LDecoder* const dec,
                                           uint32_t* const data, int width,
                                           int height, int last_row,
@@ -1470,13 +1522,9 @@ WEBP_NODISCARD static int DecodeImageData(VP8LDecoder* const dec,
         if (VP8LIsEndOfStream(br)) break;
         *src = htree_group->literal_arb | (code << 8);
       } else {
-        int red, blue, alpha;
-        red = ReadSymbol(htree_group->htrees[RED], br);
-        VP8LFillBitWindow(br);
-        blue = ReadSymbol(htree_group->htrees[BLUE], br);
-        alpha = ReadSymbol(htree_group->htrees[ALPHA], br);
+        DecodeLiterals(htree_group, code, width, mask, src_last, br, &src,
+                       &col);
         if (VP8LIsEndOfStream(br)) break;
-        *src = ((uint32_t)alpha << 24) | (red << 16) | (code << 8) | blue;
       }
     AdvanceByOne:
       ++src;
