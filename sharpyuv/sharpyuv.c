@@ -457,8 +457,7 @@ int SharpYuvConvert(const void* r_ptr, const void* g_ptr, const void* b_ptr,
                     void* v_ptr, int v_stride, int yuv_bit_depth, int width,
                     int height, const SharpYuvConversionMatrix* yuv_matrix) {
   SharpYuvOptions options;
-  options.yuv_matrix = yuv_matrix;
-  options.transfer_type = kSharpYuvTransferFunctionBt709;
+  if (!SharpYuvOptionsInit(yuv_matrix, &options)) return 0;
   return SharpYuvConvertWithOptions(
       r_ptr, g_ptr, b_ptr, rgb_step, rgb_stride, rgb_bit_depth, y_ptr, y_stride,
       u_ptr, u_stride, v_ptr, v_stride, yuv_bit_depth, width, height, &options);
