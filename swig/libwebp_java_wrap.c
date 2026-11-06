@@ -929,14 +929,28 @@ typedef size_t (*WebPEncodeLosslessFunction)(const uint8_t* rgb,
                                              int width, int height, int stride,
                                              uint8_t** output);
 
-static uint8_t* EncodeLossy(const uint8_t* rgb,
+static int ValidateEncodeParams(size_t rgb_size, int width, int height,
+                                int stride, int bytes_per_pixel) {
+  if (width <= 0 || height <= 0 || stride <= 0 || bytes_per_pixel <= 0) {
+    return 0;
+  }
+  if ((uint64_t)stride < (uint64_t)width * bytes_per_pixel) {
+    return 0;
+  }
+  return (uint64_t)rgb_size >=
+         (uint64_t)(height - 1) * stride + (uint64_t)width * bytes_per_pixel;
+}
+
+static uint8_t* EncodeLossy(const uint8_t* rgb, size_t rgb_size,
                             int width, int height, int stride,
-                            float quality_factor,
+                            int bytes_per_pixel, float quality_factor,
                             WebPEncodeFunction encfn,
                             int* output_size, int* unused) {
   uint8_t* output = NULL;
   const size_t image_size =
-      encfn(rgb, width, height, stride, quality_factor, &output);
+      ValidateEncodeParams(rgb_size, width, height, stride, bytes_per_pixel)
+          ? encfn(rgb, width, height, stride, quality_factor, &output)
+          : 0;
   // the values of following two will be interpreted by ReturnedBufferSize()
   // as 'width' and 'height' in the size calculation.
   *output_size = image_size;
@@ -944,12 +958,16 @@ static uint8_t* EncodeLossy(const uint8_t* rgb,
   return image_size ? output : NULL;
 }
 
-static uint8_t* EncodeLossless(const uint8_t* rgb,
+static uint8_t* EncodeLossless(const uint8_t* rgb, size_t rgb_size,
                                int width, int height, int stride,
+                               int bytes_per_pixel,
                                WebPEncodeLosslessFunction encfn,
                                int* output_size, int* unused) {
   uint8_t* output = NULL;
-  const size_t image_size = encfn(rgb, width, height, stride, &output);
+  const size_t image_size =
+      ValidateEncodeParams(rgb_size, width, height, stride, bytes_per_pixel)
+          ? encfn(rgb, width, height, stride, &output)
+          : 0;
   // the values of the following two will be interpreted by
   // ReturnedBufferSize() as 'width' and 'height' in the size calculation.
   *output_size = image_size;
@@ -963,33 +981,33 @@ static uint8_t* EncodeLossless(const uint8_t* rgb,
 // than dealing with the return pointer.
 // The additional parameters are to allow reuse of ReturnedBufferSize(),
 // unused2 and output_size will be used in this case.
-#define LOSSY_WRAPPER(FUNC)                                             \
-  static uint8_t* wrap_##FUNC(                                          \
-      const uint8_t* rgb, int* unused1, int* unused2, int* output_size, \
-      int width, int height, int stride, float quality_factor) {        \
-    return EncodeLossy(rgb, width, height, stride, quality_factor,      \
-                       FUNC, output_size, unused2);                     \
-  }                                                                     \
+#define LOSSY_WRAPPER(FUNC, BPS)                                          \
+  static uint8_t* wrap_##FUNC(                                            \
+      const uint8_t* rgb, size_t unused1, int* unused2, int* output_size, \
+      int width, int height, int stride, float quality_factor) {          \
+    return EncodeLossy(rgb, unused1, width, height, stride, BPS,          \
+                       quality_factor, FUNC, output_size, unused2);       \
+  }                                                                       \
 
-LOSSY_WRAPPER(WebPEncodeRGB)
-LOSSY_WRAPPER(WebPEncodeBGR)
-LOSSY_WRAPPER(WebPEncodeRGBA)
-LOSSY_WRAPPER(WebPEncodeBGRA)
+LOSSY_WRAPPER(WebPEncodeRGB, 3)
+LOSSY_WRAPPER(WebPEncodeBGR, 3)
+LOSSY_WRAPPER(WebPEncodeRGBA, 4)
+LOSSY_WRAPPER(WebPEncodeBGRA, 4)
 
 #undef LOSSY_WRAPPER
 
-#define LOSSLESS_WRAPPER(FUNC)                                          \
-  static uint8_t* wrap_##FUNC(                                          \
-      const uint8_t* rgb, int* unused1, int* unused2, int* output_size, \
-      int width, int height, int stride) {                              \
-    return EncodeLossless(rgb, width, height, stride,                   \
-                          FUNC, output_size, unused2);                  \
-  }                                                                     \
+#define LOSSLESS_WRAPPER(FUNC, BPS)                                       \
+  static uint8_t* wrap_##FUNC(                                            \
+      const uint8_t* rgb, size_t unused1, int* unused2, int* output_size, \
+      int width, int height, int stride) {                                \
+    return EncodeLossless(rgb, unused1, width, height, stride, BPS,       \
+                          FUNC, output_size, unused2);                    \
+  }                                                                       \
 
-LOSSLESS_WRAPPER(WebPEncodeLosslessRGB)
-LOSSLESS_WRAPPER(WebPEncodeLosslessBGR)
-LOSSLESS_WRAPPER(WebPEncodeLosslessRGBA)
-LOSSLESS_WRAPPER(WebPEncodeLosslessBGRA)
+LOSSLESS_WRAPPER(WebPEncodeLosslessRGB, 3)
+LOSSLESS_WRAPPER(WebPEncodeLosslessBGR, 3)
+LOSSLESS_WRAPPER(WebPEncodeLosslessRGBA, 4)
+LOSSLESS_WRAPPER(WebPEncodeLosslessBGRA, 4)
 
 #undef LOSSLESS_WRAPPER
 
@@ -1034,7 +1052,14 @@ SWIGEXPORT jint JNICALL Java_com_google_webp_libwebpJNI_WebPGetInfo(JNIEnv *jenv
   (void)jenv;
   (void)jcls;
   if (!SWIG_JavaArrayInUint8(jenv, &jarr1, &arg1, jarg1)) return 0;
-  arg2 = (size_t)jarg2;
+  {
+    if (!jarg1 || jarg2 < 0 ||
+        jarg2 > (jlong)(*jenv)->GetArrayLength(jenv, jarg1)) {
+      arg2 = 0;
+    } else {
+      arg2 = (size_t)jarg2;
+    }
+  }
   {
     if (!jarg3) {
       SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
@@ -1089,7 +1114,14 @@ SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_WebPDecodeRGB(JNIE
   (void)jenv;
   (void)jcls;
   if (!SWIG_JavaArrayInUint8(jenv, &jarr1, &arg1, jarg1)) return 0;
-  arg2 = (size_t)jarg2;
+  {
+    if (!jarg1 || jarg2 < 0 ||
+        jarg2 > (jlong)(*jenv)->GetArrayLength(jenv, jarg1)) {
+      arg2 = 0;
+    } else {
+      arg2 = (size_t)jarg2;
+    }
+  }
   {
     if (!jarg3) {
       SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
@@ -1145,7 +1177,14 @@ SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_WebPDecodeRGBA(JNI
   (void)jenv;
   (void)jcls;
   if (!SWIG_JavaArrayInUint8(jenv, &jarr1, &arg1, jarg1)) return 0;
-  arg2 = (size_t)jarg2;
+  {
+    if (!jarg1 || jarg2 < 0 ||
+        jarg2 > (jlong)(*jenv)->GetArrayLength(jenv, jarg1)) {
+      arg2 = 0;
+    } else {
+      arg2 = (size_t)jarg2;
+    }
+  }
   {
     if (!jarg3) {
       SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
@@ -1201,7 +1240,14 @@ SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_WebPDecodeARGB(JNI
   (void)jenv;
   (void)jcls;
   if (!SWIG_JavaArrayInUint8(jenv, &jarr1, &arg1, jarg1)) return 0;
-  arg2 = (size_t)jarg2;
+  {
+    if (!jarg1 || jarg2 < 0 ||
+        jarg2 > (jlong)(*jenv)->GetArrayLength(jenv, jarg1)) {
+      arg2 = 0;
+    } else {
+      arg2 = (size_t)jarg2;
+    }
+  }
   {
     if (!jarg3) {
       SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
@@ -1257,7 +1303,14 @@ SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_WebPDecodeBGR(JNIE
   (void)jenv;
   (void)jcls;
   if (!SWIG_JavaArrayInUint8(jenv, &jarr1, &arg1, jarg1)) return 0;
-  arg2 = (size_t)jarg2;
+  {
+    if (!jarg1 || jarg2 < 0 ||
+        jarg2 > (jlong)(*jenv)->GetArrayLength(jenv, jarg1)) {
+      arg2 = 0;
+    } else {
+      arg2 = (size_t)jarg2;
+    }
+  }
   {
     if (!jarg3) {
       SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
@@ -1313,7 +1366,14 @@ SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_WebPDecodeBGRA(JNI
   (void)jenv;
   (void)jcls;
   if (!SWIG_JavaArrayInUint8(jenv, &jarr1, &arg1, jarg1)) return 0;
-  arg2 = (size_t)jarg2;
+  {
+    if (!jarg1 || jarg2 < 0 ||
+        jarg2 > (jlong)(*jenv)->GetArrayLength(jenv, jarg1)) {
+      arg2 = 0;
+    } else {
+      arg2 = (size_t)jarg2;
+    }
+  }
   {
     if (!jarg3) {
       SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "array null");
@@ -1370,7 +1430,7 @@ SWIGEXPORT jint JNICALL Java_com_google_webp_libwebpJNI_WebPGetEncoderVersion(JN
 SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeRGB(JNIEnv *jenv, jclass jcls, jbyteArray jarg1, jint jarg2, jint jarg3, jintArray jarg4, jint jarg5, jint jarg6, jint jarg7, jfloat jarg8) {
   jbyteArray jresult = 0 ;
   uint8_t *arg1 = (uint8_t *) 0 ;
-  int *arg2 = (int *) 0 ;
+  size_t arg2 ;
   int *arg3 = (int *) 0 ;
   int *arg4 = (int *) 0 ;
   int arg5 ;
@@ -1384,7 +1444,10 @@ SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeRG
   (void)jenv;
   (void)jcls;
   if (!SWIG_JavaArrayInUint8(jenv, &jarr1, &arg1, jarg1)) return 0;
-  arg2 = (int *)&jarg2;
+  {
+    (void)jarg2;
+    arg2 = jarg1 ? (size_t)(*jenv)->GetArrayLength(jenv, jarg1) : 0;
+  }
   arg3 = (int *)&jarg3;
   {
     if (!jarg4) {
@@ -1420,7 +1483,7 @@ SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeRG
 SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeBGR(JNIEnv *jenv, jclass jcls, jbyteArray jarg1, jint jarg2, jint jarg3, jintArray jarg4, jint jarg5, jint jarg6, jint jarg7, jfloat jarg8) {
   jbyteArray jresult = 0 ;
   uint8_t *arg1 = (uint8_t *) 0 ;
-  int *arg2 = (int *) 0 ;
+  size_t arg2 ;
   int *arg3 = (int *) 0 ;
   int *arg4 = (int *) 0 ;
   int arg5 ;
@@ -1434,7 +1497,10 @@ SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeBG
   (void)jenv;
   (void)jcls;
   if (!SWIG_JavaArrayInUint8(jenv, &jarr1, &arg1, jarg1)) return 0;
-  arg2 = (int *)&jarg2;
+  {
+    (void)jarg2;
+    arg2 = jarg1 ? (size_t)(*jenv)->GetArrayLength(jenv, jarg1) : 0;
+  }
   arg3 = (int *)&jarg3;
   {
     if (!jarg4) {
@@ -1470,7 +1536,7 @@ SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeBG
 SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeRGBA(JNIEnv *jenv, jclass jcls, jbyteArray jarg1, jint jarg2, jint jarg3, jintArray jarg4, jint jarg5, jint jarg6, jint jarg7, jfloat jarg8) {
   jbyteArray jresult = 0 ;
   uint8_t *arg1 = (uint8_t *) 0 ;
-  int *arg2 = (int *) 0 ;
+  size_t arg2 ;
   int *arg3 = (int *) 0 ;
   int *arg4 = (int *) 0 ;
   int arg5 ;
@@ -1484,7 +1550,10 @@ SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeRG
   (void)jenv;
   (void)jcls;
   if (!SWIG_JavaArrayInUint8(jenv, &jarr1, &arg1, jarg1)) return 0;
-  arg2 = (int *)&jarg2;
+  {
+    (void)jarg2;
+    arg2 = jarg1 ? (size_t)(*jenv)->GetArrayLength(jenv, jarg1) : 0;
+  }
   arg3 = (int *)&jarg3;
   {
     if (!jarg4) {
@@ -1520,7 +1589,7 @@ SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeRG
 SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeBGRA(JNIEnv *jenv, jclass jcls, jbyteArray jarg1, jint jarg2, jint jarg3, jintArray jarg4, jint jarg5, jint jarg6, jint jarg7, jfloat jarg8) {
   jbyteArray jresult = 0 ;
   uint8_t *arg1 = (uint8_t *) 0 ;
-  int *arg2 = (int *) 0 ;
+  size_t arg2 ;
   int *arg3 = (int *) 0 ;
   int *arg4 = (int *) 0 ;
   int arg5 ;
@@ -1534,7 +1603,10 @@ SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeBG
   (void)jenv;
   (void)jcls;
   if (!SWIG_JavaArrayInUint8(jenv, &jarr1, &arg1, jarg1)) return 0;
-  arg2 = (int *)&jarg2;
+  {
+    (void)jarg2;
+    arg2 = jarg1 ? (size_t)(*jenv)->GetArrayLength(jenv, jarg1) : 0;
+  }
   arg3 = (int *)&jarg3;
   {
     if (!jarg4) {
@@ -1570,7 +1642,7 @@ SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeBG
 SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeLosslessRGB(JNIEnv *jenv, jclass jcls, jbyteArray jarg1, jint jarg2, jint jarg3, jintArray jarg4, jint jarg5, jint jarg6, jint jarg7) {
   jbyteArray jresult = 0 ;
   uint8_t *arg1 = (uint8_t *) 0 ;
-  int *arg2 = (int *) 0 ;
+  size_t arg2 ;
   int *arg3 = (int *) 0 ;
   int *arg4 = (int *) 0 ;
   int arg5 ;
@@ -1583,7 +1655,10 @@ SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeLo
   (void)jenv;
   (void)jcls;
   if (!SWIG_JavaArrayInUint8(jenv, &jarr1, &arg1, jarg1)) return 0;
-  arg2 = (int *)&jarg2;
+  {
+    (void)jarg2;
+    arg2 = jarg1 ? (size_t)(*jenv)->GetArrayLength(jenv, jarg1) : 0;
+  }
   arg3 = (int *)&jarg3;
   {
     if (!jarg4) {
@@ -1618,7 +1693,7 @@ SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeLo
 SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeLosslessBGR(JNIEnv *jenv, jclass jcls, jbyteArray jarg1, jint jarg2, jint jarg3, jintArray jarg4, jint jarg5, jint jarg6, jint jarg7) {
   jbyteArray jresult = 0 ;
   uint8_t *arg1 = (uint8_t *) 0 ;
-  int *arg2 = (int *) 0 ;
+  size_t arg2 ;
   int *arg3 = (int *) 0 ;
   int *arg4 = (int *) 0 ;
   int arg5 ;
@@ -1631,7 +1706,10 @@ SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeLo
   (void)jenv;
   (void)jcls;
   if (!SWIG_JavaArrayInUint8(jenv, &jarr1, &arg1, jarg1)) return 0;
-  arg2 = (int *)&jarg2;
+  {
+    (void)jarg2;
+    arg2 = jarg1 ? (size_t)(*jenv)->GetArrayLength(jenv, jarg1) : 0;
+  }
   arg3 = (int *)&jarg3;
   {
     if (!jarg4) {
@@ -1666,7 +1744,7 @@ SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeLo
 SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeLosslessRGBA(JNIEnv *jenv, jclass jcls, jbyteArray jarg1, jint jarg2, jint jarg3, jintArray jarg4, jint jarg5, jint jarg6, jint jarg7) {
   jbyteArray jresult = 0 ;
   uint8_t *arg1 = (uint8_t *) 0 ;
-  int *arg2 = (int *) 0 ;
+  size_t arg2 ;
   int *arg3 = (int *) 0 ;
   int *arg4 = (int *) 0 ;
   int arg5 ;
@@ -1679,7 +1757,10 @@ SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeLo
   (void)jenv;
   (void)jcls;
   if (!SWIG_JavaArrayInUint8(jenv, &jarr1, &arg1, jarg1)) return 0;
-  arg2 = (int *)&jarg2;
+  {
+    (void)jarg2;
+    arg2 = jarg1 ? (size_t)(*jenv)->GetArrayLength(jenv, jarg1) : 0;
+  }
   arg3 = (int *)&jarg3;
   {
     if (!jarg4) {
@@ -1714,7 +1795,7 @@ SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeLo
 SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeLosslessBGRA(JNIEnv *jenv, jclass jcls, jbyteArray jarg1, jint jarg2, jint jarg3, jintArray jarg4, jint jarg5, jint jarg6, jint jarg7) {
   jbyteArray jresult = 0 ;
   uint8_t *arg1 = (uint8_t *) 0 ;
-  int *arg2 = (int *) 0 ;
+  size_t arg2 ;
   int *arg3 = (int *) 0 ;
   int *arg4 = (int *) 0 ;
   int arg5 ;
@@ -1727,7 +1808,10 @@ SWIGEXPORT jbyteArray JNICALL Java_com_google_webp_libwebpJNI_wrap_1WebPEncodeLo
   (void)jenv;
   (void)jcls;
   if (!SWIG_JavaArrayInUint8(jenv, &jarr1, &arg1, jarg1)) return 0;
-  arg2 = (int *)&jarg2;
+  {
+    (void)jarg2;
+    arg2 = jarg1 ? (size_t)(*jenv)->GetArrayLength(jenv, jarg1) : 0;
+  }
   arg3 = (int *)&jarg3;
   {
     if (!jarg4) {

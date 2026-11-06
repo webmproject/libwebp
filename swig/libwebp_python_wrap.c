@@ -3447,14 +3447,27 @@ typedef size_t (*WebPEncodeLosslessFunction)(const uint8_t* rgb,
                                              int width, int height, int stride,
                                              uint8_t** output);
 
-static uint8_t* EncodeLossy(const uint8_t* rgb,
+static int ValidateEncodeParams(size_t rgb_size, int width, int height,
+                                int stride, int bytes_per_pixel) {
+  if (width <= 0 || height <= 0 || stride <= 0 || bytes_per_pixel <= 0) {
+    return 0;
+  }
+  if ((uint64_t)stride < (uint64_t)width * bytes_per_pixel) {
+    return 0;
+  }
+  return (uint64_t)rgb_size >=
+         (uint64_t)(height - 1) * stride + (uint64_t)width * bytes_per_pixel;
+}
+
+static uint8_t* EncodeLossy(const uint8_t* rgb, size_t rgb_size,
                             int width, int height, int stride,
-                            float quality_factor,
+                            int bytes_per_pixel, float quality_factor,
                             WebPEncodeFunction encfn,
                             int* output_size, int* unused) {
   uint8_t* output = NULL;
   const size_t image_size =
-      encfn(rgb, width, height, stride, quality_factor, &output);
+      ValidateEncodeParams(rgb_size, width, height, stride, bytes_per_pixel) ?
+      encfn(rgb, width, height, stride, quality_factor, &output) : 0;
   // the values of following two will be interpreted by ReturnedBufferSize()
   // as 'width' and 'height' in the size calculation.
   *output_size = image_size;
@@ -3462,12 +3475,15 @@ static uint8_t* EncodeLossy(const uint8_t* rgb,
   return image_size ? output : NULL;
 }
 
-static uint8_t* EncodeLossless(const uint8_t* rgb,
+static uint8_t* EncodeLossless(const uint8_t* rgb, size_t rgb_size,
                                int width, int height, int stride,
+                               int bytes_per_pixel,
                                WebPEncodeLosslessFunction encfn,
                                int* output_size, int* unused) {
   uint8_t* output = NULL;
-  const size_t image_size = encfn(rgb, width, height, stride, &output);
+  const size_t image_size =
+      ValidateEncodeParams(rgb_size, width, height, stride, bytes_per_pixel) ?
+      encfn(rgb, width, height, stride, &output) : 0;
   // the values of the following two will be interpreted by
   // ReturnedBufferSize() as 'width' and 'height' in the size calculation.
   *output_size = image_size;
@@ -3481,33 +3497,33 @@ static uint8_t* EncodeLossless(const uint8_t* rgb,
 // than dealing with the return pointer.
 // The additional parameters are to allow reuse of ReturnedBufferSize(),
 // unused2 and output_size will be used in this case.
-#define LOSSY_WRAPPER(FUNC)                                             \
-  static uint8_t* wrap_##FUNC(                                          \
-      const uint8_t* rgb, int* unused1, int* unused2, int* output_size, \
-      int width, int height, int stride, float quality_factor) {        \
-    return EncodeLossy(rgb, width, height, stride, quality_factor,      \
-                       FUNC, output_size, unused2);                     \
-  }                                                                     \
+#define LOSSY_WRAPPER(FUNC, BPS)                                          \
+  static uint8_t* wrap_##FUNC(                                            \
+      const uint8_t* rgb, size_t unused1, int* unused2, int* output_size, \
+      int width, int height, int stride, float quality_factor) {          \
+    return EncodeLossy(rgb, unused1, width, height, stride, BPS,          \
+                       quality_factor, FUNC, output_size, unused2);       \
+  }                                                                       \
 
-LOSSY_WRAPPER(WebPEncodeRGB)
-LOSSY_WRAPPER(WebPEncodeBGR)
-LOSSY_WRAPPER(WebPEncodeRGBA)
-LOSSY_WRAPPER(WebPEncodeBGRA)
+LOSSY_WRAPPER(WebPEncodeRGB, 3)
+LOSSY_WRAPPER(WebPEncodeBGR, 3)
+LOSSY_WRAPPER(WebPEncodeRGBA, 4)
+LOSSY_WRAPPER(WebPEncodeBGRA, 4)
 
 #undef LOSSY_WRAPPER
 
-#define LOSSLESS_WRAPPER(FUNC)                                          \
-  static uint8_t* wrap_##FUNC(                                          \
-      const uint8_t* rgb, int* unused1, int* unused2, int* output_size, \
-      int width, int height, int stride) {                              \
-    return EncodeLossless(rgb, width, height, stride,                   \
-                          FUNC, output_size, unused2);                  \
-  }                                                                     \
+#define LOSSLESS_WRAPPER(FUNC, BPS)                                       \
+  static uint8_t* wrap_##FUNC(                                            \
+      const uint8_t* rgb, size_t unused1, int* unused2, int* output_size, \
+      int width, int height, int stride) {                                \
+    return EncodeLossless(rgb, unused1, width, height, stride, BPS,       \
+                          FUNC, output_size, unused2);                    \
+  }                                                                       \
 
-LOSSLESS_WRAPPER(WebPEncodeLosslessRGB)
-LOSSLESS_WRAPPER(WebPEncodeLosslessBGR)
-LOSSLESS_WRAPPER(WebPEncodeLosslessRGBA)
-LOSSLESS_WRAPPER(WebPEncodeLosslessBGRA)
+LOSSLESS_WRAPPER(WebPEncodeLosslessRGB, 3)
+LOSSLESS_WRAPPER(WebPEncodeLosslessBGR, 3)
+LOSSLESS_WRAPPER(WebPEncodeLosslessRGBA, 4)
+LOSSLESS_WRAPPER(WebPEncodeLosslessBGRA, 4)
 
 #undef LOSSLESS_WRAPPER
 
@@ -3970,7 +3986,7 @@ fail:
 SWIGINTERN PyObject *_wrap_wrap_WebPEncodeRGB(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   uint8_t *arg1 = (uint8_t *) 0 ;
-  int *arg2 = (int *) 0 ;
+  size_t arg2 ;
   int *arg3 = (int *) 0 ;
   int *arg4 = (int *) 0 ;
   int arg5 ;
@@ -3978,8 +3994,6 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeRGB(PyObject *SWIGUNUSEDPARM(self), Py
   int arg7 ;
   float arg8 ;
   Py_buffer rgb_buffer1 ;
-  int temp2 ;
-  int res2 = 0 ;
   int temp3 ;
   int res3 = 0 ;
   int temp4 ;
@@ -4018,15 +4032,9 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeRGB(PyObject *SWIGUNUSEDPARM(self), Py
     }
     arg1 = (uint8_t *)rgb_buffer1.buf;
   }
-  if (!(SWIG_IsOK((res2 = SWIG_ConvertPtr(obj1,SWIG_as_voidptrptr(&arg2),SWIGTYPE_p_int,0))))) {
-    int val;
-    int ecode = SWIG_AsVal_int(obj1, &val);
-    if (!SWIG_IsOK(ecode)) {
-      SWIG_exception_fail(SWIG_ArgError(ecode), "in method '" "wrap_WebPEncodeRGB" "', argument " "2"" of type '" "int""'");
-    }
-    temp2 = (int)(val);
-    arg2 = &temp2;
-    res2 = SWIG_AddTmpMask(ecode);
+  {
+    (void)obj1;
+    arg2 = (rgb_buffer1.len < 0) ? 0 : (size_t)rgb_buffer1.len;
   }
   if (!(SWIG_IsOK((res3 = SWIG_ConvertPtr(obj2,SWIG_as_voidptrptr(&arg3),SWIGTYPE_p_int,0))))) {
     int val;
@@ -4073,7 +4081,6 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeRGB(PyObject *SWIGUNUSEDPARM(self), Py
   {
     PyBuffer_Release(&rgb_buffer1);
   }
-  if (SWIG_IsNewObj(res2)) free((char*)arg2);
   if (SWIG_IsNewObj(res3)) free((char*)arg3);
   free(result);
   return resultobj;
@@ -4081,7 +4088,6 @@ fail:
   {
     PyBuffer_Release(&rgb_buffer1);
   }
-  if (SWIG_IsNewObj(res2)) free((char*)arg2);
   if (SWIG_IsNewObj(res3)) free((char*)arg3);
   return NULL;
 }
@@ -4090,7 +4096,7 @@ fail:
 SWIGINTERN PyObject *_wrap_wrap_WebPEncodeBGR(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   uint8_t *arg1 = (uint8_t *) 0 ;
-  int *arg2 = (int *) 0 ;
+  size_t arg2 ;
   int *arg3 = (int *) 0 ;
   int *arg4 = (int *) 0 ;
   int arg5 ;
@@ -4098,8 +4104,6 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeBGR(PyObject *SWIGUNUSEDPARM(self), Py
   int arg7 ;
   float arg8 ;
   Py_buffer rgb_buffer1 ;
-  int temp2 ;
-  int res2 = 0 ;
   int temp3 ;
   int res3 = 0 ;
   int temp4 ;
@@ -4138,15 +4142,9 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeBGR(PyObject *SWIGUNUSEDPARM(self), Py
     }
     arg1 = (uint8_t *)rgb_buffer1.buf;
   }
-  if (!(SWIG_IsOK((res2 = SWIG_ConvertPtr(obj1,SWIG_as_voidptrptr(&arg2),SWIGTYPE_p_int,0))))) {
-    int val;
-    int ecode = SWIG_AsVal_int(obj1, &val);
-    if (!SWIG_IsOK(ecode)) {
-      SWIG_exception_fail(SWIG_ArgError(ecode), "in method '" "wrap_WebPEncodeBGR" "', argument " "2"" of type '" "int""'");
-    }
-    temp2 = (int)(val);
-    arg2 = &temp2;
-    res2 = SWIG_AddTmpMask(ecode);
+  {
+    (void)obj1;
+    arg2 = (rgb_buffer1.len < 0) ? 0 : (size_t)rgb_buffer1.len;
   }
   if (!(SWIG_IsOK((res3 = SWIG_ConvertPtr(obj2,SWIG_as_voidptrptr(&arg3),SWIGTYPE_p_int,0))))) {
     int val;
@@ -4193,7 +4191,6 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeBGR(PyObject *SWIGUNUSEDPARM(self), Py
   {
     PyBuffer_Release(&rgb_buffer1);
   }
-  if (SWIG_IsNewObj(res2)) free((char*)arg2);
   if (SWIG_IsNewObj(res3)) free((char*)arg3);
   free(result);
   return resultobj;
@@ -4201,7 +4198,6 @@ fail:
   {
     PyBuffer_Release(&rgb_buffer1);
   }
-  if (SWIG_IsNewObj(res2)) free((char*)arg2);
   if (SWIG_IsNewObj(res3)) free((char*)arg3);
   return NULL;
 }
@@ -4210,7 +4206,7 @@ fail:
 SWIGINTERN PyObject *_wrap_wrap_WebPEncodeRGBA(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   uint8_t *arg1 = (uint8_t *) 0 ;
-  int *arg2 = (int *) 0 ;
+  size_t arg2 ;
   int *arg3 = (int *) 0 ;
   int *arg4 = (int *) 0 ;
   int arg5 ;
@@ -4218,8 +4214,6 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeRGBA(PyObject *SWIGUNUSEDPARM(self), P
   int arg7 ;
   float arg8 ;
   Py_buffer rgb_buffer1 ;
-  int temp2 ;
-  int res2 = 0 ;
   int temp3 ;
   int res3 = 0 ;
   int temp4 ;
@@ -4258,15 +4252,9 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeRGBA(PyObject *SWIGUNUSEDPARM(self), P
     }
     arg1 = (uint8_t *)rgb_buffer1.buf;
   }
-  if (!(SWIG_IsOK((res2 = SWIG_ConvertPtr(obj1,SWIG_as_voidptrptr(&arg2),SWIGTYPE_p_int,0))))) {
-    int val;
-    int ecode = SWIG_AsVal_int(obj1, &val);
-    if (!SWIG_IsOK(ecode)) {
-      SWIG_exception_fail(SWIG_ArgError(ecode), "in method '" "wrap_WebPEncodeRGBA" "', argument " "2"" of type '" "int""'");
-    }
-    temp2 = (int)(val);
-    arg2 = &temp2;
-    res2 = SWIG_AddTmpMask(ecode);
+  {
+    (void)obj1;
+    arg2 = (rgb_buffer1.len < 0) ? 0 : (size_t)rgb_buffer1.len;
   }
   if (!(SWIG_IsOK((res3 = SWIG_ConvertPtr(obj2,SWIG_as_voidptrptr(&arg3),SWIGTYPE_p_int,0))))) {
     int val;
@@ -4313,7 +4301,6 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeRGBA(PyObject *SWIGUNUSEDPARM(self), P
   {
     PyBuffer_Release(&rgb_buffer1);
   }
-  if (SWIG_IsNewObj(res2)) free((char*)arg2);
   if (SWIG_IsNewObj(res3)) free((char*)arg3);
   free(result);
   return resultobj;
@@ -4321,7 +4308,6 @@ fail:
   {
     PyBuffer_Release(&rgb_buffer1);
   }
-  if (SWIG_IsNewObj(res2)) free((char*)arg2);
   if (SWIG_IsNewObj(res3)) free((char*)arg3);
   return NULL;
 }
@@ -4330,7 +4316,7 @@ fail:
 SWIGINTERN PyObject *_wrap_wrap_WebPEncodeBGRA(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   uint8_t *arg1 = (uint8_t *) 0 ;
-  int *arg2 = (int *) 0 ;
+  size_t arg2 ;
   int *arg3 = (int *) 0 ;
   int *arg4 = (int *) 0 ;
   int arg5 ;
@@ -4338,8 +4324,6 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeBGRA(PyObject *SWIGUNUSEDPARM(self), P
   int arg7 ;
   float arg8 ;
   Py_buffer rgb_buffer1 ;
-  int temp2 ;
-  int res2 = 0 ;
   int temp3 ;
   int res3 = 0 ;
   int temp4 ;
@@ -4378,15 +4362,9 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeBGRA(PyObject *SWIGUNUSEDPARM(self), P
     }
     arg1 = (uint8_t *)rgb_buffer1.buf;
   }
-  if (!(SWIG_IsOK((res2 = SWIG_ConvertPtr(obj1,SWIG_as_voidptrptr(&arg2),SWIGTYPE_p_int,0))))) {
-    int val;
-    int ecode = SWIG_AsVal_int(obj1, &val);
-    if (!SWIG_IsOK(ecode)) {
-      SWIG_exception_fail(SWIG_ArgError(ecode), "in method '" "wrap_WebPEncodeBGRA" "', argument " "2"" of type '" "int""'");
-    }
-    temp2 = (int)(val);
-    arg2 = &temp2;
-    res2 = SWIG_AddTmpMask(ecode);
+  {
+    (void)obj1;
+    arg2 = (rgb_buffer1.len < 0) ? 0 : (size_t)rgb_buffer1.len;
   }
   if (!(SWIG_IsOK((res3 = SWIG_ConvertPtr(obj2,SWIG_as_voidptrptr(&arg3),SWIGTYPE_p_int,0))))) {
     int val;
@@ -4433,7 +4411,6 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeBGRA(PyObject *SWIGUNUSEDPARM(self), P
   {
     PyBuffer_Release(&rgb_buffer1);
   }
-  if (SWIG_IsNewObj(res2)) free((char*)arg2);
   if (SWIG_IsNewObj(res3)) free((char*)arg3);
   free(result);
   return resultobj;
@@ -4441,7 +4418,6 @@ fail:
   {
     PyBuffer_Release(&rgb_buffer1);
   }
-  if (SWIG_IsNewObj(res2)) free((char*)arg2);
   if (SWIG_IsNewObj(res3)) free((char*)arg3);
   return NULL;
 }
@@ -4450,15 +4426,13 @@ fail:
 SWIGINTERN PyObject *_wrap_wrap_WebPEncodeLosslessRGB(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   uint8_t *arg1 = (uint8_t *) 0 ;
-  int *arg2 = (int *) 0 ;
+  size_t arg2 ;
   int *arg3 = (int *) 0 ;
   int *arg4 = (int *) 0 ;
   int arg5 ;
   int arg6 ;
   int arg7 ;
   Py_buffer rgb_buffer1 ;
-  int temp2 ;
-  int res2 = 0 ;
   int temp3 ;
   int res3 = 0 ;
   int temp4 ;
@@ -4494,15 +4468,9 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeLosslessRGB(PyObject *SWIGUNUSEDPARM(s
     }
     arg1 = (uint8_t *)rgb_buffer1.buf;
   }
-  if (!(SWIG_IsOK((res2 = SWIG_ConvertPtr(obj1,SWIG_as_voidptrptr(&arg2),SWIGTYPE_p_int,0))))) {
-    int val;
-    int ecode = SWIG_AsVal_int(obj1, &val);
-    if (!SWIG_IsOK(ecode)) {
-      SWIG_exception_fail(SWIG_ArgError(ecode), "in method '" "wrap_WebPEncodeLosslessRGB" "', argument " "2"" of type '" "int""'");
-    }
-    temp2 = (int)(val);
-    arg2 = &temp2;
-    res2 = SWIG_AddTmpMask(ecode);
+  {
+    (void)obj1;
+    arg2 = (rgb_buffer1.len < 0) ? 0 : (size_t)rgb_buffer1.len;
   }
   if (!(SWIG_IsOK((res3 = SWIG_ConvertPtr(obj2,SWIG_as_voidptrptr(&arg3),SWIGTYPE_p_int,0))))) {
     int val;
@@ -4544,7 +4512,6 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeLosslessRGB(PyObject *SWIGUNUSEDPARM(s
   {
     PyBuffer_Release(&rgb_buffer1);
   }
-  if (SWIG_IsNewObj(res2)) free((char*)arg2);
   if (SWIG_IsNewObj(res3)) free((char*)arg3);
   free(result);
   return resultobj;
@@ -4552,7 +4519,6 @@ fail:
   {
     PyBuffer_Release(&rgb_buffer1);
   }
-  if (SWIG_IsNewObj(res2)) free((char*)arg2);
   if (SWIG_IsNewObj(res3)) free((char*)arg3);
   return NULL;
 }
@@ -4561,15 +4527,13 @@ fail:
 SWIGINTERN PyObject *_wrap_wrap_WebPEncodeLosslessBGR(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   uint8_t *arg1 = (uint8_t *) 0 ;
-  int *arg2 = (int *) 0 ;
+  size_t arg2 ;
   int *arg3 = (int *) 0 ;
   int *arg4 = (int *) 0 ;
   int arg5 ;
   int arg6 ;
   int arg7 ;
   Py_buffer rgb_buffer1 ;
-  int temp2 ;
-  int res2 = 0 ;
   int temp3 ;
   int res3 = 0 ;
   int temp4 ;
@@ -4605,15 +4569,9 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeLosslessBGR(PyObject *SWIGUNUSEDPARM(s
     }
     arg1 = (uint8_t *)rgb_buffer1.buf;
   }
-  if (!(SWIG_IsOK((res2 = SWIG_ConvertPtr(obj1,SWIG_as_voidptrptr(&arg2),SWIGTYPE_p_int,0))))) {
-    int val;
-    int ecode = SWIG_AsVal_int(obj1, &val);
-    if (!SWIG_IsOK(ecode)) {
-      SWIG_exception_fail(SWIG_ArgError(ecode), "in method '" "wrap_WebPEncodeLosslessBGR" "', argument " "2"" of type '" "int""'");
-    }
-    temp2 = (int)(val);
-    arg2 = &temp2;
-    res2 = SWIG_AddTmpMask(ecode);
+  {
+    (void)obj1;
+    arg2 = (rgb_buffer1.len < 0) ? 0 : (size_t)rgb_buffer1.len;
   }
   if (!(SWIG_IsOK((res3 = SWIG_ConvertPtr(obj2,SWIG_as_voidptrptr(&arg3),SWIGTYPE_p_int,0))))) {
     int val;
@@ -4655,7 +4613,6 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeLosslessBGR(PyObject *SWIGUNUSEDPARM(s
   {
     PyBuffer_Release(&rgb_buffer1);
   }
-  if (SWIG_IsNewObj(res2)) free((char*)arg2);
   if (SWIG_IsNewObj(res3)) free((char*)arg3);
   free(result);
   return resultobj;
@@ -4663,7 +4620,6 @@ fail:
   {
     PyBuffer_Release(&rgb_buffer1);
   }
-  if (SWIG_IsNewObj(res2)) free((char*)arg2);
   if (SWIG_IsNewObj(res3)) free((char*)arg3);
   return NULL;
 }
@@ -4672,15 +4628,13 @@ fail:
 SWIGINTERN PyObject *_wrap_wrap_WebPEncodeLosslessRGBA(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   uint8_t *arg1 = (uint8_t *) 0 ;
-  int *arg2 = (int *) 0 ;
+  size_t arg2 ;
   int *arg3 = (int *) 0 ;
   int *arg4 = (int *) 0 ;
   int arg5 ;
   int arg6 ;
   int arg7 ;
   Py_buffer rgb_buffer1 ;
-  int temp2 ;
-  int res2 = 0 ;
   int temp3 ;
   int res3 = 0 ;
   int temp4 ;
@@ -4716,15 +4670,9 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeLosslessRGBA(PyObject *SWIGUNUSEDPARM(
     }
     arg1 = (uint8_t *)rgb_buffer1.buf;
   }
-  if (!(SWIG_IsOK((res2 = SWIG_ConvertPtr(obj1,SWIG_as_voidptrptr(&arg2),SWIGTYPE_p_int,0))))) {
-    int val;
-    int ecode = SWIG_AsVal_int(obj1, &val);
-    if (!SWIG_IsOK(ecode)) {
-      SWIG_exception_fail(SWIG_ArgError(ecode), "in method '" "wrap_WebPEncodeLosslessRGBA" "', argument " "2"" of type '" "int""'");
-    }
-    temp2 = (int)(val);
-    arg2 = &temp2;
-    res2 = SWIG_AddTmpMask(ecode);
+  {
+    (void)obj1;
+    arg2 = (rgb_buffer1.len < 0) ? 0 : (size_t)rgb_buffer1.len;
   }
   if (!(SWIG_IsOK((res3 = SWIG_ConvertPtr(obj2,SWIG_as_voidptrptr(&arg3),SWIGTYPE_p_int,0))))) {
     int val;
@@ -4766,7 +4714,6 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeLosslessRGBA(PyObject *SWIGUNUSEDPARM(
   {
     PyBuffer_Release(&rgb_buffer1);
   }
-  if (SWIG_IsNewObj(res2)) free((char*)arg2);
   if (SWIG_IsNewObj(res3)) free((char*)arg3);
   free(result);
   return resultobj;
@@ -4774,7 +4721,6 @@ fail:
   {
     PyBuffer_Release(&rgb_buffer1);
   }
-  if (SWIG_IsNewObj(res2)) free((char*)arg2);
   if (SWIG_IsNewObj(res3)) free((char*)arg3);
   return NULL;
 }
@@ -4783,15 +4729,13 @@ fail:
 SWIGINTERN PyObject *_wrap_wrap_WebPEncodeLosslessBGRA(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   uint8_t *arg1 = (uint8_t *) 0 ;
-  int *arg2 = (int *) 0 ;
+  size_t arg2 ;
   int *arg3 = (int *) 0 ;
   int *arg4 = (int *) 0 ;
   int arg5 ;
   int arg6 ;
   int arg7 ;
   Py_buffer rgb_buffer1 ;
-  int temp2 ;
-  int res2 = 0 ;
   int temp3 ;
   int res3 = 0 ;
   int temp4 ;
@@ -4827,15 +4771,9 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeLosslessBGRA(PyObject *SWIGUNUSEDPARM(
     }
     arg1 = (uint8_t *)rgb_buffer1.buf;
   }
-  if (!(SWIG_IsOK((res2 = SWIG_ConvertPtr(obj1,SWIG_as_voidptrptr(&arg2),SWIGTYPE_p_int,0))))) {
-    int val;
-    int ecode = SWIG_AsVal_int(obj1, &val);
-    if (!SWIG_IsOK(ecode)) {
-      SWIG_exception_fail(SWIG_ArgError(ecode), "in method '" "wrap_WebPEncodeLosslessBGRA" "', argument " "2"" of type '" "int""'");
-    }
-    temp2 = (int)(val);
-    arg2 = &temp2;
-    res2 = SWIG_AddTmpMask(ecode);
+  {
+    (void)obj1;
+    arg2 = (rgb_buffer1.len < 0) ? 0 : (size_t)rgb_buffer1.len;
   }
   if (!(SWIG_IsOK((res3 = SWIG_ConvertPtr(obj2,SWIG_as_voidptrptr(&arg3),SWIGTYPE_p_int,0))))) {
     int val;
@@ -4877,7 +4815,6 @@ SWIGINTERN PyObject *_wrap_wrap_WebPEncodeLosslessBGRA(PyObject *SWIGUNUSEDPARM(
   {
     PyBuffer_Release(&rgb_buffer1);
   }
-  if (SWIG_IsNewObj(res2)) free((char*)arg2);
   if (SWIG_IsNewObj(res3)) free((char*)arg3);
   free(result);
   return resultobj;
@@ -4885,7 +4822,6 @@ fail:
   {
     PyBuffer_Release(&rgb_buffer1);
   }
-  if (SWIG_IsNewObj(res2)) free((char*)arg2);
   if (SWIG_IsNewObj(res3)) free((char*)arg3);
   return NULL;
 }

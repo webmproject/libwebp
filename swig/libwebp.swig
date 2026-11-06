@@ -63,6 +63,22 @@ JAVA_ARRAYS_DECL(uint8_t, jbyte, Byte, Uint8)
 JAVA_ARRAYS_IMPL(uint8_t, jbyte, Byte, Uint8)
 JAVA_ARRAYS_TYPEMAPS(uint8_t, byte, jbyte, Uint8, "[B")
 %apply uint8_t[] { uint8_t* }
+%typemap(in) size_t data_size {
+  if (!jarg1 || $input < 0 ||
+      $input > (jlong)JCALL1(GetArrayLength, jenv, jarg1)) {
+    $1 = 0;
+  } else {
+    $1 = ($1_ltype)$input;
+  }
+}
+%typemap(jni) size_t unused1 "jint"
+%typemap(jtype) size_t unused1 "int"
+%typemap(jstype) size_t unused1 "int"
+%typemap(javain) size_t unused1 "$javainput"
+%typemap(in) size_t unused1 {
+  (void)$input;
+  $1 = jarg1 ? (size_t)JCALL1(GetArrayLength, jenv, jarg1) : 0;
+}
 #endif  /* SWIGJAVA */
 
 #ifdef SWIGPYTHON
@@ -91,6 +107,11 @@ JAVA_ARRAYS_TYPEMAPS(uint8_t, byte, jbyte, Uint8, "[B")
 
 %typemap(freearg) const uint8_t* rgb {
   PyBuffer_Release(&rgb_buffer$argnum);
+}
+
+%typemap(in) size_t unused1 {
+  (void)$input;
+  $1 = (rgb_buffer1.len < 0) ? 0 : (size_t)rgb_buffer1.len;
 }
 
 %define DECODE_AUTODOC(func)
@@ -226,14 +247,28 @@ typedef size_t (*WebPEncodeLosslessFunction)(const uint8_t* rgb,
                                              int width, int height, int stride,
                                              uint8_t** output);
 
-static uint8_t* EncodeLossy(const uint8_t* rgb,
+static int ValidateEncodeParams(size_t rgb_size, int width, int height,
+                                int stride, int bytes_per_pixel) {
+  if (width <= 0 || height <= 0 || stride <= 0 || bytes_per_pixel <= 0) {
+    return 0;
+  }
+  if ((uint64_t)stride < (uint64_t)width * bytes_per_pixel) {
+    return 0;
+  }
+  return (uint64_t)rgb_size >=
+         (uint64_t)(height - 1) * stride + (uint64_t)width * bytes_per_pixel;
+}
+
+static uint8_t* EncodeLossy(const uint8_t* rgb, size_t rgb_size,
                             int width, int height, int stride,
-                            float quality_factor,
+                            int bytes_per_pixel, float quality_factor,
                             WebPEncodeFunction encfn,
                             int* output_size, int* unused) {
   uint8_t* output = NULL;
   const size_t image_size =
-      encfn(rgb, width, height, stride, quality_factor, &output);
+      ValidateEncodeParams(rgb_size, width, height, stride, bytes_per_pixel)
+          ? encfn(rgb, width, height, stride, quality_factor, &output)
+          : 0;
   // the values of following two will be interpreted by ReturnedBufferSize()
   // as 'width' and 'height' in the size calculation.
   *output_size = image_size;
@@ -241,12 +276,16 @@ static uint8_t* EncodeLossy(const uint8_t* rgb,
   return image_size ? output : NULL;
 }
 
-static uint8_t* EncodeLossless(const uint8_t* rgb,
+static uint8_t* EncodeLossless(const uint8_t* rgb, size_t rgb_size,
                                int width, int height, int stride,
+                               int bytes_per_pixel,
                                WebPEncodeLosslessFunction encfn,
                                int* output_size, int* unused) {
   uint8_t* output = NULL;
-  const size_t image_size = encfn(rgb, width, height, stride, &output);
+  const size_t image_size =
+      ValidateEncodeParams(rgb_size, width, height, stride, bytes_per_pixel)
+          ? encfn(rgb, width, height, stride, &output)
+          : 0;
   // the values of the following two will be interpreted by
   // ReturnedBufferSize() as 'width' and 'height' in the size calculation.
   *output_size = image_size;
@@ -262,7 +301,7 @@ static uint8_t* EncodeLossless(const uint8_t* rgb,
 
 #if defined(SWIGJAVA) || defined(SWIGPYTHON)
 
-%apply int* INPUT { int* unused1, int* unused2 }
+%apply int* INPUT { int* unused2 }
 %apply int* OUTPUT { int* output_size }
 
 // free the buffer returned by these functions after copying into
@@ -299,33 +338,33 @@ static uint8_t* EncodeLossless(const uint8_t* rgb,
 // than dealing with the return pointer.
 // The additional parameters are to allow reuse of ReturnedBufferSize(),
 // unused2 and output_size will be used in this case.
-#define LOSSY_WRAPPER(FUNC)                                             \
-  static uint8_t* wrap_##FUNC(                                          \
-      const uint8_t* rgb, int* unused1, int* unused2, int* output_size, \
-      int width, int height, int stride, float quality_factor) {        \
-    return EncodeLossy(rgb, width, height, stride, quality_factor,      \
-                       FUNC, output_size, unused2);                     \
-  }                                                                     \
+#define LOSSY_WRAPPER(FUNC, BPS)                                          \
+  static uint8_t* wrap_##FUNC(                                            \
+      const uint8_t* rgb, size_t unused1, int* unused2, int* output_size, \
+      int width, int height, int stride, float quality_factor) {          \
+    return EncodeLossy(rgb, unused1, width, height, stride, BPS,          \
+                       quality_factor, FUNC, output_size, unused2);       \
+  }                                                                       \
 
-LOSSY_WRAPPER(WebPEncodeRGB)
-LOSSY_WRAPPER(WebPEncodeBGR)
-LOSSY_WRAPPER(WebPEncodeRGBA)
-LOSSY_WRAPPER(WebPEncodeBGRA)
+LOSSY_WRAPPER(WebPEncodeRGB, 3)
+LOSSY_WRAPPER(WebPEncodeBGR, 3)
+LOSSY_WRAPPER(WebPEncodeRGBA, 4)
+LOSSY_WRAPPER(WebPEncodeBGRA, 4)
 
 #undef LOSSY_WRAPPER
 
-#define LOSSLESS_WRAPPER(FUNC)                                          \
-  static uint8_t* wrap_##FUNC(                                          \
-      const uint8_t* rgb, int* unused1, int* unused2, int* output_size, \
-      int width, int height, int stride) {                              \
-    return EncodeLossless(rgb, width, height, stride,                   \
-                          FUNC, output_size, unused2);                  \
-  }                                                                     \
+#define LOSSLESS_WRAPPER(FUNC, BPS)                                       \
+  static uint8_t* wrap_##FUNC(                                            \
+      const uint8_t* rgb, size_t unused1, int* unused2, int* output_size, \
+      int width, int height, int stride) {                                \
+    return EncodeLossless(rgb, unused1, width, height, stride, BPS,       \
+                          FUNC, output_size, unused2);                    \
+  }                                                                       \
 
-LOSSLESS_WRAPPER(WebPEncodeLosslessRGB)
-LOSSLESS_WRAPPER(WebPEncodeLosslessBGR)
-LOSSLESS_WRAPPER(WebPEncodeLosslessRGBA)
-LOSSLESS_WRAPPER(WebPEncodeLosslessBGRA)
+LOSSLESS_WRAPPER(WebPEncodeLosslessRGB, 3)
+LOSSLESS_WRAPPER(WebPEncodeLosslessBGR, 3)
+LOSSLESS_WRAPPER(WebPEncodeLosslessRGBA, 4)
+LOSSLESS_WRAPPER(WebPEncodeLosslessBGRA, 4)
 
 #undef LOSSLESS_WRAPPER
 
