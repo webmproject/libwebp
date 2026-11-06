@@ -12,7 +12,8 @@
 
 #include <assert.h>
 #include <limits.h>
-#include <math.h>  // for pow()
+#include <math.h>    // for pow()
+#include <stddef.h>  // for ptrdiff_t, size_t
 #include <stdio.h>
 #include <stdlib.h>  // for abs()
 #include <string.h>
@@ -670,8 +671,8 @@ static void DisposeFrameRectangle(int dispose_method,
   }
 }
 
-static uint32_t RectArea(const FrameRectangle* const rect) {
-  return (uint32_t)rect->width * rect->height;
+static size_t RectArea(const FrameRectangle* const rect) {
+  return (size_t)rect->width * rect->height;
 }
 
 WEBP_NODISCARD static int IsLosslessBlendingPossible(
@@ -816,7 +817,7 @@ WEBP_NODISCARD static int FlattenSimilarBlocks(const WebPPicture* const src,
       }
       carryover_mask_block += block_size;
     }
-    carryover_mask_row += block_size * rect->width;
+    carryover_mask_row += (ptrdiff_t)block_size * rect->width;
   }
   return modified;
 }
@@ -1053,8 +1054,7 @@ static WebPEncodingError GenerateCandidates(
     if (use_blending_ll) {
       // Reset the whole carryover mask to "all pixels are explicitly encoded in
       // this current frame".
-      memset(enc->candidate_carryover_mask, 0,
-             params->rect_ll.width * params->rect_ll.height);
+      memset(enc->candidate_carryover_mask, 0, RectArea(&params->rect_ll));
       enc->curr_canvas_copy_modified =
           IncreaseTransparency(canvas_carryover, &params->rect_ll, curr_canvas,
                                enc->candidate_carryover_mask);
@@ -1074,8 +1074,7 @@ static WebPEncodingError GenerateCandidates(
     if (use_blending_lossy) {
       // Reset the whole carryover mask to "all pixels are explicitly encoded in
       // this current frame".
-      memset(enc->candidate_carryover_mask, 0,
-             params->rect_lossy.width * params->rect_lossy.height);
+      memset(enc->candidate_carryover_mask, 0, RectArea(&params->rect_lossy));
       enc->curr_canvas_copy_modified = FlattenSimilarBlocks(
           canvas_carryover, &params->rect_lossy, curr_canvas,
           config_lossy->quality, enc->candidate_carryover_mask);
@@ -1624,6 +1623,7 @@ int WebPAnimEncoderAdd(WebPAnimEncoder* enc, WebPPicture* frame, int timestamp,
   }
 
   if (frame != NULL) {
+    frame->error_code = VP8_ENC_OK;
     if (frame->width != enc->canvas_width ||
         frame->height != enc->canvas_height) {
       frame->error_code = VP8_ENC_ERROR_INVALID_CONFIGURATION;
