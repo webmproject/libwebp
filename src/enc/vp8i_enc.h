@@ -498,8 +498,7 @@ int VP8FilterStrengthFromDelta(int sharpness, int delta);
 // Returns true if 'picture' is non-NULL and dimensions/colorspace are within
 // their valid ranges. If returning false, the 'error_code' in 'picture' is
 // updated.
-WEBP_NODISCARD WEBP_EXTERN int WebPValidatePicture(
-    const WebPPicture* const picture);
+WEBP_NODISCARD int WebPValidatePicture(const WebPPicture* const picture);
 
 // Same as WebPValidatePicture, but additionally checks that the required plane
 // buffers (argb if use_argb, or y/u/v if !use_argb, as well as a if
@@ -508,7 +507,7 @@ WEBP_NODISCARD WEBP_EXTERN int WebPValidatePicture(
 // If use_argb is true, only the argb buffer is checked. If use_argb is false,
 // the y, u, and v buffers are checked, and a is checked if colorspace has
 // WEBP_CSP_ALPHA_BIT.
-WEBP_NODISCARD WEBP_EXTERN int WebPValidateAllocatedPicture(
+WEBP_NODISCARD int WebPValidateAllocatedPicture(
     const WebPPicture* const picture);
 
 // Remove reference to the ARGB/YUVA buffer (doesn't free anything).
