@@ -293,7 +293,7 @@ void EncDecTest(bool use_argb, fuzz_utils::WebPPictureCpp pic_cpp,
 
 TEST(EncIndexDec, Buganizer498966814) {
   const bool use_argb = false;
-  WebPPicture pic = fuzz_utils::GetSourcePicture(/*index=*/2, use_argb);
+  WebPPicture pic = fuzz_utils::GetSourcePicture(/*image_index=*/2, use_argb);
   EncDecTest(false,
              fuzz_utils::WebPPictureCpp{
                  use_argb, pic.colorspace, pic.width, pic.height, pic.y, pic.u,

@@ -152,7 +152,7 @@ void AdvancedApiTest(std::string_view blob, uint8_t factor_u8, int colorspace,
       VP8StatusCode status;
       if (size & 8) {
         size_t available_size = value + 1;
-        while (1) {
+        while (true) {
           if (available_size > size) available_size = size;
           status = WebPIUpdate(idec, data, available_size);
           if (status != VP8_STATUS_SUSPENDED || available_size == size) break;
@@ -163,7 +163,7 @@ void AdvancedApiTest(std::string_view blob, uint8_t factor_u8, int colorspace,
         // Implemented here by simply advancing the pointer into data.
         const uint8_t* new_data = data;
         size_t new_size = value + 1;
-        while (1) {
+        while (true) {
           if (new_data + new_size > data + size) {
             new_size = data + size - new_data;
           }
