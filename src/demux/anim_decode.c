@@ -56,6 +56,10 @@ struct WebPAnimDecoder {
   int prev_frame_was_keyframe;   // True if previous frame was a keyframe.
   int next_frame;                // Index of the next frame to be decoded
                                  // (starting from 1).
+  int dirty_x;                   // Bounding box of modified pixels in
+  int dirty_y;                   // curr_frame.
+  int dirty_width;
+  int dirty_height;
 };
 
 static void DefaultDecoderOptions(WebPAnimDecoderOptions* const dec_options) {
@@ -164,16 +168,6 @@ static int IsFullFrame(int width, int height, int canvas_width,
   return (width == canvas_width && height == canvas_height);
 }
 
-// Clear the canvas to transparent.
-WEBP_NODISCARD static int ZeroFillCanvas(uint8_t* buf, uint32_t canvas_width,
-                                         uint32_t canvas_height) {
-  const uint64_t size =
-      (uint64_t)canvas_width * canvas_height * NUM_CHANNELS * sizeof(*buf);
-  if (!CheckSizeOverflow(size)) return 0;
-  WEBP_UNSAFE_MEMSET(buf, 0, (size_t)size);
-  return 1;
-}
-
 // Clear given frame rectangle to transparent.
 static void ZeroFillFrameRect(uint8_t* buf, int buf_stride, int x_offset,
                               int y_offset, int width, int height) {
@@ -188,14 +182,44 @@ static void ZeroFillFrameRect(uint8_t* buf, int buf_stride, int x_offset,
   }
 }
 
-// Copy width * height pixels from 'src' to 'dst'.
-WEBP_NODISCARD static int CopyCanvas(const uint8_t* src, uint8_t* dst,
-                                     uint32_t width, uint32_t height) {
-  const uint64_t size = (uint64_t)width * height * NUM_CHANNELS;
-  if (!CheckSizeOverflow(size)) return 0;
+// Copy given frame rectangle from 'src' to 'dst'.
+static void CopyFrameRect(const uint8_t* src, uint8_t* dst, int buf_stride,
+                          int x_offset, int y_offset, int width, int height) {
+  int j;
+  const uint32_t x = (uint32_t)x_offset * NUM_CHANNELS;  // 26 bits
+  const uint64_t y = (uint64_t)y_offset * buf_stride;
+  const uint64_t offset = y + x;
+  assert(width * NUM_CHANNELS <= buf_stride);
   assert(src != NULL && dst != NULL);
-  WEBP_UNSAFE_MEMCPY(dst, src, (size_t)size);
-  return 1;
+  src += offset;
+  dst += offset;
+  for (j = 0; j < height; ++j) {
+    WEBP_UNSAFE_MEMCPY(dst, src, width * NUM_CHANNELS);
+    src += buf_stride;
+    dst += buf_stride;
+  }
+}
+
+// Expand the dirty rectangle in 'dec' to include the given rectangle.
+static void MergeDirtyRect(WebPAnimDecoder* const dec, int x_offset,
+                           int y_offset, int width, int height) {
+  if (dec->dirty_width == 0 || dec->dirty_height == 0) {
+    dec->dirty_x = x_offset;
+    dec->dirty_y = y_offset;
+    dec->dirty_width = width;
+    dec->dirty_height = height;
+  } else {
+    const int max_x = dec->dirty_x + dec->dirty_width;
+    const int max_y = dec->dirty_y + dec->dirty_height;
+    const int iter_max_x = x_offset + width;
+    const int iter_max_y = y_offset + height;
+    if (x_offset < dec->dirty_x) dec->dirty_x = x_offset;
+    if (y_offset < dec->dirty_y) dec->dirty_y = y_offset;
+    dec->dirty_width =
+        ((iter_max_x > max_x) ? iter_max_x : max_x) - dec->dirty_x;
+    dec->dirty_height =
+        ((iter_max_y > max_y) ? iter_max_y : max_y) - dec->dirty_y;
+  }
 }
 
 // Returns true if the current frame is a key-frame.
@@ -357,13 +381,27 @@ int WebPAnimDecoderGetNext(WebPAnimDecoder* dec, uint8_t** buf_ptr,
   is_key_frame = IsKeyFrame(&iter, &dec->prev_iter,
                             dec->prev_frame_was_keyframe, width, height);
   if (is_key_frame) {
-    if (!ZeroFillCanvas(dec->curr_frame, width, height)) {
-      goto Error;
+    if (!IsFullFrame(iter.width, iter.height, width, height) &&
+        dec->dirty_width > 0 && dec->dirty_height > 0) {
+      ZeroFillFrameRect(dec->curr_frame, width * NUM_CHANNELS, dec->dirty_x,
+                        dec->dirty_y, dec->dirty_width, dec->dirty_height);
     }
+    dec->dirty_x = iter.x_offset;
+    dec->dirty_y = iter.y_offset;
+    dec->dirty_width = iter.width;
+    dec->dirty_height = iter.height;
   } else {
-    if (!CopyCanvas(dec->prev_frame_disposed, dec->curr_frame, width, height)) {
-      goto Error;
+    if (dec->prev_iter.dispose_method == WEBP_MUX_DISPOSE_BACKGROUND) {
+      ZeroFillFrameRect(dec->curr_frame, width * NUM_CHANNELS,
+                        dec->prev_iter.x_offset, dec->prev_iter.y_offset,
+                        dec->prev_iter.width, dec->prev_iter.height);
     }
+    if (iter.blend_method == WEBP_MUX_BLEND) {
+      CopyFrameRect(dec->curr_frame, dec->prev_frame_disposed,
+                    width * NUM_CHANNELS, iter.x_offset, iter.y_offset,
+                    iter.width, iter.height);
+    }
+    MergeDirtyRect(dec, iter.x_offset, iter.y_offset, iter.width, iter.height);
   }
 
   // Decode.
@@ -431,14 +469,6 @@ int WebPAnimDecoderGetNext(WebPAnimDecoder* dec, uint8_t** buf_ptr,
   WebPDemuxReleaseIterator(&dec->prev_iter);
   dec->prev_iter = iter;
   dec->prev_frame_was_keyframe = is_key_frame;
-  if (!CopyCanvas(dec->curr_frame, dec->prev_frame_disposed, width, height)) {
-    goto Error;
-  }
-  if (dec->prev_iter.dispose_method == WEBP_MUX_DISPOSE_BACKGROUND) {
-    ZeroFillFrameRect(dec->prev_frame_disposed, width * NUM_CHANNELS,
-                      dec->prev_iter.x_offset, dec->prev_iter.y_offset,
-                      dec->prev_iter.width, dec->prev_iter.height);
-  }
   ++dec->next_frame;
 
   // All OK, fill in the values.

@@ -241,7 +241,7 @@ WEBP_EXTERN void WebPDemuxReleaseChunkIterator(WebPChunkIterator* iter);
       int timestamp;
       WebPAnimDecoderGetNext(dec, &buf, &timestamp);
       // ... (Render 'buf' based on 'timestamp').
-      // ... (Do NOT free 'buf', as it is owned by 'dec').
+      // ... (Do NOT modify or free 'buf', as it is owned by 'dec').
     }
     WebPAnimDecoderReset(dec);
   }
@@ -317,8 +317,9 @@ WEBP_NODISCARD WEBP_EXTERN int WebPAnimDecoderGetInfo(
 // Fetch the next frame from 'dec' based on options supplied to
 // WebPAnimDecoderNew(). This will be a fully reconstructed canvas of size
 // 'canvas_width * 4 * canvas_height', and not just the frame sub-rectangle. The
-// returned buffer 'buf' is valid only until the next call to
-// WebPAnimDecoderGetNext(), WebPAnimDecoderReset() or WebPAnimDecoderDelete().
+// returned buffer 'buf' is owned by 'dec', must not be modified by the caller,
+// and is valid only until the next call to WebPAnimDecoderGetNext(),
+// WebPAnimDecoderReset() or WebPAnimDecoderDelete().
 // Parameters:
 //   dec - (in/out) decoder instance from which the next frame is to be fetched.
 //   buf - (out) decoded frame.
@@ -326,6 +327,7 @@ WEBP_NODISCARD WEBP_EXTERN int WebPAnimDecoderGetInfo(
 // Returns:
 //   False if any of the arguments are NULL, or if there is a parsing or
 //   decoding error, or if there are no more frames. Otherwise, returns true.
+// TODO(vrabaud): change 'buf' to const uint8_t** when we can break the API.
 WEBP_NODISCARD WEBP_EXTERN int WebPAnimDecoderGetNext(WebPAnimDecoder* dec,
                                                       uint8_t** buf,
                                                       int* timestamp);
