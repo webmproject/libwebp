@@ -14,6 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
@@ -232,6 +233,129 @@ void EncDecValidTest(bool use_argb, fuzz_utils::WebPPictureCpp pic_cpp,
           fprintf(stderr,
                   "Cropped alpha mismatch at (%d, %d): got %u, expected %u.\n",
                   x, y, actual_a, expected_a);
+          std::abort();
+        }
+      }
+    }
+  }
+
+  // Verify that incremental decoding (via WebPIAppend or WebPIUpdate) of the
+  // encoded bitstream with the same colorspace and decoder_options succeeds and
+  // produces the exact same output as one-shot WebPDecode.
+  if (cropped_status == VP8_STATUS_OK) {
+    WebPDecoderConfig idec_config;
+    std::unique_ptr<WebPDecoderConfig, fuzz_utils::UniquePtrDeleter>
+        idec_config_owner(&idec_config);
+    if (!WebPInitDecoderConfig(&idec_config)) {
+      fprintf(stderr, "WebPInitDecoderConfig failed.\n");
+      std::abort();
+    }
+    idec_config.output.colorspace = static_cast<WEBP_CSP_MODE>(colorspace);
+    std::memcpy(&idec_config.options, &decoder_options,
+                sizeof(decoder_options));
+
+    // A simple single-chunk WebP file has:
+    //   - bytes 0..11: 12-byte "RIFF" + file_size + "WEBP" container header,
+    //   - bytes 12..15: 4-byte chunk tag ("VP8 " or "VP8L", i.e. no "VP8X"),
+    //   - bytes 16..19: 32-bit little-endian chunk payload size (chunk_len),
+    //   - bytes 20..20+chunk_len-1: raw VP8/VP8L compressed bitstream.
+    // When the encoded output has this layout, use the low bits of fuzz inputs
+    // (optimization_index and colorspace) to deterministically choose between
+    // feeding the full RIFF container, a RIFF-less chunk, or a headerless raw
+    // bitstream to the incremental decoder.
+    const uint8_t* idec_data = out_data;
+    size_t idec_size = out_size;
+    if (out_size >= 32 && (std::memcmp(out_data + 12, "VP8 ", 4) == 0 ||
+                           std::memcmp(out_data + 12, "VP8L", 4) == 0)) {
+      const uint32_t chunk_len = out_data[16] | (uint32_t{out_data[17]} << 8) |
+                                 (uint32_t{out_data[18]} << 16) |
+                                 (uint32_t{out_data[19]} << 24);
+      if (chunk_len >= 12 && 20u + chunk_len <= out_size) {
+        if ((optimization_index & 1) != 0) {
+          // Strip both the 12-byte RIFF header and 8-byte chunk header to test
+          // headerless raw VP8/VP8L incremental decoding (where the total
+          // bitstream size is unknown upfront).
+          idec_data = out_data + 20;
+          idec_size = chunk_len;
+        } else if ((colorspace & 1) != 0) {
+          // Strip only the 12-byte RIFF header, keeping the "VP8 "/"VP8L" chunk
+          // header and its declared payload size.
+          idec_data = out_data + 12;
+          idec_size = out_size - 12;
+        }
+      }
+    }
+
+    WebPIDecoder* const idec = WebPIDecode(nullptr, 0, &idec_config);
+    if (idec != nullptr) {
+      // Start with a small chunk size in [1..64] so early calls exercise
+      // VP8_STATUS_SUSPENDED across header and partition/entropy parsing, then
+      // double the chunk size at each step so large images finish quickly.
+      // Alternate between WebPIUpdate (passing the growing prefix [0..avail))
+      // and WebPIAppend (passing each new slice [pos..pos+n)) based on
+      // out_size.
+      VP8StatusCode idec_status = VP8_STATUS_SUSPENDED;
+      size_t step = 1 + (out_size % 64);
+      if ((out_size & 2) != 0) {
+        size_t avail = step;
+        while (true) {
+          if (avail > idec_size) avail = idec_size;
+          idec_status = WebPIUpdate(idec, idec_data, avail);
+          if (idec_status != VP8_STATUS_SUSPENDED || avail == idec_size) break;
+          avail *= 2;
+        }
+      } else {
+        size_t pos = 0;
+        while (pos < idec_size && idec_status == VP8_STATUS_SUSPENDED) {
+          const size_t n = std::min<size_t>(step, idec_size - pos);
+          idec_status = WebPIAppend(idec, idec_data + pos, n);
+          pos += n;
+          step *= 2;
+        }
+      }
+      WebPIDelete(idec);
+
+      // Since the bitstream is valid and one-shot WebPDecode succeeded,
+      // incremental decoding must also succeed (unless an allocation limit is
+      // hit).
+      if (idec_status != VP8_STATUS_OK &&
+          idec_status != VP8_STATUS_OUT_OF_MEMORY &&
+          idec_status != VP8_STATUS_USER_ABORT) {
+        fprintf(stderr, "Incremental decode failed. status: %d.\n",
+                idec_status);
+        std::abort();
+      }
+      // Verify that the incrementally decoded pixels match the one-shot
+      // decoded buffer (cropped_dec_config.output) byte-for-byte across RGB or
+      // YUVA planes.
+      if (idec_status == VP8_STATUS_OK) {
+        const WebPDecBuffer& a = idec_config.output;
+        const WebPDecBuffer& b = cropped_dec_config.output;
+        bool match = (a.colorspace == b.colorspace && a.width == b.width &&
+                      a.height == b.height);
+        if (match) {
+          if (WebPIsRGBMode(a.colorspace)) {
+            match =
+                (a.u.RGBA.size == b.u.RGBA.size &&
+                 std::memcmp(a.u.RGBA.rgba, b.u.RGBA.rgba, a.u.RGBA.size) == 0);
+          } else {
+            match =
+                (a.u.YUVA.y_size == b.u.YUVA.y_size &&
+                 a.u.YUVA.u_size == b.u.YUVA.u_size &&
+                 a.u.YUVA.v_size == b.u.YUVA.v_size &&
+                 std::memcmp(a.u.YUVA.y, b.u.YUVA.y, a.u.YUVA.y_size) == 0 &&
+                 std::memcmp(a.u.YUVA.u, b.u.YUVA.u, a.u.YUVA.u_size) == 0 &&
+                 std::memcmp(a.u.YUVA.v, b.u.YUVA.v, a.u.YUVA.v_size) == 0);
+            if (match && (a.u.YUVA.a != nullptr || b.u.YUVA.a != nullptr)) {
+              match =
+                  (a.u.YUVA.a != nullptr && b.u.YUVA.a != nullptr &&
+                   a.u.YUVA.a_size == b.u.YUVA.a_size &&
+                   std::memcmp(a.u.YUVA.a, b.u.YUVA.a, a.u.YUVA.a_size) == 0);
+            }
+          }
+        }
+        if (!match) {
+          fprintf(stderr, "Incremental decode output mismatch.\n");
           std::abort();
         }
       }

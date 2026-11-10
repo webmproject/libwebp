@@ -62,6 +62,8 @@ void WebPResetDecParams(WebPDecParams* const params);
 //------------------------------------------------------------------------------
 // Header parsing helpers
 
+#define CHUNK_SIZE_UNKNOWN (~(size_t)0)
+
 // Structure storing a description of the RIFF headers.
 typedef struct {
   const uint8_t* WEBP_COUNTED_BY(data_size) data;  // input buffer
@@ -71,7 +73,9 @@ typedef struct {
   const uint8_t* WEBP_COUNTED_BY(alpha_data_size)
       alpha_data;          // points to alpha chunk (if present)
   size_t alpha_data_size;  // alpha chunk size
-  size_t compressed_size;  // VP8/VP8L compressed data size
+  size_t compressed_size;  // VP8/VP8L compressed data size (or
+                           // CHUNK_SIZE_UNKNOWN when headerless and
+                           // !have_all_data)
   size_t riff_size;        // size of the riff payload (or 0 if absent)
   int is_lossless;         // true if a VP8L chunk is present
 } WebPHeaderStructure;

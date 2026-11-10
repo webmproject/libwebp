@@ -78,7 +78,10 @@ struct WebPIDecoder {
   WebPDecBuffer output;  // output buffer (when no external one is supplied,
                          // or if the external one has slow-memory)
   WebPDecBuffer* final_output;  // Slow-memory output to copy to eventually.
-  size_t chunk_size;  // Compressed VP8/VP8L size extracted from Header.
+  size_t chunk_size;        // Compressed VP8/VP8L size extracted from Header
+                            // (or CHUNK_SIZE_UNKNOWN for raw bitstreams).
+  size_t chunk_bytes_left;  // Unreceived bytes remaining in the VP8/VP8L chunk
+                            // (0 if chunk_size == CHUNK_SIZE_UNKNOWN).
 
   int last_mb_y;  // last row reached for intra-mode decoding
 };
@@ -95,6 +98,11 @@ typedef struct {
 
 static WEBP_INLINE size_t MemDataSize(const MemBuffer* mem) {
   return (mem->end - mem->start);
+}
+
+static WEBP_INLINE int HasMoreData(const WebPIDecoder* const idec) {
+  return (idec->chunk_size == CHUNK_SIZE_UNKNOWN) ||
+         (idec->chunk_bytes_left > 0);
 }
 
 // Check if we need to preserve the compressed alpha data, as it may not have
@@ -202,6 +210,13 @@ WEBP_NODISCARD static int AppendToMemBuffer(WebPIDecoder* const idec,
     // allows for a chunk should be considered a smoke smell.
     return 0;
   }
+  if (idec->state != STATE_WEBP_HEADER &&
+      idec->chunk_size != CHUNK_SIZE_UNKNOWN) {
+    if (data_size > idec->chunk_bytes_left) {
+      data_size = idec->chunk_bytes_left;
+    }
+    idec->chunk_bytes_left -= data_size;
+  }
 
   if (mem->end + data_size > mem->buf_size) {  // Need some free memory
     const size_t new_mem_start = old_start - old_base;
@@ -220,8 +235,10 @@ WEBP_NODISCARD static int AppendToMemBuffer(WebPIDecoder* const idec,
   }
 
   assert(mem->buf != NULL);
-  WEBP_UNSAFE_MEMCPY(mem->buf + mem->end, data, data_size);
-  mem->end += data_size;
+  if (data_size > 0) {
+    WEBP_UNSAFE_MEMCPY(mem->buf + mem->end, data, data_size);
+    mem->end += data_size;
+  }
   assert(mem->end <= mem->buf_size);
 
   DoRemap(idec, mem->buf + mem->start - old_start);
@@ -241,7 +258,18 @@ WEBP_NODISCARD static int RemapMemBuffer(WebPIDecoder* const idec,
   if (data_size < mem->buf_size) return 0;  // can't remap to a shorter buffer!
 
   mem->buf = (uint8_t*)data;
-  mem->end = mem->buf_size = data_size;
+  if (idec->state != STATE_WEBP_HEADER &&
+      idec->chunk_size != CHUNK_SIZE_UNKNOWN) {
+    size_t added = data_size - mem->buf_size;
+    if (added > idec->chunk_bytes_left) {
+      added = idec->chunk_bytes_left;
+    }
+    mem->end += added;
+    idec->chunk_bytes_left -= added;
+  } else {
+    mem->end = data_size;
+  }
+  mem->buf_size = data_size;
 
   DoRemap(idec, mem->buf + mem->start - old_start);
   return 1;
@@ -329,6 +357,15 @@ static void ChangeState(WebPIDecoder* const idec, DecState new_state,
   idec->state = new_state;
   mem->start += consumed_bytes;
   assert(mem->start <= mem->end);
+  if (idec->chunk_size != CHUNK_SIZE_UNKNOWN) {
+    const size_t curr_size = MemDataSize(mem);
+    if (curr_size >= idec->chunk_size) {
+      mem->end = mem->start + idec->chunk_size;
+      idec->chunk_bytes_left = 0;
+    } else {
+      idec->chunk_bytes_left = idec->chunk_size - curr_size;
+    }
+  }
   idec->io.data = mem->buf + mem->start;
   idec->io.data_size = MemDataSize(mem);
 }
@@ -383,7 +420,8 @@ static VP8StatusCode DecodeVP8FrameHeader(WebPIDecoder* const idec) {
 
   if (curr_size < VP8_FRAME_HEADER_SIZE) {
     // Not enough data bytes to extract VP8 Frame Header.
-    return VP8_STATUS_SUSPENDED;
+    return HasMoreData(idec) ? VP8_STATUS_SUSPENDED
+                             : IDecError(idec, VP8_STATUS_BITSTREAM_ERROR);
   }
   {
     const uint8_t* WEBP_BIDI_INDEXABLE const bounded_data =
@@ -441,15 +479,18 @@ static VP8StatusCode DecodePartition0(WebPIDecoder* const idec) {
 
   // Wait till we have enough data for the whole partition #0
   if (MemDataSize(&idec->mem) < idec->mem.part0_size) {
-    return VP8_STATUS_SUSPENDED;
+    return HasMoreData(idec) ? VP8_STATUS_SUSPENDED
+                             : IDecError(idec, VP8_STATUS_BITSTREAM_ERROR);
   }
 
+  dec->incremental = HasMoreData(idec);
   if (!VP8GetHeaders(dec, io)) {
     const VP8StatusCode status = dec->status;
     if (status == VP8_STATUS_SUSPENDED ||
         status == VP8_STATUS_NOT_ENOUGH_DATA) {
-      // treating NOT_ENOUGH_DATA as SUSPENDED state
-      return VP8_STATUS_SUSPENDED;
+      // treating NOT_ENOUGH_DATA as SUSPENDED state if more data is expected
+      return HasMoreData(idec) ? VP8_STATUS_SUSPENDED
+                               : IDecError(idec, VP8_STATUS_BITSTREAM_ERROR);
     }
     return IDecError(idec, status);
   }
@@ -513,9 +554,12 @@ static VP8StatusCode DecodeRemaining(WebPIDecoder* const idec) {
       MBContext context;
       SaveContext(dec, token_br, &context);
       if (!VP8DecodeMB(dec, token_br)) {
-        // We shouldn't fail when MAX_MB data was available, or when a
-        // non-last partition (whose full size is already in memory) runs out.
-        if ((dec->mb_y & dec->num_parts_minus_one) !=
+        // Return an error (instead of suspending) when all bytes of the chunk
+        // have already been received, when a non-last partition (whose full
+        // size is already in memory) runs out, or when more than MAX_MB_SIZE
+        // bytes were available for a single macroblock.
+        if (!HasMoreData(idec) ||
+            (dec->mb_y & dec->num_parts_minus_one) !=
                 dec->num_parts_minus_one ||
             (dec->num_parts_minus_one == 0 &&
              MemDataSize(&idec->mem) > MAX_MB_SIZE)) {
@@ -569,14 +613,14 @@ static VP8StatusCode DecodeVP8LHeader(WebPIDecoder* const idec) {
   assert(idec->is_lossless);
 
   // Wait until there's enough data for decoding header.
-  if (curr_size < (idec->chunk_size >> 3)) {
+  if (idec->chunk_size != CHUNK_SIZE_UNKNOWN &&
+      curr_size < (idec->chunk_size >> 3)) {
     dec->status = VP8_STATUS_SUSPENDED;
     return ErrorStatusLossless(idec, dec->status);
   }
 
   if (!VP8LDecodeHeader(dec, io)) {
-    if (dec->status == VP8_STATUS_BITSTREAM_ERROR &&
-        curr_size < idec->chunk_size) {
+    if (dec->status == VP8_STATUS_BITSTREAM_ERROR && HasMoreData(idec)) {
       dec->status = VP8_STATUS_SUSPENDED;
     }
     return ErrorStatusLossless(idec, dec->status);
@@ -594,11 +638,10 @@ static VP8StatusCode DecodeVP8LHeader(WebPIDecoder* const idec) {
 
 static VP8StatusCode DecodeVP8LData(WebPIDecoder* const idec) {
   VP8LDecoder* const dec = (VP8LDecoder*)idec->dec;
-  const size_t curr_size = MemDataSize(&idec->mem);
   assert(idec->is_lossless);
 
   // Switch to incremental decoding if we don't have all the bytes available.
-  dec->incremental = (curr_size < idec->chunk_size);
+  dec->incremental = HasMoreData(idec);
 
   if (!VP8LDecodeImage(dec)) {
     return ErrorStatusLossless(idec, dec->status);

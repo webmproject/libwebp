@@ -180,19 +180,29 @@ void AdvancedApiTest(std::string_view blob, uint8_t factor_u8, int colorspace,
       (void)WebPIDecGetYUVA(idec, &last_y, &u, &v, &a, &width, &height, &stride,
                             &uv_stride, &a_stride);
       WebPIDelete(idec);
-      // Verify that incremental decoding produces the same output as one-shot
-      // WebPDecode() when both succeed.
-      if (status == VP8_STATUS_OK) {
-        WebPDecoderConfig ref_config;
-        if (WebPInitDecoderConfig(&ref_config)) {
-          ref_config.options = config.options;
-          ref_config.output.colorspace = config.output.colorspace;
-          const VP8StatusCode ref_status = WebPDecode(data, size, &ref_config);
+      EXPECT_NE(status, VP8_STATUS_NOT_ENOUGH_DATA);
+      // Verify that incremental decoding agrees with one-shot WebPDecode().
+      WebPDecoderConfig ref_config;
+      if (WebPInitDecoderConfig(&ref_config)) {
+        ref_config.options = config.options;
+        ref_config.output.colorspace = config.output.colorspace;
+        const VP8StatusCode ref_status = WebPDecode(data, size, &ref_config);
+        if (status != VP8_STATUS_OUT_OF_MEMORY &&
+            ref_status != VP8_STATUS_OUT_OF_MEMORY) {
           if (ref_status == VP8_STATUS_OK) {
-            CompareDecBuffers(config.output, ref_config.output);
+            EXPECT_EQ(status, VP8_STATUS_OK);
+            if (status == VP8_STATUS_OK) {
+              CompareDecBuffers(config.output, ref_config.output);
+            }
+          } else if (status == VP8_STATUS_OK) {
+            // Incremental decoding may finish before the end of a truncated
+            // RIFF container (e.g. when cropping stops early or trailing chunks
+            // are missing), which one-shot WebPDecode() reports as
+            // VP8_STATUS_NOT_ENOUGH_DATA.
+            EXPECT_EQ(ref_status, VP8_STATUS_NOT_ENOUGH_DATA);
           }
-          WebPFreeDecBuffer(&ref_config.output);
         }
+        WebPFreeDecBuffer(&ref_config.output);
       }
     } else {
       (void)WebPDecode(data, size, &config);
@@ -455,4 +465,97 @@ TEST(AdvancedApi, Buganizer498966235) {
       68, 3, true,
       fuzz_utils::WebPDecoderOptionsCpp{
           0, 0, 1, 5, 10, 5, 9, 0, 1, 3, 0, 72, 0, 83, {0, 0, 0, 0, 0}});
+}
+
+TEST(AdvancedApi, RawAndTruncatedChunkIncrementalConsistency) {
+  constexpr int kWidth = 64;
+  constexpr int kHeight = 64;
+  std::vector<uint8_t> rgb(kWidth * kHeight * 3);
+  for (size_t i = 0; i < rgb.size(); ++i) {
+    rgb[i] = static_cast<uint8_t>(i * 37 + (i >> 3) * 13);
+  }
+
+  for (bool lossless : {false, true}) {
+    uint8_t* encoded = nullptr;
+    const size_t encoded_size =
+        lossless ? WebPEncodeLosslessRGB(rgb.data(), kWidth, kHeight,
+                                         kWidth * 3, &encoded)
+                 : WebPEncodeRGB(rgb.data(), kWidth, kHeight, kWidth * 3, 75.f,
+                                 &encoded);
+    ASSERT_NE(encoded, nullptr);
+    ASSERT_GT(encoded_size, 40u);
+    const uint32_t payload_size = encoded[16] | (uint32_t{encoded[17]} << 8) |
+                                  (uint32_t{encoded[18]} << 16) |
+                                  (uint32_t{encoded[19]} << 24);
+    ASSERT_LE(20u + payload_size, encoded_size);
+    ASSERT_GT(payload_size, 24u);
+
+    // 1. Headerless raw VP8/VP8L bitstream must decode identically via
+    // one-shot WebPDecode(), chunked WebPIAppend(), and WebPIUpdate().
+    const uint8_t* const raw_data = encoded + 20;
+    WebPDecoderConfig ref_config;
+    ASSERT_TRUE(WebPInitDecoderConfig(&ref_config));
+    ASSERT_EQ(WebPDecode(raw_data, payload_size, &ref_config), VP8_STATUS_OK);
+
+    for (bool use_update : {false, true}) {
+      WebPDecoderConfig config;
+      ASSERT_TRUE(WebPInitDecoderConfig(&config));
+      WebPIDecoder* const idec = WebPIDecode(nullptr, 0, &config);
+      ASSERT_NE(idec, nullptr);
+      VP8StatusCode status = VP8_STATUS_SUSPENDED;
+      for (size_t pos = 0; pos < payload_size && status == VP8_STATUS_SUSPENDED;
+           pos += 13) {
+        const size_t chunk = std::min<size_t>(13, payload_size - pos);
+        status = use_update ? WebPIUpdate(idec, raw_data, pos + chunk)
+                            : WebPIAppend(idec, raw_data + pos, chunk);
+      }
+      EXPECT_EQ(status, VP8_STATUS_OK);
+      CompareDecBuffers(config.output, ref_config.output);
+      WebPIDelete(idec);
+      WebPFreeDecBuffer(&config.output);
+    }
+    WebPFreeDecBuffer(&ref_config.output);
+
+    // 2. A "VP8 "/"VP8L" chunk whose declared size is smaller than its
+    // bitstream must fail in both one-shot and incremental decoding.
+    std::vector<uint8_t> bad_chunk(encoded + 12, encoded + encoded_size);
+    const uint32_t part0_size = ((raw_data[0] | (uint32_t{raw_data[1]} << 8) |
+                                  (uint32_t{raw_data[2]} << 16)) >>
+                                 5) +
+                                10u;
+    const uint32_t short_size = lossless ? 16u : (part0_size + 4u);
+    ASSERT_LT(short_size + 16u, payload_size);
+    bad_chunk[4] = static_cast<uint8_t>(short_size & 0xff);
+    bad_chunk[5] = static_cast<uint8_t>((short_size >> 8) & 0xff);
+    bad_chunk[6] = static_cast<uint8_t>((short_size >> 16) & 0xff);
+    bad_chunk[7] = static_cast<uint8_t>((short_size >> 24) & 0xff);
+
+    WebPDecoderConfig one_shot_config;
+    ASSERT_TRUE(WebPInitDecoderConfig(&one_shot_config));
+    EXPECT_NE(WebPDecode(bad_chunk.data(), bad_chunk.size(), &one_shot_config),
+              VP8_STATUS_OK);
+    WebPFreeDecBuffer(&one_shot_config.output);
+
+    for (bool use_update : {false, true}) {
+      WebPDecoderConfig config;
+      ASSERT_TRUE(WebPInitDecoderConfig(&config));
+      WebPIDecoder* const idec = WebPIDecode(nullptr, 0, &config);
+      ASSERT_NE(idec, nullptr);
+      // Incomplete prefix (< 8 + short_size) must suspend, not error.
+      const size_t prefix = 8 + short_size - 1;
+      EXPECT_EQ(use_update ? WebPIUpdate(idec, bad_chunk.data(), prefix)
+                           : WebPIAppend(idec, bad_chunk.data(), prefix),
+                VP8_STATUS_SUSPENDED);
+      // Reaching declared chunk size must report BITSTREAM_ERROR.
+      EXPECT_EQ(use_update
+                    ? WebPIUpdate(idec, bad_chunk.data(), bad_chunk.size())
+                    : WebPIAppend(idec, bad_chunk.data() + prefix,
+                                  bad_chunk.size() - prefix),
+                VP8_STATUS_BITSTREAM_ERROR);
+      WebPIDelete(idec);
+      WebPFreeDecBuffer(&config.output);
+    }
+
+    WebPFree(encoded);
+  }
 }

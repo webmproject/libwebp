@@ -273,7 +273,7 @@ static VP8StatusCode ParseVP8Header(const uint8_t* WEBP_COUNTED_BY(*data_size) *
   } else {
     // Raw VP8/VP8L bitstream (no header).
     *is_lossless = VP8LCheckSignature(data, *data_size);
-    *chunk_size = *data_size;
+    *chunk_size = have_all_data ? *data_size : CHUNK_SIZE_UNKNOWN;
   }
 
   return VP8_STATUS_OK;
@@ -377,7 +377,8 @@ static VP8StatusCode ParseHeadersInternal(
   if (status != VP8_STATUS_OK) {
     goto ReturnWidthHeight;  // Wrong VP8/VP8L chunk-header / insufficient data.
   }
-  if (hdrs.compressed_size > MAX_CHUNK_PAYLOAD) {
+  if (hdrs.compressed_size != CHUNK_SIZE_UNKNOWN &&
+      hdrs.compressed_size > MAX_CHUNK_PAYLOAD) {
     return VP8_STATUS_BITSTREAM_ERROR;
   }
 
@@ -391,8 +392,8 @@ static VP8StatusCode ParseHeadersInternal(
       goto ReturnWidthHeight;
     }
     // Validates raw VP8 data.
-    if (!VP8GetInfo(data, data_size, (uint32_t)hdrs.compressed_size,
-                    &image_width, &image_height)) {
+    if (!VP8GetInfo(data, data_size, hdrs.compressed_size, &image_width,
+                    &image_height)) {
       return VP8_STATUS_BITSTREAM_ERROR;
     }
   } else {
@@ -489,8 +490,9 @@ WEBP_NODISCARD static VP8StatusCode DecodeInto(
   if (!VP8InitIo(&io)) {
     return VP8_STATUS_INVALID_PARAM;
   }
+  assert(headers.offset + headers.compressed_size <= headers.data_size);
   io.data = headers.data + headers.offset;
-  io.data_size = headers.data_size - headers.offset;
+  io.data_size = headers.compressed_size;
   WebPInitCustomIo(params, &io);  // Plug the I/O functions.
 
   if (!headers.is_lossless) {
