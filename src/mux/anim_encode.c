@@ -18,7 +18,6 @@
 #include <stdlib.h>  // for abs()
 #include <string.h>
 
-#include "src/enc/vp8i_enc.h"
 #include "src/mux/animi.h"
 #include "src/utils/utils.h"
 #include "src/webp/decode.h"
@@ -628,6 +627,15 @@ static WEBP_INLINE int clip(int64_t v, int min_v, int max_v) {
   return (v < min_v) ? min_v : (v > max_v) ? max_v : (int)v;
 }
 
+// Validates that 'picture' has valid dimensions, colorspace, strides, and
+// allocated plane buffers.
+WEBP_NODISCARD static int ValidateAllocatedPicture(
+    const WebPPicture* const picture) {
+  WebPPicture view;
+  if (picture == NULL) return 0;
+  return WebPPictureView(picture, 0, 0, picture->width, picture->height, &view);
+}
+
 int WebPAnimEncoderRefineRect(const WebPPicture* const prev_canvas,
                               const WebPPicture* const curr_canvas,
                               int is_lossless, float quality,
@@ -635,8 +643,8 @@ int WebPAnimEncoderRefineRect(const WebPPicture* const prev_canvas,
                               int* const width, int* const height) {
   FrameRectangle rect;
   int right, left, bottom, top;
-  if (!WebPValidateAllocatedPicture(prev_canvas) ||
-      !WebPValidateAllocatedPicture(curr_canvas) ||
+  if (!ValidateAllocatedPicture(prev_canvas) ||
+      !ValidateAllocatedPicture(curr_canvas) ||
       prev_canvas->width != curr_canvas->width ||
       prev_canvas->height != curr_canvas->height || !prev_canvas->use_argb ||
       !curr_canvas->use_argb || x_offset == NULL || y_offset == NULL ||
@@ -1631,7 +1639,7 @@ int WebPAnimEncoderAdd(WebPAnimEncoder* enc, WebPPicture* frame, int timestamp,
       return 0;
     }
 
-    if (!WebPValidateAllocatedPicture(frame)) {
+    if (!ValidateAllocatedPicture(frame)) {
       MarkError2(enc, "ERROR adding frame. WebPEncodingError",
                  frame->error_code);
       return 0;
