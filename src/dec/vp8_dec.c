@@ -43,9 +43,10 @@ int WebPGetDecoderVersion(void) {
 //------------------------------------------------------------------------------
 // Signature and pointer-to-function for GetCoeffs() variants below.
 
-typedef int (*GetCoeffsFunc)(VP8BitReader* const br,
+typedef int (*GetCoeffsFunc)(VP8BitReader* WEBP_RESTRICT const br,
                              const VP8BandProbas* const prob[], int ctx,
-                             const quant_t dq, int n, int16_t* out);
+                             const quant_t dq, int n,
+                             int16_t* WEBP_RESTRICT out);
 static volatile GetCoeffsFunc GetCoeffs = NULL;
 
 static void InitGetCoeffs(void);
