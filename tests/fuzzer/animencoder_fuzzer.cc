@@ -25,7 +25,6 @@
 #include <vector>
 
 #include "./fuzz_utils.h"
-#include "gtest/gtest.h"
 #include "src/dsp/cpu.h"
 #include "src/mux/animi.h"
 #include "webp/encode.h"

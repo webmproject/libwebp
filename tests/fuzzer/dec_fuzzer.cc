@@ -56,8 +56,7 @@ void DecodeWebP(std::string_view arbitrary_bytes,
 }
 
 FUZZ_TEST(WebPSuite, DecodeWebP)
-    .WithDomains(fuzztest::String().WithMaxSize(fuzz_utils::kMaxWebPFileSize +
-                                                1),
+    .WithDomains(fuzz_utils::ArbitraryImageWithSeeds(
+                     fuzz_utils::FuzzSeedFormat::kWebPOnly),
                  fuzz_utils::ArbitraryValidWebPDecoderOptions());
-
 }  // namespace

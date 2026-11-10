@@ -21,7 +21,6 @@
 
 #include "./fuzz_utils.h"
 #include "./nalloc.h"
-#include "gtest/gtest.h"
 #include "imageio/imageio_util.h"
 #include "webp/decode.h"
 #include "webp/demux.h"
@@ -79,8 +78,8 @@ End:
 }  // namespace
 
 FUZZ_TEST(AnimDecoder, AnimDecoderTest)
-    .WithDomains(fuzztest::String().WithMaxSize(fuzz_utils::kMaxWebPFileSize +
-                                                1));
+    .WithDomains(fuzz_utils::ArbitraryImageWithSeeds(
+        fuzz_utils::FuzzSeedFormat::kWebPOnly));
 
 TEST(AnimDecoder, Buganizer498967090) {
   AnimDecoderTest(std::string(

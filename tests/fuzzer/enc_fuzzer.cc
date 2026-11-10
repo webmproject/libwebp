@@ -23,7 +23,6 @@
 #include <string>
 #include <string_view>
 
-#include "gtest/gtest.h"
 #include "imageio/image_dec.h"
 #include "src/dsp/cpu.h"
 #include "tests/fuzzer/fuzz_utils.h"
@@ -110,7 +109,6 @@ void EncTestImpl(WebPPicture& pic, uint32_t optimization_index, bool use_argb,
 
   WebPFree(rgba);
   WebPMemoryWriterClear(&memory_writer);
-  WebPPictureFree(&pic);
 }
 
 // For open source compatibility, maybe_unused is necessary.
@@ -120,6 +118,7 @@ void EncTestImpl(WebPPicture& pic, uint32_t optimization_index, bool use_argb,
     const fuzz_utils::CropOrScaleParams& crop_or_scale_params) {
   // Init the source picture.
   WebPPicture pic;
+  std::unique_ptr<WebPPicture, fuzz_utils::UniquePtrDeleter> pic_owner(&pic);
   if (!WebPPictureInit(&pic)) {
     std::cerr << "WebPPictureInit failed.\n";
     std::abort();
@@ -136,7 +135,7 @@ void EncTestImpl(WebPPicture& pic, uint32_t optimization_index, bool use_argb,
 }
 
 void EncArbitraryTest(
-    fuzz_utils::WebPPictureCpp pic_cpp, uint32_t optimization_index,
+    const fuzz_utils::WebPPictureCpp& pic_cpp, uint32_t optimization_index,
     bool use_argb, const WebPConfig& config,
     const fuzz_utils::CropOrScaleParams& crop_or_scale_params) {
   WebPPicture& pic = pic_cpp.ref();
@@ -145,6 +144,16 @@ void EncArbitraryTest(
 }
 
 }  // namespace
+
+FUZZ_TEST(Enc, EncFileTest)
+    .WithDomains(fuzztest::ElementOf<std::string>(fuzz_utils::DefaultSeeds(
+                     fuzz_utils::FuzzSeedFormat::kImageIo)),
+                 /*optimization_index=*/
+                 fuzztest::InRange<uint32_t>(0,
+                                             fuzz_utils::kMaxOptimizationIndex),
+                 /*use_argb=*/fuzztest::Arbitrary<bool>(),
+                 fuzz_utils::ArbitraryWebPConfig(),
+                 fuzz_utils::ArbitraryCropOrScaleParams());
 
 FUZZ_TEST(Enc, EncArbitraryTest)
     .WithDomains(fuzz_utils::ArbitraryWebPPicture(),

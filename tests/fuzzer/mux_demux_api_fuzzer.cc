@@ -22,7 +22,6 @@
 #include <utility>
 
 #include "./fuzz_utils.h"
-#include "gtest/gtest.h"
 #include "webp/demux.h"
 #include "webp/mux.h"
 #include "webp/mux_types.h"
@@ -223,7 +222,8 @@ void MuxEditApiTest(std::string_view data_in,
 }
 
 auto ArbitraryWebPString() {
-  return fuzztest::String().WithMaxSize(fuzz_utils::kMaxWebPFileSize + 1);
+  return fuzz_utils::ArbitraryImageWithSeeds(
+      fuzz_utils::FuzzSeedFormat::kWebPOnly);
 }
 
 }  // namespace

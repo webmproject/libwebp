@@ -19,7 +19,6 @@
 #include <vector>
 
 #include "./fuzz_utils.h"
-#include "gtest/gtest.h"
 #include "sharpyuv/sharpyuv.h"
 #include "sharpyuv/sharpyuv_csp.h"
 

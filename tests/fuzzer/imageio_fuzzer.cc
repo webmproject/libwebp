@@ -26,8 +26,12 @@
 #include "./nalloc.h"
 #include "imageio/image_dec.h"
 #include "imageio/metadata.h"
-#include "src/webp/encode.h"
 #include "tests/fuzzer/fuzz_utils.h"
+#include "webp/encode.h"
+
+#ifdef WEBP_HAVE_TIFF
+#include <tiffio.h>
+#endif
 
 namespace {
 
@@ -57,6 +61,13 @@ constexpr WebPInputFileFormat kUnknown = WEBP_UNSUPPORTED_FORMAT;
 
 void Decode(std::string_view arbitrary_bytes, WebPInputFileFormat format,
             bool keep_alpha, bool use_argb) {
+#ifdef WEBP_HAVE_TIFF
+  if (format == kUnknown || format == WEBP_TIFF_FORMAT) {
+    TIFFSetErrorHandler(NULL);    // libtiff can be verbose about errors.
+    TIFFSetWarningHandler(NULL);  // Silence it to avoid timeouts.
+  }
+#endif
+
   const uint8_t* data =
       reinterpret_cast<const uint8_t*>(arbitrary_bytes.data());
   const size_t size = arbitrary_bytes.size();
@@ -70,8 +81,8 @@ void Decode(std::string_view arbitrary_bytes, WebPInputFileFormat format,
 }
 
 FUZZ_TEST(ImageIOSuite, Decode)
-    .WithDomains(fuzztest::String().WithMaxSize(fuzz_utils::kMaxWebPFileSize +
-                                                1),
+    .WithDomains(fuzz_utils::ArbitraryImageWithSeeds(
+                     fuzz_utils::FuzzSeedFormat::kImageIo),
                  fuzztest::ElementOf<WebPInputFileFormat>(
                      {WEBP_PNG_FORMAT, WEBP_JPEG_FORMAT, WEBP_TIFF_FORMAT,
                       WEBP_WEBP_FORMAT, WEBP_PNM_FORMAT, kUnknown}),

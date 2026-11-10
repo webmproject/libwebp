@@ -33,13 +33,14 @@
 #include "./img_alpha.h"
 #include "./img_grid.h"
 #include "./img_peak.h"
-#include "fuzztest/fuzztest.h"
+#include "fuzztest/fuzztest.h"  // IWYU pragma: export
+#include "gtest/gtest.h"        // IWYU pragma: export
 #include "src/dsp/cpu.h"
-#include "src/webp/decode.h"
-#include "src/webp/demux.h"
-#include "src/webp/encode.h"
-#include "src/webp/mux.h"
-#include "src/webp/types.h"
+#include "webp/decode.h"
+#include "webp/demux.h"
+#include "webp/encode.h"
+#include "webp/mux.h"
+#include "webp/types.h"
 
 namespace fuzz_utils {
 
@@ -489,8 +490,36 @@ void SetOptimization(VP8CPUInfo default_VP8GetCPUInfo, uint32_t index);
 // See https://developers.google.com/speed/webp/docs/riff_container.
 static constexpr size_t kMaxWebPFileSize = (1ull << 32) - 2;  // 4 GiB - 2
 
+// Input formats accepted by a fuzzer target, used to select matching fuzzing
+// dictionaries and seed files.
+enum class FuzzSeedFormat {
+  kWebPOnly,    // WebP bitstreams and raw/extensionless corpus seeds.
+  kWebPAndGif,  // Animated image readers (WebP, GIF, and raw seeds).
+  kImageIo,     // Static imageio readers (WebP, PNG, JPEG, PNM, TIFF, raw).
+};
+
+// Reads non-empty, non-comment dictionary entries from `file_paths`, aborting
+// if any file cannot be opened.
 std::vector<std::string> GetDictionaryFromFiles(
     const std::vector<std::string_view>& file_paths);
+// Returns fuzzing dictionary tokens matching `format`.
+std::vector<std::string> DefaultDictionary(FuzzSeedFormat format);
+
+// Reads seed file contents matching `format` from `dir` (or returns empty if
+// `dir` does not exist).
+std::vector<std::string> ReadFilesFromDirectory(std::string_view dir,
+                                                FuzzSeedFormat format);
+// Returns corpus seed payloads matching `format`.
+std::vector<std::string> DefaultSeeds(FuzzSeedFormat format);
+
+// Returns a FuzzTest byte-string domain configured with the dictionary and seed
+// corpus matching `format`.
+inline auto ArbitraryImageWithSeeds(FuzzSeedFormat format) {
+  return fuzztest::String()
+      .WithMaxSize(kMaxWebPFileSize + 1)
+      .WithDictionary(DefaultDictionary(format))
+      .WithSeeds(DefaultSeeds(format));
+}
 
 // Checks whether the binary blob containing a JPEG or WebP is too big for the
 // fuzzer.

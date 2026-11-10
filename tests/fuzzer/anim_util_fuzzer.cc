@@ -141,5 +141,5 @@ void ReadAnimatedImageTest(std::string_view blob) {
 }  // namespace
 
 FUZZ_TEST(ReadAnimatedImage, ReadAnimatedImageTest)
-    .WithDomains(fuzztest::String().WithMaxSize(fuzz_utils::kMaxWebPFileSize +
-                                                1));
+    .WithDomains(fuzz_utils::ArbitraryImageWithSeeds(
+        fuzz_utils::FuzzSeedFormat::kWebPAndGif));

@@ -25,7 +25,6 @@
 #include <vector>
 
 #include "./fuzz_utils.h"
-#include "gtest/gtest.h"
 #include "webp/decode.h"
 #include "webp/types.h"
 
@@ -105,8 +104,8 @@ void SimpleApiTest(std::string_view data_in) {
 }  // namespace
 
 FUZZ_TEST(SimpleApi, SimpleApiTest)
-    .WithDomains(fuzztest::String().WithMaxSize(fuzz_utils::kMaxWebPFileSize +
-                                                1));
+    .WithDomains(fuzz_utils::ArbitraryImageWithSeeds(
+        fuzz_utils::FuzzSeedFormat::kWebPOnly));
 
 TEST(SimpleApi, Buganizer498966511) {
   SimpleApiTest(

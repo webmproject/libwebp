@@ -23,7 +23,6 @@
 #include <vector>
 
 #include "./fuzz_utils.h"
-#include "gtest/gtest.h"
 #include "src/dec/webpi_dec.h"
 #include "src/utils/rescaler_utils.h"
 #include "webp/decode.h"
@@ -215,8 +214,8 @@ void AdvancedApiTest(std::string_view blob, uint8_t factor_u8, int colorspace,
 }  // namespace
 
 FUZZ_TEST(AdvancedApi, AdvancedApiTest)
-    .WithDomains(fuzztest::String().WithMaxSize(fuzz_utils::kMaxWebPFileSize +
-                                                1),
+    .WithDomains(fuzz_utils::ArbitraryImageWithSeeds(
+                     fuzz_utils::FuzzSeedFormat::kWebPOnly),
                  /*factor_u8=*/fuzztest::Arbitrary<uint8_t>(),
 #if defined(WEBP_REDUCE_CSP)
                  fuzztest::ElementOf<int>({static_cast<int>(MODE_RGBA),

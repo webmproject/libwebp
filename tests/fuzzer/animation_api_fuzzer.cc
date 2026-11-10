@@ -20,7 +20,6 @@
 #include <string_view>
 
 #include "./fuzz_utils.h"
-#include "gtest/gtest.h"
 #include "webp/decode.h"
 #include "webp/demux.h"
 #include "webp/mux_types.h"
@@ -84,8 +83,8 @@ void AnimationApiTest(std::string_view blob, bool use_threads,
 }  // namespace
 
 FUZZ_TEST(AnimationApi, AnimationApiTest)
-    .WithDomains(fuzztest::String().WithMaxSize(fuzz_utils::kMaxWebPFileSize +
-                                                1),
+    .WithDomains(fuzz_utils::ArbitraryImageWithSeeds(
+                     fuzz_utils::FuzzSeedFormat::kWebPOnly),
                  /*use_threads=*/fuzztest::Arbitrary<bool>(),
                  // Animations only support 4 (out of 12) modes.
                  fuzztest::ElementOf<WEBP_CSP_MODE>({MODE_RGBA, MODE_BGRA,

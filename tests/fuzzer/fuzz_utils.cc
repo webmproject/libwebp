@@ -18,12 +18,19 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cctype>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
+#include <cstring>
+#include <filesystem>  // NOLINT
+#include <fstream>
+#include <initializer_list>
+#include <iostream>
 #include <string>
 #include <string_view>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 #include "./img_alpha.h"
@@ -120,9 +127,65 @@ void SetOptimization(VP8CPUInfo default_VP8GetCPUInfo, uint32_t index) {
 
 //------------------------------------------------------------------------------
 
-std::vector<std::string> ReadFilesFromDirectory(std::string_view dir) {
+std::vector<std::string> GetDictionaryFromFiles(
+    const std::vector<std::string_view>& file_paths) {
+  std::vector<std::string> lines;
+  for (std::string_view file_path : file_paths) {
+    std::ifstream dictfile{std::string(file_path)};
+    if (!dictfile.is_open()) {
+      std::cerr << file_path << " cannot be opened\n";
+      std::abort();
+    }
+    for (std::string line; std::getline(dictfile, line);) {
+      if (line.empty() || line[0] == '#') {
+        continue;
+      }
+      lines.push_back(line);
+    }
+  }
+  return lines;
+}
+
+namespace {
+
+bool ShouldIncludeSeedFile(std::string_view path, FuzzSeedFormat format) {
+  const size_t slash = path.find_last_of("/\\");
+  const std::string_view filename =
+      (slash == std::string_view::npos) ? path : path.substr(slash + 1);
+  const size_t dot = filename.rfind('.');
+  const std::string_view ext = (dot == std::string_view::npos || dot == 0)
+                                   ? std::string_view()
+                                   : filename.substr(dot);
+  if (ext.empty()) return true;
+  std::string lower_ext(ext);
+  for (char& c : lower_ext) {
+    c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+  }
+  switch (format) {
+    case FuzzSeedFormat::kWebPOnly:
+      return lower_ext == ".webp";
+    case FuzzSeedFormat::kWebPAndGif:
+      return lower_ext == ".webp" || lower_ext == ".gif";
+    case FuzzSeedFormat::kImageIo:
+      for (std::string_view allowed :
+           {".webp", ".png", ".jpg", ".jpeg", ".ppm", ".pgm", ".pbm", ".pam",
+            ".pnm", ".tif", ".tiff", ".bin"}) {
+        if (lower_ext == allowed) return true;
+      }
+      return false;
+  }
+  return false;
+}
+
+}  // namespace
+
+std::vector<std::string> ReadFilesFromDirectory(std::string_view dir,
+                                                FuzzSeedFormat format) {
+  if (!std::filesystem::is_directory(dir)) return {};
   std::vector<std::tuple<std::string>> tuples =
-      fuzztest::ReadFilesFromDirectory(dir);
+      fuzztest::ReadFilesFromDirectory(dir, [format](std::string_view path) {
+        return ShouldIncludeSeedFile(path, format);
+      });
   std::vector<std::string> strings(tuples.size());
   for (size_t i = 0; i < tuples.size(); ++i) {
     using std::swap;
@@ -130,6 +193,27 @@ std::vector<std::string> ReadFilesFromDirectory(std::string_view dir) {
   }
   return strings;
 }
+
+#if !defined(WEBP_HAS_CUSTOM_FUZZ_SEEDS)
+std::vector<std::string> DefaultDictionary(FuzzSeedFormat /*format*/) {
+  for (std::string_view path : {"tests/fuzzer/fuzz.dict", "fuzz.dict"}) {
+    if (std::filesystem::is_regular_file(path)) {
+      return GetDictionaryFromFiles({path});
+    }
+  }
+  return {};
+}
+
+std::vector<std::string> DefaultSeeds(FuzzSeedFormat format) {
+  std::vector<std::string> seeds;
+  if (const char* const dir = std::getenv("TEST_DATA_DIRS");
+      dir != nullptr && *dir != '\0') {
+    seeds = ReadFilesFromDirectory(dir, format);
+  }
+  if (seeds.empty()) seeds.push_back("");
+  return seeds;
+}
+#endif  // !defined(WEBP_HAS_CUSTOM_FUZZ_SEEDS)
 
 //------------------------------------------------------------------------------
 
