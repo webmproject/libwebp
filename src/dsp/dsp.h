@@ -240,8 +240,10 @@ extern VP8WHT VP8TransformWHT;
 
 #define WEBP_TRANSFORM_AC3_C1 20091
 #define WEBP_TRANSFORM_AC3_C2 35468
-#define WEBP_TRANSFORM_AC3_MUL1(a) ((((a) * WEBP_TRANSFORM_AC3_C1) >> 16) + (a))
-#define WEBP_TRANSFORM_AC3_MUL2(a) (((a) * WEBP_TRANSFORM_AC3_C2) >> 16)
+#define WEBP_TRANSFORM_AC3_MUL1(a) \
+  ((int)((((int64_t)(a) * WEBP_TRANSFORM_AC3_C1) >> 16) + (a)))
+#define WEBP_TRANSFORM_AC3_MUL2(a) \
+  ((int)(((int64_t)(a) * WEBP_TRANSFORM_AC3_C2) >> 16))
 
 // *dst is the destination block, with stride BPS. Boundary samples are
 // assumed accessible when needed.

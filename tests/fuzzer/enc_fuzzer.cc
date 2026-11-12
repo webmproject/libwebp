@@ -35,40 +35,16 @@ namespace {
 const VP8CPUInfo default_VP8GetCPUInfo = fuzz_utils::VP8GetCPUInfo;
 
 void EncTestImpl(WebPPicture& pic, uint32_t optimization_index, bool use_argb,
-                 const WebPConfig& config,
+                 WebPConfig config,
                  const fuzz_utils::CropOrScaleParams& crop_or_scale_params) {
-  fuzz_utils::SetOptimization(default_VP8GetCPUInfo, optimization_index);
-
-  // Crop and scale.
-  if (!CropOrScale(&pic, crop_or_scale_params)) {
-    const WebPEncodingError error_code = pic.error_code;
-    if (error_code == VP8_ENC_ERROR_OUT_OF_MEMORY) return;
-    std::cerr << "CropOrScale failed. Error code: " << error_code << "\n";
-    std::abort();
-  }
-
-  // Skip slow settings on big images, it's likely to timeout.
-  if (pic.width * pic.height > 32 * 32) {
-    if (config.quality > 99.0f &&
-        ((config.lossless && config.method >= 5) || config.method == 6)) {
-      return;
-    }
-    if (config.alpha_quality == 100 && config.method == 6) {
-      return;
-    }
-  }
-
-  // Encode.
   WebPMemoryWriter memory_writer;
   WebPMemoryWriterInit(&memory_writer);
-  pic.writer = WebPMemoryWrite;
-  pic.custom_ptr = &memory_writer;
-  if (!WebPEncode(&config, &pic)) {
-    const WebPEncodingError error_code = pic.error_code;
-    WebPMemoryWriterClear(&memory_writer);
-    if (error_code == VP8_ENC_ERROR_OUT_OF_MEMORY) return;
-    std::cerr << "WebPEncode failed. Error code: " << error_code << "\n";
-    std::abort();
+  std::unique_ptr<WebPMemoryWriter, fuzz_utils::UniquePtrDeleter>
+      memory_writer_owner(&memory_writer);
+  if (!fuzz_utils::CropOrScaleAndEncode(crop_or_scale_params, config, pic,
+                                        default_VP8GetCPUInfo,
+                                        optimization_index, memory_writer)) {
+    return;
   }
 
   // Try decoding the result.
@@ -79,7 +55,6 @@ void EncTestImpl(WebPPicture& pic, uint32_t optimization_index, bool use_argb,
   if (rgba == nullptr || w != pic.width || h != pic.height) {
     std::cerr << "WebPDecodeBGRA failed.\n";
     WebPFree(rgba);
-    WebPMemoryWriterClear(&memory_writer);
     std::abort();
   }
 
@@ -100,7 +75,6 @@ void EncTestImpl(WebPPicture& pic, uint32_t optimization_index, bool use_argb,
         if (v1 != v2) {
           std::cerr << "Lossless compression failed pixel-exactness.\n";
           WebPFree(rgba);
-          WebPMemoryWriterClear(&memory_writer);
           std::abort();
         }
       }
@@ -108,7 +82,6 @@ void EncTestImpl(WebPPicture& pic, uint32_t optimization_index, bool use_argb,
   }
 
   WebPFree(rgba);
-  WebPMemoryWriterClear(&memory_writer);
 }
 
 // For open source compatibility, maybe_unused is necessary.

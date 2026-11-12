@@ -21,42 +21,55 @@
 #include <string_view>
 
 #include "./nalloc.h"
+#include "src/dsp/cpu.h"
 #include "tests/fuzzer/fuzz_utils.h"
 #include "webp/decode.h"
 
 namespace {
 
+const VP8CPUInfo default_VP8GetCPUInfo = fuzz_utils::VP8GetCPUInfo;
+
 void DecodeWebP(std::string_view arbitrary_bytes,
-                const fuzz_utils::WebPDecoderOptionsCpp& decoder_options) {
+                const fuzz_utils::WebPDecoderOptionsCpp& decoder_options,
+                uint32_t optimization_index) {
   if (fuzz_utils::IsImageTooBig(
           reinterpret_cast<const uint8_t*>(arbitrary_bytes.data()),
           arbitrary_bytes.size())) {
     return;
   }
+  fuzz_utils::SetOptimization(default_VP8GetCPUInfo, optimization_index);
   WebPDecoderConfig decoder_config;
   if (!WebPInitDecoderConfig(&decoder_config)) {
     fprintf(stderr, "WebPInitDecoderConfig failed.\n");
     std::abort();
   }
+  const uint8_t* const data =
+      reinterpret_cast<const uint8_t*>(arbitrary_bytes.data());
+  const size_t size = arbitrary_bytes.size();
   nalloc_init(nullptr);
-  nalloc_start(reinterpret_cast<const uint8_t*>(arbitrary_bytes.data()),
-               arbitrary_bytes.size());
+  nalloc_start(data, size);
   std::memcpy(&decoder_config.options, &decoder_options,
               sizeof(decoder_options));
-  const VP8StatusCode status =
-      WebPDecode(reinterpret_cast<const uint8_t*>(arbitrary_bytes.data()),
-                 arbitrary_bytes.size(), &decoder_config);
+  const VP8StatusCode status = WebPDecode(data, size, &decoder_config);
+  nalloc_end();
+  if (status == VP8_STATUS_OK) {
+    fuzz_utils::CompareDecodeOptimizations(
+        default_VP8GetCPUInfo, optimization_index, data, size, decoder_config);
+  }
   WebPFreeDecBuffer(&decoder_config.output);
   // The decoding may fail (because the fuzzed input can be anything) but not
   // for these reasons.
   if (status == VP8_STATUS_SUSPENDED || status == VP8_STATUS_USER_ABORT) {
     std::abort();
   }
-  nalloc_end();
 }
 
 FUZZ_TEST(WebPSuite, DecodeWebP)
-    .WithDomains(fuzz_utils::ArbitraryImageWithSeeds(
-                     fuzz_utils::FuzzSeedFormat::kWebPOnly),
-                 fuzz_utils::ArbitraryValidWebPDecoderOptions());
+    .WithDomains(
+        fuzz_utils::ArbitraryImageWithSeeds(
+            fuzz_utils::FuzzSeedFormat::kWebPOnly),
+        fuzz_utils::ArbitraryValidWebPDecoderOptions(),
+        /*optimization_index=*/
+        fuzztest::InRange<uint32_t>(0, fuzz_utils::kMaxOptimizationIndex));
+
 }  // namespace

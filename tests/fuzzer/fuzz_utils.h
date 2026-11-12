@@ -104,11 +104,10 @@ struct UniquePtrDeleter {
 // Like WebPPicture but with no C array.
 // This can be removed once b/294098900 is fixed.
 struct WebPPictureCpp {
-  inline WebPPictureCpp(int use_argb, WebPEncCSP colorspace, int width,
-                        int height, uint8_t* y, uint8_t* u, uint8_t* v,
-                        int y_stride, int uv_stride, uint8_t* a, int a_stride,
-                        uint32_t* argb, int argb_stride, void* memory,
-                        void* memory_argb) {
+  WebPPictureCpp(int use_argb, WebPEncCSP colorspace, int width, int height,
+                 uint8_t* y, uint8_t* u, uint8_t* v, int y_stride,
+                 int uv_stride, uint8_t* a, int a_stride, uint32_t* argb,
+                 int argb_stride, void* memory, void* memory_argb) {
     pic.reset(new WebPPicture(), [](WebPPicture* pic) {
       WebPPictureFree(pic);
       delete pic;
@@ -524,6 +523,28 @@ inline auto ArbitraryImageWithSeeds(FuzzSeedFormat format) {
 // Checks whether the binary blob containing a JPEG or WebP is too big for the
 // fuzzer.
 bool IsImageTooBig(const uint8_t* data, size_t size);
+
+// Compares two decoded buffers byte-for-byte.
+bool CompareDecBuffers(const WebPDecBuffer& a, const WebPDecBuffer& b);
+
+// Crops or scales `pic` according to `crop_or_scale_params`, encodes it into
+// `memory_writer` using `config` and `optimization_index`, and verifies that
+// encoding a copy of `pic` with a reference optimization level produces the
+// exact same bitstream.
+bool CropOrScaleAndEncode(const CropOrScaleParams& crop_or_scale_params,
+                          WebPConfig& config, WebPPicture& pic,
+                          VP8CPUInfo default_VP8GetCPUInfo,
+                          uint32_t optimization_index,
+                          WebPMemoryWriter& memory_writer);
+
+// Re-decodes `data` (of length `size`) using a reference optimization level
+// different from `optimization_index` with the same options and output
+// colorspace as `config`, and aborts if the decoded output differs from
+// `config.output`.
+void CompareDecodeOptimizations(VP8CPUInfo default_VP8GetCPUInfo,
+                                uint32_t optimization_index,
+                                const uint8_t* data, size_t size,
+                                const WebPDecoderConfig& config);
 
 }  // namespace fuzz_utils
 

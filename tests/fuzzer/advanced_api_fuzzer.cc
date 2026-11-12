@@ -31,31 +31,6 @@
 
 namespace {
 
-void CompareDecBuffers(const WebPDecBuffer& a, const WebPDecBuffer& b) {
-  ASSERT_EQ(a.colorspace, b.colorspace);
-  ASSERT_EQ(a.width, b.width);
-  ASSERT_EQ(a.height, b.height);
-  if (WebPIsRGBMode(a.colorspace)) {
-    ASSERT_EQ(a.u.RGBA.size, b.u.RGBA.size);
-    ASSERT_NE(a.u.RGBA.rgba, nullptr);
-    ASSERT_EQ(a.u.RGBA.rgba != nullptr, b.u.RGBA.rgba != nullptr);
-    EXPECT_EQ(std::memcmp(a.u.RGBA.rgba, b.u.RGBA.rgba, a.u.RGBA.size), 0);
-  } else {
-    ASSERT_EQ(a.u.YUVA.y_size, b.u.YUVA.y_size);
-    ASSERT_EQ(a.u.YUVA.u_size, b.u.YUVA.u_size);
-    ASSERT_EQ(a.u.YUVA.v_size, b.u.YUVA.v_size);
-    EXPECT_EQ(std::memcmp(a.u.YUVA.y, b.u.YUVA.y, a.u.YUVA.y_size), 0);
-    EXPECT_EQ(std::memcmp(a.u.YUVA.u, b.u.YUVA.u, a.u.YUVA.u_size), 0);
-    EXPECT_EQ(std::memcmp(a.u.YUVA.v, b.u.YUVA.v, a.u.YUVA.v_size), 0);
-    if (a.u.YUVA.a != nullptr || b.u.YUVA.a != nullptr) {
-      ASSERT_NE(a.u.YUVA.a, nullptr);
-      ASSERT_NE(b.u.YUVA.a, nullptr);
-      ASSERT_EQ(a.u.YUVA.a_size, b.u.YUVA.a_size);
-      EXPECT_EQ(std::memcmp(a.u.YUVA.a, b.u.YUVA.a, a.u.YUVA.a_size), 0);
-    }
-  }
-}
-
 void AdvancedApiTest(std::string_view blob, uint8_t factor_u8, int colorspace,
                      bool incremental,
                      const fuzz_utils::WebPDecoderOptionsCpp& decoder_options) {
@@ -191,7 +166,8 @@ void AdvancedApiTest(std::string_view blob, uint8_t factor_u8, int colorspace,
           if (ref_status == VP8_STATUS_OK) {
             EXPECT_EQ(status, VP8_STATUS_OK);
             if (status == VP8_STATUS_OK) {
-              CompareDecBuffers(config.output, ref_config.output);
+              EXPECT_TRUE(fuzz_utils::CompareDecBuffers(config.output,
+                                                        ref_config.output));
             }
           } else if (status == VP8_STATUS_OK) {
             // Incremental decoding may finish before the end of a truncated
@@ -509,7 +485,8 @@ TEST(AdvancedApi, RawAndTruncatedChunkIncrementalConsistency) {
                             : WebPIAppend(idec, raw_data + pos, chunk);
       }
       EXPECT_EQ(status, VP8_STATUS_OK);
-      CompareDecBuffers(config.output, ref_config.output);
+      EXPECT_TRUE(
+          fuzz_utils::CompareDecBuffers(config.output, ref_config.output));
       WebPIDelete(idec);
       WebPFreeDecBuffer(&config.output);
     }

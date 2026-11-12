@@ -27,6 +27,7 @@
 #include <fstream>
 #include <initializer_list>
 #include <iostream>
+#include <memory>
 #include <string>
 #include <string_view>
 #include <tuple>
@@ -95,12 +96,12 @@ extern "C" VP8CPUInfo VP8GetCPUInfo;
 static VP8CPUInfo GetCPUInfo;
 
 static WEBP_INLINE int GetCPUInfoNoSSE41(CPUFeature feature) {
-  if (feature == kSSE4_1 || feature == kAVX) return 0;
+  if (feature == kSSE4_1 || feature == kAVX || feature == kAVX2) return 0;
   return GetCPUInfo(feature);
 }
 
 static WEBP_INLINE int GetCPUInfoNoAVX(CPUFeature feature) {
-  if (feature == kAVX) return 0;
+  if (feature == kAVX || feature == kAVX2) return 0;
   return GetCPUInfo(feature);
 }
 
@@ -238,6 +239,155 @@ bool IsImageTooBig(const uint8_t* data, size_t size) {
     }
   }
   return false;
+}
+
+bool CompareDecBuffers(const WebPDecBuffer& a, const WebPDecBuffer& b) {
+  if (a.colorspace != b.colorspace || a.width != b.width ||
+      a.height != b.height) {
+    return false;
+  }
+  if (WebPIsRGBMode(a.colorspace)) {
+    return a.u.RGBA.size == b.u.RGBA.size &&
+           std::memcmp(a.u.RGBA.rgba, b.u.RGBA.rgba, a.u.RGBA.size) == 0;
+  }
+  if (a.u.YUVA.y_size != b.u.YUVA.y_size ||
+      a.u.YUVA.u_size != b.u.YUVA.u_size ||
+      a.u.YUVA.v_size != b.u.YUVA.v_size ||
+      std::memcmp(a.u.YUVA.y, b.u.YUVA.y, a.u.YUVA.y_size) != 0 ||
+      std::memcmp(a.u.YUVA.u, b.u.YUVA.u, a.u.YUVA.u_size) != 0 ||
+      std::memcmp(a.u.YUVA.v, b.u.YUVA.v, a.u.YUVA.v_size) != 0) {
+    return false;
+  }
+  if (a.u.YUVA.a != nullptr || b.u.YUVA.a != nullptr) {
+    return a.u.YUVA.a != nullptr && b.u.YUVA.a != nullptr &&
+           a.u.YUVA.a_size == b.u.YUVA.a_size &&
+           std::memcmp(a.u.YUVA.a, b.u.YUVA.a, a.u.YUVA.a_size) == 0;
+  }
+  return true;
+}
+
+namespace {
+
+bool CropOrScaleAndEncodeOne(const CropOrScaleParams& crop_or_scale_params,
+                             WebPConfig& config, WebPPicture& pic,
+                             WebPMemoryWriter& memory_writer) {
+  // Crop and scale.
+  if (!CropOrScale(&pic, crop_or_scale_params)) {
+    const WebPEncodingError error_code = pic.error_code;
+    if (error_code == VP8_ENC_ERROR_OUT_OF_MEMORY) return false;
+    std::cerr << "CropOrScale failed. Error code: " << error_code << "\n";
+    std::abort();
+  }
+
+  // Skip slow settings on big images, it's likely to timeout.
+  if (pic.width * pic.height > 32 * 32) {
+    if (config.lossless) {
+      if (config.quality > 99.0f && config.method >= 5) {
+        config.quality = 99.0f;
+        config.method = 5;
+      }
+    } else {
+      if (config.quality > 99.0f && config.method == 6) {
+        config.quality = 99.0f;
+      }
+    }
+    if (config.alpha_quality == 100 && config.method == 6) {
+      config.alpha_quality = 99;
+    }
+  }
+
+  // Encode.
+  pic.writer = WebPMemoryWrite;
+  pic.custom_ptr = &memory_writer;
+  if (!WebPEncode(&config, &pic)) {
+    const WebPEncodingError error_code = pic.error_code;
+    if (error_code == VP8_ENC_ERROR_OUT_OF_MEMORY ||
+        error_code == VP8_ENC_ERROR_BAD_WRITE) {
+      return false;
+    }
+    std::cerr << "WebPEncode failed. Error code: " << error_code << "\n";
+    std::abort();
+  }
+  return true;
+}
+
+}  // namespace
+
+bool CropOrScaleAndEncode(const CropOrScaleParams& crop_or_scale_params,
+                          WebPConfig& config, WebPPicture& pic,
+                          VP8CPUInfo default_VP8GetCPUInfo,
+                          uint32_t optimization_index,
+                          WebPMemoryWriter& memory_writer) {
+  WebPPicture pic_ref;
+  if (!WebPPictureInit(&pic_ref)) {
+    std::cerr << "WebPPictureInit failed.\n";
+    std::abort();
+  }
+  std::unique_ptr<WebPPicture, UniquePtrDeleter> pic_ref_owner(&pic_ref);
+  if (!WebPPictureCopy(&pic, &pic_ref)) return false;
+  WebPConfig config_ref = config;
+
+  SetOptimization(default_VP8GetCPUInfo, optimization_index);
+  if (!CropOrScaleAndEncodeOne(crop_or_scale_params, config, pic,
+                               memory_writer)) {
+    return false;
+  }
+
+  // Verify that encoding produces the exact same bitstream independently of the
+  // optimization level.
+  const uint32_t ref_optimization_index =
+      (optimization_index == kMaxOptimizationIndex) ? 0 : kMaxOptimizationIndex;
+  SetOptimization(default_VP8GetCPUInfo, ref_optimization_index);
+  WebPMemoryWriter ref_memory_writer;
+  WebPMemoryWriterInit(&ref_memory_writer);
+  std::unique_ptr<WebPMemoryWriter, UniquePtrDeleter> ref_memory_writer_owner(
+      &ref_memory_writer);
+  if (!CropOrScaleAndEncodeOne(crop_or_scale_params, config_ref, pic_ref,
+                               ref_memory_writer)) {
+    return false;
+  }
+  if (memory_writer.size != ref_memory_writer.size ||
+      std::memcmp(memory_writer.mem, ref_memory_writer.mem,
+                  memory_writer.size) != 0) {
+    std::cerr << "Encoded bitstream mismatch between optimizations "
+              << optimization_index << " and " << ref_optimization_index
+              << ".\n";
+    std::abort();
+  }
+  SetOptimization(default_VP8GetCPUInfo, optimization_index);
+  return true;
+}
+
+void CompareDecodeOptimizations(VP8CPUInfo default_VP8GetCPUInfo,
+                                uint32_t optimization_index,
+                                const uint8_t* data, size_t size,
+                                const WebPDecoderConfig& config) {
+  const uint32_t ref_optimization_index =
+      (optimization_index == kMaxOptimizationIndex) ? 0 : kMaxOptimizationIndex;
+  SetOptimization(default_VP8GetCPUInfo, ref_optimization_index);
+  WebPDecoderConfig ref_config;
+  std::unique_ptr<WebPDecoderConfig, UniquePtrDeleter> ref_config_owner(
+      &ref_config);
+  if (!WebPInitDecoderConfig(&ref_config)) {
+    std::cerr << "WebPInitDecoderConfig failed.\n";
+    std::abort();
+  }
+  ref_config.output.colorspace = config.output.colorspace;
+  ref_config.options = config.options;
+  const VP8StatusCode ref_status = WebPDecode(data, size, &ref_config);
+  SetOptimization(default_VP8GetCPUInfo, optimization_index);
+  if (ref_status != VP8_STATUS_OK && ref_status != VP8_STATUS_OUT_OF_MEMORY &&
+      ref_status != VP8_STATUS_USER_ABORT) {
+    std::cerr << "WebPDecode failed. status: " << ref_status << ".\n";
+    std::abort();
+  }
+  if (ref_status == VP8_STATUS_OK &&
+      !CompareDecBuffers(config.output, ref_config.output)) {
+    std::cerr << "Decoded output mismatch between optimizations "
+              << optimization_index << " and " << ref_optimization_index
+              << ".\n";
+    std::abort();
+  }
 }
 
 }  // namespace fuzz_utils

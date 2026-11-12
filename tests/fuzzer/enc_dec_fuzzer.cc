@@ -35,50 +35,6 @@ namespace {
 
 const VP8CPUInfo default_VP8GetCPUInfo = fuzz_utils::VP8GetCPUInfo;
 
-bool Enc(const fuzz_utils::CropOrScaleParams& crop_or_scale_params,
-         WebPConfig& config, WebPPicture& pic,
-         WebPMemoryWriter& memory_writer) {
-  // Crop and scale.
-  if (!fuzz_utils::CropOrScale(&pic, crop_or_scale_params)) {
-    const WebPEncodingError error_code = pic.error_code;
-    if (error_code == VP8_ENC_ERROR_OUT_OF_MEMORY) return false;
-    fprintf(stderr, "ExtractAndCropOrScale failed. Error code: %d\n",
-            error_code);
-    std::abort();
-  }
-
-  // Skip slow settings on big images, it's likely to timeout.
-  if (pic.width * pic.height > 32 * 32) {
-    if (config.lossless) {
-      if (config.quality > 99.0f && config.method >= 5) {
-        config.quality = 99.0f;
-        config.method = 5;
-      }
-    } else {
-      if (config.quality > 99.0f && config.method == 6) {
-        config.quality = 99.0f;
-      }
-    }
-    if (config.alpha_quality == 100 && config.method == 6) {
-      config.alpha_quality = 99;
-    }
-  }
-
-  // Encode.
-  pic.writer = WebPMemoryWrite;
-  pic.custom_ptr = &memory_writer;
-  if (!WebPEncode(&config, &pic)) {
-    const WebPEncodingError error_code = pic.error_code;
-    if (error_code == VP8_ENC_ERROR_OUT_OF_MEMORY ||
-        error_code == VP8_ENC_ERROR_BAD_WRITE) {
-      return false;
-    }
-    fprintf(stderr, "WebPEncode failed. Error code: %d\n", error_code);
-    std::abort();
-  }
-  return true;
-}
-
 // Encodes a picture and decodes it using valid colorspace and decoder options,
 // verifying that decoding succeeds and produces consistent output.
 void EncDecValidTest(bool use_argb, fuzz_utils::WebPPictureCpp pic_cpp,
@@ -86,17 +42,18 @@ void EncDecValidTest(bool use_argb, fuzz_utils::WebPPictureCpp pic_cpp,
                      const fuzz_utils::CropOrScaleParams& crop_or_scale_params,
                      int colorspace,
                      const fuzz_utils::WebPDecoderOptionsCpp& decoder_options) {
-  fuzz_utils::SetOptimization(default_VP8GetCPUInfo, optimization_index);
-
   // Init the source picture.
   WebPPicture& pic = pic_cpp.ref();
-
   WebPMemoryWriter memory_writer;
   WebPMemoryWriterInit(&memory_writer);
   std::unique_ptr<WebPMemoryWriter, fuzz_utils::UniquePtrDeleter>
       memory_writer_owner(&memory_writer);
 
-  if (!Enc(crop_or_scale_params, config, pic, memory_writer)) return;
+  if (!fuzz_utils::CropOrScaleAndEncode(crop_or_scale_params, config, pic,
+                                        default_VP8GetCPUInfo,
+                                        optimization_index, memory_writer)) {
+    return;
+  }
 
   // Try decoding the result without options into BGRA first.
   const uint8_t* const out_data = memory_writer.mem;
@@ -176,6 +133,14 @@ void EncDecValidTest(bool use_argb, fuzz_utils::WebPPictureCpp pic_cpp,
       cropped_status != VP8_STATUS_USER_ABORT) {
     fprintf(stderr, "WebPDecode failed. status: %d.\n", cropped_status);
     abort();
+  }
+
+  // Verify that decoding with decoder_options produces the exact same output
+  // independently of the optimization level.
+  if (cropped_status == VP8_STATUS_OK) {
+    fuzz_utils::CompareDecodeOptimizations(default_VP8GetCPUInfo,
+                                           optimization_index, out_data,
+                                           out_size, cropped_dec_config);
   }
 
   // Verify that for all 8-bit alpha colorspaces, decoding with decoder_options
@@ -328,36 +293,11 @@ void EncDecValidTest(bool use_argb, fuzz_utils::WebPPictureCpp pic_cpp,
       // Verify that the incrementally decoded pixels match the one-shot
       // decoded buffer (cropped_dec_config.output) byte-for-byte across RGB or
       // YUVA planes.
-      if (idec_status == VP8_STATUS_OK) {
-        const WebPDecBuffer& a = idec_config.output;
-        const WebPDecBuffer& b = cropped_dec_config.output;
-        bool match = (a.colorspace == b.colorspace && a.width == b.width &&
-                      a.height == b.height);
-        if (match) {
-          if (WebPIsRGBMode(a.colorspace)) {
-            match =
-                (a.u.RGBA.size == b.u.RGBA.size &&
-                 std::memcmp(a.u.RGBA.rgba, b.u.RGBA.rgba, a.u.RGBA.size) == 0);
-          } else {
-            match =
-                (a.u.YUVA.y_size == b.u.YUVA.y_size &&
-                 a.u.YUVA.u_size == b.u.YUVA.u_size &&
-                 a.u.YUVA.v_size == b.u.YUVA.v_size &&
-                 std::memcmp(a.u.YUVA.y, b.u.YUVA.y, a.u.YUVA.y_size) == 0 &&
-                 std::memcmp(a.u.YUVA.u, b.u.YUVA.u, a.u.YUVA.u_size) == 0 &&
-                 std::memcmp(a.u.YUVA.v, b.u.YUVA.v, a.u.YUVA.v_size) == 0);
-            if (match && (a.u.YUVA.a != nullptr || b.u.YUVA.a != nullptr)) {
-              match =
-                  (a.u.YUVA.a != nullptr && b.u.YUVA.a != nullptr &&
-                   a.u.YUVA.a_size == b.u.YUVA.a_size &&
-                   std::memcmp(a.u.YUVA.a, b.u.YUVA.a, a.u.YUVA.a_size) == 0);
-            }
-          }
-        }
-        if (!match) {
-          fprintf(stderr, "Incremental decode output mismatch.\n");
-          std::abort();
-        }
+      if (idec_status == VP8_STATUS_OK &&
+          !fuzz_utils::CompareDecBuffers(idec_config.output,
+                                         cropped_dec_config.output)) {
+        fprintf(stderr, "Incremental decode output mismatch.\n");
+        std::abort();
       }
     }
   }
@@ -370,8 +310,6 @@ void EncDecTest(bool use_argb, fuzz_utils::WebPPictureCpp pic_cpp,
                 const fuzz_utils::CropOrScaleParams& crop_or_scale_params,
                 int colorspace,
                 const fuzz_utils::WebPDecoderOptionsCpp& decoder_options) {
-  fuzz_utils::SetOptimization(default_VP8GetCPUInfo, optimization_index);
-
   // Init the source picture.
   WebPPicture& pic = pic_cpp.ref();
   WebPMemoryWriter memory_writer;
@@ -379,7 +317,11 @@ void EncDecTest(bool use_argb, fuzz_utils::WebPPictureCpp pic_cpp,
   std::unique_ptr<WebPMemoryWriter, fuzz_utils::UniquePtrDeleter>
       memory_writer_owner(&memory_writer);
 
-  if (!Enc(crop_or_scale_params, config, pic, memory_writer)) return;
+  if (!fuzz_utils::CropOrScaleAndEncode(crop_or_scale_params, config, pic,
+                                        default_VP8GetCPUInfo,
+                                        optimization_index, memory_writer)) {
+    return;
+  }
 
   // Try decoding the result.
   const uint8_t* const out_data = memory_writer.mem;
