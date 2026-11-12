@@ -1300,11 +1300,17 @@ static void ShiftWindow32b(VP8LDecoder* const dec, uint32_t* const data,
                            uint32_t** const last_cached,
                            uint32_t** const src_end,
                            uint32_t** const src_last) {
-  const ptrdiff_t shift_pixels =
+  ptrdiff_t shift_pixels;
+  if (window_limit <= 0 || *src - data < window_limit) return;
+  if (dec->hdr.color_cache_size > 0) {
+    VP8LColorCacheInsert(&dec->hdr.color_cache, *last_cached, *src);
+    *last_cached = *src;
+  }
+  shift_pixels =
       ShiftWindow(dec, data, *src - data, window_limit, sizeof(*data));
   if (shift_pixels > 0) {
     *src -= shift_pixels;
-    *last_cached -= shift_pixels;
+    if (dec->hdr.color_cache_size > 0) *last_cached -= shift_pixels;
     *src_end -= shift_pixels;
     *src_last -= shift_pixels;
   }
@@ -1402,11 +1408,14 @@ End:
   return ok;
 }
 
-static void SaveState(VP8LDecoder* const dec, int last_pixel) {
+static void SaveState(VP8LDecoder* const dec, int last_pixel,
+                      uint32_t** last_cached, uint32_t* const src) {
   assert(dec->incremental);
   dec->saved_br = dec->br;
   dec->saved_last_pixel = last_pixel;
   if (dec->hdr.color_cache_size > 0) {
+    VP8LColorCacheInsert(&dec->hdr.color_cache, *last_cached, src);
+    *last_cached = src;
     VP8LColorCacheCopy(&dec->hdr.color_cache, &dec->hdr.saved_color_cache);
   }
 }
@@ -1493,13 +1502,15 @@ WEBP_NODISCARD static int DecodeImageData(VP8LDecoder* const dec,
   assert(dec->last_row < last_row);
   assert(src_last <= src_end);
 
-  while (src < src_last) {
-    int code;
-    if (row >= next_sync_row ||
-        (dec->incremental && dec->saved_last_pixel < dec->last_row * width)) {
-      SaveState(dec, GetAbsoluteOffset(dec, src - data));
+  if (src < src_last) {
+    if (dec->incremental) {
+      SaveState(dec, GetAbsoluteOffset(dec, src - data), &last_cached, src);
       next_sync_row = row + SYNC_EVERY_N_ROWS;
     }
+  }
+
+  while (src < src_last) {
+    int code;
     // Only update when changing tile. Note we could use this test:
     // if "((((prev_col ^ col) | prev_row ^ row)) > mask)" -> tile changed
     // but that's actually slower and needs storing the previous col/row.
@@ -1539,9 +1550,11 @@ WEBP_NODISCARD static int DecodeImageData(VP8LDecoder* const dec,
             process_func(dec, row, /*wait_for_biggest_batch=*/1);
           }
         }
-        if (color_cache != NULL) {
-          VP8LColorCacheInsert(color_cache, last_cached, src);
-          last_cached = src;
+        if (row >= next_sync_row ||
+            (dec->incremental &&
+             dec->saved_last_pixel < dec->last_row * width)) {
+          SaveState(dec, GetAbsoluteOffset(dec, src - data), &last_cached, src);
+          next_sync_row = row + SYNC_EVERY_N_ROWS;
         }
         ShiftWindow32b(dec, data, window_limit, &src, &last_cached, &src_end,
                        &src_last);
@@ -1576,9 +1589,10 @@ WEBP_NODISCARD static int DecodeImageData(VP8LDecoder* const dec,
       // 'length'), the following holds true.
       assert(src <= src_end);
       if (col & mask) htree_group = GetHtreeGroupForPos(hdr, col, row);
-      if (color_cache != NULL) {
-        VP8LColorCacheInsert(color_cache, last_cached, src);
-        last_cached = src;
+      if (row >= next_sync_row ||
+          (dec->incremental && dec->saved_last_pixel < dec->last_row * width)) {
+        SaveState(dec, GetAbsoluteOffset(dec, src - data), &last_cached, src);
+        next_sync_row = row + SYNC_EVERY_N_ROWS;
       }
       ShiftWindow32b(dec, data, window_limit, &src, &last_cached, &src_end,
                      &src_last);
@@ -1617,6 +1631,11 @@ WEBP_NODISCARD static int DecodeImageData(VP8LDecoder* const dec,
     }
     dec->status = VP8_STATUS_OK;
     dec->last_pixel = GetAbsoluteOffset(dec, src - data);
+    // If src_end was not reached, the function might be called again (e.g. for
+    // incremental or alpha decoding).
+    if (src < src_end && color_cache != NULL) {
+      VP8LColorCacheInsert(color_cache, last_cached, src);
+    }
   } else {
     // if not incremental, and we are past the end of buffer (eos=1), then this
     // is a real bitstream error.
