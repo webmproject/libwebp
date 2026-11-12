@@ -178,11 +178,11 @@ static void SubMem(void* ptr) {
   } while (0)
 #endif
 
-// Returns 0 in case of overflow of nmemb * size.
+// Returns 0 in case of overflow of nmemb * size, or if nmemb * size is 0.
 WEBP_NODISCARD static int CheckSizeArgumentsOverflow(uint64_t nmemb,
                                                      size_t size) {
   const uint64_t total_size = nmemb * size;
-  if (nmemb == 0) return 1;
+  if (nmemb == 0 || size == 0) return 0;
   if ((uint64_t)size > WEBP_MAX_ALLOCABLE_MEMORY / nmemb) return 0;
   if (!CheckSizeOverflow(total_size)) return 0;
 #if defined(PRINT_MEM_INFO) && defined(MALLOC_FAIL_AT)
@@ -207,7 +207,6 @@ void* WEBP_SIZED_BY_OR_NULL(nmemb* size)
   void* ptr;
   Increment(&num_malloc_calls);
   if (!CheckSizeArgumentsOverflow(nmemb, size)) return NULL;
-  assert(nmemb * size > 0);
   ptr = malloc((size_t)(nmemb * size));
   AddMem(ptr, (size_t)(nmemb * size));
   return WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(void*, ptr, (size_t)(nmemb * size));
@@ -218,7 +217,6 @@ void* WEBP_SIZED_BY_OR_NULL(nmemb* size)
   void* ptr;
   Increment(&num_calloc_calls);
   if (!CheckSizeArgumentsOverflow(nmemb, size)) return NULL;
-  assert(nmemb * size > 0);
   ptr = calloc((size_t)nmemb, size);
   AddMem(ptr, (size_t)(nmemb * size));
   return WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(void*, ptr, (size_t)(nmemb * size));
