@@ -143,23 +143,31 @@ static WEBP_INLINE void PutLE32(uint8_t* const WEBP_COUNTED_BY(4) data,
     ((__GNUC__ == 3 && __GNUC_MINOR__ >= 4) || __GNUC__ >= 4)
 // Returns (int)floor(log2(n)). n must be > 0.
 static WEBP_INLINE int BitsLog2Floor(uint32_t n) {
+  assert(n != 0);
   return 31 ^ __builtin_clz(n);
 }
-// counts the number of trailing zero
-static WEBP_INLINE int BitsCtz(uint32_t n) { return __builtin_ctz(n); }
+// Counts the number of trailing zeroes. n must be > 0.
+static WEBP_INLINE int BitsCtz(uint32_t n) {
+  assert(n != 0);
+  return __builtin_ctz(n);
+}
 #elif defined(_MSC_VER) && _MSC_VER > 1310 && \
     (defined(_M_X64) || defined(_M_IX86))
 #include <intrin.h>
 #pragma intrinsic(_BitScanReverse)
 #pragma intrinsic(_BitScanForward)
 
+// Returns (int)floor(log2(n)). n must be > 0.
 static WEBP_INLINE int BitsLog2Floor(uint32_t n) {
   unsigned long first_set_bit;  // NOLINT (runtime/int)
+  assert(n != 0);
   _BitScanReverse(&first_set_bit, n);
   return first_set_bit;
 }
+// Counts the number of trailing zeroes. n must be > 0.
 static WEBP_INLINE int BitsCtz(uint32_t n) {
   unsigned long first_set_bit;  // NOLINT (runtime/int)
+  assert(n != 0);
   _BitScanForward(&first_set_bit, n);
   return first_set_bit;
 }
@@ -171,6 +179,7 @@ static WEBP_INLINE int BitsCtz(uint32_t n) {
 extern const uint8_t WebPLogTable8bit[256];
 static WEBP_INLINE int WebPLog2FloorC(uint32_t n) {
   int log_value = 0;
+  assert(n != 0);
   while (n >= 256) {
     log_value += 8;
     n >>= 8;
@@ -178,10 +187,13 @@ static WEBP_INLINE int WebPLog2FloorC(uint32_t n) {
   return log_value + WebPLogTable8bit[n];
 }
 
+// Returns (int)floor(log2(n)). n must be > 0.
 static WEBP_INLINE int BitsLog2Floor(uint32_t n) { return WebPLog2FloorC(n); }
 
+// Counts the number of trailing zeroes. n must be > 0.
 static WEBP_INLINE int BitsCtz(uint32_t n) {
   int i;
+  assert(n != 0);
   for (i = 0; i < 32; ++i, n >>= 1) {
     if (n & 1) return i;
   }
