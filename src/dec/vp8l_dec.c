@@ -1413,6 +1413,7 @@ static void SaveState(VP8LDecoder* const dec, int last_pixel) {
 
 static void RestoreState(VP8LDecoder* const dec) {
   assert(dec->br.eos);
+  assert(dec->saved_last_pixel >= dec->last_row * dec->width);
   dec->status = VP8_STATUS_SUSPENDED;
   dec->br = dec->saved_br;
   dec->last_pixel = dec->saved_last_pixel;
@@ -1494,7 +1495,8 @@ WEBP_NODISCARD static int DecodeImageData(VP8LDecoder* const dec,
 
   while (src < src_last) {
     int code;
-    if (row >= next_sync_row) {
+    if (row >= next_sync_row ||
+        (dec->incremental && dec->saved_last_pixel < dec->last_row * width)) {
       SaveState(dec, GetAbsoluteOffset(dec, src - data));
       next_sync_row = row + SYNC_EVERY_N_ROWS;
     }
