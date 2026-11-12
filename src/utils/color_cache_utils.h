@@ -16,6 +16,7 @@
 #define WEBP_UTILS_COLOR_CACHE_UTILS_H_
 
 #include <assert.h>
+#include <stddef.h>
 
 #include "src/dsp/cpu.h"
 #include "src/dsp/dsp.h"
@@ -30,7 +31,8 @@ extern "C" {
 
 // Main color cache struct.
 typedef struct {
-  uint32_t* WEBP_COUNTED_BY_OR_NULL(1u << hash_bits) colors;  // color entries
+  uint32_t* WEBP_RESTRICT
+      WEBP_COUNTED_BY_OR_NULL(1u << hash_bits) colors;  // color entries
   int hash_shift;  // Hash shift: 32 - 'hash_bits'.
   int hash_bits;
 } VP8LColorCache;
@@ -55,9 +57,16 @@ static WEBP_INLINE void VP8LColorCacheSet(const VP8LColorCache* const cc,
 }
 
 static WEBP_INLINE void VP8LColorCacheInsert(const VP8LColorCache* const cc,
-                                             uint32_t argb) {
-  const int key = VP8LHashPix(argb, cc->hash_shift);
-  cc->colors[key] = argb;
+                                             const uint32_t* const argb,
+                                             const uint32_t* const end) {
+  uint32_t* WEBP_RESTRICT const colors = cc->colors;
+  const int hash_shift = cc->hash_shift;
+  const ptrdiff_t len = end - argb;
+  ptrdiff_t i;
+  for (i = 0; i < len; ++i) {
+    const uint32_t a = argb[i];
+    colors[VP8LHashPix(a, hash_shift)] = a;
+  }
 }
 
 static WEBP_INLINE int VP8LColorCacheGetIndex(const VP8LColorCache* const cc,

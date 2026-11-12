@@ -1538,9 +1538,8 @@ WEBP_NODISCARD static int DecodeImageData(VP8LDecoder* const dec,
           }
         }
         if (color_cache != NULL) {
-          while (last_cached < src) {
-            VP8LColorCacheInsert(color_cache, *last_cached++);
-          }
+          VP8LColorCacheInsert(color_cache, last_cached, src);
+          last_cached = src;
         }
         ShiftWindow32b(dec, data, window_limit, &src, &last_cached, &src_end,
                        &src_last);
@@ -1576,9 +1575,8 @@ WEBP_NODISCARD static int DecodeImageData(VP8LDecoder* const dec,
       assert(src <= src_end);
       if (col & mask) htree_group = GetHtreeGroupForPos(hdr, col, row);
       if (color_cache != NULL) {
-        while (last_cached < src) {
-          VP8LColorCacheInsert(color_cache, *last_cached++);
-        }
+        VP8LColorCacheInsert(color_cache, last_cached, src);
+        last_cached = src;
       }
       ShiftWindow32b(dec, data, window_limit, &src, &last_cached, &src_end,
                      &src_last);
@@ -1586,9 +1584,8 @@ WEBP_NODISCARD static int DecodeImageData(VP8LDecoder* const dec,
       const int key = code - len_code_limit;
       assert(color_cache != NULL);
       if (VP8LIsEndOfStream(br)) break;
-      while (last_cached < src) {
-        VP8LColorCacheInsert(color_cache, *last_cached++);
-      }
+      VP8LColorCacheInsert(color_cache, last_cached, src);
+      last_cached = src;
       *src = VP8LColorCacheLookup(color_cache, key);
       goto AdvanceByOne;
     } else {  // Not reached

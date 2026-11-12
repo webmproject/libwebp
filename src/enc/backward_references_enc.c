@@ -469,7 +469,7 @@ WEBP_NODISCARD static int BackwardReferencesRle(int xsize, int ysize,
                                                 int cache_bits,
                                                 VP8LBackwardRefs* const refs) {
   const int pix_count = xsize * ysize;
-  int i, k;
+  int i;
   const int use_color_cache = (cache_bits > 0);
   VP8LColorCache hashers;
 
@@ -495,9 +495,7 @@ WEBP_NODISCARD static int BackwardReferencesRle(int xsize, int ysize,
     } else if (prev_row_len >= MIN_LENGTH) {
       VP8LBackwardRefsCursorAdd(refs, PixOrCopyCreateCopy(xsize, prev_row_len));
       if (use_color_cache) {
-        for (k = 0; k < prev_row_len; ++k) {
-          VP8LColorCacheInsert(&hashers, argb[i + k]);
-        }
+        VP8LColorCacheInsert(&hashers, &argb[i], &argb[i + prev_row_len]);
       }
       i += prev_row_len;
     } else {
@@ -564,7 +562,7 @@ WEBP_NODISCARD static int BackwardReferencesLz77(
     } else {
       VP8LBackwardRefsCursorAdd(refs, PixOrCopyCreateCopy(offset, len));
       if (use_color_cache) {
-        for (j = i; j < i + len; ++j) VP8LColorCacheInsert(&hashers, argb[j]);
+        VP8LColorCacheInsert(&hashers, &argb[i], &argb[i + len]);
       }
     }
     i += len;
@@ -868,16 +866,15 @@ WEBP_NODISCARD static int BackwardRefsWithLocalCache(
         // hashers contains argb_literal
         *v = PixOrCopyCreateCacheIdx(ix);
       } else {
-        VP8LColorCacheInsert(&hashers, argb_literal);
+        VP8LColorCacheInsert(&hashers, &argb_literal, &argb_literal + 1);
       }
       ++pixel_index;
     } else {
       // refs was created without local cache, so it can not have cache indexes.
-      int k;
       assert(PixOrCopyIsCopy(v));
-      for (k = 0; k < v->len; ++k) {
-        VP8LColorCacheInsert(&hashers, argb[pixel_index++]);
-      }
+      VP8LColorCacheInsert(&hashers, &argb[pixel_index],
+                           &argb[pixel_index + v->len]);
+      pixel_index += v->len;
     }
     VP8LRefsCursorNext(&c);
   }

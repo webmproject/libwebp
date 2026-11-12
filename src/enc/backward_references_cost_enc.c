@@ -129,7 +129,7 @@ static WEBP_INLINE void AddSingleLiteralWithCostModel(
     // use_color_cache is true and hashers contains color
     cost_val += DivRound(GetCacheCost(cost_model, ix) * 68, 100);
   } else {
-    if (use_color_cache) VP8LColorCacheInsert(hashers, color);
+    if (use_color_cache) VP8LColorCacheInsert(hashers, &color, &color + 1);
     cost_val += DivRound(GetLiteralCost(cost_model, color) * 82, 100);
   }
   if (cost[idx] > cost_val) {
@@ -727,13 +727,10 @@ WEBP_NODISCARD static int BackwardReferencesHashChainFollowChosenPath(
   for (ix = 0; ix < chosen_path_size; ++ix) {
     const int len = chosen_path[ix];
     if (len != 1) {
-      int k;
       const int offset = VP8LHashChainFindOffset(hash_chain, i);
       VP8LBackwardRefsCursorAdd(refs, PixOrCopyCreateCopy(offset, len));
       if (use_color_cache) {
-        for (k = 0; k < len; ++k) {
-          VP8LColorCacheInsert(&hashers, argb[i + k]);
-        }
+        VP8LColorCacheInsert(&hashers, &argb[i], &argb[i + len]);
       }
       i += len;
     } else {
@@ -745,7 +742,9 @@ WEBP_NODISCARD static int BackwardReferencesHashChainFollowChosenPath(
         // push pixel as a color cache index
         v = PixOrCopyCreateCacheIdx(idx);
       } else {
-        if (use_color_cache) VP8LColorCacheInsert(&hashers, argb[i]);
+        if (use_color_cache) {
+          VP8LColorCacheInsert(&hashers, &argb[i], &argb[i] + 1);
+        }
         v = PixOrCopyCreateLiteral(argb[i]);
       }
       VP8LBackwardRefsCursorAdd(refs, v);
