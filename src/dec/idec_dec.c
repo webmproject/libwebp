@@ -451,17 +451,18 @@ static VP8StatusCode CopyParts0Data(WebPIDecoder* const idec) {
   assert(mem->part0_buf == NULL);
   // the following is a format limitation, no need for runtime check:
   assert(part_size <= mem->part0_size);
-  if (part_size == 0) {  // can't have zero-size partition #0
-    return VP8_STATUS_BITSTREAM_ERROR;
-  }
   if (mem->mode == MEM_MODE_APPEND) {
-    // We copy and grab ownership of the partition #0 data.
+    // We copy and grab ownership of the partition #0 data. Note that
+    // part_size can be 0 when the remaining bits of partition #0 have already
+    // been prefetched into br->value during VP8GetHeaders().
     uint8_t* WEBP_BIDI_INDEXABLE const part0_buf =
-        (uint8_t*)WebPSafeMalloc(1ULL, part_size);
+        (uint8_t*)WebPSafeMalloc(1ULL, (part_size > 0) ? part_size : 1);
     if (part0_buf == NULL) {
       return VP8_STATUS_OUT_OF_MEMORY;
     }
-    WEBP_UNSAFE_MEMCPY(part0_buf, br->buf, part_size);
+    if (part_size > 0) {
+      WEBP_UNSAFE_MEMCPY(part0_buf, br->buf, part_size);
+    }
     mem->part0_buf = part0_buf;
     VP8BitReaderSetBuffer(br, part0_buf, part_size);
   } else {
