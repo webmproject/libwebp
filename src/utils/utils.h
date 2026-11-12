@@ -120,14 +120,14 @@ static WEBP_INLINE uint32_t GetLE32(const uint8_t* const WEBP_COUNTED_BY(4)
 // Store 16, 24 or 32 bits in little-endian order.
 static WEBP_INLINE void PutLE16(uint8_t* const WEBP_COUNTED_BY(2) data,
                                 int val) {
-  assert(val < (1 << 16));
+  assert(val >= 0 && val < (1 << 16));
   data[0] = (val >> 0) & 0xff;
   data[1] = (val >> 8) & 0xff;
 }
 
 static WEBP_INLINE void PutLE24(uint8_t* const WEBP_COUNTED_BY(3) data,
                                 int val) {
-  assert(val < (1 << 24));
+  assert(val >= 0 && val < (1 << 24));
   PutLE16(data, val & 0xffff);
   data[2] = (val >> 16) & 0xff;
 }
