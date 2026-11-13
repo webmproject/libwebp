@@ -240,10 +240,15 @@ extern VP8WHT VP8TransformWHT;
 
 #define WEBP_TRANSFORM_AC3_C1 20091
 #define WEBP_TRANSFORM_AC3_C2 35468
-#define WEBP_TRANSFORM_AC3_MUL1(a) \
-  ((int)((((int64_t)(a) * WEBP_TRANSFORM_AC3_C1) >> 16) + (a)))
-#define WEBP_TRANSFORM_AC3_MUL2(a) \
-  ((int)(((int64_t)(a) * WEBP_TRANSFORM_AC3_C2) >> 16))
+static WEBP_UBSAN_IGNORE_UNSIGNED_OVERFLOW WEBP_ALWAYS_INLINE int
+WEBP_TRANSFORM_AC3_MUL1(int a) {
+  return (int)(((int32_t)((uint32_t)a * WEBP_TRANSFORM_AC3_C1) >> 16) +
+               (uint32_t)a);
+}
+static WEBP_UBSAN_IGNORE_UNSIGNED_OVERFLOW WEBP_ALWAYS_INLINE int
+WEBP_TRANSFORM_AC3_MUL2(int a) {
+  return (int)((int32_t)((uint32_t)a * WEBP_TRANSFORM_AC3_C2) >> 16);
+}
 
 // *dst is the destination block, with stride BPS. Boundary samples are
 // assumed accessible when needed.

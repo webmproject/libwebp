@@ -165,10 +165,10 @@ static void TransformWHT_C(const int16_t* WEBP_RESTRICT in,
     const int a1 = tmp[1 + i * 4] + tmp[2 + i * 4];
     const int a2 = tmp[1 + i * 4] - tmp[2 + i * 4];
     const int a3 = dc - tmp[3 + i * 4];
-    out[0] = (a0 + a1) >> 3;
-    out[16] = (a3 + a2) >> 3;
-    out[32] = (a0 - a1) >> 3;
-    out[48] = (a3 - a2) >> 3;
+    out[0] = (int16_t)((a0 + a1) >> 3);
+    out[16] = (int16_t)((a3 + a2) >> 3);
+    out[32] = (int16_t)((a0 - a1) >> 3);
+    out[48] = (int16_t)((a3 - a2) >> 3);
     out += 64;
   }
 }

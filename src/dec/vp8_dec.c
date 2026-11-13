@@ -490,7 +490,7 @@ static int GetCoeffsFast(VP8BitReader* WEBP_RESTRICT const br,
         v = GetLargeValue(br, p);
         p = p_ctx[2];
       }
-      out[kZigzag[n]] = VP8GetSigned(br, v, "coeffs") * dq[n > 0];
+      out[kZigzag[n]] = (int16_t)(VP8GetSigned(br, v, "coeffs") * dq[n > 0]);
     }
   }
   return 16;
@@ -520,7 +520,7 @@ static int GetCoeffsAlt(VP8BitReader* WEBP_RESTRICT const br,
         v = GetLargeValue(br, p);
         p = p_ctx[2];
       }
-      out[kZigzag[n]] = VP8GetSigned(br, v, "coeffs") * dq[n > 0];
+      out[kZigzag[n]] = (int16_t)(VP8GetSigned(br, v, "coeffs") * dq[n > 0]);
     }
   }
   return 16;
