@@ -156,6 +156,7 @@ void AdvancedApiTest(std::string_view blob, uint8_t factor_u8, int colorspace,
                             &uv_stride, &a_stride);
       WebPIDelete(idec);
       EXPECT_NE(status, VP8_STATUS_NOT_ENOUGH_DATA);
+      EXPECT_NE(status, VP8_STATUS_USER_ABORT);
       // Verify that incremental decoding agrees with one-shot WebPDecode().
       WebPDecoderConfig ref_config;
       if (WebPInitDecoderConfig(&ref_config)) {

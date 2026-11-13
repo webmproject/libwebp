@@ -585,13 +585,15 @@ static VP8StatusCode DecodeRemaining(WebPIDecoder* const idec) {
 
     // Reconstruct, filter and emit the row.
     if (!VP8ProcessRow(dec, io)) {
-      return IDecError(idec, VP8_STATUS_USER_ABORT);
+      return IDecError(idec, (dec->status != VP8_STATUS_OK)
+                                 ? dec->status
+                                 : VP8_STATUS_USER_ABORT);
     }
   }
   // Synchronize the thread and check for errors.
   if (!VP8ExitCritical(dec, io)) {
     idec->state = STATE_ERROR;  // prevent re-entry in IDecError
-    return IDecError(idec, VP8_STATUS_USER_ABORT);
+    return IDecError(idec, dec->status);
   }
   dec->ready = 0;
   return FinishDecoding(idec);
