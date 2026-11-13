@@ -27,6 +27,7 @@
 #include "src/utils/rescaler_utils.h"
 #include "webp/decode.h"
 #include "webp/encode.h"
+#include "webp/format_constants.h"
 #include "webp/types.h"
 
 namespace {
@@ -180,7 +181,45 @@ void AdvancedApiTest(std::string_view blob, uint8_t factor_u8, int colorspace,
         WebPFreeDecBuffer(&ref_config.output);
       }
     } else {
-      (void)WebPDecode(data, size, &config);
+      const VP8StatusCode status = WebPDecode(data, size, &config);
+      if (status == VP8_STATUS_OK && !config.options.use_cropping &&
+          WebPIsAlphaMode(config.output.colorspace)) {
+        // Cross-check lossless ALPH decoding (which may take the 8-bit paletted
+        // DecodeAlphaData() fast path) against standalone 32-bit VP8L decoding
+        // (DecodeImageData()).
+        WebPHeaderStructure headers;
+        std::memset(&headers, 0, sizeof(headers));
+        headers.data = data;
+        headers.data_size = size;
+        headers.have_all_data = 1;
+        if (WebPParseHeaders(&headers) == VP8_STATUS_OK &&
+            !headers.is_lossless && headers.alpha_data != nullptr &&
+            headers.alpha_data_size > ALPHA_HEADER_LEN &&
+            ((headers.alpha_data[0] & 0x03) == ALPHA_LOSSLESS_COMPRESSION)) {
+          const uint32_t w = config.input.width - 1;
+          const uint32_t h = config.input.height - 1;
+          const uint32_t bits = w | (h << 14);
+          std::vector<uint8_t> vp8l(VP8L_FRAME_HEADER_SIZE +
+                                    headers.alpha_data_size - ALPHA_HEADER_LEN);
+          vp8l[0] = VP8L_MAGIC_BYTE;
+          vp8l[1] = static_cast<uint8_t>(bits & 0xff);
+          vp8l[2] = static_cast<uint8_t>((bits >> 8) & 0xff);
+          vp8l[3] = static_cast<uint8_t>((bits >> 16) & 0xff);
+          vp8l[4] = static_cast<uint8_t>((bits >> 24) & 0xff);
+          std::memcpy(vp8l.data() + VP8L_FRAME_HEADER_SIZE,
+                      headers.alpha_data + ALPHA_HEADER_LEN,
+                      headers.alpha_data_size - ALPHA_HEADER_LEN);
+          WebPDecoderConfig alph_config;
+          if (WebPInitDecoderConfig(&alph_config)) {
+            const VP8StatusCode alph_status =
+                WebPDecode(vp8l.data(), vp8l.size(), &alph_config);
+            if (alph_status != VP8_STATUS_OUT_OF_MEMORY) {
+              EXPECT_EQ(alph_status, VP8_STATUS_OK);
+            }
+            WebPFreeDecBuffer(&alph_config.output);
+          }
+        }
+      }
     }
 
     WebPFreeDecBuffer(&config.output);
@@ -533,5 +572,46 @@ TEST(AdvancedApi, RawAndTruncatedChunkIncrementalConsistency) {
     }
 
     WebPFree(encoded);
+  }
+}
+
+// An 8x3 lossy+alpha WebP whose lossless ALPH stream uses 8-bit paletted
+// decoding (COLOR_INDEXING_TRANSFORM with 2 colors, bundled to 1x3 bytes).
+// Dropping the 14th ALPH byte leaves 96 bits (94 header bits + 2 row symbols),
+// so decoding the 3rd and final row reaches src == src_end while reading 1 bit
+// past EOF (br->eos == 1).
+TEST(AdvancedApi, TruncatedPalettedAlphaAtLastPixel) {
+  uint8_t webp[] =
+      {
+          'R',  'I',  'F',  'F',  0x4c, 0x00, 0x00, 0x00,
+          'W',  'E',  'B',  'P',  'V',  'P',  '8',  'X',
+          0x0a, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00,
+          0x07, 0x00, 0x00, 0x02, 0x00, 0x00,  // 8x3 canvas with alpha
+          'A',  'L',  'P',  'H',  0x0e, 0x00, 0x00, 0x00,
+          0x01, 0x0f, 0x70, 0x80, 0xff, 0x88, 0xfe, 0x87,
+          0x38, 0x40, 0x40, 0x44, 0xc4, 0x00,  // 14-byte paletted ALPH payload
+          'V',  'P',  '8',  ' ',  0x18, 0x00, 0x00, 0x00,
+          0x30, 0x01, 0x00, 0x9d, 0x01, 0x2a, 0x08, 0x00,
+          0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0d,
+          0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      };
+
+  // With all 14 ALPH bytes, decoding succeeds.
+  {
+    WebPDecoderConfig config;
+    ASSERT_TRUE(WebPInitDecoderConfig(&config));
+    EXPECT_EQ(WebPDecode(webp, sizeof(webp), &config), VP8_STATUS_OK);
+    WebPFreeDecBuffer(&config.output);
+  }
+
+  // Truncate ALPH chunk size from 14 to 13 bytes (the 14th byte becomes the
+  // RIFF padding byte, so the container remains well-formed).
+  webp[34] = 0x0d;
+  {
+    WebPDecoderConfig config;
+    ASSERT_TRUE(WebPInitDecoderConfig(&config));
+    EXPECT_EQ(WebPDecode(webp, sizeof(webp), &config),
+              VP8_STATUS_BITSTREAM_ERROR);
+    WebPFreeDecBuffer(&config.output);
   }
 }
