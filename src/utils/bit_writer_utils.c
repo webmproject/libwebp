@@ -182,6 +182,7 @@ uint8_t* VP8BitWriterFinish(VP8BitWriter* const bw) {
 int VP8BitWriterAppend(VP8BitWriter* const bw, const uint8_t* data,
                        size_t size) {
   assert(data != NULL);
+  assert(size > 0);
   if (bw->nb_bits != -8) return 0;  // Flush() must have been called
   if (!BitWriterResize(bw, size)) return 0;
   WEBP_UNSAFE_MEMCPY(bw->buf + bw->pos, data, size);
