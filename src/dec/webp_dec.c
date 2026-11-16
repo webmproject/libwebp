@@ -364,11 +364,11 @@ static VP8StatusCode ParseHeadersInternal(
         NULL;
     status = ParseOptionalChunks(&data, &data_size, hdrs.riff_size,
                                  &local_alpha_data, &local_alpha_data_size);
+    hdrs.alpha_data = local_alpha_data;
+    hdrs.alpha_data_size = local_alpha_data_size;
     if (status != VP8_STATUS_OK) {
       goto ReturnWidthHeight;  // Invalid chunk size / insufficient data.
     }
-    hdrs.alpha_data = local_alpha_data;
-    hdrs.alpha_data_size = local_alpha_data_size;
   }
 
   // Skip over VP8/VP8L header.
