@@ -282,7 +282,7 @@ void VP8LBitWriterSwap(VP8LBitWriter* const src, VP8LBitWriter* const dst) {
 void VP8LPutBitsFlushBits(VP8LBitWriter* const bw, int* used,
                           vp8l_atype_t* bits) {
   // If needed, make some room by flushing some bits out.
-  if (bw->cur + VP8L_WRITER_BYTES > bw->end) {
+  if (bw->end - bw->cur < VP8L_WRITER_BYTES) {
     const uint64_t extra_size = (bw->end - bw->buf) + MIN_EXTRA_SIZE;
     if (!CheckSizeOverflow(extra_size) ||
         !VP8LBitWriterResize(bw, (size_t)extra_size)) {
