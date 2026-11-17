@@ -37,7 +37,7 @@ typedef struct {
   size_t end;       // end location
   size_t riff_end;  // riff chunk end location, can be > end.
   size_t buf_size;  // size of the buffer
-  const uint8_t* buf;
+  const uint8_t* WEBP_COUNTED_BY(buf_size) buf;
 } MemBuffer;
 
 typedef struct {
@@ -112,16 +112,22 @@ int WebPGetDemuxVersion(void) {
 // MemBuffer
 
 WEBP_NODISCARD static int RemapMemBuffer(MemBuffer* const mem,
-                                         const uint8_t* data, size_t size) {
+                                         const uint8_t* WEBP_COUNTED_BY(size)
+                                             data,
+                                         size_t size) {
   if (size < mem->buf_size) return 0;  // can't remap to a shorter buffer!
 
+  // Assign capacity and pointer together for -fbounds-safety counted_by.
+  mem->buf_size = size;
   mem->buf = data;
-  mem->end = mem->buf_size = size;
+  mem->end = size;
   return 1;
 }
 
 WEBP_NODISCARD static int InitMemBuffer(MemBuffer* const mem,
-                                        const uint8_t* data, size_t size) {
+                                        const uint8_t* WEBP_COUNTED_BY(size)
+                                            data,
+                                        size_t size) {
   WEBP_UNSAFE_MEMSET(mem, 0, sizeof(*mem));
   return RemapMemBuffer(mem, data, size);
 }
@@ -145,7 +151,8 @@ static WEBP_INLINE void Rewind(MemBuffer* const mem, size_t size) {
   mem->start -= size;
 }
 
-static WEBP_INLINE const uint8_t* GetBuffer(MemBuffer* const mem) {
+static WEBP_INLINE const uint8_t* WEBP_INDEXABLE
+GetBuffer(MemBuffer* const mem) {
   return mem->buf + mem->start;
 }
 
@@ -157,21 +164,22 @@ static WEBP_INLINE uint8_t ReadByte(MemBuffer* const mem) {
 }
 
 static WEBP_INLINE int ReadLE16s(MemBuffer* const mem) {
-  const uint8_t* const data = mem->buf + mem->start;
+  // Use GetBuffer() so the view inherits MemBuffer counted_by / INDEXABLE.
+  const uint8_t* WEBP_INDEXABLE const data = GetBuffer(mem);
   const int val = GetLE16(data);
   Skip(mem, 2);
   return val;
 }
 
 static WEBP_INLINE int ReadLE24s(MemBuffer* const mem) {
-  const uint8_t* const data = mem->buf + mem->start;
+  const uint8_t* WEBP_INDEXABLE const data = GetBuffer(mem);
   const int val = GetLE24(data);
   Skip(mem, 3);
   return val;
 }
 
 static WEBP_INLINE uint32_t ReadLE32(MemBuffer* const mem) {
-  const uint8_t* const data = mem->buf + mem->start;
+  const uint8_t* WEBP_INDEXABLE const data = GetBuffer(mem);
   const uint32_t val = GetLE32(data);
   Skip(mem, 4);
   return val;
@@ -400,6 +408,8 @@ static ParseStatus ReadHeader(MemBuffer* const mem) {
   mem->riff_end = riff_size + CHUNK_HEADER_SIZE;
   if (mem->buf_size > mem->riff_end) {
     mem->buf_size = mem->end = mem->riff_end;
+    // Refresh counted_by relationship after capacity-only update.
+    WEBP_SELF_ASSIGN(mem->buf);
   }
 
   Skip(mem, RIFF_HEADER_SIZE);
@@ -821,9 +831,9 @@ static const Frame* GetFrame(const WebPDemuxer* const dmux, int frame_num) {
   return f;
 }
 
-static const uint8_t* GetFramePayload(const uint8_t* const mem_buf,
-                                      const Frame* const frame,
-                                      size_t* const data_size) {
+static const uint8_t* WEBP_INDEXABLE
+GetFramePayload(const uint8_t* WEBP_INDEXABLE const mem_buf,
+                const Frame* const frame, size_t* const data_size) {
   *data_size = 0;
   if (frame != NULL) {
     const ChunkData* const image = frame->img_components;
@@ -849,9 +859,10 @@ static const uint8_t* GetFramePayload(const uint8_t* const mem_buf,
 WEBP_NODISCARD static int SynthesizeFrame(const WebPDemuxer* const dmux,
                                           const Frame* const frame,
                                           WebPIterator* const iter) {
-  const uint8_t* const mem_buf = dmux->mem.buf;
+  const uint8_t* WEBP_INDEXABLE const mem_buf = dmux->mem.buf;
   size_t payload_size = 0;
-  const uint8_t* const payload = GetFramePayload(mem_buf, frame, &payload_size);
+  const uint8_t* WEBP_INDEXABLE const payload =
+      GetFramePayload(mem_buf, frame, &payload_size);
   if (payload == NULL) return 0;
   assert(frame != NULL);
 
@@ -866,8 +877,7 @@ WEBP_NODISCARD static int SynthesizeFrame(const WebPDemuxer* const dmux,
   iter->dispose_method = frame->dispose_method;
   iter->blend_method = frame->blend_method;
   iter->complete = frame->complete;
-  iter->fragment.bytes = payload;
-  iter->fragment.size = payload_size;
+  WebPDataSet(&iter->fragment, payload, payload_size);
   return 1;
 }
 
@@ -909,11 +919,11 @@ void WebPDemuxReleaseIterator(WebPIterator* iter) { (void)iter; }
 // Chunk iteration
 
 static int ChunkCount(const WebPDemuxer* const dmux, const char fourcc[4]) {
-  const uint8_t* const mem_buf = dmux->mem.buf;
+  const uint8_t* WEBP_INDEXABLE const mem_buf = dmux->mem.buf;
   const Chunk* c;
   int count = 0;
   for (c = dmux->chunks; c != NULL; c = c->next) {
-    const uint8_t* const header = mem_buf + c->data.offset;
+    const uint8_t* WEBP_INDEXABLE const header = mem_buf + c->data.offset;
     if (!memcmp(header, fourcc, TAG_SIZE)) ++count;
   }
   return count;
@@ -921,11 +931,11 @@ static int ChunkCount(const WebPDemuxer* const dmux, const char fourcc[4]) {
 
 static const Chunk* GetChunk(const WebPDemuxer* const dmux,
                              const char fourcc[4], int chunk_num) {
-  const uint8_t* const mem_buf = dmux->mem.buf;
+  const uint8_t* WEBP_INDEXABLE const mem_buf = dmux->mem.buf;
   const Chunk* c;
   int count = 0;
   for (c = dmux->chunks; c != NULL; c = c->next) {
-    const uint8_t* const header = mem_buf + c->data.offset;
+    const uint8_t* WEBP_INDEXABLE const header = mem_buf + c->data.offset;
     if (!memcmp(header, fourcc, TAG_SIZE)) ++count;
     if (count == chunk_num) break;
   }
@@ -943,10 +953,10 @@ WEBP_NODISCARD static int SetChunk(const char fourcc[4], int chunk_num,
   if (chunk_num == 0) chunk_num = count;
 
   if (chunk_num <= count) {
-    const uint8_t* const mem_buf = dmux->mem.buf;
+    const uint8_t* WEBP_INDEXABLE const mem_buf = dmux->mem.buf;
     const Chunk* const chunk = GetChunk(dmux, fourcc, chunk_num);
-    iter->chunk.bytes = mem_buf + chunk->data.offset + CHUNK_HEADER_SIZE;
-    iter->chunk.size = chunk->data.size - CHUNK_HEADER_SIZE;
+    WebPDataSet(&iter->chunk, mem_buf + chunk->data.offset + CHUNK_HEADER_SIZE,
+                chunk->data.size - CHUNK_HEADER_SIZE);
     iter->num_chunks = count;
     iter->chunk_num = chunk_num;
     return 1;
@@ -965,18 +975,25 @@ int WebPDemuxGetChunk(const WebPDemuxer* dmux, const char fourcc[4],
 
 int WebPDemuxNextChunk(WebPChunkIterator* iter) {
   if (iter != NULL) {
-    const char* const fourcc =
-        (const char*)iter->chunk.bytes - CHUNK_HEADER_SIZE;
-    return SetChunk(fourcc, iter->chunk_num + 1, iter);
+    // Pass forge inline: assigning to const char* under
+    // WEBP_ASSUME_UNSAFE_INDEXABLE_ABI drops bidi bounds back to
+    // __unsafe_indexable and fails SetChunk(const char fourcc[4]).
+    return SetChunk(
+        WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(
+            const char*, (const char*)iter->chunk.bytes - CHUNK_HEADER_SIZE,
+            TAG_SIZE),
+        iter->chunk_num + 1, iter);
   }
   return 0;
 }
 
 int WebPDemuxPrevChunk(WebPChunkIterator* iter) {
   if (iter != NULL && iter->chunk_num > 1) {
-    const char* const fourcc =
-        (const char*)iter->chunk.bytes - CHUNK_HEADER_SIZE;
-    return SetChunk(fourcc, iter->chunk_num - 1, iter);
+    return SetChunk(
+        WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(
+            const char*, (const char*)iter->chunk.bytes - CHUNK_HEADER_SIZE,
+            TAG_SIZE),
+        iter->chunk_num - 1, iter);
   }
   return 0;
 }

@@ -419,7 +419,9 @@ int WebPAnimDecoderGetNext(WebPAnimDecoder* dec, uint8_t** buf_ptr,
     buf->size = (size_t)size;
     buf->rgba = dec->curr_frame + out_offset;
 
-    if (WebPDecode(in, in_size, config) != VP8_STATUS_OK) {
+    if (WebPDecode(
+            WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(const uint8_t*, in, in_size),
+            in_size, config) != VP8_STATUS_OK) {
       goto Error;
     }
   }

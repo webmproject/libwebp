@@ -23,6 +23,7 @@
 
 #include "src/utils/bounds_safety.h"
 #include "src/webp/format_constants.h"
+#include "src/webp/mux_types.h"
 #include "src/webp/types.h"
 
 WEBP_ASSUME_UNSAFE_INDEXABLE_ABI
@@ -30,6 +31,19 @@ WEBP_ASSUME_UNSAFE_INDEXABLE_ABI
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+// Assigns size then bytes. With WEBP_COUNTED_BY_OR_NULL(size) on bytes,
+// capacity must be set before the pointer so the counted_by relationship
+// stays valid (same order as MemBuffer Remap).
+static WEBP_INLINE void WebPDataSet(WebPData* webp_data,
+                                    const uint8_t* WEBP_COUNTED_BY_OR_NULL(size)
+                                        bytes,
+                                    size_t size) {
+  if (webp_data != NULL) {
+    webp_data->size = size;
+    webp_data->bytes = bytes;
+  }
+}
 
 //------------------------------------------------------------------------------
 // Memory allocation

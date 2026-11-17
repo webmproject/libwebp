@@ -58,7 +58,7 @@ typedef enum WebPMuxAnimBlend {
 // (ICC profile, metadata) and WebP compressed image data.
 // 'bytes' memory must be allocated using WebPMalloc() and such.
 struct WebPData {
-  const uint8_t* bytes;
+  const uint8_t* WEBP_COUNTED_BY_OR_NULL(size) bytes;
   size_t size;
 };
 
@@ -85,10 +85,14 @@ WEBP_NODISCARD static WEBP_INLINE int WebPDataCopy(const WebPData* src,
   if (src == NULL || dst == NULL) return 0;
   WebPDataInit(dst);
   if (src->bytes != NULL && src->size != 0) {
-    dst->bytes = (uint8_t*)WebPMalloc(src->size);
-    if (dst->bytes == NULL) return 0;
-    WEBP_UNSAFE_MEMCPY((void*)dst->bytes, src->bytes, src->size);
+    // WebPMalloc is ABI __single; forge as uint8_t* with sized bounds
+    // (void* is incomplete and cannot be the forge type).
+    uint8_t* const bytes = WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(
+        uint8_t*, WebPMalloc(src->size), src->size);
+    if (bytes == NULL) return 0;
+    WEBP_UNSAFE_MEMCPY(bytes, src->bytes, src->size);
     dst->size = src->size;
+    dst->bytes = bytes;
   }
   return 1;
 }
