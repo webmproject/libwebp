@@ -129,6 +129,8 @@ WEBP_NODISCARD static int EncodeAlphaInternal(
   assert(method <= ALPHA_LOSSLESS_COMPRESSION);
   assert(sizeof(header) == ALPHA_HEADER_LEN);
 
+  memset(&result->stats, 0, sizeof(result->stats));
+
   filter_func = WebPFilters[filter];
   if (filter_func != NULL) {
     filter_func(data, width, height, width, tmp_alpha);
@@ -153,6 +155,7 @@ WEBP_NODISCARD static int EncodeAlphaInternal(
         // compressed size is larger than source! Revert to uncompressed mode.
         method = ALPHA_NO_COMPRESSION;
         VP8LBitWriterWipeOut(&tmp_bw);
+        memset(&result->stats, 0, sizeof(result->stats));
       }
     } else {
       VP8LBitWriterWipeOut(&tmp_bw);
@@ -238,6 +241,7 @@ static uint32_t GetFilterMap(const uint8_t* alpha, int width, int height,
 static void InitFilterTrial(FilterTrial* const score) {
   score->score = (size_t)~0U;
   (void)VP8BitWriterInit(&score->bw, 0);
+  memset(&score->stats, 0, sizeof(score->stats));
 }
 
 WEBP_NODISCARD static int ApplyFiltersAndEncode(
