@@ -87,14 +87,11 @@ WEBP_NODISCARD static WEBP_INLINE int WebPDataCopy(const WebPData* src,
   if (src == NULL || dst == NULL) return 0;
   WebPDataInit(dst);
   if (src->bytes != NULL && src->size != 0) {
-    // WebPMalloc is ABI __single; forge as uint8_t* with sized bounds
-    // (void* is incomplete and cannot be the forge type).
-    uint8_t* const bytes = WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(
-        uint8_t*, WebPMalloc(src->size), src->size);
+    uint8_t* const bytes = (uint8_t*)WebPMalloc(src->size);
     if (bytes == NULL) return 0;
     WEBP_UNSAFE_MEMCPY(bytes, src->bytes, src->size);
     dst->size = src->size;
-    dst->bytes = bytes;
+    dst->bytes = WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(uint8_t*, bytes, src->size);
   }
   return 1;
 }
