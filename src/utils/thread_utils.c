@@ -232,10 +232,13 @@ WEBP_NODISCARD static int Reset(WebPWorker* const worker) {
       pthread_mutex_destroy(&impl->mutex);
       goto Error;
     }
-    pthread_mutex_lock(&impl->mutex);
-    ok = !pthread_create(&impl->thread, NULL, ThreadLoop, worker);
-    if (ok) worker->status = OK;
-    pthread_mutex_unlock(&impl->mutex);
+    if (pthread_mutex_lock(&impl->mutex)) {
+      ok = 0;
+    } else {
+      ok = !pthread_create(&impl->thread, NULL, ThreadLoop, worker);
+      if (ok) worker->status = OK;
+      pthread_mutex_unlock(&impl->mutex);
+    }
     if (!ok) {
       pthread_mutex_destroy(&impl->mutex);
       pthread_cond_destroy(&impl->condition);
