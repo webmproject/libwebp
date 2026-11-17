@@ -220,6 +220,7 @@ static void Help(void) {
           "  -ssim ..... print SSIM distortion\n"
           "  -psnr ..... print PSNR distortion (default)\n"
           "  -alpha .... preserve alpha plane\n"
+          "  -exact .... expect exact match (distortion >= 99)\n"
           "  -h ........ this message\n"
           "  -o <file> . save the diff map as a WebP lossless file\n"
           "  -scale .... scale the difference map to fit [0..255] range\n"
@@ -234,6 +235,7 @@ int main(int argc, const char* argv[]) {
   size_t size1 = 0, size2 = 0;
   int ret = EXIT_FAILURE;
   float disto[5];
+  int exact = 0;
   int type = 0;
   int c;
   int help = 0;
@@ -258,6 +260,8 @@ int main(int argc, const char* argv[]) {
       type = 0;
     } else if (!strcmp(argv[c], "-alpha")) {
       keep_alpha = 1;
+    } else if (!strcmp(argv[c], "-exact")) {
+      exact = 1;
     } else if (!strcmp(argv[c], "-scale")) {
       scale = 1;
     } else if (!strcmp(argv[c], "-gray")) {
@@ -300,6 +304,11 @@ int main(int argc, const char* argv[]) {
   printf("%u %.2f    %.2f %.2f %.2f %.2f [ %.2f bpp ]\n", (unsigned int)size1,
          disto[4], disto[0], disto[1], disto[2], disto[3],
          8.f * size1 / pic1.width / pic1.height);
+
+  if (exact && disto[4] < 99.f) {
+    fprintf(stderr, "Pictures do not match (distortion: %.2f).\n", disto[4]);
+    goto End;
+  }
 
   if (output != NULL) {
     uint8_t* data = NULL;
