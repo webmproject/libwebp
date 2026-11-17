@@ -296,13 +296,14 @@ WEBP_NODISCARD static int ReadHuffmanCodeLengths(
   }
 
   symbol = 0;
-  while (symbol < num_symbols) {
+  while (!br->eos && symbol < num_symbols) {
     const HuffmanCode* p;
     int code_len;
     if (max_symbol-- == 0) break;
     VP8LFillBitWindow(br);
     p = &tables.curr_segment->start[VP8LPrefetchBits(br) & LENGTHS_TABLE_MASK];
     VP8LSetBitPos(br, br->bit_pos + p->bits);
+    if (VP8LIsEndOfStream(br)) break;
     code_len = p->value;
     if (code_len < kCodeLengthLiterals) {
       code_lengths[symbol++] = code_len;
@@ -321,7 +322,8 @@ WEBP_NODISCARD static int ReadHuffmanCodeLengths(
       }
     }
   }
-  ok = 1;
+  br->eos = VP8LIsEndOfStream(br);
+  ok = !br->eos;
 
 End:
   VP8LHuffmanTablesDeallocate(&tables);

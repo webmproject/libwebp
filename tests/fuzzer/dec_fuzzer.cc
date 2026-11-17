@@ -52,7 +52,11 @@ void DecodeWebP(std::string_view arbitrary_bytes,
               sizeof(decoder_options));
   const VP8StatusCode status = WebPDecode(data, size, &decoder_config);
   nalloc_end();
-  if (status == VP8_STATUS_OK) {
+  // Lossy VP8 SIMD IDCT assumes encoder-bounded DCT coefficients and can
+  // overflow 16-bit intermediates differently from the scalar C reference on
+  // corrupted bitstreams (valid lossy bitstreams are checked in
+  // enc_dec_fuzzer).
+  if (status == VP8_STATUS_OK && decoder_config.input.format == 2) {
     fuzz_utils::CompareDecodeOptimizations(
         default_VP8GetCPUInfo, optimization_index, data, size, decoder_config);
   }
