@@ -27,6 +27,8 @@
 #include "src/webp/mux_types.h"
 #include "src/webp/types.h"
 
+WEBP_ASSUME_UNSAFE_INDEXABLE_ABI
+
 #if defined(_MSC_VER) && _MSC_VER < 1900
 #define snprintf _snprintf
 #endif
@@ -344,7 +346,7 @@ static void FrameRelease(EncodedFrame* const encoded_frame) {
   if (encoded_frame != NULL) {
     WebPDataClear(&encoded_frame->sub_frame.bitstream);
     WebPDataClear(&encoded_frame->key_frame.bitstream);
-    memset(encoded_frame, 0, sizeof(*encoded_frame));
+    WEBP_UNSAFE_MEMSET(encoded_frame, 0, sizeof(*encoded_frame));
   }
 }
 
@@ -863,7 +865,7 @@ static WebPEncodingError EncodeCandidate(WebPPicture* const sub_frame,
   WebPConfig config = *encoder_config;
   WebPEncodingError error_code = VP8_ENC_OK;
   assert(candidate != NULL);
-  memset(candidate, 0, sizeof(*candidate));
+  WEBP_UNSAFE_MEMSET(candidate, 0, sizeof(*candidate));
 
   // Set frame rect and info.
   candidate->rect = *rect;
@@ -1062,7 +1064,8 @@ static WebPEncodingError GenerateCandidates(
     if (use_blending_ll) {
       // Reset the whole carryover mask to "all pixels are explicitly encoded in
       // this current frame".
-      memset(enc->candidate_carryover_mask, 0, RectArea(&params->rect_ll));
+      WEBP_UNSAFE_MEMSET(enc->candidate_carryover_mask, 0,
+                         RectArea(&params->rect_ll));
       enc->curr_canvas_copy_modified =
           IncreaseTransparency(canvas_carryover, &params->rect_ll, curr_canvas,
                                enc->candidate_carryover_mask);
@@ -1082,7 +1085,8 @@ static WebPEncodingError GenerateCandidates(
     if (use_blending_lossy) {
       // Reset the whole carryover mask to "all pixels are explicitly encoded in
       // this current frame".
-      memset(enc->candidate_carryover_mask, 0, RectArea(&params->rect_lossy));
+      WEBP_UNSAFE_MEMSET(enc->candidate_carryover_mask, 0,
+                         RectArea(&params->rect_lossy));
       enc->curr_canvas_copy_modified = FlattenSimilarBlocks(
           canvas_carryover, &params->rect_lossy, curr_canvas,
           config_lossy->quality, enc->candidate_carryover_mask);

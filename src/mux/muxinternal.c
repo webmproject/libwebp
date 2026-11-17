@@ -23,6 +23,8 @@
 #include "src/webp/mux_types.h"
 #include "src/webp/types.h"
 
+WEBP_ASSUME_UNSAFE_INDEXABLE_ABI
+
 #define UNDEFINED_CHUNK_SIZE ((uint32_t)(-1))
 
 const ChunkInfo kChunks[] = {
@@ -50,7 +52,7 @@ int WebPGetMuxVersion(void) {
 
 void ChunkInit(WebPChunk* const chunk) {
   assert(chunk);
-  memset(chunk, 0, sizeof(*chunk));
+  WEBP_UNSAFE_MEMSET(chunk, 0, sizeof(*chunk));
   chunk->tag = NIL_TAG;
 }
 
@@ -229,7 +231,7 @@ size_t ChunkListDiskSize(const WebPChunk* chunk_list) {
 
 void MuxImageInit(WebPMuxImage* const wpi) {
   assert(wpi);
-  memset(wpi, 0, sizeof(*wpi));
+  WEBP_UNSAFE_MEMSET(wpi, 0, sizeof(*wpi));
 }
 
 WebPMuxImage* MuxImageRelease(WebPMuxImage* const wpi) {

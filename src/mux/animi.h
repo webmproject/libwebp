@@ -16,6 +16,8 @@
 
 #include "src/webp/mux.h"
 
+WEBP_ASSUME_UNSAFE_INDEXABLE_ABI
+
 #ifdef __cplusplus
 extern "C" {
 #endif

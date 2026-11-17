@@ -24,6 +24,8 @@
 #include "src/webp/mux_types.h"
 #include "src/webp/types.h"
 
+WEBP_ASSUME_UNSAFE_INDEXABLE_ABI
+
 //------------------------------------------------------------------------------
 // Helper method(s).
 
@@ -504,7 +506,7 @@ WebPMuxError WebPMuxGetFrame(const WebPMux* mux, uint32_t nth,
   if (mux == NULL || frame == NULL) {
     return WEBP_MUX_INVALID_ARGUMENT;
   }
-  memset(frame, 0, sizeof(*frame));
+  WEBP_UNSAFE_MEMSET(frame, 0, sizeof(*frame));
 
   // Get the nth WebPMuxImage.
   err = MuxImageGetNth((const WebPMuxImage**)&mux->images, nth, &wpi);

@@ -24,12 +24,14 @@
 #include "src/webp/mux_types.h"
 #include "src/webp/types.h"
 
+WEBP_ASSUME_UNSAFE_INDEXABLE_ABI
+
 //------------------------------------------------------------------------------
 // Life of a mux object.
 
 static void MuxInit(WebPMux* const mux) {
   assert(mux != NULL);
-  memset(mux, 0, sizeof(*mux));
+  WEBP_UNSAFE_MEMSET(mux, 0, sizeof(*mux));
   mux->canvas_width = 0;  // just to be explicit
   mux->canvas_height = 0;
 }
@@ -610,7 +612,7 @@ WebPMuxError WebPMuxAssemble(WebPMux* mux, WebPData* assembled_data) {
     return WEBP_MUX_INVALID_ARGUMENT;
   }
   // Clean up returned data, in case something goes wrong.
-  memset(assembled_data, 0, sizeof(*assembled_data));
+  WEBP_UNSAFE_MEMSET(assembled_data, 0, sizeof(*assembled_data));
 
   if (mux == NULL) {
     return WEBP_MUX_INVALID_ARGUMENT;

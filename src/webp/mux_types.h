@@ -18,6 +18,8 @@
 
 #include "./types.h"
 
+WEBP_ASSUME_UNSAFE_INDEXABLE_ABI
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -73,7 +75,7 @@ static WEBP_INLINE void WebPDataInit(WebPData* webp_data) {
 // Does not deallocate the object itself.
 static WEBP_INLINE void WebPDataClear(WebPData* webp_data) {
   if (webp_data != NULL) {
-    WebPFree((void*)webp_data->bytes);
+    WebPFree(WEBP_UNSAFE_FORGE_SINGLE(void*, webp_data->bytes));
     WebPDataInit(webp_data);
   }
 }
