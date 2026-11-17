@@ -184,13 +184,13 @@ void VP8LBitReaderSetBuffer(VP8LBitReader* const br,
 uint32_t VP8LReadBits(VP8LBitReader* const br, int n_bits);
 
 // Return the prefetched bits, so they can be looked up.
-static WEBP_INLINE uint32_t VP8LPrefetchBits(VP8LBitReader* const br) {
+static WEBP_ALWAYS_INLINE uint32_t VP8LPrefetchBits(VP8LBitReader* const br) {
   return (uint32_t)(br->val >> (br->bit_pos & (VP8L_LBITS - 1)));
 }
 
 // Returns true if there was an attempt at reading bit past the end of
 // the buffer. Doesn't set br->eos flag.
-static WEBP_INLINE int VP8LIsEndOfStream(const VP8LBitReader* const br) {
+static WEBP_ALWAYS_INLINE int VP8LIsEndOfStream(const VP8LBitReader* const br) {
   assert(br->pos <= br->len);
   return br->eos || ((br->pos == br->len) && (br->bit_pos > VP8L_LBITS));
 }
@@ -199,7 +199,7 @@ static WEBP_INLINE int VP8LIsEndOfStream(const VP8LBitReader* const br) {
 // VP8LPrefetchBits and VP8LFillBitWindow.
 // This function does *not* set br->eos, since it's speed-critical.
 // Use with extreme care!
-static WEBP_INLINE void VP8LSetBitPos(VP8LBitReader* const br, int val) {
+static WEBP_ALWAYS_INLINE void VP8LSetBitPos(VP8LBitReader* const br, int val) {
   br->bit_pos = val;
 }
 
@@ -207,7 +207,7 @@ static WEBP_INLINE void VP8LSetBitPos(VP8LBitReader* const br, int val) {
 // The common fast path is inlined; the near-end-of-buffer fallback is handled
 // by the non-inlined VP8LDoFillBitWindow.
 extern void VP8LDoFillBitWindow(VP8LBitReader* const br);
-static WEBP_INLINE void VP8LFillBitWindow(VP8LBitReader* const br) {
+static WEBP_ALWAYS_INLINE void VP8LFillBitWindow(VP8LBitReader* const br) {
   if (br->bit_pos >= VP8L_WBITS) {
 #if defined(VP8L_USE_FAST_LOAD)
     if (br->pos + sizeof(br->val) < br->len) {

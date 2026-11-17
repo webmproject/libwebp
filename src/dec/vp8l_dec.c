@@ -576,6 +576,8 @@ int ReadHuffmanCodesHelper(int color_cache_bits, int num_htree_groups,
       }
       htree_group->is_trivial_literal = is_trivial_literal;
       htree_group->is_trivial_code = 0;
+      htree_group->is_trivial_alpha = (htrees[ALPHA][0].bits == 0);
+      htree_group->literal_arb = 0;
       if (is_trivial_literal) {
         const int red = htrees[RED][0].value;
         const int blue = htrees[BLUE][0].value;
@@ -585,6 +587,8 @@ int ReadHuffmanCodesHelper(int color_cache_bits, int num_htree_groups,
           htree_group->is_trivial_code = 1;
           htree_group->literal_arb |= htrees[GREEN][0].value << 8;
         }
+      } else if (htree_group->is_trivial_alpha) {
+        htree_group->literal_arb = htrees[ALPHA][0].value;
       }
       htree_group->packed_table = NULL;
       if (!htree_group->is_trivial_code && (max_bits < HUFFMAN_PACKED_BITS) &&
@@ -1439,8 +1443,9 @@ static void RestoreState(VP8LDecoder* const dec) {
 // literal pixel for AdvanceByOne.
 static WEBP_ALWAYS_INLINE void DecodeLiterals(
     const HTreeGroup* const htree_group, int code, int width, int mask,
-    const uint32_t* const src_last, VP8LBitReader* WEBP_RESTRICT const br,
-    uint32_t** const src_ptr, int* const col_ptr) {
+    const uint32_t* const src_last, int is_trivial_alpha,
+    VP8LBitReader* WEBP_RESTRICT const br, uint32_t** const src_ptr,
+    int* const col_ptr) {
   uint32_t* src = *src_ptr;
   const int col = *col_ptr;
   // Bound the run to the end of the current Huffman tile or image row so we
@@ -1457,7 +1462,8 @@ static WEBP_ALWAYS_INLINE void DecodeLiterals(
     int blue, alpha, bit_pos;
     VP8LFillBitWindow(&lbr);
     blue = ReadSymbol(htree_group->htrees[BLUE], &lbr);
-    alpha = ReadSymbol(htree_group->htrees[ALPHA], &lbr);
+    alpha = is_trivial_alpha ? (int)htree_group->literal_arb
+                             : ReadSymbol(htree_group->htrees[ALPHA], &lbr);
     if (VP8LIsEndOfStream(&lbr)) break;
     *src = ((uint32_t)alpha << 24) | (red << 16) | (code << 8) | blue;
     if (src >= fast_end) break;
@@ -1535,8 +1541,15 @@ WEBP_NODISCARD static int DecodeImageData(VP8LDecoder* const dec,
         if (VP8LIsEndOfStream(br)) break;
         *src = htree_group->literal_arb | (code << 8);
       } else {
-        DecodeLiterals(htree_group, code, width, mask, src_last, br, &src,
-                       &col);
+        // Pass literal 1 or 0 so the compiler constant-folds the in-loop
+        // alpha check and elides ReadSymbol for trivial alpha.
+        if (htree_group->is_trivial_alpha) {
+          DecodeLiterals(htree_group, code, width, mask, src_last,
+                         /*is_trivial_alpha=*/1, br, &src, &col);
+        } else {
+          DecodeLiterals(htree_group, code, width, mask, src_last,
+                         /*is_trivial_alpha=*/0, br, &src, &col);
+        }
         if (VP8LIsEndOfStream(br)) break;
       }
     AdvanceByOne:

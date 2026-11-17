@@ -24,7 +24,6 @@
 #include <vector>
 
 #include "./fuzz_utils.h"
-#include "gtest/gtest.h"
 #include "src/dsp/cpu.h"
 #include "src/utils/rescaler_utils.h"
 #include "src/utils/utils.h"

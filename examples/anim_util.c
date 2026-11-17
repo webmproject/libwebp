@@ -33,6 +33,10 @@
 #define snprintf _snprintf
 #endif
 
+#ifndef WEBP_UINT64_MAX
+#define WEBP_UINT64_MAX (~0ull)
+#endif
+
 static const int kNumChannels = 4;
 
 // -----------------------------------------------------------------------------
@@ -104,7 +108,9 @@ int CheckMultiplicationOverflow(uint32_t val1, uint32_t val2, size_t* product) {
 
 WEBP_NODISCARD
 int CheckAdditionOverflow(size_t val1, uint32_t val2, size_t* addition) {
-  const uint64_t size = (uint64_t)val1 + val2;
+  uint64_t size;
+  if (val1 > WEBP_UINT64_MAX - val2) return 0;
+  size = (uint64_t)val1 + val2;
   if (CheckSizeForOverflow(size)) {
     *addition = (size_t)size;
     return 1;
