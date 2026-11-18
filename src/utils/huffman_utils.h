@@ -93,7 +93,7 @@ struct HTreeGroup {
   uint32_t literal_arb;    // If is_trivial_literal is true, this is the
                            // ARGB value of the pixel, with Green channel
                            // being set to zero. Otherwise, if is_trivial_alpha
-                           // is true, holds only the Alpha value.
+                           // is true, holds Alpha shifted left by 24.
   int is_trivial_code;     // true if is_trivial_literal with only one code
   int is_trivial_alpha;    // true if huffman tree for Alpha is trivial
   // table mapping input bits to a packed values, or escape case to literal code

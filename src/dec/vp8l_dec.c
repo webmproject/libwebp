@@ -590,7 +590,7 @@ int ReadHuffmanCodesHelper(int color_cache_bits, int num_htree_groups,
           htree_group->literal_arb |= htrees[GREEN][0].value << 8;
         }
       } else if (htree_group->is_trivial_alpha) {
-        htree_group->literal_arb = htrees[ALPHA][0].value;
+        htree_group->literal_arb = (uint32_t)htrees[ALPHA][0].value << 24;
       }
       htree_group->packed_table = NULL;
       if (!htree_group->is_trivial_code && (max_bits < HUFFMAN_PACKED_BITS) &&
@@ -1461,13 +1461,15 @@ static WEBP_ALWAYS_INLINE void DecodeLiterals(
   for (;;) {
     // 'code' holds the literal's GREEN channel (0..255); read RED, BLUE, ALPHA.
     const int red = ReadSymbol(htree_group->htrees[RED], &lbr);
-    int blue, alpha, bit_pos;
+    int blue, bit_pos;
+    uint32_t alpha;
     VP8LFillBitWindow(&lbr);
     blue = ReadSymbol(htree_group->htrees[BLUE], &lbr);
-    alpha = is_trivial_alpha ? (int)htree_group->literal_arb
-                             : ReadSymbol(htree_group->htrees[ALPHA], &lbr);
+    alpha = is_trivial_alpha
+                ? htree_group->literal_arb
+                : (uint32_t)ReadSymbol(htree_group->htrees[ALPHA], &lbr) << 24;
     if (VP8LIsEndOfStream(&lbr)) break;
-    *src = ((uint32_t)alpha << 24) | (red << 16) | (code << 8) | blue;
+    *src = alpha | (red << 16) | (code << 8) | blue;
     if (src >= fast_end) break;
     // Peek at the next symbol: if it's another literal (code < 256), stay in
     // this tight loop; otherwise rewind bit_pos so the outer loop handles it.
