@@ -422,9 +422,8 @@ target_include_directories(webputils PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
 add_library(webp $<TARGET_OBJECTS:webpdecode> $<TARGET_OBJECTS:webpdsp>
                  $<TARGET_OBJECTS:webpencode> $<TARGET_OBJECTS:webputils>)
 if(WEBP_ENABLE_FBOUNDS_SAFETY)
-  # Enable -fbounds-safety for webputils, webpdecode(r); webpdemux and
-  # libwebpmux are wired below once those targets exist (same option / same
-  # define).
+  # Enable -fbounds-safety for webputils, webpdecode(r); webpdemux is wired
+  # below once that target exists (same option / same define).
   add_definitions(-DWEBP_SUPPORT_FBOUNDS_SAFETY=1)
   target_compile_options(webputils PRIVATE -fbounds-safety)
   target_compile_options(webputilsdecode PRIVATE -fbounds-safety)
@@ -572,9 +571,6 @@ if(WEBP_BUILD_LIBWEBPMUX)
   parse_makefile_am(${CMAKE_CURRENT_SOURCE_DIR}/src/mux "WEBP_MUX_SRCS" "")
   add_library(libwebpmux ${WEBP_MUX_SRCS})
   target_link_libraries(libwebpmux webp)
-  if(WEBP_ENABLE_FBOUNDS_SAFETY)
-    target_compile_options(libwebpmux PRIVATE -fbounds-safety)
-  endif()
   target_include_directories(libwebpmux PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
                                                 ${CMAKE_CURRENT_SOURCE_DIR})
   set_version(src/mux/Makefile.am libwebpmux webpmux)
