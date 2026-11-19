@@ -195,7 +195,8 @@ void ChunkListDelete(WebPChunk** const chunk_list) {
 //------------------------------------------------------------------------------
 // Chunk serialization methods.
 
-static uint8_t* ChunkEmit(const WebPChunk* const chunk, uint8_t* dst) {
+static uint8_t* WEBP_INDEXABLE ChunkEmit(const WebPChunk* const chunk,
+                                         uint8_t* WEBP_INDEXABLE dst) {
   const size_t chunk_size = chunk->data.size;
   assert(chunk);
   // Do not check chunk->tag != NIL as NIL_TAG could have been read from a file.
@@ -203,13 +204,14 @@ static uint8_t* ChunkEmit(const WebPChunk* const chunk, uint8_t* dst) {
   PutLE32(dst + TAG_SIZE, (uint32_t)chunk_size);
   assert(chunk_size == (uint32_t)chunk_size);
   if (chunk_size > 0) {
-    memcpy(dst + CHUNK_HEADER_SIZE, chunk->data.bytes, chunk_size);
+    memcpy(dst + CHUNK_HEADER_SIZE, MuxDataBytes(&chunk->data), chunk_size);
   }
   if (chunk_size & 1) dst[CHUNK_HEADER_SIZE + chunk_size] = 0;  // Add padding.
   return dst + ChunkDiskSize(chunk);
 }
 
-uint8_t* ChunkListEmit(const WebPChunk* chunk_list, uint8_t* dst) {
+uint8_t* WEBP_INDEXABLE ChunkListEmit(const WebPChunk* chunk_list,
+                                      uint8_t* WEBP_INDEXABLE dst) {
   while (chunk_list != NULL) {
     dst = ChunkEmit(chunk_list, dst);
     chunk_list = chunk_list->next;
@@ -382,22 +384,24 @@ size_t MuxImageDiskSize(const WebPMuxImage* const wpi) {
 }
 
 // Special case as ANMF chunk encapsulates other image chunks.
-static uint8_t* ChunkEmitSpecial(const WebPChunk* const header,
-                                 size_t total_size, uint8_t* dst) {
+static uint8_t* WEBP_INDEXABLE ChunkEmitSpecial(const WebPChunk* const header,
+                                                size_t total_size,
+                                                uint8_t* WEBP_INDEXABLE dst) {
   const size_t header_size = header->data.size;
   const size_t offset_to_next = total_size - CHUNK_HEADER_SIZE;
   assert(header->tag == kChunks[IDX_ANMF].tag);
   PutLE32(dst + 0, header->tag);
   PutLE32(dst + TAG_SIZE, (uint32_t)offset_to_next);
   assert(header_size == (uint32_t)header_size);
-  memcpy(dst + CHUNK_HEADER_SIZE, header->data.bytes, header_size);
+  memcpy(dst + CHUNK_HEADER_SIZE, MuxDataBytes(&header->data), header_size);
   if (header_size & 1) {
     dst[CHUNK_HEADER_SIZE + header_size] = 0;  // Add padding.
   }
   return dst + ChunkDiskSize(header);
 }
 
-uint8_t* MuxImageEmit(const WebPMuxImage* const wpi, uint8_t* dst) {
+uint8_t* WEBP_INDEXABLE MuxImageEmit(const WebPMuxImage* const wpi,
+                                     uint8_t* WEBP_INDEXABLE dst) {
   // Ordering of chunks to be emitted is strictly as follows:
   // 1. ANMF chunk (if present).
   // 2. ALPH chunk (if present).
@@ -423,7 +427,9 @@ int MuxHasAlpha(const WebPMuxImage* images) {
   return 0;
 }
 
-uint8_t* MuxEmitRiffHeader(uint8_t* const data, size_t size) {
+uint8_t* WEBP_INDEXABLE MuxEmitRiffHeader(uint8_t* const WEBP_COUNTED_BY(size)
+                                              data,
+                                          size_t size) {
   PutLE32(data + 0, MKFOURCC('R', 'I', 'F', 'F'));
   PutLE32(data + TAG_SIZE, (uint32_t)size - CHUNK_HEADER_SIZE);
   assert(size == (uint32_t)size);

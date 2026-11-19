@@ -19,6 +19,7 @@
 
 #include "src/dec/vp8i_dec.h"
 #include "src/dec/vp8li_dec.h"
+#include "src/utils/bounds_safety.h"
 #include "src/webp/format_constants.h"
 #include "src/webp/mux.h"
 #include "src/webp/mux_types.h"
@@ -107,6 +108,13 @@ typedef struct {
 
 extern const ChunkInfo kChunks[IDX_LAST_CHUNK];
 
+// Returns 'data->bytes' bounded by 'data->size'.
+static WEBP_INLINE const uint8_t* WEBP_BIDI_INDEXABLE
+MuxDataBytes(const WebPData* const data) {
+  return WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(const uint8_t*, data->bytes,
+                                          data->size);
+}
+
 //------------------------------------------------------------------------------
 // Chunk object management.
 
@@ -167,7 +175,8 @@ static WEBP_INLINE size_t ChunkDiskSize(const WebPChunk* chunk) {
 size_t ChunkListDiskSize(const WebPChunk* chunk_list);
 
 // Write out the given list of chunks into 'dst'.
-uint8_t* ChunkListEmit(const WebPChunk* chunk_list, uint8_t* dst);
+uint8_t* WEBP_INDEXABLE ChunkListEmit(const WebPChunk* chunk_list,
+                                      uint8_t* WEBP_INDEXABLE dst);
 
 //------------------------------------------------------------------------------
 // MuxImage object management.
@@ -216,7 +225,8 @@ WebPMuxError MuxImageGetNth(const WebPMuxImage** wpi_list, uint32_t nth,
 size_t MuxImageDiskSize(const WebPMuxImage* const wpi);
 
 // Write out the given image into 'dst'.
-uint8_t* MuxImageEmit(const WebPMuxImage* const wpi, uint8_t* dst);
+uint8_t* WEBP_INDEXABLE MuxImageEmit(const WebPMuxImage* const wpi,
+                                     uint8_t* WEBP_INDEXABLE dst);
 
 //------------------------------------------------------------------------------
 // Helper methods for mux.
@@ -225,7 +235,9 @@ uint8_t* MuxImageEmit(const WebPMuxImage* const wpi, uint8_t* dst);
 int MuxHasAlpha(const WebPMuxImage* images);
 
 // Write out RIFF header into 'data', given total data size 'size'.
-uint8_t* MuxEmitRiffHeader(uint8_t* const data, size_t size);
+uint8_t* WEBP_INDEXABLE MuxEmitRiffHeader(uint8_t* const WEBP_COUNTED_BY(size)
+                                              data,
+                                          size_t size);
 
 // Returns the list where chunk with given ID is to be inserted in mux.
 WebPChunk** MuxGetChunkListFromId(const WebPMux* mux, WebPChunkId id);
