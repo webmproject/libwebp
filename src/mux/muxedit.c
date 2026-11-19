@@ -134,7 +134,7 @@ static WebPMuxError MuxSet(WebPMux* const mux, uint32_t tag,
 static WebPMuxError CreateFrameData(int width, int height,
                                     const WebPMuxFrameInfo* const info,
                                     WebPData* const frame) {
-  uint8_t* frame_bytes;
+  uint8_t* WEBP_BIDI_INDEXABLE frame_bytes;
   const size_t frame_size = kChunks[IDX_ANMF].size;
 
   assert(width > 0 && height > 0 && info->duration >= 0);
@@ -167,7 +167,7 @@ static WebPMuxError GetImageData(const WebPData* const bitstream,
                                  int* const is_lossless) {
   WebPDataInit(alpha);  // Default: no alpha.
   if (bitstream->size < TAG_SIZE ||
-      memcmp(bitstream->bytes, "RIFF", TAG_SIZE)) {
+      memcmp(MuxDataBytes(bitstream), "RIFF", TAG_SIZE)) {
     // It is NOT webp file data. Return input data as is.
     *image = *bitstream;
   } else {
@@ -183,7 +183,7 @@ static WebPMuxError GetImageData(const WebPData* const bitstream,
     }
     WebPMuxDelete(mux);
   }
-  *is_lossless = VP8LCheckSignature(image->bytes, image->size);
+  *is_lossless = VP8LCheckSignature(MuxDataBytes(image), image->size);
   return WEBP_MUX_OK;
 }
 
@@ -395,14 +395,15 @@ static WebPMuxError GetFrameInfo(const WebPChunk* const frame_chunk,
                                  int* const x_offset, int* const y_offset,
                                  int* const duration) {
   const WebPData* const data = &frame_chunk->data;
+  const uint8_t* WEBP_BIDI_INDEXABLE const bytes = MuxDataBytes(data);
   const size_t expected_data_size = ANMF_CHUNK_SIZE;
   assert(frame_chunk != NULL);
   assert(frame_chunk->tag == kChunks[IDX_ANMF].tag);
   if (data->size != expected_data_size) return WEBP_MUX_INVALID_ARGUMENT;
 
-  *x_offset = 2 * GetLE24(data->bytes + 0);
-  *y_offset = 2 * GetLE24(data->bytes + 3);
-  *duration = GetLE24(data->bytes + 12);
+  *x_offset = 2 * GetLE24(bytes + 0);
+  *y_offset = 2 * GetLE24(bytes + 3);
+  *duration = GetLE24(bytes + 12);
   return WEBP_MUX_OK;
 }
 
@@ -594,7 +595,8 @@ static size_t ImageListDiskSize(const WebPMuxImage* wpi_list) {
 }
 
 // Write out the given list of images into 'dst'.
-static uint8_t* ImageListEmit(const WebPMuxImage* wpi_list, uint8_t* dst) {
+static uint8_t* WEBP_INDEXABLE ImageListEmit(const WebPMuxImage* wpi_list,
+                                             uint8_t* WEBP_INDEXABLE dst) {
   while (wpi_list != NULL) {
     dst = MuxImageEmit(wpi_list, dst);
     wpi_list = wpi_list->next;
@@ -604,8 +606,8 @@ static uint8_t* ImageListEmit(const WebPMuxImage* wpi_list, uint8_t* dst) {
 
 WebPMuxError WebPMuxAssemble(WebPMux* mux, WebPData* assembled_data) {
   size_t size = 0;
-  uint8_t* data = NULL;
-  uint8_t* dst = NULL;
+  uint8_t* WEBP_BIDI_INDEXABLE data = NULL;
+  uint8_t* WEBP_INDEXABLE dst = NULL;
   WebPMuxError err;
 
   if (assembled_data == NULL) {

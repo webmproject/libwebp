@@ -73,6 +73,10 @@ if(WEBP_BUILD_LIBWEBPMUX)
   # library) so the tests link in every configuration.
   add_webp_fuzztest(animencoder_fuzzer)
   target_sources(animencoder_fuzzer PRIVATE ${WEBP_MUX_SRCS})
+  if(WEBP_ENABLE_FBOUNDS_SAFETY)
+    target_compile_options(animencoder_fuzzer
+                           PRIVATE $<$<COMPILE_LANGUAGE:C>:-fbounds-safety>)
+  endif()
   add_webp_fuzztest(mux_demux_api_fuzzer libwebpmux webpdemux)
 endif()
 
