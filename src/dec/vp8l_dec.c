@@ -1441,23 +1441,14 @@ static void RestoreState(VP8LDecoder* const dec) {
 
 // Decodes the current literal pixel (whose GREEN symbol 'code' <
 // NUM_LITERAL_CODES has already been read) and any subsequent literal pixels in
-// the current tile and row, leaving *src_ptr and *col_ptr at the last decoded
-// literal pixel for AdvanceByOne.
+// the current tile and row, leaving *src_ptr at the last decoded literal pixel
+// for AdvanceByOne.
 static WEBP_ALWAYS_INLINE void DecodeLiterals(
-    const HTreeGroup* const htree_group, int code, int width, int mask,
-    const uint32_t* const src_last, int is_trivial_alpha,
-    VP8LBitReader* WEBP_RESTRICT const br, uint32_t** const src_ptr,
-    int* const col_ptr) {
+    const HTreeGroup* const htree_group, int code,
+    const uint32_t* const fast_end, int is_trivial_alpha,
+    VP8LBitReader* WEBP_RESTRICT const br, uint32_t** const src_ptr) {
   uint32_t* src = *src_ptr;
-  const int col = *col_ptr;
-  // Bound the run to the end of the current Huffman tile or image row so we
-  // don't cross a tile boundary (where htree_group changes) or row boundary.
-  const uint32_t tile_end_col = (uint32_t)(col | mask);
-  const int max_col =
-      (tile_end_col < (uint32_t)(width - 1)) ? (int)tile_end_col : (width - 1);
-  const uint32_t* fast_end = src + (max_col - col);
   VP8LBitReader lbr = *br;  // Local copy keeps bit-reader state in registers.
-  if (fast_end >= src_last) fast_end = src_last - 1;
   for (;;) {
     // 'code' holds the literal's GREEN channel (0..255); read RED, BLUE, ALPHA.
     const int red = ReadSymbol(htree_group->htrees[RED], &lbr);
@@ -1483,7 +1474,6 @@ static WEBP_ALWAYS_INLINE void DecodeLiterals(
     ++src;
   }
   *br = lbr;
-  *col_ptr = col + (int)(src - *src_ptr);
   *src_ptr = src;
 }
 
@@ -1492,13 +1482,13 @@ WEBP_NODISCARD static int DecodeImageData(VP8LDecoder* const dec,
                                           int height, int last_row,
                                           ProcessRowsFunc process_func) {
   int row = dec->last_pixel / width;
-  int col = dec->last_pixel % width;
   VP8LBitReader* WEBP_RESTRICT const br = &dec->br;
   VP8LMetadata* const hdr = &dec->hdr;
   const ptrdiff_t window_limit =
       GetWindowLimit(dec, height, process_func != NULL);
   uint32_t* src = data + dec->last_pixel - GetWindowOffset(dec);
   uint32_t* last_cached = src;
+  const uint32_t* row_start = data + GetWindowRowOffset(dec, row);
   uint32_t* src_end = data + GetWindowRowOffset(dec, height);
   uint32_t* src_last = data + GetWindowRowOffset(dec, last_row);
   const int len_code_limit = NUM_LITERAL_CODES + NUM_LENGTH_CODES;
@@ -1508,7 +1498,8 @@ WEBP_NODISCARD static int DecodeImageData(VP8LDecoder* const dec,
       (hdr->color_cache_size > 0) ? &hdr->color_cache : NULL;
   const int mask = hdr->huffman_mask;
   const HTreeGroup* htree_group =
-      (src < src_last) ? GetHtreeGroupForPos(hdr, col, row) : NULL;
+      (src < src_last) ? GetHtreeGroupForPos(hdr, (int)(src - row_start), row)
+                       : NULL;
   assert(dec->last_row < last_row);
   assert(src_last <= src_end);
 
@@ -1521,6 +1512,7 @@ WEBP_NODISCARD static int DecodeImageData(VP8LDecoder* const dec,
 
   while (src < src_last) {
     int code;
+    const int col = (int)(src - row_start);
     // Only update when changing tile. Note we could use this test:
     // if "((((prev_col ^ col) | prev_row ^ row)) > mask)" -> tile changed
     // but that's actually slower and needs storing the previous col/row.
@@ -1545,22 +1537,26 @@ WEBP_NODISCARD static int DecodeImageData(VP8LDecoder* const dec,
         if (VP8LIsEndOfStream(br)) break;
         *src = htree_group->literal_arb | (code << 8);
       } else {
+        const uint32_t tile_end_col = (uint32_t)(col | mask);
+        const int max_col = (tile_end_col < (uint32_t)(width - 1))
+                                ? (int)tile_end_col
+                                : (width - 1);
+        const uint32_t* fast_end = row_start + max_col;
+        if (fast_end >= src_last) fast_end = src_last - 1;
         // Pass literal 1 or 0 so the compiler constant-folds the in-loop
         // alpha check and elides ReadSymbol for trivial alpha.
         if (htree_group->is_trivial_alpha) {
-          DecodeLiterals(htree_group, code, width, mask, src_last,
-                         /*is_trivial_alpha=*/1, br, &src, &col);
+          DecodeLiterals(htree_group, code, fast_end, /*is_trivial_alpha=*/1,
+                         br, &src);
         } else {
-          DecodeLiterals(htree_group, code, width, mask, src_last,
-                         /*is_trivial_alpha=*/0, br, &src, &col);
+          DecodeLiterals(htree_group, code, fast_end, /*is_trivial_alpha=*/0,
+                         br, &src);
         }
         if (VP8LIsEndOfStream(br)) break;
       }
     AdvanceByOne:
       ++src;
-      ++col;
-      if (col >= width) {
-        col = 0;
+      if (src - row_start >= width) {
         ++row;
         if (process_func != NULL) {
           if (row <= last_row) {
@@ -1575,6 +1571,7 @@ WEBP_NODISCARD static int DecodeImageData(VP8LDecoder* const dec,
         }
         ShiftWindow32b(dec, data, window_limit, &src, &last_cached, &src_end,
                        &src_last);
+        row_start = src;
       }
     } else if (code < len_code_limit) {  // Backward reference
       int dist_code, dist;
@@ -1592,27 +1589,36 @@ WEBP_NODISCARD static int DecodeImageData(VP8LDecoder* const dec,
         CopyBlock32b(src, dist, length);
       }
       src += length;
-      col += length;
-      while (col >= width) {
-        col -= width;
-        ++row;
-        if (process_func != NULL) {
-          if (row <= last_row) {
-            process_func(dec, row, /*wait_for_biggest_batch=*/1);
+      if (src - row_start >= width) {
+        int new_col;
+        do {
+          row_start += width;
+          ++row;
+          if (process_func != NULL) {
+            if (row <= last_row) {
+              process_func(dec, row, /*wait_for_biggest_batch=*/1);
+            }
           }
+        } while (src - row_start >= width);
+        // Because of the check done above (before 'src' was incremented by
+        // 'length'), the following holds true.
+        assert(src <= src_end);
+        new_col = (int)(src - row_start);
+        if (new_col & mask) {
+          htree_group = GetHtreeGroupForPos(hdr, new_col, row);
         }
+        if (row >= next_sync_row ||
+            (dec->incremental &&
+             dec->saved_last_pixel < dec->last_row * width)) {
+          SaveState(dec, GetAbsoluteOffset(dec, src - data), &last_cached, src);
+          next_sync_row = row + SYNC_EVERY_N_ROWS;
+        }
+        ShiftWindow32b(dec, data, window_limit, &src, &last_cached, &src_end,
+                       &src_last);
+        row_start = src - new_col;
+      } else if ((int)(src - row_start) & mask) {
+        htree_group = GetHtreeGroupForPos(hdr, (int)(src - row_start), row);
       }
-      // Because of the check done above (before 'src' was incremented by
-      // 'length'), the following holds true.
-      assert(src <= src_end);
-      if (col & mask) htree_group = GetHtreeGroupForPos(hdr, col, row);
-      if (row >= next_sync_row ||
-          (dec->incremental && dec->saved_last_pixel < dec->last_row * width)) {
-        SaveState(dec, GetAbsoluteOffset(dec, src - data), &last_cached, src);
-        next_sync_row = row + SYNC_EVERY_N_ROWS;
-      }
-      ShiftWindow32b(dec, data, window_limit, &src, &last_cached, &src_end,
-                     &src_last);
     } else if (code < color_cache_limit) {  // Color cache
       const int key = code - len_code_limit;
       assert(color_cache != NULL);
