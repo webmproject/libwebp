@@ -85,6 +85,8 @@ endif()
 
 set(WEBP_SIMD_FILES_TO_INCLUDE)
 set(WEBP_SIMD_FLAGS_TO_INCLUDE)
+unset(WEBP_HAVE_NEON_RTCD)
+unset(WEBP_HAVE_NEON_RTCD CACHE)
 
 if(ANDROID AND ANDROID_ABI)
   if(${ANDROID_ABI} STREQUAL "armeabi-v7a")
@@ -120,6 +122,26 @@ foreach(I_SIMD RANGE ${WEBP_SIMD_FLAGS_RANGE})
     endif()
     set(CMAKE_REQUIRED_FLAGS ${SIMD_COMPILE_FLAG})
     webp_check_compiler_flag(${WEBP_SIMD_FLAG} ${WEBP_ENABLE_SIMD})
+    if(${WEBP_SIMD_FLAG} STREQUAL "NEON" AND WEBP_HAVE_NEON)
+      unset(WEBP_HAVE_FLAG_NEON_RTCD CACHE)
+      check_c_source_compiles(
+        "
+          int main(void) {
+            #if !defined(__linux__)
+            this is not valid code
+            #endif
+            return 0;
+          }
+        "
+        WEBP_HAVE_FLAG_NEON_RTCD)
+      if(WEBP_HAVE_FLAG_NEON_RTCD)
+        set(WEBP_HAVE_NEON_RTCD 1)
+      else()
+        message(WARNING "NEON runtime detection is unavailable. Force with "
+                        "CFLAGS=-mfpu=neon or -DCMAKE_C_FLAGS=-mfpu=neon.")
+        set(WEBP_HAVE_NEON 0)
+      endif()
+    endif()
   else()
     if(MSVC AND SIMD_ENABLE_FLAGS)
       # The detection for SSE2/SSE4 support under MSVC is based on the compiler

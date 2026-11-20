@@ -76,11 +76,10 @@
 #cmakedefine WEBP_HAVE_JPEG 1
 
 /* Set to 1 if NEON is supported */
-#cmakedefine WEBP_HAVE_NEON
+#cmakedefine WEBP_HAVE_NEON 1
 
 /* Set to 1 if runtime detection of NEON is enabled */
-/* TODO: handle properly in CMake */
-#cmakedefine WEBP_HAVE_NEON_RTCD
+#cmakedefine WEBP_HAVE_NEON_RTCD 1
 
 /* Set to 1 if PNG library is installed */
 #cmakedefine WEBP_HAVE_PNG 1
