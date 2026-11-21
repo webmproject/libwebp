@@ -451,7 +451,7 @@ static int DGifSavedExtensionToGCB(GifFileType* GifFile, int ImageIndex,
 #define CONTINUE_EXT_FUNC_CODE 0x00
 
 // Signature was changed in v5.0
-#define DGifOpenFileName(a, b) DGifOpenFileName(a)
+#define DGifOpen(a, b, c) DGifOpen(a, b)
 
 #endif  // !LOCAL_GIF_PREREQ(5, 0)
 
