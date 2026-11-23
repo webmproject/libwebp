@@ -35,7 +35,7 @@ static uint64_t SharpYuvUpdateY_SSE2(const uint16_t* ref, const uint16_t* src,
   const __m128i one = _mm_set1_epi16(1);
   __m128i sum = zero;
 
-  for (i = 0; i + 8 <= len; i += 8) {
+  for (i = 0; i <= len - 8; i += 8) {
     const __m128i A = _mm_loadu_si128((const __m128i*)(ref + i));
     const __m128i B = _mm_loadu_si128((const __m128i*)(src + i));
     const __m128i C = _mm_loadu_si128((const __m128i*)(dst + i));
@@ -62,7 +62,7 @@ static uint64_t SharpYuvUpdateY_SSE2(const uint16_t* ref, const uint16_t* src,
 static void SharpYuvUpdateRGB_SSE2(const int16_t* ref, const int16_t* src,
                                    int16_t* dst, int len) {
   int i = 0;
-  for (i = 0; i + 8 <= len; i += 8) {
+  for (i = 0; i <= len - 8; i += 8) {
     const __m128i A = _mm_loadu_si128((const __m128i*)(ref + i));
     const __m128i B = _mm_loadu_si128((const __m128i*)(src + i));
     const __m128i C = _mm_loadu_si128((const __m128i*)(dst + i));

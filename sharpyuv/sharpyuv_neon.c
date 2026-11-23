@@ -30,7 +30,7 @@ static uint64_t SharpYuvUpdateY_NEON(const uint16_t* ref, const uint16_t* src,
   uint64x2_t sum = vdupq_n_u64(0);
   uint64_t diff;
 
-  for (i = 0; i + 8 <= len; i += 8) {
+  for (i = 0; i <= len - 8; i += 8) {
     const int16x8_t A = vreinterpretq_s16_u16(vld1q_u16(ref + i));
     const int16x8_t B = vreinterpretq_s16_u16(vld1q_u16(src + i));
     const int16x8_t C = vreinterpretq_s16_u16(vld1q_u16(dst + i));
@@ -55,7 +55,7 @@ static uint64_t SharpYuvUpdateY_NEON(const uint16_t* ref, const uint16_t* src,
 static void SharpYuvUpdateRGB_NEON(const int16_t* ref, const int16_t* src,
                                    int16_t* dst, int len) {
   int i;
-  for (i = 0; i + 8 <= len; i += 8) {
+  for (i = 0; i <= len - 8; i += 8) {
     const int16x8_t A = vld1q_s16(ref + i);
     const int16x8_t B = vld1q_s16(src + i);
     const int16x8_t C = vld1q_s16(dst + i);
@@ -201,7 +201,7 @@ static void SharpYuvConvertRowY_NEON(const uint16_t* best_y,
   const int yuv_max = (1 << yuv_bit_depth) - 1;
   const size_t uv_w_size = (size_t)uv_w;
   int i = 0;
-  for (; i + 8 <= width; i += 8) {
+  for (; i <= width - 8; i += 8) {
     const size_t off = (size_t)(i >> 1);
     const int16x8_t W = vreinterpretq_s16_u16(vld1q_u16(best_y + i));
     const int16x4_t Ro = vld1_s16(best_uv + off + 0 * uv_w_size);
@@ -256,7 +256,7 @@ static void SharpYuvConvertRowUV_NEON(const int16_t* best_uv, int uv_w,
   const int yuv_max = (1 << yuv_bit_depth) - 1;
   const size_t uv_w_size = (size_t)uv_w;
   int i = 0;
-  for (; i + 8 <= uv_w; i += 8) {
+  for (; i <= uv_w - 8; i += 8) {
     const int16x8_t R16 = vld1q_s16(best_uv + i + 0 * uv_w_size);
     const int16x8_t G16 = vld1q_s16(best_uv + i + 1 * uv_w_size);
     const int16x8_t B16 = vld1q_s16(best_uv + i + 2 * uv_w_size);
@@ -413,7 +413,7 @@ static void UpdateW_NEON(const uint16_t* src, uint16_t* dst, int w,
   const int out_shift = SHARPYUV_GAMMA_TO_LINEAR_BITS - bit_depth;
   const size_t w_size = (size_t)w;
   int i = 0;
-  for (; i + 8 <= w; i += 8) {
+  for (; i <= w - 8; i += 8) {
     uint32x4_t R_lo, R_hi, G_lo, G_hi, B_lo, B_hi, Y_lo, Y_hi;
     GammaToLinear8_NEON(vld1q_u16(src + 0 * w_size + i), shift_right, g2l_tab,
                         &R_lo, &R_hi);
@@ -483,7 +483,7 @@ static void UpdateChroma_NEON(const uint16_t* src1, const uint16_t* src2,
   const int out_shift = SHARPYUV_GAMMA_TO_LINEAR_BITS - bit_depth;
   const size_t uv_w_size = (size_t)uv_w;
   int i = 0;
-  for (; i + 8 <= uv_w; i += 8) {
+  for (; i <= uv_w - 8; i += 8) {
     const size_t off = 2 * (size_t)i;
     const uint16x8_t r16 =
         ScaleDown8_NEON(src1 + off + 0 * uv_w_size, src2 + off + 0 * uv_w_size,

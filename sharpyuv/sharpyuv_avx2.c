@@ -73,7 +73,7 @@ static uint64_t SharpYuvUpdateY_AVX2(const uint16_t* ref, const uint16_t* src,
   __m256i sum = _mm256_setzero_si256();
   uint64_t diff;
 
-  for (i = 0; i + 16 <= len; i += 16) {
+  for (i = 0; i <= len - 16; i += 16) {
     const __m256i A = LOAD_256(ref + i);
     const __m256i B = LOAD_256(src + i);
     const __m256i C = LOAD_256(dst + i);
@@ -102,7 +102,7 @@ static uint64_t SharpYuvUpdateY_AVX2(const uint16_t* ref, const uint16_t* src,
 static void SharpYuvUpdateRGB_AVX2(const int16_t* ref, const int16_t* src,
                                    int16_t* dst, int len) {
   int i;
-  for (i = 0; i + 16 <= len; i += 16) {
+  for (i = 0; i <= len - 16; i += 16) {
     const __m256i A = LOAD_256(ref + i);
     const __m256i B = LOAD_256(src + i);
     const __m256i C = LOAD_256(dst + i);
@@ -275,7 +275,7 @@ static void SharpYuvConvertRowY_AVX2(const uint16_t* best_y,
   const int yuv_max = (1 << yuv_bit_depth) - 1;
   const size_t uv_w_size = (size_t)uv_w;
   int i = 0;
-  for (; i + 8 <= width; i += 8) {
+  for (; i <= width - 8; i += 8) {
     const size_t off = (size_t)(i >> 1);
     const __m128i W = LOAD_128(best_y + i);
     const __m128i Ro = LOAD_64(best_uv + off + 0 * uv_w_size);
@@ -329,7 +329,7 @@ static void SharpYuvConvertRowUV_AVX2(const int16_t* best_uv, int uv_w,
   const int yuv_max = (1 << yuv_bit_depth) - 1;
   const size_t uv_w_size = (size_t)uv_w;
   int i = 0;
-  for (; i + 8 <= uv_w; i += 8) {
+  for (; i <= uv_w - 8; i += 8) {
     const __m128i R16 = LOAD_128(best_uv + i + 0 * uv_w_size);
     const __m128i G16 = LOAD_128(best_uv + i + 1 * uv_w_size);
     const __m128i B16 = LOAD_128(best_uv + i + 2 * uv_w_size);
@@ -438,7 +438,7 @@ static void UpdateW_AVX2(const uint16_t* src, uint16_t* dst, int w,
   const size_t w_size = (size_t)w;
   int i = 0;
   assert(shift_right >= 0);
-  for (; i + 8 <= w; i += 8) {
+  for (; i <= w - 8; i += 8) {
     const __m256i R = GammaToLinear8_AVX2(LOAD_128(src + 0 * w_size + i),
                                           shift_right, g2l_tab);
     const __m256i G = GammaToLinear8_AVX2(LOAD_128(src + 1 * w_size + i),
@@ -520,7 +520,7 @@ static void UpdateChroma_AVX2(const uint16_t* src1, const uint16_t* src2,
   const size_t uv_w_size = (size_t)uv_w;
   int i = 0;
   assert(shift_right >= 0);
-  for (; i + 8 <= uv_w; i += 8) {
+  for (; i <= uv_w - 8; i += 8) {
     const size_t off = 2 * (size_t)i;
     const __m128i r16 =
         ScaleDown8_AVX2(src1 + off + 0 * uv_w_size, src2 + off + 0 * uv_w_size,
