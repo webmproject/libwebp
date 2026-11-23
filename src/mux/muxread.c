@@ -133,13 +133,15 @@ WEBP_NODISCARD static int MuxImageParse(const WebPChunk* const chunk,
   // ANMF.
   {
     const size_t hdr_size = ANMF_CHUNK_SIZE;
-    const WebPData temp = {bytes, hdr_size};
     // Each of ANMF chunk contain a header at the beginning. So, its size should
     // be at least 'hdr_size'.
     if (size < hdr_size) goto Fail;
-    if (ChunkAssignData(&subchunk, &temp, copy_data, chunk->tag) !=
-        WEBP_MUX_OK) {
-      goto Fail;
+    {
+      const WebPData temp = {bytes, hdr_size};
+      if (ChunkAssignData(&subchunk, &temp, copy_data, chunk->tag) !=
+          WEBP_MUX_OK) {
+        goto Fail;
+      }
     }
   }
   if (ChunkSetHead(&subchunk, &wpi->header) != WEBP_MUX_OK) goto Fail;
