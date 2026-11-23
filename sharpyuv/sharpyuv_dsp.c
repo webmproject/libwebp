@@ -14,6 +14,7 @@
 #include "./sharpyuv_dsp.h"
 
 #include <assert.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -67,13 +68,14 @@ static void SharpYuvConvertRowY_C(const uint16_t* best_y,
                                   const int coeffs[4], int sfix,
                                   int yuv_bit_depth, void* y_out) {
   const int yuv_max = (1 << yuv_bit_depth) - 1;
+  const size_t uv_w_size = (size_t)uv_w;
   int i;
   for (i = 0; i < width; ++i) {
-    const int off = i >> 1;
+    const size_t off = (size_t)(i >> 1);
     const int W = best_y[i];
-    const int r = best_uv[off + 0 * uv_w] + W;
-    const int g = best_uv[off + 1 * uv_w] + W;
-    const int b = best_uv[off + 2 * uv_w] + W;
+    const int r = best_uv[off + 0 * uv_w_size] + W;
+    const int g = best_uv[off + 1 * uv_w_size] + W;
+    const int b = best_uv[off + 2 * uv_w_size] + W;
     const int y = SharpYuvConvertComponent(r, g, b, coeffs, sfix);
     if (yuv_bit_depth <= 8) {
       ((uint8_t*)y_out)[i] = (uint8_t)SharpYuvClip16(y, 255);
@@ -88,11 +90,12 @@ static void SharpYuvConvertRowUV_C(const int16_t* best_uv, int uv_w,
                                    int sfix, int yuv_bit_depth, void* u_out,
                                    void* v_out) {
   const int yuv_max = (1 << yuv_bit_depth) - 1;
+  const size_t uv_w_size = (size_t)uv_w;
   int i;
   for (i = 0; i < uv_w; ++i) {
-    const int r = best_uv[i + 0 * uv_w];
-    const int g = best_uv[i + 1 * uv_w];
-    const int b = best_uv[i + 2 * uv_w];
+    const int r = best_uv[i + 0 * uv_w_size];
+    const int g = best_uv[i + 1 * uv_w_size];
+    const int b = best_uv[i + 2 * uv_w_size];
     const int u = SharpYuvConvertComponent(r, g, b, coeffs_u, sfix);
     const int v = SharpYuvConvertComponent(r, g, b, coeffs_v, sfix);
     if (yuv_bit_depth <= 8) {
@@ -109,14 +112,15 @@ static void SharpYuvConvertRowUV_C(const int16_t* best_uv, int uv_w,
 // UpdateW/UpdateChroma in sharpyuv.c.
 static void UpdateW_C(const uint16_t* src, uint16_t* dst, int w, int bit_depth,
                       SharpYuvTransferFunctionType transfer_type) {
+  const size_t w_size = (size_t)w;
   int i = 0;
   do {
     const uint32_t R =
-        SharpYuvGammaToLinear(src[0 * w + i], bit_depth, transfer_type);
+        SharpYuvGammaToLinear(src[0 * w_size + i], bit_depth, transfer_type);
     const uint32_t G =
-        SharpYuvGammaToLinear(src[1 * w + i], bit_depth, transfer_type);
+        SharpYuvGammaToLinear(src[1 * w_size + i], bit_depth, transfer_type);
     const uint32_t B =
-        SharpYuvGammaToLinear(src[2 * w + i], bit_depth, transfer_type);
+        SharpYuvGammaToLinear(src[2 * w_size + i], bit_depth, transfer_type);
     const int Y = SharpYuvRGBToGray(R, G, B);
     dst[i] = SharpYuvLinearToGamma((uint32_t)Y, bit_depth, transfer_type);
   } while (++i < w);
@@ -136,21 +140,25 @@ static uint32_t ScaleDown_C(uint16_t a, uint16_t b, uint16_t c, uint16_t d,
 static void UpdateChroma_C(const uint16_t* src1, const uint16_t* src2,
                            int16_t* dst, int uv_w, int bit_depth,
                            SharpYuvTransferFunctionType transfer_type) {
+  const size_t uv_w_size = (size_t)uv_w;
   int i = 0;
   do {
-    const int r = (int)ScaleDown_C(src1[0 * uv_w + 0], src1[0 * uv_w + 1],
-                                   src2[0 * uv_w + 0], src2[0 * uv_w + 1],
-                                   bit_depth, transfer_type);
-    const int g = (int)ScaleDown_C(src1[2 * uv_w + 0], src1[2 * uv_w + 1],
-                                   src2[2 * uv_w + 0], src2[2 * uv_w + 1],
-                                   bit_depth, transfer_type);
-    const int b = (int)ScaleDown_C(src1[4 * uv_w + 0], src1[4 * uv_w + 1],
-                                   src2[4 * uv_w + 0], src2[4 * uv_w + 1],
-                                   bit_depth, transfer_type);
+    const int r =
+        (int)ScaleDown_C(src1[0 * uv_w_size + 0], src1[0 * uv_w_size + 1],
+                         src2[0 * uv_w_size + 0], src2[0 * uv_w_size + 1],
+                         bit_depth, transfer_type);
+    const int g =
+        (int)ScaleDown_C(src1[2 * uv_w_size + 0], src1[2 * uv_w_size + 1],
+                         src2[2 * uv_w_size + 0], src2[2 * uv_w_size + 1],
+                         bit_depth, transfer_type);
+    const int b =
+        (int)ScaleDown_C(src1[4 * uv_w_size + 0], src1[4 * uv_w_size + 1],
+                         src2[4 * uv_w_size + 0], src2[4 * uv_w_size + 1],
+                         bit_depth, transfer_type);
     const int W = SharpYuvRGBToGray(r, g, b);
-    dst[0 * uv_w] = (int16_t)(r - W);
-    dst[1 * uv_w] = (int16_t)(g - W);
-    dst[2 * uv_w] = (int16_t)(b - W);
+    dst[0 * uv_w_size] = (int16_t)(r - W);
+    dst[1 * uv_w_size] = (int16_t)(g - W);
+    dst[2 * uv_w_size] = (int16_t)(b - W);
     dst += 1;
     src1 += 2;
     src2 += 2;

@@ -17,6 +17,7 @@
 #if defined(WEBP_USE_NEON)
 #include <arm_neon.h>
 #include <assert.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -198,13 +199,14 @@ static void SharpYuvConvertRowY_NEON(const uint16_t* best_y,
   const int64x2_t bias = vdupq_n_s64((int64_t)coeffs[3] + rounder);
   const int64x2_t neg_shift = vdupq_n_s64(-(int64_t)shift);
   const int yuv_max = (1 << yuv_bit_depth) - 1;
+  const size_t uv_w_size = (size_t)uv_w;
   int i = 0;
   for (; i + 8 <= width; i += 8) {
-    const int off = i >> 1;
+    const size_t off = (size_t)(i >> 1);
     const int16x8_t W = vreinterpretq_s16_u16(vld1q_u16(best_y + i));
-    const int16x4_t Ro = vld1_s16(best_uv + off + 0 * uv_w);
-    const int16x4_t Go = vld1_s16(best_uv + off + 1 * uv_w);
-    const int16x4_t Bo = vld1_s16(best_uv + off + 2 * uv_w);
+    const int16x4_t Ro = vld1_s16(best_uv + off + 0 * uv_w_size);
+    const int16x4_t Go = vld1_s16(best_uv + off + 1 * uv_w_size);
+    const int16x4_t Bo = vld1_s16(best_uv + off + 2 * uv_w_size);
     const int16x8_t R16 = vaddq_s16(DupEach_NEON(Ro), W);
     const int16x8_t G16 = vaddq_s16(DupEach_NEON(Go), W);
     const int16x8_t B16 = vaddq_s16(DupEach_NEON(Bo), W);
@@ -227,11 +229,11 @@ static void SharpYuvConvertRowY_NEON(const uint16_t* best_y,
     }
   }
   for (; i < width; ++i) {
-    const int off = i >> 1;
+    const size_t off = (size_t)(i >> 1);
     const int W = best_y[i];
-    const int r = best_uv[off + 0 * uv_w] + W;
-    const int g = best_uv[off + 1 * uv_w] + W;
-    const int b = best_uv[off + 2 * uv_w] + W;
+    const int r = best_uv[off + 0 * uv_w_size] + W;
+    const int g = best_uv[off + 1 * uv_w_size] + W;
+    const int b = best_uv[off + 2 * uv_w_size] + W;
     const int y = SharpYuvConvertComponent(r, g, b, coeffs, sfix);
     if (yuv_bit_depth <= 8) {
       ((uint8_t*)y_out)[i] = (uint8_t)SharpYuvClip16(y, 255);
@@ -252,11 +254,12 @@ static void SharpYuvConvertRowUV_NEON(const int16_t* best_uv, int uv_w,
   const int64x2_t bias_v = vdupq_n_s64((int64_t)coeffs_v[3] + rounder);
   const int64x2_t neg_shift = vdupq_n_s64(-(int64_t)shift);
   const int yuv_max = (1 << yuv_bit_depth) - 1;
+  const size_t uv_w_size = (size_t)uv_w;
   int i = 0;
   for (; i + 8 <= uv_w; i += 8) {
-    const int16x8_t R16 = vld1q_s16(best_uv + i + 0 * uv_w);
-    const int16x8_t G16 = vld1q_s16(best_uv + i + 1 * uv_w);
-    const int16x8_t B16 = vld1q_s16(best_uv + i + 2 * uv_w);
+    const int16x8_t R16 = vld1q_s16(best_uv + i + 0 * uv_w_size);
+    const int16x8_t G16 = vld1q_s16(best_uv + i + 1 * uv_w_size);
+    const int16x8_t B16 = vld1q_s16(best_uv + i + 2 * uv_w_size);
     const int32x4_t R_lo = vmovl_s16(vget_low_s16(R16));
     const int32x4_t R_hi = vmovl_s16(vget_high_s16(R16));
     const int32x4_t G_lo = vmovl_s16(vget_low_s16(G16));
@@ -288,9 +291,9 @@ static void SharpYuvConvertRowUV_NEON(const int16_t* best_uv, int uv_w,
     }
   }
   for (; i < uv_w; ++i) {
-    const int r = best_uv[i + 0 * uv_w];
-    const int g = best_uv[i + 1 * uv_w];
-    const int b = best_uv[i + 2 * uv_w];
+    const int r = best_uv[i + 0 * uv_w_size];
+    const int g = best_uv[i + 1 * uv_w_size];
+    const int b = best_uv[i + 2 * uv_w_size];
     const int u = SharpYuvConvertComponent(r, g, b, coeffs_u, sfix);
     const int v = SharpYuvConvertComponent(r, g, b, coeffs_v, sfix);
     if (yuv_bit_depth <= 8) {
@@ -408,26 +411,27 @@ static void UpdateW_NEON(const uint16_t* src, uint16_t* dst, int w,
                          const uint32_t* g2l_tab, const uint32_t* l2g_tab) {
   const int shift_right = bit_depth - SHARPYUV_GAMMA_TO_LINEAR_TAB_BITS;
   const int out_shift = SHARPYUV_GAMMA_TO_LINEAR_BITS - bit_depth;
+  const size_t w_size = (size_t)w;
   int i = 0;
   for (; i + 8 <= w; i += 8) {
     uint32x4_t R_lo, R_hi, G_lo, G_hi, B_lo, B_hi, Y_lo, Y_hi;
-    GammaToLinear8_NEON(vld1q_u16(src + 0 * w + i), shift_right, g2l_tab, &R_lo,
-                        &R_hi);
-    GammaToLinear8_NEON(vld1q_u16(src + 1 * w + i), shift_right, g2l_tab, &G_lo,
-                        &G_hi);
-    GammaToLinear8_NEON(vld1q_u16(src + 2 * w + i), shift_right, g2l_tab, &B_lo,
-                        &B_hi);
+    GammaToLinear8_NEON(vld1q_u16(src + 0 * w_size + i), shift_right, g2l_tab,
+                        &R_lo, &R_hi);
+    GammaToLinear8_NEON(vld1q_u16(src + 1 * w_size + i), shift_right, g2l_tab,
+                        &G_lo, &G_hi);
+    GammaToLinear8_NEON(vld1q_u16(src + 2 * w_size + i), shift_right, g2l_tab,
+                        &B_lo, &B_hi);
     Y_lo = SharpYuvRGBToGray4_NEON(R_lo, G_lo, B_lo);
     Y_hi = SharpYuvRGBToGray4_NEON(R_hi, G_hi, B_hi);
     vst1q_u16(dst + i, LinearToGamma8_NEON(Y_lo, Y_hi, out_shift, l2g_tab));
   }
   for (; i < w; ++i) {
     const uint32_t R =
-        SharpYuvGammaToLinear(src[0 * w + i], bit_depth, transfer_type);
+        SharpYuvGammaToLinear(src[0 * w_size + i], bit_depth, transfer_type);
     const uint32_t G =
-        SharpYuvGammaToLinear(src[1 * w + i], bit_depth, transfer_type);
+        SharpYuvGammaToLinear(src[1 * w_size + i], bit_depth, transfer_type);
     const uint32_t B =
-        SharpYuvGammaToLinear(src[2 * w + i], bit_depth, transfer_type);
+        SharpYuvGammaToLinear(src[2 * w_size + i], bit_depth, transfer_type);
     const int Y = SharpYuvRGBToGray(R, G, B);
     dst[i] = SharpYuvLinearToGamma((uint32_t)Y, bit_depth, transfer_type);
   }
@@ -477,17 +481,18 @@ static void UpdateChroma_NEON(const uint16_t* src1, const uint16_t* src2,
                               const uint32_t* l2g_tab) {
   const int shift_right = bit_depth - SHARPYUV_GAMMA_TO_LINEAR_TAB_BITS;
   const int out_shift = SHARPYUV_GAMMA_TO_LINEAR_BITS - bit_depth;
+  const size_t uv_w_size = (size_t)uv_w;
   int i = 0;
   for (; i + 8 <= uv_w; i += 8) {
-    const int off = 2 * i;
+    const size_t off = 2 * (size_t)i;
     const uint16x8_t r16 =
-        ScaleDown8_NEON(src1 + off + 0 * uv_w, src2 + off + 0 * uv_w,
+        ScaleDown8_NEON(src1 + off + 0 * uv_w_size, src2 + off + 0 * uv_w_size,
                         shift_right, out_shift, g2l_tab, l2g_tab);
     const uint16x8_t g16 =
-        ScaleDown8_NEON(src1 + off + 2 * uv_w, src2 + off + 2 * uv_w,
+        ScaleDown8_NEON(src1 + off + 2 * uv_w_size, src2 + off + 2 * uv_w_size,
                         shift_right, out_shift, g2l_tab, l2g_tab);
     const uint16x8_t b16 =
-        ScaleDown8_NEON(src1 + off + 4 * uv_w, src2 + off + 4 * uv_w,
+        ScaleDown8_NEON(src1 + off + 4 * uv_w_size, src2 + off + 4 * uv_w_size,
                         shift_right, out_shift, g2l_tab, l2g_tab);
     const uint32x4_t r_lo = vmovl_u16(vget_low_u16(r16));
     const uint32x4_t r_hi = vmovl_u16(vget_high_u16(r16));
@@ -512,17 +517,17 @@ static void UpdateChroma_NEON(const uint16_t* src1, const uint16_t* src2,
                                          vreinterpretq_s32_u32(w_lo))),
                      vmovn_s32(vsubq_s32(vreinterpretq_s32_u32(b_hi),
                                          vreinterpretq_s32_u32(w_hi))));
-    vst1q_s16(dst + i + 0 * uv_w, dr);
-    vst1q_s16(dst + i + 1 * uv_w, dg);
-    vst1q_s16(dst + i + 2 * uv_w, db);
+    vst1q_s16(dst + i + 0 * uv_w_size, dr);
+    vst1q_s16(dst + i + 1 * uv_w_size, dg);
+    vst1q_s16(dst + i + 2 * uv_w_size, db);
   }
   for (; i < uv_w; ++i) {
-    const int off = 2 * i;
+    const size_t off = 2 * (size_t)i;
     uint32_t rgb[3];
     int c;
     for (c = 0; c < 3; ++c) {
-      const uint16_t* s1 = src1 + off + 2 * c * uv_w;
-      const uint16_t* s2 = src2 + off + 2 * c * uv_w;
+      const uint16_t* s1 = src1 + off + 2 * (size_t)c * uv_w_size;
+      const uint16_t* s2 = src2 + off + 2 * (size_t)c * uv_w_size;
       const uint32_t A = SharpYuvGammaToLinear(s1[0], bit_depth, transfer_type);
       const uint32_t B = SharpYuvGammaToLinear(s1[1], bit_depth, transfer_type);
       const uint32_t C = SharpYuvGammaToLinear(s2[0], bit_depth, transfer_type);
@@ -532,9 +537,9 @@ static void UpdateChroma_NEON(const uint16_t* src1, const uint16_t* src2,
     }
     {
       const int W = SharpYuvRGBToGray(rgb[0], rgb[1], rgb[2]);
-      dst[i + 0 * uv_w] = (int16_t)((int)rgb[0] - W);
-      dst[i + 1 * uv_w] = (int16_t)((int)rgb[1] - W);
-      dst[i + 2 * uv_w] = (int16_t)((int)rgb[2] - W);
+      dst[i + 0 * uv_w_size] = (int16_t)((int)rgb[0] - W);
+      dst[i + 1 * uv_w_size] = (int16_t)((int)rgb[1] - W);
+      dst[i + 2 * uv_w_size] = (int16_t)((int)rgb[2] - W);
     }
   }
 }

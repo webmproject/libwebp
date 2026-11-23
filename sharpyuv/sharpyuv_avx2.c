@@ -16,6 +16,7 @@
 #if defined(WEBP_USE_AVX2)
 #include <assert.h>
 #include <immintrin.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -272,13 +273,14 @@ static void SharpYuvConvertRowY_AVX2(const uint16_t* best_y,
   const int64_t rounder = 1LL << (shift - 1);
   const __m256i bias = _mm256_set1_epi64x(coeffs[3] + rounder);
   const int yuv_max = (1 << yuv_bit_depth) - 1;
+  const size_t uv_w_size = (size_t)uv_w;
   int i = 0;
   for (; i + 8 <= width; i += 8) {
-    const int off = i >> 1;
+    const size_t off = (size_t)(i >> 1);
     const __m128i W = LOAD_128(best_y + i);
-    const __m128i Ro = LOAD_64(best_uv + off + 0 * uv_w);
-    const __m128i Go = LOAD_64(best_uv + off + 1 * uv_w);
-    const __m128i Bo = LOAD_64(best_uv + off + 2 * uv_w);
+    const __m128i Ro = LOAD_64(best_uv + off + 0 * uv_w_size);
+    const __m128i Go = LOAD_64(best_uv + off + 1 * uv_w_size);
+    const __m128i Bo = LOAD_64(best_uv + off + 2 * uv_w_size);
     const __m128i Rv = _mm_add_epi16(_mm_unpacklo_epi16(Ro, Ro), W);
     const __m128i Gv = _mm_add_epi16(_mm_unpacklo_epi16(Go, Go), W);
     const __m128i Bv = _mm_add_epi16(_mm_unpacklo_epi16(Bo, Bo), W);
@@ -301,11 +303,11 @@ static void SharpYuvConvertRowY_AVX2(const uint16_t* best_y,
     }
   }
   for (; i < width; ++i) {
-    const int off = i >> 1;
+    const size_t off = (size_t)(i >> 1);
     const int W = best_y[i];
-    const int r = best_uv[off + 0 * uv_w] + W;
-    const int g = best_uv[off + 1 * uv_w] + W;
-    const int b = best_uv[off + 2 * uv_w] + W;
+    const int r = best_uv[off + 0 * uv_w_size] + W;
+    const int g = best_uv[off + 1 * uv_w_size] + W;
+    const int b = best_uv[off + 2 * uv_w_size] + W;
     const int y = SharpYuvConvertComponent(r, g, b, coeffs, sfix);
     if (yuv_bit_depth <= 8) {
       ((uint8_t*)y_out)[i] = (uint8_t)SharpYuvClip16(y, 255);
@@ -325,11 +327,12 @@ static void SharpYuvConvertRowUV_AVX2(const int16_t* best_uv, int uv_w,
   const __m256i bias_u = _mm256_set1_epi64x(coeffs_u[3] + rounder);
   const __m256i bias_v = _mm256_set1_epi64x(coeffs_v[3] + rounder);
   const int yuv_max = (1 << yuv_bit_depth) - 1;
+  const size_t uv_w_size = (size_t)uv_w;
   int i = 0;
   for (; i + 8 <= uv_w; i += 8) {
-    const __m128i R16 = LOAD_128(best_uv + i + 0 * uv_w);
-    const __m128i G16 = LOAD_128(best_uv + i + 1 * uv_w);
-    const __m128i B16 = LOAD_128(best_uv + i + 2 * uv_w);
+    const __m128i R16 = LOAD_128(best_uv + i + 0 * uv_w_size);
+    const __m128i G16 = LOAD_128(best_uv + i + 1 * uv_w_size);
+    const __m128i B16 = LOAD_128(best_uv + i + 2 * uv_w_size);
     __m128i R_lo, R_hi, G_lo, G_hi, B_lo, B_hi;
     WidenLoHi16To32_AVX2(R16, &R_lo, &R_hi);
     WidenLoHi16To32_AVX2(G16, &G_lo, &G_hi);
@@ -356,9 +359,9 @@ static void SharpYuvConvertRowUV_AVX2(const int16_t* best_uv, int uv_w,
     }
   }
   for (; i < uv_w; ++i) {
-    const int r = best_uv[i + 0 * uv_w];
-    const int g = best_uv[i + 1 * uv_w];
-    const int b = best_uv[i + 2 * uv_w];
+    const int r = best_uv[i + 0 * uv_w_size];
+    const int g = best_uv[i + 1 * uv_w_size];
+    const int b = best_uv[i + 2 * uv_w_size];
     const int u = SharpYuvConvertComponent(r, g, b, coeffs_u, sfix);
     const int v = SharpYuvConvertComponent(r, g, b, coeffs_v, sfix);
     if (yuv_bit_depth <= 8) {
@@ -432,26 +435,27 @@ static void UpdateW_AVX2(const uint16_t* src, uint16_t* dst, int w,
                          const uint32_t* g2l_tab, const uint32_t* l2g_tab) {
   const int shift_right = bit_depth - SHARPYUV_GAMMA_TO_LINEAR_TAB_BITS;
   const int out_shift = SHARPYUV_GAMMA_TO_LINEAR_BITS - bit_depth;
+  const size_t w_size = (size_t)w;
   int i = 0;
   assert(shift_right >= 0);
   for (; i + 8 <= w; i += 8) {
-    const __m256i R =
-        GammaToLinear8_AVX2(LOAD_128(src + 0 * w + i), shift_right, g2l_tab);
-    const __m256i G =
-        GammaToLinear8_AVX2(LOAD_128(src + 1 * w + i), shift_right, g2l_tab);
-    const __m256i B =
-        GammaToLinear8_AVX2(LOAD_128(src + 2 * w + i), shift_right, g2l_tab);
+    const __m256i R = GammaToLinear8_AVX2(LOAD_128(src + 0 * w_size + i),
+                                          shift_right, g2l_tab);
+    const __m256i G = GammaToLinear8_AVX2(LOAD_128(src + 1 * w_size + i),
+                                          shift_right, g2l_tab);
+    const __m256i B = GammaToLinear8_AVX2(LOAD_128(src + 2 * w_size + i),
+                                          shift_right, g2l_tab);
     const __m256i Y = SharpYuvRGBToGray8_AVX2(R, G, B);
     STORE_128(dst + i, TruncateNarrow32To16_AVX2(
                            LinearToGamma8_AVX2(Y, out_shift, l2g_tab)));
   }
   for (; i < w; ++i) {
     const uint32_t R =
-        SharpYuvGammaToLinear(src[0 * w + i], bit_depth, transfer_type);
+        SharpYuvGammaToLinear(src[0 * w_size + i], bit_depth, transfer_type);
     const uint32_t G =
-        SharpYuvGammaToLinear(src[1 * w + i], bit_depth, transfer_type);
+        SharpYuvGammaToLinear(src[1 * w_size + i], bit_depth, transfer_type);
     const uint32_t B =
-        SharpYuvGammaToLinear(src[2 * w + i], bit_depth, transfer_type);
+        SharpYuvGammaToLinear(src[2 * w_size + i], bit_depth, transfer_type);
     const int Y = SharpYuvRGBToGray(R, G, B);
     dst[i] = SharpYuvLinearToGamma((uint32_t)Y, bit_depth, transfer_type);
   }
@@ -513,37 +517,38 @@ static void UpdateChroma_AVX2(const uint16_t* src1, const uint16_t* src2,
                               const uint32_t* l2g_tab) {
   const int shift_right = bit_depth - SHARPYUV_GAMMA_TO_LINEAR_TAB_BITS;
   const int out_shift = SHARPYUV_GAMMA_TO_LINEAR_BITS - bit_depth;
+  const size_t uv_w_size = (size_t)uv_w;
   int i = 0;
   assert(shift_right >= 0);
   for (; i + 8 <= uv_w; i += 8) {
-    const int off = 2 * i;
+    const size_t off = 2 * (size_t)i;
     const __m128i r16 =
-        ScaleDown8_AVX2(src1 + off + 0 * uv_w, src2 + off + 0 * uv_w,
+        ScaleDown8_AVX2(src1 + off + 0 * uv_w_size, src2 + off + 0 * uv_w_size,
                         shift_right, out_shift, g2l_tab, l2g_tab);
     const __m128i g16 =
-        ScaleDown8_AVX2(src1 + off + 2 * uv_w, src2 + off + 2 * uv_w,
+        ScaleDown8_AVX2(src1 + off + 2 * uv_w_size, src2 + off + 2 * uv_w_size,
                         shift_right, out_shift, g2l_tab, l2g_tab);
     const __m128i b16 =
-        ScaleDown8_AVX2(src1 + off + 4 * uv_w, src2 + off + 4 * uv_w,
+        ScaleDown8_AVX2(src1 + off + 4 * uv_w_size, src2 + off + 4 * uv_w_size,
                         shift_right, out_shift, g2l_tab, l2g_tab);
     const __m256i r32 = _mm256_cvtepu16_epi32(r16);
     const __m256i g32 = _mm256_cvtepu16_epi32(g16);
     const __m256i b32 = _mm256_cvtepu16_epi32(b16);
     const __m256i w32 = SharpYuvRGBToGray8_AVX2(r32, g32, b32);
-    STORE_128(dst + i + 0 * uv_w,
+    STORE_128(dst + i + 0 * uv_w_size,
               TruncateNarrow32To16_AVX2(_mm256_sub_epi32(r32, w32)));
-    STORE_128(dst + i + 1 * uv_w,
+    STORE_128(dst + i + 1 * uv_w_size,
               TruncateNarrow32To16_AVX2(_mm256_sub_epi32(g32, w32)));
-    STORE_128(dst + i + 2 * uv_w,
+    STORE_128(dst + i + 2 * uv_w_size,
               TruncateNarrow32To16_AVX2(_mm256_sub_epi32(b32, w32)));
   }
   for (; i < uv_w; ++i) {
-    const int off = 2 * i;
+    const size_t off = 2 * (size_t)i;
     uint32_t rgb[3];
     int c;
     for (c = 0; c < 3; ++c) {
-      const uint16_t* s1 = src1 + off + 2 * c * uv_w;
-      const uint16_t* s2 = src2 + off + 2 * c * uv_w;
+      const uint16_t* s1 = src1 + off + 2 * (size_t)c * uv_w_size;
+      const uint16_t* s2 = src2 + off + 2 * (size_t)c * uv_w_size;
       const uint32_t A = SharpYuvGammaToLinear(s1[0], bit_depth, transfer_type);
       const uint32_t B = SharpYuvGammaToLinear(s1[1], bit_depth, transfer_type);
       const uint32_t C = SharpYuvGammaToLinear(s2[0], bit_depth, transfer_type);
@@ -553,9 +558,9 @@ static void UpdateChroma_AVX2(const uint16_t* src1, const uint16_t* src2,
     }
     {
       const int W = SharpYuvRGBToGray(rgb[0], rgb[1], rgb[2]);
-      dst[i + 0 * uv_w] = (int16_t)((int)rgb[0] - W);
-      dst[i + 1 * uv_w] = (int16_t)((int)rgb[1] - W);
-      dst[i + 2 * uv_w] = (int16_t)((int)rgb[2] - W);
+      dst[i + 0 * uv_w_size] = (int16_t)((int)rgb[0] - W);
+      dst[i + 1 * uv_w_size] = (int16_t)((int)rgb[1] - W);
+      dst[i + 2 * uv_w_size] = (int16_t)((int)rgb[2] - W);
     }
   }
 }

@@ -16,6 +16,7 @@
 #include <assert.h>
 #include <limits.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -70,6 +71,7 @@ static uint32_t ScaleDown(uint16_t a, uint16_t b, uint16_t c, uint16_t d,
 static WEBP_INLINE void UpdateW(const fixed_y_t* src, fixed_y_t* dst, int w,
                                 int bit_depth,
                                 SharpYuvTransferFunctionType transfer_type) {
+  const size_t w_size = (size_t)w;
   int i = 0;
   if (transfer_type == kSharpYuvTransferFunctionBt709 ||
       transfer_type == kSharpYuvTransferFunctionBt601 ||
@@ -84,11 +86,11 @@ static WEBP_INLINE void UpdateW(const fixed_y_t* src, fixed_y_t* dst, int w,
   }
   do {
     const uint32_t R =
-        SharpYuvGammaToLinear(src[0 * w + i], bit_depth, transfer_type);
+        SharpYuvGammaToLinear(src[0 * w_size + i], bit_depth, transfer_type);
     const uint32_t G =
-        SharpYuvGammaToLinear(src[1 * w + i], bit_depth, transfer_type);
+        SharpYuvGammaToLinear(src[1 * w_size + i], bit_depth, transfer_type);
     const uint32_t B =
-        SharpYuvGammaToLinear(src[2 * w + i], bit_depth, transfer_type);
+        SharpYuvGammaToLinear(src[2 * w_size + i], bit_depth, transfer_type);
     const uint32_t Y = SharpYuvRGBToGray(R, G, B);
     dst[i] = (fixed_y_t)SharpYuvLinearToGamma(Y, bit_depth, transfer_type);
   } while (++i < w);
@@ -97,6 +99,7 @@ static WEBP_INLINE void UpdateW(const fixed_y_t* src, fixed_y_t* dst, int w,
 static void UpdateChroma(const fixed_y_t* src1, const fixed_y_t* src2,
                          fixed_t* dst, int uv_w, int bit_depth,
                          SharpYuvTransferFunctionType transfer_type) {
+  const size_t uv_w_size = (size_t)uv_w;
   int i = 0;
   if (transfer_type == kSharpYuvTransferFunctionBt709 ||
       transfer_type == kSharpYuvTransferFunctionBt601 ||
@@ -110,19 +113,19 @@ static void UpdateChroma(const fixed_y_t* src1, const fixed_y_t* src2,
     return;
   }
   do {
-    const int r =
-        ScaleDown(src1[0 * uv_w + 0], src1[0 * uv_w + 1], src2[0 * uv_w + 0],
-                  src2[0 * uv_w + 1], bit_depth, transfer_type);
-    const int g =
-        ScaleDown(src1[2 * uv_w + 0], src1[2 * uv_w + 1], src2[2 * uv_w + 0],
-                  src2[2 * uv_w + 1], bit_depth, transfer_type);
-    const int b =
-        ScaleDown(src1[4 * uv_w + 0], src1[4 * uv_w + 1], src2[4 * uv_w + 0],
-                  src2[4 * uv_w + 1], bit_depth, transfer_type);
+    const int r = ScaleDown(src1[0 * uv_w_size + 0], src1[0 * uv_w_size + 1],
+                            src2[0 * uv_w_size + 0], src2[0 * uv_w_size + 1],
+                            bit_depth, transfer_type);
+    const int g = ScaleDown(src1[2 * uv_w_size + 0], src1[2 * uv_w_size + 1],
+                            src2[2 * uv_w_size + 0], src2[2 * uv_w_size + 1],
+                            bit_depth, transfer_type);
+    const int b = ScaleDown(src1[4 * uv_w_size + 0], src1[4 * uv_w_size + 1],
+                            src2[4 * uv_w_size + 0], src2[4 * uv_w_size + 1],
+                            bit_depth, transfer_type);
     const int W = SharpYuvRGBToGray(r, g, b);
-    dst[0 * uv_w] = (fixed_t)(r - W);
-    dst[1 * uv_w] = (fixed_t)(g - W);
-    dst[2 * uv_w] = (fixed_t)(b - W);
+    dst[0 * uv_w_size] = (fixed_t)(r - W);
+    dst[1 * uv_w_size] = (fixed_t)(g - W);
+    dst[2 * uv_w_size] = (fixed_t)(b - W);
     dst += 1;
     src1 += 2;
     src2 += 2;
@@ -130,10 +133,12 @@ static void UpdateChroma(const fixed_y_t* src1, const fixed_y_t* src2,
 }
 
 static void StoreGray(const fixed_y_t* rgb, fixed_y_t* y, int w) {
+  const size_t w_size = (size_t)w;
   int i = 0;
   assert(w > 0);
   do {
-    y[i] = SharpYuvRGBToGray(rgb[0 * w + i], rgb[1 * w + i], rgb[2 * w + i]);
+    y[i] = SharpYuvRGBToGray(rgb[0 * w_size + i], rgb[1 * w_size + i],
+                             rgb[2 * w_size + i]);
   } while (++i < w);
 }
 
@@ -157,7 +162,7 @@ static void ImportOneRow(const uint8_t* const r_ptr, const uint8_t* const g_ptr,
   // Convert the rgb_step from a number of bytes to a number of uint8_t or
   // uint16_t values depending the bit depth.
   const int step = (rgb_bit_depth > 8) ? rgb_step / 2 : rgb_step;
-  const int w = (pic_width + 1) & ~1;
+  const size_t w = (size_t)((pic_width + 1) & ~1);
   const int shift = GetPrecisionShift(rgb_bit_depth);
   const int max_val = (1 << rgb_bit_depth) - 1;
   int i = 0;
@@ -202,28 +207,29 @@ static void InterpolateTwoRows(const fixed_y_t* const best_y,
                                const fixed_t* prev_uv, const fixed_t* cur_uv,
                                const fixed_t* next_uv, int w, fixed_y_t* out1,
                                fixed_y_t* out2, int bit_depth) {
-  const int uv_w = w >> 1;
+  const size_t w_size = (size_t)w;
+  const size_t uv_w = (size_t)(w >> 1);
   const int len = (w - 1) >> 1;  // length to filter
   int k = 3;
   while (k-- > 0) {  // process each R/G/B segments in turn
     // special boundary case for i==0
     out1[0] = Filter2(cur_uv[0], prev_uv[0], best_y[0], bit_depth);
-    out2[0] = Filter2(cur_uv[0], next_uv[0], best_y[w], bit_depth);
+    out2[0] = Filter2(cur_uv[0], next_uv[0], best_y[w_size], bit_depth);
 
     SharpYuvFilterRow(cur_uv, prev_uv, len, best_y + 0 + 1, out1 + 1,
                       bit_depth);
-    SharpYuvFilterRow(cur_uv, next_uv, len, best_y + w + 1, out2 + 1,
+    SharpYuvFilterRow(cur_uv, next_uv, len, best_y + w_size + 1, out2 + 1,
                       bit_depth);
 
     // special boundary case for i == w - 1 when w is even
     if (!(w & 1)) {
-      out1[w - 1] = Filter2(cur_uv[uv_w - 1], prev_uv[uv_w - 1],
-                            best_y[w - 1 + 0], bit_depth);
-      out2[w - 1] = Filter2(cur_uv[uv_w - 1], next_uv[uv_w - 1],
-                            best_y[w - 1 + w], bit_depth);
+      out1[w_size - 1] = Filter2(cur_uv[uv_w - 1], prev_uv[uv_w - 1],
+                                 best_y[w_size - 1 + 0], bit_depth);
+      out2[w_size - 1] = Filter2(cur_uv[uv_w - 1], next_uv[uv_w - 1],
+                                 best_y[w_size - 1 + w_size], bit_depth);
     }
-    out1 += w;
-    out2 += w;
+    out1 += w_size;
+    out2 += w_size;
     prev_uv += uv_w;
     cur_uv += uv_w;
     next_uv += uv_w;
@@ -242,6 +248,8 @@ static int ConvertWRGBToYUV(const fixed_y_t* best_y, const fixed_t* best_uv,
   const int h = (height + 1) & ~1;
   const int uv_w = w >> 1;
   const int uv_h = h >> 1;
+  const size_t w_size = (size_t)w;
+  const size_t three_uv_w = 3 * (size_t)uv_w;
   const int sfix = GetPrecisionShift(rgb_bit_depth);
 
   best_uv = best_uv_base;
@@ -249,9 +257,9 @@ static int ConvertWRGBToYUV(const fixed_y_t* best_y, const fixed_t* best_uv,
   do {
     SharpYuvConvertRowY(best_y, best_uv, width, uv_w, yuv_matrix->rgb_to_y,
                         sfix, yuv_bit_depth, y_ptr);
-    best_y += w;
-    best_uv += (j & 1) * 3 * uv_w;
-    y_ptr += y_stride;
+    best_y += w_size;
+    best_uv += (j & 1) ? three_uv_w : 0;
+    if (j + 1 < height) y_ptr += y_stride;
   } while (++j < height);
 
   best_uv = best_uv_base;
@@ -262,9 +270,11 @@ static int ConvertWRGBToYUV(const fixed_y_t* best_y, const fixed_t* best_uv,
     SharpYuvConvertRowUV(best_uv, uv_w, yuv_matrix->rgb_to_u,
                          yuv_matrix->rgb_to_v, sfix, yuv_bit_depth, u_ptr,
                          v_ptr);
-    best_uv += 3 * uv_w;
-    u_ptr += u_stride;
-    v_ptr += v_stride;
+    best_uv += three_uv_w;
+    if (j + 1 < uv_h) {
+      u_ptr += u_stride;
+      v_ptr += v_stride;
+    }
   } while (++j < uv_h);
   return 1;
 }
@@ -272,10 +282,23 @@ static int ConvertWRGBToYUV(const fixed_y_t* best_y, const fixed_t* best_uv,
 //------------------------------------------------------------------------------
 // Main function
 
+static int SafeAddSize(size_t a, size_t b, size_t* out) {
+  if (a > SIZE_MAX - b) return 0;
+  *out = a + b;
+  return 1;
+}
+
+static int SafeMulSize(size_t a, size_t b, size_t* out) {
+  if (a != 0 && b > SIZE_MAX / a) return 0;
+  *out = a * b;
+  return 1;
+}
+
 static void* SafeMalloc(uint64_t nmemb, size_t size) {
-  const uint64_t total_size = nmemb * (uint64_t)size;
-  if (total_size != (size_t)total_size) return NULL;
-  return malloc((size_t)total_size);
+  size_t total_size;
+  if (nmemb != (size_t)nmemb) return NULL;
+  if (!SafeMulSize((size_t)nmemb, size, &total_size)) return NULL;
+  return malloc(total_size);
 }
 
 static int DoSharpArgbToYuv(const uint8_t* r_ptr, const uint8_t* g_ptr,
@@ -291,36 +314,60 @@ static int DoSharpArgbToYuv(const uint8_t* r_ptr, const uint8_t* g_ptr,
   const int h = (height + 1) & ~1;
   const int uv_w = w >> 1;
   const int uv_h = h >> 1;
+  const size_t w_size = (size_t)w;
+  const size_t h_size = (size_t)h;
+  const size_t uv_w_size = (size_t)uv_w;
+  const size_t uv_h_size = (size_t)uv_h;
   const int y_bit_depth = rgb_bit_depth + GetPrecisionShift(rgb_bit_depth);
-  uint64_t prev_diff_y_sum = ~0;
+  uint64_t prev_diff_y_sum = ~(uint64_t)0;
   int j, iter;
-
-  const uint64_t tmp_buffer_size = (uint64_t)w * 3 * 2;
-  const uint64_t best_y_base_size = (uint64_t)w * h;
-  const uint64_t target_y_base_size = (uint64_t)w * h;
-  const uint64_t best_rgb_y_size = (uint64_t)w * 2;
-  const uint64_t best_uv_base_size = (uint64_t)uv_w * 3 * uv_h;
-  const uint64_t target_uv_base_size = (uint64_t)uv_w * 3 * uv_h;
-  const uint64_t best_rgb_uv_size = (uint64_t)uv_w * 3;
-  fixed_y_t* const tmp_buffer = (fixed_y_t*)SafeMalloc(
-      (tmp_buffer_size + best_y_base_size + target_y_base_size +
-       best_rgb_y_size) +
-          (best_uv_base_size + target_uv_base_size + best_rgb_uv_size),
-      sizeof(*tmp_buffer));
+  size_t two_w, three_w, three_w_bytes;
+  size_t three_uv_w, three_uv_w_bytes;
+  size_t tmp_buffer_size, best_y_base_size, target_y_base_size;
+  size_t best_rgb_y_size, best_uv_base_size, target_uv_base_size;
+  size_t best_rgb_uv_size, total_nmemb, total_bytes;
+  fixed_y_t* tmp_buffer = NULL;
   fixed_y_t *best_y_base, *target_y_base, *best_rgb_y;
   fixed_t *best_uv_base, *target_uv_base, *best_rgb_uv;
   fixed_y_t *best_y, *target_y;
   fixed_t *best_uv, *target_uv;
-  const uint64_t diff_y_threshold = (uint64_t)(3.0 * w * h);
+  uint64_t diff_y_threshold;
   int ok;
   assert(w > 0);
   assert(h > 0);
   assert(sizeof(fixed_y_t) == sizeof(fixed_t));
 
+  if (!SafeMulSize(w_size, 2, &two_w) || !SafeMulSize(w_size, 3, &three_w) ||
+      !SafeMulSize(three_w, sizeof(*tmp_buffer), &three_w_bytes) ||
+      !SafeMulSize(three_w, 2, &tmp_buffer_size) ||
+      !SafeMulSize(w_size, h_size, &best_y_base_size) ||
+      !SafeMulSize(uv_w_size, 3, &three_uv_w) ||
+      !SafeMulSize(three_uv_w, sizeof(*best_uv), &three_uv_w_bytes) ||
+      !SafeMulSize(three_uv_w, uv_h_size, &best_uv_base_size)) {
+    return 0;
+  }
+  target_y_base_size = best_y_base_size;
+  best_rgb_y_size = two_w;
+  target_uv_base_size = best_uv_base_size;
+  best_rgb_uv_size = three_uv_w;
+
+  total_nmemb = 0;
+  if (!SafeAddSize(total_nmemb, tmp_buffer_size, &total_nmemb) ||
+      !SafeAddSize(total_nmemb, best_y_base_size, &total_nmemb) ||
+      !SafeAddSize(total_nmemb, target_y_base_size, &total_nmemb) ||
+      !SafeAddSize(total_nmemb, best_rgb_y_size, &total_nmemb) ||
+      !SafeAddSize(total_nmemb, best_uv_base_size, &total_nmemb) ||
+      !SafeAddSize(total_nmemb, target_uv_base_size, &total_nmemb) ||
+      !SafeAddSize(total_nmemb, best_rgb_uv_size, &total_nmemb) ||
+      !SafeMulSize(total_nmemb, sizeof(*tmp_buffer), &total_bytes)) {
+    return 0;
+  }
+  tmp_buffer = (fixed_y_t*)SafeMalloc(1, total_bytes);
   if (tmp_buffer == NULL) {
     ok = 0;
     goto End;
   }
+  diff_y_threshold = (uint64_t)3 * (uint64_t)w * (uint64_t)h;
   best_y_base = tmp_buffer + tmp_buffer_size;
   target_y_base = best_y_base + best_y_base_size;
   best_rgb_y = target_y_base + target_y_base_size;
@@ -335,8 +382,8 @@ static int DoSharpArgbToYuv(const uint8_t* r_ptr, const uint8_t* g_ptr,
   // Import RGB samples to W/RGB representation.
   for (j = 0; j < height; j += 2) {
     const int is_last_row = (j == height - 1);
-    fixed_y_t* const src1 = tmp_buffer + 0 * w;
-    fixed_y_t* const src2 = tmp_buffer + 3 * w;
+    fixed_y_t* const src1 = tmp_buffer;
+    fixed_y_t* const src2 = tmp_buffer + three_w;
 
     // prepare two rows of input
     ImportOneRow(r_ptr, g_ptr, b_ptr, rgb_step, rgb_bit_depth, width, src1);
@@ -344,22 +391,27 @@ static int DoSharpArgbToYuv(const uint8_t* r_ptr, const uint8_t* g_ptr,
       ImportOneRow(r_ptr + rgb_stride, g_ptr + rgb_stride, b_ptr + rgb_stride,
                    rgb_step, rgb_bit_depth, width, src2);
     } else {
-      memcpy(src2, src1, 3 * w * sizeof(*src2));
+      memcpy(src2, src1, three_w_bytes);
     }
     StoreGray(src1, best_y + 0, w);
-    StoreGray(src2, best_y + w, w);
+    StoreGray(src2, best_y + w_size, w);
 
     UpdateW(src1, target_y, w, y_bit_depth, transfer_type);
-    UpdateW(src2, target_y + w, w, y_bit_depth, transfer_type);
+    UpdateW(src2, target_y + w_size, w, y_bit_depth, transfer_type);
     UpdateChroma(src1, src2, target_uv, uv_w, y_bit_depth, transfer_type);
-    memcpy(best_uv, target_uv, 3 * uv_w * sizeof(*best_uv));
-    best_y += 2 * w;
-    best_uv += 3 * uv_w;
-    target_y += 2 * w;
-    target_uv += 3 * uv_w;
-    r_ptr += 2 * (ptrdiff_t)rgb_stride;
-    g_ptr += 2 * (ptrdiff_t)rgb_stride;
-    b_ptr += 2 * (ptrdiff_t)rgb_stride;
+    memcpy(best_uv, target_uv, three_uv_w_bytes);
+    best_y += two_w;
+    best_uv += three_uv_w;
+    target_y += two_w;
+    target_uv += three_uv_w;
+    if (height - j > 2) {
+      r_ptr += rgb_stride;
+      r_ptr += rgb_stride;
+      g_ptr += rgb_stride;
+      g_ptr += rgb_stride;
+      b_ptr += rgb_stride;
+      b_ptr += rgb_stride;
+    }
   }
 
   // Iterate and resolve clipping conflicts.
@@ -374,29 +426,45 @@ static int DoSharpArgbToYuv(const uint8_t* r_ptr, const uint8_t* g_ptr,
     target_uv = target_uv_base;
     j = 0;
     do {
-      fixed_y_t* const src1 = tmp_buffer + 0 * w;
-      fixed_y_t* const src2 = tmp_buffer + 3 * w;
+      fixed_y_t* const src1 = tmp_buffer;
+      fixed_y_t* const src2 = tmp_buffer + three_w;
       {
-        const fixed_t* const next_uv = cur_uv + ((j < h - 2) ? 3 * uv_w : 0);
+        const fixed_t* const next_uv = cur_uv + ((j < h - 2) ? three_uv_w : 0);
         InterpolateTwoRows(best_y, prev_uv, cur_uv, next_uv, w, src1, src2,
                            y_bit_depth);
         prev_uv = cur_uv;
         cur_uv = next_uv;
       }
 
-      UpdateW(src1, best_rgb_y + 0 * w, w, y_bit_depth, transfer_type);
-      UpdateW(src2, best_rgb_y + 1 * w, w, y_bit_depth, transfer_type);
+      UpdateW(src1, best_rgb_y, w, y_bit_depth, transfer_type);
+      UpdateW(src2, best_rgb_y + w_size, w, y_bit_depth, transfer_type);
       UpdateChroma(src1, src2, best_rgb_uv, uv_w, y_bit_depth, transfer_type);
 
       // update two rows of Y and one row of RGB
-      diff_y_sum +=
-          SharpYuvUpdateY(target_y, best_rgb_y, best_y, 2 * w, y_bit_depth);
-      SharpYuvUpdateRGB(target_uv, best_rgb_uv, best_uv, 3 * uv_w);
+      if (two_w <= (size_t)INT_MAX) {
+        diff_y_sum += SharpYuvUpdateY(target_y, best_rgb_y, best_y, (int)two_w,
+                                      y_bit_depth);
+      } else {
+        diff_y_sum +=
+            SharpYuvUpdateY(target_y, best_rgb_y, best_y, w, y_bit_depth);
+        diff_y_sum += SharpYuvUpdateY(target_y + w_size, best_rgb_y + w_size,
+                                      best_y + w_size, w, y_bit_depth);
+      }
+      if (three_uv_w <= (size_t)INT_MAX) {
+        SharpYuvUpdateRGB(target_uv, best_rgb_uv, best_uv, (int)three_uv_w);
+      } else {
+        SharpYuvUpdateRGB(target_uv, best_rgb_uv, best_uv, uv_w);
+        SharpYuvUpdateRGB(target_uv + uv_w_size, best_rgb_uv + uv_w_size,
+                          best_uv + uv_w_size, uv_w);
+        SharpYuvUpdateRGB(target_uv + 2 * uv_w_size,
+                          best_rgb_uv + 2 * uv_w_size, best_uv + 2 * uv_w_size,
+                          uv_w);
+      }
 
-      best_y += 2 * w;
-      best_uv += 3 * uv_w;
-      target_y += 2 * w;
-      target_uv += 3 * uv_w;
+      best_y += two_w;
+      best_uv += three_uv_w;
+      target_y += two_w;
+      target_uv += three_uv_w;
       j += 2;
     } while (j < h);
     // test exit condition
@@ -526,31 +594,34 @@ int SharpYuvConvertWithOptions(const void* r_ptr, const void* g_ptr,
     return 0;
   }
   {
-    const uint64_t yuv_bytes = (yuv_bit_depth > 8) ? 2 : 1;
-    const uint64_t uv_width = (width + 1) / 2;
+    const size_t yuv_bytes = (yuv_bit_depth > 8) ? 2 : 1;
+    const size_t uv_width = ((size_t)width + 1) / 2;
+    const size_t uv_height = ((size_t)height + 1) / 2;
     const uint64_t abs_step =
         (uint64_t)((rgb_step < 0) ? -(int64_t)rgb_step : (int64_t)rgb_step);
     const uint64_t abs_stride =
         (uint64_t)((rgb_stride < 0) ? -(int64_t)rgb_stride
                                     : (int64_t)rgb_stride);
-    const uint64_t total_rgb_size = (uint64_t)height * abs_stride;
-    const uint64_t uv_height = (height + 1) / 2;
-    const uint64_t total_y_size = (uint64_t)height * y_stride;
-    const uint64_t total_u_size = uv_height * u_stride;
-    const uint64_t total_v_size = uv_height * v_stride;
+    size_t min_y_stride, min_uv_stride, min_rgb_stride, tmp_size;
 
-    if (y_stride < 0 || (uint64_t)y_stride < (uint64_t)width * yuv_bytes ||
-        u_stride < 0 || (uint64_t)u_stride < uv_width * yuv_bytes ||
-        v_stride < 0 || (uint64_t)v_stride < uv_width * yuv_bytes) {
+    if (y_stride < 0 || u_stride < 0 || v_stride < 0 || abs_step == 0 ||
+        abs_step != (size_t)abs_step || abs_stride != (size_t)abs_stride) {
       return 0;
     }
-    if (abs_step == 0 || abs_stride < (uint64_t)width * abs_step) {
+    if (!SafeMulSize((size_t)width, yuv_bytes, &min_y_stride) ||
+        !SafeMulSize(uv_width, yuv_bytes, &min_uv_stride) ||
+        !SafeMulSize((size_t)width, (size_t)abs_step, &min_rgb_stride)) {
       return 0;
     }
-    if (total_rgb_size != (size_t)total_rgb_size ||
-        total_y_size != (size_t)total_y_size ||
-        total_u_size != (size_t)total_u_size ||
-        total_v_size != (size_t)total_v_size) {
+    if ((size_t)y_stride < min_y_stride || (size_t)u_stride < min_uv_stride ||
+        (size_t)v_stride < min_uv_stride ||
+        (size_t)abs_stride < min_rgb_stride) {
+      return 0;
+    }
+    if (!SafeMulSize((size_t)height, (size_t)abs_stride, &tmp_size) ||
+        !SafeMulSize((size_t)height, (size_t)y_stride, &tmp_size) ||
+        !SafeMulSize(uv_height, (size_t)u_stride, &tmp_size) ||
+        !SafeMulSize(uv_height, (size_t)v_stride, &tmp_size)) {
       return 0;
     }
   }
