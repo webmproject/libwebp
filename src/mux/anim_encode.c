@@ -832,6 +832,35 @@ WEBP_NODISCARD static int FlattenSimilarBlocks(const WebPPicture* const src,
   return modified;
 }
 
+// Replace the semi-transparent pixels of 'dst' in 'rect' by fully transparent
+// ones, keeping their color. Assumes IsLossyBlendingPossible() returned true,
+// so these pixels are similar to the canvas: blending them over it would
+// compound their alpha instead of keeping it.
+// Returns true if at least one pixel gets modified.
+// Remember the modified pixel locations as 1s in carryover_mask.
+WEBP_NODISCARD static int ClearSemiTransparentPixels(
+    const FrameRectangle* const rect, WebPPicture* const dst,
+    uint8_t* const carryover_mask) {
+  int i, j;
+  int modified = 0;
+  // carryover_mask spans over the rect part of the canvas.
+  uint8_t* carryover_row = carryover_mask;
+  assert(dst != NULL && rect != NULL);
+  for (j = rect->y_offset; j < rect->y_offset + rect->height; ++j) {
+    uint32_t* const pdst = dst->argb + (ptrdiff_t)j * dst->argb_stride;
+    for (i = rect->x_offset; i < rect->x_offset + rect->width; ++i) {
+      const uint32_t alpha = pdst[i] >> 24;
+      if (alpha != 0x00 && alpha != 0xff) {
+        pdst[i] &= 0x00ffffffu;
+        carryover_row[i - rect->x_offset] = 1;
+        modified = 1;
+      }
+    }
+    carryover_row += rect->width;
+  }
+  return modified;
+}
+
 WEBP_NODISCARD static int EncodeFrame(const WebPConfig* const config,
                                       WebPPicture* const pic,
                                       WebPMemoryWriter* const memory) {
@@ -1090,6 +1119,10 @@ static WebPEncodingError GenerateCandidates(
       enc->curr_canvas_copy_modified = FlattenSimilarBlocks(
           canvas_carryover, &params->rect_lossy, curr_canvas,
           config_lossy->quality, enc->candidate_carryover_mask);
+      if (ClearSemiTransparentPixels(&params->rect_lossy, curr_canvas,
+                                     enc->candidate_carryover_mask)) {
+        enc->curr_canvas_copy_modified = 1;
+      }
     }
     error_code =
         EncodeCandidate(&params->sub_frame_lossy, &params->rect_lossy,
