@@ -184,15 +184,26 @@ void VP8LBitReaderSetBuffer(VP8LBitReader* const br,
 uint32_t VP8LReadBits(VP8LBitReader* const br, int n_bits);
 
 // Return the prefetched bits, so they can be looked up.
-static WEBP_ALWAYS_INLINE uint32_t VP8LPrefetchBits(VP8LBitReader* const br) {
-  return (uint32_t)(br->val >> (br->bit_pos & (VP8L_LBITS - 1)));
+static WEBP_ALWAYS_INLINE uint32_t VP8LPrefetchBitsFast(vp8l_val_t val,
+                                                        int bit_pos) {
+  return (uint32_t)(val >> (bit_pos & (VP8L_LBITS - 1)));
+}
+
+static WEBP_ALWAYS_INLINE uint32_t
+VP8LPrefetchBits(const VP8LBitReader* const br) {
+  return VP8LPrefetchBitsFast(br->val, br->bit_pos);
 }
 
 // Returns true if there was an attempt at reading bit past the end of
 // the buffer. Doesn't set br->eos flag.
-static WEBP_ALWAYS_INLINE int VP8LIsEndOfStream(const VP8LBitReader* const br) {
+static WEBP_ALWAYS_INLINE int VP8LIsEndOfStreamFast(
+    const VP8LBitReader* const br, int bit_pos) {
   assert(br->pos <= br->len);
-  return br->eos || ((br->pos == br->len) && (br->bit_pos > VP8L_LBITS));
+  return br->eos || ((bit_pos > VP8L_LBITS) && (br->pos == br->len));
+}
+
+static WEBP_ALWAYS_INLINE int VP8LIsEndOfStream(const VP8LBitReader* const br) {
+  return VP8LIsEndOfStreamFast(br, br->bit_pos);
 }
 
 // For jumping over a number of bits in the bit stream when accessed with
@@ -207,20 +218,31 @@ static WEBP_ALWAYS_INLINE void VP8LSetBitPos(VP8LBitReader* const br, int val) {
 // The common fast path is inlined; the near-end-of-buffer fallback is handled
 // by the non-inlined VP8LDoFillBitWindow.
 extern void VP8LDoFillBitWindow(VP8LBitReader* const br);
-static WEBP_ALWAYS_INLINE void VP8LFillBitWindow(VP8LBitReader* const br) {
-  if (br->bit_pos >= VP8L_WBITS) {
+static WEBP_ALWAYS_INLINE void VP8LFillBitWindowFast(VP8LBitReader* const br,
+                                                     vp8l_val_t* const val,
+                                                     int* const bit_pos) {
+  if (*bit_pos >= VP8L_WBITS) {
 #if defined(VP8L_USE_FAST_LOAD)
-    if (br->pos + sizeof(br->val) < br->len) {
-      br->val = (br->val >> VP8L_WBITS) |
-                ((vp8l_val_t)HToLE32(WebPMemToUint32(br->buf + br->pos))
-                 << (VP8L_LBITS - VP8L_WBITS));
-      br->bit_pos -= VP8L_WBITS;
-      br->pos += VP8L_LOG8_WBITS;
+    const size_t pos = br->pos;
+    if (pos + sizeof(*val) < br->len) {
+      *val = (*val >> VP8L_WBITS) |
+             ((vp8l_val_t)HToLE32(WebPMemToUint32(br->buf + pos))
+              << (VP8L_LBITS - VP8L_WBITS));
+      *bit_pos -= VP8L_WBITS;
+      br->pos = pos + VP8L_LOG8_WBITS;
       return;
     }
 #endif
+    br->val = *val;
+    br->bit_pos = *bit_pos;
     VP8LDoFillBitWindow(br);
+    *val = br->val;
+    *bit_pos = br->bit_pos;
   }
+}
+
+static WEBP_ALWAYS_INLINE void VP8LFillBitWindow(VP8LBitReader* const br) {
+  VP8LFillBitWindowFast(br, &br->val, &br->bit_pos);
 }
 
 #ifdef __cplusplus
