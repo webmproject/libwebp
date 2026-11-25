@@ -16,8 +16,11 @@
 #endif
 
 #include <assert.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <string.h>
+
+#include "webp/types.h"
 
 #ifdef HAVE_WINCODEC_H
 #ifdef __MINGW32__
@@ -79,6 +82,26 @@ WEBP_DEFINE_GUID(GUID_WICPixelFormat64bppBGRA_, 0x1562ff7c, 0xd352, 0x46f9,
 WEBP_DEFINE_GUID(GUID_WICPixelFormat64bppRGBA_, 0x6fddc324, 0x4e03, 0x4bfe,
                  0xb1, 0x85, 0x3d, 0x77, 0x76, 0x8d, 0xc9, 0x16);
 
+static HRESULT CreateMemoryStream(const uint8_t* data, size_t data_size,
+                                  IStream** stream) {
+  HRESULT hr = S_OK;
+  HGLOBAL image;
+  void* image_mem;
+  if (data == NULL || data_size == 0) return E_FAIL;
+  image = GlobalAlloc(GMEM_MOVEABLE, data_size);
+  if (image == NULL) return E_OUTOFMEMORY;
+  image_mem = GlobalLock(image);
+  if (image_mem == NULL) {
+    GlobalFree(image);
+    return E_FAIL;
+  }
+  memcpy(image_mem, data, data_size);
+  GlobalUnlock(image);
+  IFS(CreateStreamOnHGlobal(image, TRUE, stream));
+  if (FAILED(hr)) GlobalFree(image);
+  return hr;
+}
+
 static HRESULT OpenInputStream(const char* filename, IStream** stream) {
   HRESULT hr = S_OK;
   if (!WSTRCMP(filename, "-")) {
@@ -86,22 +109,8 @@ static HRESULT OpenInputStream(const char* filename, IStream** stream) {
     size_t data_size = 0;
     const int ok = ImgIoUtilReadFile(filename, &data, &data_size);
     if (ok) {
-      HGLOBAL image = GlobalAlloc(GMEM_MOVEABLE, data_size);
-      if (image != NULL) {
-        void* const image_mem = GlobalLock(image);
-        if (image_mem != NULL) {
-          memcpy(image_mem, data, data_size);
-          GlobalUnlock(image);
-          IFS(CreateStreamOnHGlobal(image, TRUE, stream));
-          if (FAILED(hr)) GlobalFree(image);
-        } else {
-          GlobalFree(image);
-          hr = E_FAIL;
-        }
-      } else {
-        hr = E_OUTOFMEMORY;
-      }
-      free((void*)data);
+      hr = CreateMemoryStream(data, data_size, stream);
+      WebPFree((void*)data);
     } else {
       hr = E_FAIL;
     }
@@ -238,8 +247,10 @@ static int HasAlpha(IWICImagingFactory* const factory,
   return has_alpha;
 }
 
-int ReadPictureWithWIC(const char* const filename, WebPPicture* const pic,
-                       int keep_alpha, Metadata* const metadata) {
+static int ReadPictureWithWICImpl(const char* const filename,
+                                  const uint8_t* const data, size_t data_size,
+                                  WebPPicture* const pic, int keep_alpha,
+                                  Metadata* const metadata) {
   // From Microsoft SDK 6.0a -- ks.h
   // Define a local copy to avoid link errors under mingw.
   WEBP_DEFINE_GUID(GUID_NULL_, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
@@ -274,7 +285,7 @@ int ReadPictureWithWIC(const char* const filename, WebPPicture* const pic,
   int has_alpha = 0;
   int64_t stride;
 
-  if (filename == NULL || pic == NULL) return 0;
+  if ((filename == NULL && data == NULL) || pic == NULL) return 0;
 
   IFS(CoInitialize(NULL));
   IFS(CoCreateInstance(
@@ -287,7 +298,11 @@ int ReadPictureWithWIC(const char* const filename, WebPPicture* const pic,
             "Use -s for the available YUV input.\n");
   }
   // Prepare for image decoding.
-  IFS(OpenInputStream(filename, &stream));
+  if (filename != NULL) {
+    IFS(OpenInputStream(filename, &stream));
+  } else {
+    IFS(CreateMemoryStream(data, data_size, &stream));
+  }
   IFS(IWICImagingFactory_CreateDecoderFromStream(
       factory, stream, NULL, WICDecodeMetadataCacheOnDemand, &decoder));
   IFS(IWICBitmapDecoder_GetFrameCount(decoder, &frame_count));
@@ -376,6 +391,19 @@ int ReadPictureWithWIC(const char* const filename, WebPPicture* const pic,
   free(rgb);
   return SUCCEEDED(hr);
 }
+
+int ReadPictureWithWIC(const char* const filename, WebPPicture* const pic,
+                       int keep_alpha, Metadata* const metadata) {
+  if (filename == NULL) return 0;
+  return ReadPictureWithWICImpl(filename, NULL, 0, pic, keep_alpha, metadata);
+}
+
+int ReadWIC(const uint8_t* const data, size_t data_size, WebPPicture* const pic,
+            int keep_alpha, Metadata* const metadata) {
+  if (data == NULL) return 0;
+  return ReadPictureWithWICImpl(NULL, data, data_size, pic, keep_alpha,
+                                metadata);
+}
 #else   // !HAVE_WINCODEC_H
 int ReadPictureWithWIC(const char* const filename,
                        struct WebPPicture* const pic, int keep_alpha,
@@ -390,6 +418,14 @@ int ReadPictureWithWIC(const char* const filename,
           "wincodec.h detection is working correctly if using autoconf "
           "and HAVE_WINCODEC_H is defined before building.\n");
   return 0;
+}
+
+int ReadWIC(const uint8_t* const data, size_t data_size,
+            struct WebPPicture* const pic, int keep_alpha,
+            struct Metadata* const metadata) {
+  (void)data;
+  (void)data_size;
+  return ReadPictureWithWIC(NULL, pic, keep_alpha, metadata);
 }
 #endif  // HAVE_WINCODEC_H
 

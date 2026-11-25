@@ -12,6 +12,10 @@
 #ifndef WEBP_IMAGEIO_WICDEC_H_
 #define WEBP_IMAGEIO_WICDEC_H_
 
+#include <stddef.h>
+
+#include "webp/types.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -26,6 +30,11 @@ struct WebPPicture;
 int ReadPictureWithWIC(const char* const filename,
                        struct WebPPicture* const pic, int keep_alpha,
                        struct Metadata* const metadata);
+
+// Same as ReadPictureWithWIC(), but reads from a memory buffer.
+int ReadWIC(const uint8_t* const data, size_t data_size,
+            struct WebPPicture* const pic, int keep_alpha,
+            struct Metadata* const metadata);
 
 #ifdef __cplusplus
 }  // extern "C"
