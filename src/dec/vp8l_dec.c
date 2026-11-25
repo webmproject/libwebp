@@ -143,19 +143,42 @@ int VP8LGetInfo(const uint8_t* WEBP_COUNTED_BY(data_size) data,
 
 //------------------------------------------------------------------------------
 
-static WEBP_INLINE int GetCopyDistance(int distance_symbol,
-                                       VP8LBitReader* const br) {
-  int extra_bits, offset;
+#if defined(__GNUC__) || defined(__clang__)
+#define WEBP_NOINLINE __attribute__((noinline))
+#elif defined(_MSC_VER)
+#define WEBP_NOINLINE __declspec(noinline)
+#else
+#define WEBP_NOINLINE
+#endif
+
+static WEBP_NOINLINE int GetCopyDistanceExtra(
+    int distance_symbol, VP8LBitReader* WEBP_RESTRICT const br) {
+  const int extra_bits = (distance_symbol - 2) >> 1;
+  int offset, bits;
+  if (br->eos || extra_bits > VP8L_MAX_NUM_BIT_READ) {
+    br->eos = 1;
+    br->bit_pos = 0;
+    return 1;
+  }
+  VP8LFillBitWindow(br);
+  offset = (2 + (distance_symbol & 1)) << extra_bits;
+  bits = VP8LPrefetchBits(br) & ((1 << extra_bits) - 1);
+  VP8LSetBitPos(br, br->bit_pos + extra_bits);
+  return offset + bits + 1;
+}
+
+#undef WEBP_NOINLINE
+
+static WEBP_ALWAYS_INLINE int GetCopyDistance(
+    int distance_symbol, VP8LBitReader* WEBP_RESTRICT const br) {
   if (distance_symbol < 4) {
     return distance_symbol + 1;
   }
-  extra_bits = (distance_symbol - 2) >> 1;
-  offset = (2 + (distance_symbol & 1)) << extra_bits;
-  return offset + VP8LReadBits(br, extra_bits) + 1;
+  return GetCopyDistanceExtra(distance_symbol, br);
 }
 
-static WEBP_INLINE int GetCopyLength(int length_symbol,
-                                     VP8LBitReader* const br) {
+static WEBP_ALWAYS_INLINE int GetCopyLength(
+    int length_symbol, VP8LBitReader* WEBP_RESTRICT const br) {
   // Length and distance prefixes are encoded the same way.
   return GetCopyDistance(length_symbol, br);
 }
@@ -1376,7 +1399,6 @@ WEBP_NODISCARD static int DecodeAlphaData(VP8LDecoder* const dec,
         const int length_sym = code - NUM_LITERAL_CODES;
         const int length = GetCopyLength(length_sym, br);
         const int dist_symbol = ReadSymbol(htree_group->htrees[DIST], br);
-        VP8LFillBitWindow(br);
         dist_code = GetCopyDistance(dist_symbol, br);
         dist = PlaneCodeToDistance(width, dist_code);
         if (src - data >= (ptrdiff_t)dist &&
@@ -1585,7 +1607,6 @@ WEBP_NODISCARD static int DecodeImageData(VP8LDecoder* WEBP_RESTRICT const dec,
       const int length_sym = code - NUM_LITERAL_CODES;
       const int length = GetCopyLength(length_sym, br);
       const int dist_symbol = ReadSymbol(htree_group->htrees[DIST], br);
-      VP8LFillBitWindow(br);
       dist_code = GetCopyDistance(dist_symbol, br);
       dist = PlaneCodeToDistance(width, dist_code);
 
