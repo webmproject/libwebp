@@ -65,6 +65,15 @@ WebPImageReader WebPGetImageReader(WebPInputFileFormat format);
 WebPImageReader WebPGuessImageReader(const uint8_t* const data,
                                      size_t data_size);
 
+// Initializes 'pic' with WebPPictureInit() (overwriting all fields; 'pic'
+// need not be initialized beforehand, and must not already own allocated
+// buffers or they will leak), sets 'pic->use_argb' to 'use_argb', guesses the
+// image format of 'data', and decodes it into 'pic'.
+// Returns true on success.
+int WebPReadImage(const uint8_t* const data, size_t data_size,
+                  struct WebPPicture* const pic, int keep_alpha, int use_argb,
+                  struct Metadata* const metadata);
+
 #ifdef __cplusplus
 }  // extern "C"
 #endif

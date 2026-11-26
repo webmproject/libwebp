@@ -14,6 +14,9 @@
 #include <stddef.h>
 
 #include "./metadata.h"
+#ifdef HAVE_WINCODEC_H
+#include "./wicdec.h"
+#endif
 #include "webp/encode.h"
 #include "webp/types.h"
 
@@ -93,4 +96,29 @@ WebPImageReader WebPGetImageReader(WebPInputFileFormat format) {
 WebPImageReader WebPGuessImageReader(const uint8_t* const data,
                                      size_t data_size) {
   return WebPGetImageReader(WebPGuessImageType(data, data_size));
+}
+
+int WebPReadImage(const uint8_t* const data, size_t data_size,
+                  struct WebPPicture* const pic, int keep_alpha, int use_argb,
+                  struct Metadata* const metadata) {
+  WebPImageReader reader;
+  if (data == NULL || data_size == 0 || pic == NULL || !WebPPictureInit(pic)) {
+    return 0;
+  }
+#ifdef HAVE_WINCODEC_H
+  // Try to decode the buffer using WIC, falling back to the other readers for
+  // e.g., WebP or PNM.
+  if (ReadWIC(data, data_size, pic, keep_alpha, metadata)) {
+    // ReadWIC() always forces pic->use_argb to 1.
+    if (!use_argb && !WebPPictureARGBToYUVA(pic, WEBP_YUV420)) {
+      MetadataFree(metadata);
+      WebPPictureFree(pic);
+      return 0;
+    }
+    return 1;
+  }
+#endif
+  pic->use_argb = use_argb;
+  reader = WebPGuessImageReader(data, data_size);
+  return reader(data, data_size, pic, keep_alpha, metadata);
 }

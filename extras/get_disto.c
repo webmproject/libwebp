@@ -33,27 +33,15 @@ static size_t ReadPicture(const char* const filename, WebPPicture* const pic,
                           int keep_alpha) {
   const uint8_t* data = NULL;
   size_t data_size = 0;
-  WebPImageReader reader = NULL;
   int ok = ImgIoUtilReadFile(filename, &data, &data_size);
-  if (!ok) goto End;
-
-  pic->use_argb = 1;  // force ARGB
-
-#ifdef HAVE_WINCODEC_H
-  // Try to decode the file using WIC falling back to the other readers for
-  // e.g., WebP.
-  ok = ReadPictureWithWIC(filename, pic, keep_alpha, NULL);
-  if (ok) goto End;
-#endif
-  reader = WebPGuessImageReader(data, data_size);
-  ok = reader(data, data_size, pic, keep_alpha, NULL);
-
-End:
+  if (ok) {
+    ok = WebPReadImage(data, data_size, pic, keep_alpha, /*use_argb=*/1, NULL);
+  }
   if (!ok) {
     WFPRINTF(stderr, "Error! Could not process file %s\n",
              (const W_CHAR*)filename);
   }
-  free((void*)data);
+  WebPFree((void*)data);
   return ok ? data_size : 0;
 }
 

@@ -75,46 +75,16 @@ static int ReadYUV(const uint8_t* const data, size_t data_size,
   return use_argb ? WebPPictureYUVAToARGB(pic) : 1;
 }
 
-#ifdef HAVE_WINCODEC_H
-
-static int ReadPicture(const char* const filename, WebPPicture* const pic,
-                       int keep_alpha, Metadata* const metadata) {
-  int ok = 0;
-  const uint8_t* data = NULL;
-  size_t data_size = 0;
-  if (pic->width != 0 && pic->height != 0) {
-    ok = ImgIoUtilReadFile(filename, &data, &data_size);
-    ok = ok && ReadYUV(data, data_size, pic);
-  } else {
-    // If no size specified, try to decode it using WIC.
-    ok = ReadPictureWithWIC(filename, pic, keep_alpha, metadata);
-    if (!ok) {
-      ok = ImgIoUtilReadFile(filename, &data, &data_size);
-      ok = ok && ReadWebP(data, data_size, pic, keep_alpha, metadata);
-    }
-  }
-  if (!ok) {
-    WFPRINTF(stderr, "Error! Could not process file %s\n",
-             (const W_CHAR*)filename);
-  }
-  WebPFree((void*)data);
-  return ok;
-}
-
-#else  // !HAVE_WINCODEC_H
-
 static int ReadPicture(const char* const filename, WebPPicture* const pic,
                        int keep_alpha, Metadata* const metadata) {
   const uint8_t* data = NULL;
   size_t data_size = 0;
-  int ok = 0;
-
-  ok = ImgIoUtilReadFile(filename, &data, &data_size);
+  int ok = ImgIoUtilReadFile(filename, &data, &data_size);
   if (!ok) goto End;
 
   if (pic->width == 0 || pic->height == 0) {
-    WebPImageReader reader = WebPGuessImageReader(data, data_size);
-    ok = reader(data, data_size, pic, keep_alpha, metadata);
+    ok = WebPReadImage(data, data_size, pic, keep_alpha, pic->use_argb,
+                       metadata);
   } else {
     // If image size is specified, infer it as YUV format.
     ok = ReadYUV(data, data_size, pic);
@@ -127,8 +97,6 @@ End:
   WebPFree((void*)data);
   return ok;
 }
-
-#endif  // !HAVE_WINCODEC_H
 
 static void AllocExtraInfo(WebPPicture* const pic) {
   const int mb_w = (pic->width + 15) / 16;
@@ -730,6 +698,7 @@ int main(int argc, const char* argv[]) {
   int show_progress = 0;
   int keep_metadata = 0;
   int metadata_written = 0;
+  int extra_info_type = 0;
   WebPPicture picture;
   int print_distortion = -1;     // -1=off, 0=PSNR, 1=SSIM, 2=LSIM
   WebPPicture original_picture;  // when PSNR or SSIM is requested
@@ -880,7 +849,7 @@ int main(int argc, const char* argv[]) {
     } else if (!strcmp(argv[c], "-partition_limit") && c + 1 < argc) {
       config.partition_limit = ExUtilGetInt(argv[++c], 0, &parse_error);
     } else if (!strcmp(argv[c], "-map") && c + 1 < argc) {
-      picture.extra_info_type = ExUtilGetInt(argv[++c], 0, &parse_error);
+      extra_info_type = ExUtilGetInt(argv[++c], 0, &parse_error);
     } else if (!strcmp(argv[c], "-crop") && c + 4 < argc) {
       crop = 1;
       crop_x = ExUtilGetInt(argv[++c], 0, &parse_error);
@@ -1058,6 +1027,7 @@ int main(int argc, const char* argv[]) {
              (const W_CHAR*)in_file);
     goto Error;
   }
+  picture.extra_info_type = extra_info_type;
   picture.progress_hook = (show_progress && !quiet) ? ProgressReport : NULL;
 
   if (blend_alpha) {
