@@ -59,13 +59,16 @@ static void SharpYuvUpdateRGB_NEON(const int16_t* ref, const int16_t* src,
     const int16x8_t A = vld1q_s16(ref + i);
     const int16x8_t B = vld1q_s16(src + i);
     const int16x8_t C = vld1q_s16(dst + i);
-    const int16x8_t D = vsubq_s16(A, B);  // diff_uv
-    const int16x8_t E = vaddq_s16(C, D);  // new_uv
-    vst1q_s16(dst + i, E);
+    const int32x4_t E_lo =
+        vaddw_s16(vsubl_s16(vget_low_s16(A), vget_low_s16(B)), vget_low_s16(C));
+    const int32x4_t E_hi = vaddw_s16(
+        vsubl_s16(vget_high_s16(A), vget_high_s16(B)), vget_high_s16(C));
+    vst1q_s16(dst + i, vcombine_s16(vqmovn_s32(E_lo), vqmovn_s32(E_hi)));
   }
   for (; i < len; ++i) {
     const int diff_uv = ref[i] - src[i];
-    dst[i] += diff_uv;
+    const int sum = (int)dst[i] + diff_uv;
+    dst[i] = (int16_t)(sum < -32768 ? -32768 : (sum > 32767 ? 32767 : sum));
   }
 }
 
@@ -207,16 +210,18 @@ static void SharpYuvConvertRowY_NEON(const uint16_t* best_y,
     const int16x4_t Ro = vld1_s16(best_uv + off + 0 * uv_w_size);
     const int16x4_t Go = vld1_s16(best_uv + off + 1 * uv_w_size);
     const int16x4_t Bo = vld1_s16(best_uv + off + 2 * uv_w_size);
-    const int16x8_t R16 = vaddq_s16(DupEach_NEON(Ro), W);
-    const int16x8_t G16 = vaddq_s16(DupEach_NEON(Go), W);
-    const int16x8_t B16 = vaddq_s16(DupEach_NEON(Bo), W);
-
+    const int16x8_t Rdup = DupEach_NEON(Ro);
+    const int16x8_t Gdup = DupEach_NEON(Go);
+    const int16x8_t Bdup = DupEach_NEON(Bo);
     const int32x4_t y_lo = Convert4_NEON(
-        vmovl_s16(vget_low_s16(R16)), vmovl_s16(vget_low_s16(G16)),
-        vmovl_s16(vget_low_s16(B16)), coeffs, bias, neg_shift);
+        vaddl_s16(vget_low_s16(Rdup), vget_low_s16(W)),
+        vaddl_s16(vget_low_s16(Gdup), vget_low_s16(W)),
+        vaddl_s16(vget_low_s16(Bdup), vget_low_s16(W)), coeffs, bias, neg_shift);
     const int32x4_t y_hi = Convert4_NEON(
-        vmovl_s16(vget_high_s16(R16)), vmovl_s16(vget_high_s16(G16)),
-        vmovl_s16(vget_high_s16(B16)), coeffs, bias, neg_shift);
+        vaddl_s16(vget_high_s16(Rdup), vget_high_s16(W)),
+        vaddl_s16(vget_high_s16(Gdup), vget_high_s16(W)),
+        vaddl_s16(vget_high_s16(Bdup), vget_high_s16(W)), coeffs, bias,
+        neg_shift);
     const int16x8_t y16 = vcombine_s16(vqmovn_s32(y_lo), vqmovn_s32(y_hi));
 
     if (yuv_bit_depth <= 8) {

@@ -66,13 +66,20 @@ static void SharpYuvUpdateRGB_SSE2(const int16_t* ref, const int16_t* src,
     const __m128i A = _mm_loadu_si128((const __m128i*)(ref + i));
     const __m128i B = _mm_loadu_si128((const __m128i*)(src + i));
     const __m128i C = _mm_loadu_si128((const __m128i*)(dst + i));
-    const __m128i D = _mm_sub_epi16(A, B);  // diff_uv
-    const __m128i E = _mm_add_epi16(C, D);  // new_uv
-    _mm_storeu_si128((__m128i*)(dst + i), E);
+    const __m128i A_lo = _mm_srai_epi32(_mm_unpacklo_epi16(A, A), 16);
+    const __m128i A_hi = _mm_srai_epi32(_mm_unpackhi_epi16(A, A), 16);
+    const __m128i B_lo = _mm_srai_epi32(_mm_unpacklo_epi16(B, B), 16);
+    const __m128i B_hi = _mm_srai_epi32(_mm_unpackhi_epi16(B, B), 16);
+    const __m128i C_lo = _mm_srai_epi32(_mm_unpacklo_epi16(C, C), 16);
+    const __m128i C_hi = _mm_srai_epi32(_mm_unpackhi_epi16(C, C), 16);
+    const __m128i E_lo = _mm_add_epi32(C_lo, _mm_sub_epi32(A_lo, B_lo));
+    const __m128i E_hi = _mm_add_epi32(C_hi, _mm_sub_epi32(A_hi, B_hi));
+    _mm_storeu_si128((__m128i*)(dst + i), _mm_packs_epi32(E_lo, E_hi));
   }
   for (; i < len; ++i) {
     const int diff_uv = ref[i] - src[i];
-    dst[i] += diff_uv;
+    const int sum = (int)dst[i] + diff_uv;
+    dst[i] = (int16_t)(sum < -32768 ? -32768 : (sum > 32767 ? 32767 : sum));
   }
 }
 
@@ -158,7 +165,7 @@ static void SharpYuvFilterRow32_SSE2(const int16_t* A, const int16_t* B,
     const __m128i f0 = _mm_unpacklo_epi32(e0, e1);
     const __m128i f1 = _mm_unpackhi_epi32(e0, e1);
     const __m128i g = _mm_loadu_si128((const __m128i*)(best_y + 2 * i + 0));
-    const __m128i h_16 = _mm_add_epi16(g, _mm_packs_epi32(f0, f1));
+    const __m128i h_16 = _mm_adds_epi16(g, _mm_packs_epi32(f0, f1));
     const __m128i final = _mm_max_epi16(_mm_min_epi16(h_16, max), zero);
     _mm_storeu_si128((__m128i*)(out + 2 * i + 0), final);
   }

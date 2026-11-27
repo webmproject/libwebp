@@ -106,13 +106,20 @@ static void SharpYuvUpdateRGB_AVX2(const int16_t* ref, const int16_t* src,
     const __m256i A = LOAD_256(ref + i);
     const __m256i B = LOAD_256(src + i);
     const __m256i C = LOAD_256(dst + i);
-    const __m256i D = _mm256_sub_epi16(A, B);  // diff_uv
-    const __m256i E = _mm256_add_epi16(C, D);  // new_uv
-    STORE_256(dst + i, E);
+    const __m256i A_lo = _mm256_srai_epi32(_mm256_unpacklo_epi16(A, A), 16);
+    const __m256i A_hi = _mm256_srai_epi32(_mm256_unpackhi_epi16(A, A), 16);
+    const __m256i B_lo = _mm256_srai_epi32(_mm256_unpacklo_epi16(B, B), 16);
+    const __m256i B_hi = _mm256_srai_epi32(_mm256_unpackhi_epi16(B, B), 16);
+    const __m256i C_lo = _mm256_srai_epi32(_mm256_unpacklo_epi16(C, C), 16);
+    const __m256i C_hi = _mm256_srai_epi32(_mm256_unpackhi_epi16(C, C), 16);
+    const __m256i E_lo = _mm256_add_epi32(C_lo, _mm256_sub_epi32(A_lo, B_lo));
+    const __m256i E_hi = _mm256_add_epi32(C_hi, _mm256_sub_epi32(A_hi, B_hi));
+    STORE_256(dst + i, _mm256_packs_epi32(E_lo, E_hi));
   }
   for (; i < len; ++i) {
     const int diff_uv = ref[i] - src[i];
-    dst[i] += diff_uv;
+    const int sum = (int)dst[i] + diff_uv;
+    dst[i] = (int16_t)(sum < -32768 ? -32768 : (sum > 32767 ? 32767 : sum));
   }
 }
 
@@ -186,9 +193,9 @@ static void SharpYuvFilterRow32_AVX2(const int16_t* A, const int16_t* B,
       const __m128i g_lo = LOAD_128(best_y + 2 * i + 0);
       const __m128i g_hi = LOAD_128(best_y + 2 * i + 8);
       STORE_128(out + 2 * i + 0,
-                Clip16_128_AVX2(_mm_add_epi16(g_lo, out_lo), max));
+                Clip16_128_AVX2(_mm_adds_epi16(g_lo, out_lo), max));
       STORE_128(out + 2 * i + 8,
-                Clip16_128_AVX2(_mm_add_epi16(g_hi, out_hi), max));
+                Clip16_128_AVX2(_mm_adds_epi16(g_hi, out_hi), max));
     }
   }
   for (; i < len; ++i) {
@@ -281,13 +288,17 @@ static void SharpYuvConvertRowY_AVX2(const uint16_t* best_y,
     const __m128i Ro = LOAD_64(best_uv + off + 0 * uv_w_size);
     const __m128i Go = LOAD_64(best_uv + off + 1 * uv_w_size);
     const __m128i Bo = LOAD_64(best_uv + off + 2 * uv_w_size);
-    const __m128i Rv = _mm_add_epi16(_mm_unpacklo_epi16(Ro, Ro), W);
-    const __m128i Gv = _mm_add_epi16(_mm_unpacklo_epi16(Go, Go), W);
-    const __m128i Bv = _mm_add_epi16(_mm_unpacklo_epi16(Bo, Bo), W);
-    __m128i R_lo, R_hi, G_lo, G_hi, B_lo, B_hi;
-    WidenLoHi16To32_AVX2(Rv, &R_lo, &R_hi);
-    WidenLoHi16To32_AVX2(Gv, &G_lo, &G_hi);
-    WidenLoHi16To32_AVX2(Bv, &B_lo, &B_hi);
+    __m128i W_lo, W_hi, R_lo, R_hi, G_lo, G_hi, B_lo, B_hi;
+    WidenLoHi16To32_AVX2(W, &W_lo, &W_hi);
+    WidenLoHi16To32_AVX2(_mm_unpacklo_epi16(Ro, Ro), &R_lo, &R_hi);
+    WidenLoHi16To32_AVX2(_mm_unpacklo_epi16(Go, Go), &G_lo, &G_hi);
+    WidenLoHi16To32_AVX2(_mm_unpacklo_epi16(Bo, Bo), &B_lo, &B_hi);
+    R_lo = _mm_add_epi32(R_lo, W_lo);
+    R_hi = _mm_add_epi32(R_hi, W_hi);
+    G_lo = _mm_add_epi32(G_lo, W_lo);
+    G_hi = _mm_add_epi32(G_hi, W_hi);
+    B_lo = _mm_add_epi32(B_lo, W_lo);
+    B_hi = _mm_add_epi32(B_hi, W_hi);
     {
       const __m128i y_lo = Convert4_AVX2(R_lo, G_lo, B_lo, coeffs, bias, shift);
       const __m128i y_hi = Convert4_AVX2(R_hi, G_hi, B_hi, coeffs, bias, shift);

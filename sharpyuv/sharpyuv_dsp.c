@@ -46,7 +46,8 @@ static void SharpYuvUpdateRGB_C(const int16_t* ref, const int16_t* src,
   int i;
   for (i = 0; i < len; ++i) {
     const int diff_uv = ref[i] - src[i];
-    dst[i] += diff_uv;
+    const int sum = (int)dst[i] + diff_uv;
+    dst[i] = (int16_t)(sum < -32768 ? -32768 : (sum > 32767 ? 32767 : sum));
   }
 }
 
