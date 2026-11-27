@@ -974,7 +974,7 @@ int WebPDemuxGetChunk(const WebPDemuxer* dmux, const char fourcc[4],
 }
 
 int WebPDemuxNextChunk(WebPChunkIterator* iter) {
-  if (iter != NULL) {
+  if (iter != NULL && iter->chunk.bytes != NULL) {
     // Pass forge inline: assigning to const char* under
     // WEBP_ASSUME_UNSAFE_INDEXABLE_ABI drops bidi bounds back to
     // __unsafe_indexable and fails SetChunk(const char fourcc[4]).
@@ -988,7 +988,7 @@ int WebPDemuxNextChunk(WebPChunkIterator* iter) {
 }
 
 int WebPDemuxPrevChunk(WebPChunkIterator* iter) {
-  if (iter != NULL && iter->chunk_num > 1) {
+  if (iter != NULL && iter->chunk.bytes != NULL && iter->chunk_num > 1) {
     return SetChunk(
         WEBP_UNSAFE_FORGE_BIDI_INDEXABLE(
             const char*, (const char*)iter->chunk.bytes - CHUNK_HEADER_SIZE,
