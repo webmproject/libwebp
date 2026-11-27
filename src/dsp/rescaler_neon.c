@@ -37,12 +37,21 @@
   } while (0)
 
 #if (WEBP_RESCALER_RFIX == 32)
-#define MAKE_HALF_CST(C) vdupq_n_s32((int32_t)((C) >> 1))
-// note: B is actualy scale>>1. See MAKE_HALF_CST
-#define MULT_FIX(A, B) \
-  vreinterpretq_u32_s32(vqrdmulhq_s32(vreinterpretq_s32_u32((A)), (B)))
-#define MULT_FIX_FLOOR(A, B) \
-  vreinterpretq_u32_s32(vqdmulhq_s32(vreinterpretq_s32_u32((A)), (B)))
+static WEBP_INLINE uint32x4_t MultFix_NEON(const uint32x4_t A, uint32_t scale) {
+  const uint64x2_t lo = vmull_n_u32(vget_low_u32(A), scale);
+  const uint64x2_t hi = vmull_n_u32(vget_high_u32(A), scale);
+  return vcombine_u32(vrshrn_n_u64(lo, WEBP_RESCALER_RFIX),
+                      vrshrn_n_u64(hi, WEBP_RESCALER_RFIX));
+}
+static WEBP_INLINE uint32x4_t MultFixFloor_NEON(const uint32x4_t A,
+                                                uint32_t scale) {
+  const uint64x2_t lo = vmull_n_u32(vget_low_u32(A), scale);
+  const uint64x2_t hi = vmull_n_u32(vget_high_u32(A), scale);
+  return vcombine_u32(vshrn_n_u64(lo, WEBP_RESCALER_RFIX),
+                      vshrn_n_u64(hi, WEBP_RESCALER_RFIX));
+}
+#define MULT_FIX(A, B) MultFix_NEON((A), (B))
+#define MULT_FIX_FLOOR(A, B) MultFixFloor_NEON((A), (B))
 #else
 #error "MULT_FIX/WEBP_RESCALER_RFIX need some more work"
 #endif
@@ -69,7 +78,7 @@ static void RescalerExportRowExpand_NEON(WebPRescaler* const wrk) {
   const int max_span = x_out_max & ~7;
   const rescaler_t* const frow = wrk->frow;
   const uint32_t fy_scale = wrk->fy_scale;
-  const int32x4_t fy_scale_half = MAKE_HALF_CST(fy_scale);
+  // Use full unsigned 32-bit scale in MultFix_NEON to avoid signed overflow.
   assert(!WebPRescalerOutputDone(wrk));
   assert(wrk->y_accum <= 0);
   assert(wrk->y_expand);
@@ -78,8 +87,8 @@ static void RescalerExportRowExpand_NEON(WebPRescaler* const wrk) {
     for (x_out = 0; x_out < max_span; x_out += 8) {
       LOAD_32x4(frow + x_out + 0, A0);
       LOAD_32x4(frow + x_out + 4, A1);
-      const uint32x4_t B0 = MULT_FIX(A0, fy_scale_half);
-      const uint32x4_t B1 = MULT_FIX(A1, fy_scale_half);
+      const uint32x4_t B0 = MULT_FIX(A0, fy_scale);
+      const uint32x4_t B1 = MULT_FIX(A1, fy_scale);
       const uint16x4_t C0 = vmovn_u32(B0);
       const uint16x4_t C1 = vmovn_u32(B1);
       const uint8x8_t D = vqmovn_u16(vcombine_u16(C0, C1));
@@ -98,8 +107,8 @@ static void RescalerExportRowExpand_NEON(WebPRescaler* const wrk) {
           Interpolate_NEON(frow + x_out + 0, irow + x_out + 0, A, B);
       const uint32x4_t C1 =
           Interpolate_NEON(frow + x_out + 4, irow + x_out + 4, A, B);
-      const uint32x4_t D0 = MULT_FIX(C0, fy_scale_half);
-      const uint32x4_t D1 = MULT_FIX(C1, fy_scale_half);
+      const uint32x4_t D0 = MULT_FIX(C0, fy_scale);
+      const uint32x4_t D1 = MULT_FIX(C1, fy_scale);
       const uint16x4_t E0 = vmovn_u32(D0);
       const uint16x4_t E1 = vmovn_u32(D1);
       const uint8x8_t F = vqmovn_u16(vcombine_u16(E0, E1));
@@ -124,8 +133,7 @@ static void RescalerExportRowShrink_NEON(WebPRescaler* const wrk) {
   const uint32_t yscale = wrk->fy_scale * (-wrk->y_accum);
   const uint32_t fxy_scale = wrk->fxy_scale;
   const uint32x4_t zero = vdupq_n_u32(0);
-  const int32x4_t yscale_half = MAKE_HALF_CST(yscale);
-  const int32x4_t fxy_scale_half = MAKE_HALF_CST(fxy_scale);
+  // Use full unsigned 32-bit scales in MultFix*_NEON to avoid signed overflow.
   assert(!WebPRescalerOutputDone(wrk));
   assert(wrk->y_accum <= 0);
   assert(!wrk->y_expand);
@@ -133,12 +141,12 @@ static void RescalerExportRowShrink_NEON(WebPRescaler* const wrk) {
     for (x_out = 0; x_out < max_span; x_out += 8) {
       LOAD_32x8(frow + x_out, in0, in1);
       LOAD_32x8(irow + x_out, in2, in3);
-      const uint32x4_t A0 = MULT_FIX_FLOOR(in0, yscale_half);
-      const uint32x4_t A1 = MULT_FIX_FLOOR(in1, yscale_half);
+      const uint32x4_t A0 = MULT_FIX_FLOOR(in0, yscale);
+      const uint32x4_t A1 = MULT_FIX_FLOOR(in1, yscale);
       const uint32x4_t B0 = vqsubq_u32(in2, A0);
       const uint32x4_t B1 = vqsubq_u32(in3, A1);
-      const uint32x4_t C0 = MULT_FIX(B0, fxy_scale_half);
-      const uint32x4_t C1 = MULT_FIX(B1, fxy_scale_half);
+      const uint32x4_t C0 = MULT_FIX(B0, fxy_scale);
+      const uint32x4_t C1 = MULT_FIX(B1, fxy_scale);
       const uint16x4_t D0 = vmovn_u32(C0);
       const uint16x4_t D1 = vmovn_u32(C1);
       const uint8x8_t E = vqmovn_u16(vcombine_u16(D0, D1));
@@ -154,8 +162,8 @@ static void RescalerExportRowShrink_NEON(WebPRescaler* const wrk) {
   } else {
     for (x_out = 0; x_out < max_span; x_out += 8) {
       LOAD_32x8(irow + x_out, in0, in1);
-      const uint32x4_t A0 = MULT_FIX(in0, fxy_scale_half);
-      const uint32x4_t A1 = MULT_FIX(in1, fxy_scale_half);
+      const uint32x4_t A0 = MULT_FIX(in0, fxy_scale);
+      const uint32x4_t A1 = MULT_FIX(in1, fxy_scale);
       const uint16x4_t B0 = vmovn_u32(A0);
       const uint16x4_t B1 = vmovn_u32(A1);
       const uint8x8_t C = vqmovn_u16(vcombine_u16(B0, B1));

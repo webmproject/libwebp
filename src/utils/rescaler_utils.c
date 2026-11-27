@@ -168,14 +168,20 @@ int WebPRescalerGetScaledDimensions(int src_width, int src_height,
     const int max_size = INT_MAX / 2;
 
     // if width is unspecified, scale original proportionally to height ratio.
-    if (width == 0 && src_height > 0) {
-      width =
-          (int)(((uint64_t)src_width * height + src_height - 1) / src_height);
+    if (width == 0 && height > 0 && src_height > 0) {
+      const uint64_t w64 =
+          ((uint64_t)src_width * (uint64_t)height + (uint64_t)src_height - 1) /
+          (uint64_t)src_height;
+      if (w64 == 0 || w64 > (uint64_t)max_size) return 0;
+      width = (int)w64;
     }
     // if height is unspecified, scale original proportionally to width ratio.
-    if (height == 0 && src_width > 0) {
-      height =
-          (int)(((uint64_t)src_height * width + src_width - 1) / src_width);
+    if (height == 0 && width > 0 && src_width > 0) {
+      const uint64_t h64 =
+          ((uint64_t)src_height * (uint64_t)width + (uint64_t)src_width - 1) /
+          (uint64_t)src_width;
+      if (h64 == 0 || h64 > (uint64_t)max_size) return 0;
+      height = (int)h64;
     }
     // Check if the overall dimensions still make sense.
     if (width <= 0 || height <= 0 || width > max_size || height > max_size) {
